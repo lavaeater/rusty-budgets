@@ -1,0 +1,33 @@
+<div class="flex flex-col items-center p-6">
+    <h4 class="text-2xl font-semibold mb-4">Edit Post</h4>
+    <div class="w-full max-w-3xl">
+        <div>
+            <form class="space-y-4">
+                <div class="space-y-4">
+                    <input type="text"
+                           placeholder="First Name"
+                           name="first_name"
+                           id="first_name"
+                           value="{{ member.first_name }}"
+                           autofocus
+                           class="input input-bordered w-full"
+                    />
+                </div>
+                <div class="flex justify-between items-center mt-4">
+                    <a href="/members" class="btn btn-secondary">Cancel</a>
+                    <button hx-patch="/members/{{ member.id }}" hx-target="closest tr" class="btn btn-primary">Save
+                        Member
+                    </button>
+                </div>
+            </form>
+        </div>
+        <div class="mt-6">
+            <form>
+                <div class="text-right">
+                    <input id="delete-button" type="submit" value="Delete Member" class="btn btn-error"
+                           hx-delete="/members/{{ member.id }}"/>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

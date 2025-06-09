@@ -1,0 +1,3 @@
+<tr class="cursor-pointer">
+    <td>{{ import.title }}</td>
+</tr>

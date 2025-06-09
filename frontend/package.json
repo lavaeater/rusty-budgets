@@ -1,0 +1,29 @@
+{
+  "name": "rspack-temp",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "build": "cross-env NODE_ENV=production rspack build",
+    "build:dev": "cross-env NODE_ENV=development rspack --mode development",
+    "watch:assets": "nodemon --watch ../src --watch templates --ext js,css,tera --exec \"npm run build:dev\"",
+    "dev": "npm run watch:assets"
+  },
+  "devDependencies": {
+    "@rspack/cli": "^1.1.4",
+    "@rspack/core": "^1.1.4",
+    "autoprefixer": "^10.4.20",
+    "cross-env": "^7.0.3",
+    "nodemon": "^3.1.7",
+    "postcss": "^8.4.49",
+    "postcss-loader": "^8.1.1",
+    "tailwindcss": "^3.4.15"
+  },
+  "dependencies": {
+    "@tailwindcss/typography": "^0.5.15",
+    "alpinejs": "^3.14.5",
+    "aws-sdk": "^2.1692.0",
+    "daisyui": "^4.12.14",
+    "htmx.org": "^2.0.3",
+    "hyperscript.org": "^0.9.14"
+  }
+}

@@ -1,0 +1,13 @@
+#cargo-features = ["codegen-backend"]
+
+[package]
+name = "pod-crab"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[workspace]
+members = ["entities", "api", "service", "migration"]
+
+[dependencies]
+api = { path = "api" }

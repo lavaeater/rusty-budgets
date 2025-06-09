@@ -1,0 +1,51 @@
+{% extends "layout.html.tera" %} 
+{% block content %}
+  <div class="max-w-screen-lg mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <p><!-- Nothing to see here --></p>
+    <h1 class="text-3xl font-bold mb-4">Members</h1>
+    {% if flash %}
+      <small class="text-sm block mb-4 text-{{ flash.kind }}">
+        {{ flash.message }}
+      </small>
+    {% endif %}
+    <table class="table table-zebra w-full">
+      <thead>
+      <tr>
+        <th></th>
+        <th>Firstname</th>
+        <th>Surname</th>
+        <th>Email</th>
+        <th>Mobile Phone</th>
+        <th>Birthdate</th>
+      </tr>
+      </thead>
+      <tbody id="post-list">
+      {% for member in members %}
+        {% include "members/member_row.html.tera" %}
+      {% endfor %}
+      </tbody>
+      <tfoot>
+      <tr>
+        <td></td>
+        <td class="text-center">
+          {% if page == 1 %}
+            <span class="btn btn-disabled">Previous</span>
+          {% else %}
+            <a href="/members/?page={{ page - 1 }}&posts_per_page={{ members_per_page }}" class="btn btn-secondary">Previous</a>
+          {% endif %}
+          |
+          {% if page == num_pages %}
+            <span class="btn btn-disabled">Next</span>
+          {% else %}
+            <a href="/members/?page={{ page + 1 }}&posts_per_page={{ members_per_page }}" class="btn btn-secondary">Next</a>
+          {% endif %}
+        </td>
+        <td></td>
+      </tr>
+      </tfoot>
+    </table>
+    <div class="mt-6">
+      <a href="/members/new" class="btn btn-primary">Add Member</a>
+    </div>
+  </div>
+{% endblock content %}

@@ -1,0 +1,49 @@
+{% extends "layout.html.tera" %} 
+{% block content %}
+  <div class="max-w-screen-md mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <h4 class="text-2xl font-semibold mb-4">Register Member</h4>
+    <form class="space-y-4" action="/members/create" method="post">
+      <div class="space-y-4">
+        <input type="text"
+               placeholder="First Name"
+               name="first_name"
+               id="first_name"
+               autofocus
+               class="input input-bordered w-full"
+        />
+        <input type="text"
+               placeholder="Last Name"
+               name="last_name"
+               id="last_name"
+               autofocus
+               class="input input-bordered w-full"
+        />
+        <input type="text"
+               placeholder="Email"
+               name="email"
+               id="email"
+               autofocus
+               class="input input-bordered w-full"
+        />
+        <input type="text"
+               placeholder="Phone"
+               name="mobile_phone"
+               id="mobile_phone"
+               autofocus
+               class="input input-bordered w-full"
+        />
+        <input type="text"
+               placeholder="Birth Date"
+               name="birth_date"
+               id="birth_date"
+               autofocus
+               class="input input-bordered w-full"
+        />
+      </div>
+      <div class="flex justify-between items-center mt-4">
+        <a href="/members" class="btn btn-secondary">Cancel</a>
+        <input type="submit" value="Save Member" class="btn btn-primary" />
+      </div>
+    </form>
+  </div>
+{% endblock content %}

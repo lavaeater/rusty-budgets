@@ -1,0 +1,49 @@
+{% extends "layout.html.tera" %} 
+{% block content %}
+    <form hx-boost="false" hx-encoding="multipart/form-data" hx-post="import/upload"
+          _="on htmx:xhr:progress(loaded, total) set #progress.value to (loaded/total)*100">
+        
+        <div class="mb-4">
+            <label class="text-gray-700 text-sm font-bold mb-2 block">Import Type</label>
+            <div class="space-y-2">
+                <div class="flex items-center">
+                    <input type="radio" id="members" name="import_type" value="members" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300" checked>
+                    <label for="members" class="ml-2 block text-sm text-gray-700">Members</label>
+                </div>
+                <div class="flex items-center">
+                    <input type="radio" id="transactions" name="import_type" value="transactions" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                    <label for="transactions" class="ml-2 block text-sm text-gray-700">Transactions</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <input type="file" name="file" class="block w-full text-sm text-gray-500
+                file:mr-4 file:py-2 file:px-4
+                file:rounded-md file:border-0
+                file:text-sm file:font-semibold
+                file:bg-gray-100 file:text-gray-700
+                hover:file:bg-gray-200">
+        </div>
+
+        <div class="flex items-center space-x-4">
+            <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                Import
+            </button>
+            <progress id="progress" value="0" max="100" class="h-2 w-48 [&::-webkit-progress-bar]:rounded-lg [&::-webkit-progress-value]:rounded-lg [&::-webkit-progress-bar]:bg-gray-200 [&::-webkit-progress-value]:bg-blue-500"></progress>
+        </div>
+
+        <table class="table table-zebra w-full">
+            <thead>
+            <tr>
+                <th>Import Title</th>
+            </tr>
+            </thead>
+            <tbody id="import-list">
+            {% for import in imports %}
+                {% include "import_row.html.tera" %}
+            {% endfor %}
+            </tbody>
+        </table>
+    </form>
+{% endblock content %}

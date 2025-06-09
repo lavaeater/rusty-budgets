@@ -1,0 +1,30 @@
+{% extends "layout.html.tera" %} 
+{% block content %}
+  <div class="max-w-screen-md mx-auto px-4 sm:px-6 lg:px-8 py-6" hx-boost="true">
+    <h4 class="text-2xl font-semibold mb-4">New Post</h4>
+    <form class="space-y-4" action="/posts" method="post">
+      <div class="space-y-4">
+        <input
+                type="text"
+                placeholder="Enter Title"
+                name="title"
+                id="title"
+                value=""
+                autofocus
+                class="input input-bordered w-full"
+        />
+        <textarea
+                placeholder="Enter Content"
+                name="text"
+                id="text"
+                class="textarea textarea-bordered w-full"
+                rows="5"
+        ></textarea>
+      </div>
+      <div class="flex justify-between items-center mt-4">
+        <a href="/posts" class="btn btn-secondary">Cancel</a>
+        <input type="submit" value="Save Post" class="btn btn-primary" />
+      </div>
+    </form>
+  </div>
+{% endblock content %}

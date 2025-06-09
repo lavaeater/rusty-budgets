@@ -1,0 +1,45 @@
+services:
+  db:
+    image: postgres:alpine
+    env_file:
+      - .env
+    restart: always
+    # set shared memory limit when using docker-compose
+    shm_size: 128mb
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d podcrab" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  web:
+    build: .
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy  # Waits until healthcheck passes
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      HOST: 0.0.0.0
+      PORT: ${PORT}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_PROJECT_ID: ${GOOGLE_PROJECT_ID}
+      GOOGLE_AUTH_URI: ${GOOGLE_AUTH_URI}
+      GOOGLE_TOKEN_URI: ${GOOGLE_TOKEN_URI}
+      GOOGLE_AUTH_PROVIDER_X509_CERT_URL: ${GOOGLE_AUTH_PROVIDER_X509_CERT_URL}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI}
+    ports:
+      - "8000:8000"
+
+volumes:
+  db-data:
