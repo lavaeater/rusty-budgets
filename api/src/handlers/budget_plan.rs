@@ -1,6 +1,6 @@
-use poem::{handler, web::{Form, Path, Html, Data}, Route, get, post, put, delete, Redirect};
+use poem::{handler, web::{Form, Path, Html, Data}, Route, get, post, put, delete};
 use sea_orm::{DatabaseConnection, EntityTrait, ActiveModelTrait, Set};
-use entities::{budget_plan, budget_plan_item, budget_item};
+use entities::{budget_item, budget_plan, budget_plan_item};
 use tera::Tera;
 
 #[handler]
@@ -18,7 +18,7 @@ pub async fn new_budget_plan_form(tera: Data<&Tera>) -> Html<String> {
 
 #[handler]
 pub async fn create_budget_plan(db: Data<&DatabaseConnection>, Form(form): Form<budget_plan::Model>) -> Redirect {
-    let mut new_plan = budget_plan::ActiveModel {
+    let mut new_plan =  budget_plan::ActiveModel {
         user_id: Set(form.user_id),
         year: Set(form.year),
         ..Default::default()
