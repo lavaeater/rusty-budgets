@@ -1,0 +1,67 @@
+use poem::{handler, web::{Form, Path, Html}, Route, get, post, put, delete};
+use sea_orm::{DatabaseConnection, EntityTrait, ActiveModelTrait, Set};
+use entities::{budget_item, budget_plan, budget_plan_item};
+use tera::Tera;
+
+#[handler]
+pub async fn list_budget_items(db: Data<&DatabaseConnection>, tera: Data<&Tera>) -> Html<String> {
+    let items = budget_item::Entity::find().all(db.0).await.unwrap_or_default();
+    let mut ctx = tera::Context::new();
+    ctx.insert("items", &items);
+    Html(tera.render("budget/items.html", &ctx).unwrap())
+}
+
+#[handler]
+pub async fn new_budget_item_form(tera: Data<&Tera>) -> Html<String> {
+    Html(tera.render("budget/item_form.html", &tera::Context::new()).unwrap())
+}
+
+#[handler]
+pub async fn create_budget_item(db: Data<&DatabaseConnection>, Form(form): Form<budget_item::Model>) -> Redirect {
+    let mut new_item = budget_item::ActiveModel {
+        name: Set(form.name),
+        is_income: Set(form.is_income),
+        is_active: Set(true),
+        user_id: Set(form.user_id),
+        ..Default::default()
+    };
+    new_item.insert(db.0).await.ok();
+    Redirect::see_other("/budget/items")
+}
+
+#[handler]
+pub async fn edit_budget_item_form(db: Data<&DatabaseConnection>, tera: Data<&Tera>, Path(id): Path<i32>) -> Html<String> {
+    let item = budget_item::Entity::find_by_id(id).one(db.0).await.unwrap();
+    let mut ctx = tera::Context::new();
+    ctx.insert("item", &item);
+    Html(tera.render("budget/item_form.html", &ctx).unwrap())
+}
+
+#[handler]
+pub async fn update_budget_item(db: Data<&DatabaseConnection>, Path(id): Path<i32>, Form(form): Form<budget_item::Model>) -> Redirect {
+    if let Some(mut item) = budget_item::Entity::find_by_id(id).one(db.0).await.unwrap().map(Into::into) {
+        item.name = Set(form.name);
+        item.is_income = Set(form.is_income);
+        item.is_active = Set(form.is_active);
+        item.update(db.0).await.ok();
+    }
+    Redirect::see_other("/budget/items")
+}
+
+#[handler]
+pub async fn delete_budget_item(db: Data<&DatabaseConnection>, Path(id): Path<i32>) -> Redirect {
+    budget_item::Entity::delete_by_id(id).exec(db.0).await.ok();
+    Redirect::see_other("/budget/items")
+}
+
+// Similar handlers can be created for BudgetPlan and BudgetPlanItem
+
+pub fn budget_routes() -> Route {
+    Route::new()
+        .at("/budget/items", get(list_budget_items))
+        .at("/budget/items/new", get(new_budget_item_form))
+        .at("/budget/items", post(create_budget_item))
+        .at("/budget/items/:id/edit", get(edit_budget_item_form))
+        .at("/budget/items/:id", put(update_budget_item))
+        .at("/budget/items/:id", delete(delete_budget_item))
+}
