@@ -1,0 +1,132 @@
+use poem::{handler, web::{Form, Path, Html, Data}, Route, get, post, put, delete, Redirect};
+use sea_orm::{DatabaseConnection, EntityTrait, ActiveModelTrait, Set};
+use entities::{budget_plan, budget_plan_item, budget_item};
+use tera::Tera;
+
+#[handler]
+pub async fn list_budget_plans(db: Data<&DatabaseConnection>, tera: Data<&Tera>) -> Html<String> {
+    let plans = budget_plan::Entity::find().all(db.0).await.unwrap_or_default();
+    let mut ctx = tera::Context::new();
+    ctx.insert("plans", &plans);
+    Html(tera.render("budget/plans.html.tera", &ctx).unwrap())
+}
+
+#[handler]
+pub async fn new_budget_plan_form(tera: Data<&Tera>) -> Html<String> {
+    Html(tera.render("budget/plan_form.html.tera", &tera::Context::new()).unwrap())
+}
+
+#[handler]
+pub async fn create_budget_plan(db: Data<&DatabaseConnection>, Form(form): Form<budget_plan::Model>) -> Redirect {
+    let mut new_plan = budget_plan::ActiveModel {
+        user_id: Set(form.user_id),
+        year: Set(form.year),
+        ..Default::default()
+    };
+    new_plan.insert(db.0).await.ok();
+    Redirect::see_other("/budget/plans")
+}
+
+#[handler]
+pub async fn edit_budget_plan_form(db: Data<&DatabaseConnection>, tera: Data<&Tera>, Path(id): Path<i32>) -> Html<String> {
+    let plan = budget_plan::Entity::find_by_id(id).one(db.0).await.unwrap();
+    let mut ctx = tera::Context::new();
+    ctx.insert("plan", &plan);
+    Html(tera.render("budget/plan_form.html.tera", &ctx).unwrap())
+}
+
+#[handler]
+pub async fn update_budget_plan(db: Data<&DatabaseConnection>, Path(id): Path<i32>, Form(form): Form<budget_plan::Model>) -> Redirect {
+    if let Some(mut plan) = budget_plan::Entity::find_by_id(id).one(db.0).await.unwrap().map(Into::into) {
+        plan.year = Set(form.year);
+        plan.update(db.0).await.ok();
+    }
+    Redirect::see_other("/budget/plans")
+}
+
+#[handler]
+pub async fn delete_budget_plan(db: Data<&DatabaseConnection>, Path(id): Path<i32>) -> Redirect {
+    budget_plan::Entity::delete_by_id(id).exec(db.0).await.ok();
+    Redirect::see_other("/budget/plans")
+}
+
+// BudgetPlanItem CRUD
+#[handler]
+pub async fn list_plan_items(db: Data<&DatabaseConnection>, tera: Data<&Tera>, Path(plan_id): Path<i32>) -> Html<String> {
+    let items = budget_plan_item::Entity::find().filter(budget_plan_item::Column::BudgetPlanId.eq(plan_id)).all(db.0).await.unwrap_or_default();
+    let all_budget_items = budget_item::Entity::find().all(db.0).await.unwrap_or_default();
+    let mut ctx = tera::Context::new();
+    ctx.insert("items", &items);
+    ctx.insert("budget_items", &all_budget_items);
+    ctx.insert("plan_id", &plan_id);
+    Html(tera.render("budget/plan_items.html.tera", &ctx).unwrap())
+}
+
+#[handler]
+pub async fn new_plan_item_form(db: Data<&DatabaseConnection>, tera: Data<&Tera>, Path(plan_id): Path<i32>) -> Html<String> {
+    let all_budget_items = budget_item::Entity::find().all(db.0).await.unwrap_or_default();
+    let mut ctx = tera::Context::new();
+    ctx.insert("budget_items", &all_budget_items);
+    ctx.insert("plan_id", &plan_id);
+    Html(tera.render("budget/plan_item_form.html.tera", &ctx).unwrap())
+}
+
+#[handler]
+pub async fn create_plan_item(db: Data<&DatabaseConnection>, Path(plan_id): Path<i32>, Form(form): Form<budget_plan_item::Model>) -> Redirect {
+    let mut new_item = budget_plan_item::ActiveModel {
+        budget_plan_id: Set(plan_id),
+        budget_item_id: Set(form.budget_item_id),
+        month: Set(form.month),
+        planned_amount: Set(form.planned_amount),
+        note: Set(form.note),
+        ..Default::default()
+    };
+    new_item.insert(db.0).await.ok();
+    Redirect::see_other(format!("/budget/plans/{}/items", plan_id))
+}
+
+#[handler]
+pub async fn edit_plan_item_form(db: Data<&DatabaseConnection>, tera: Data<&Tera>, Path((plan_id, id)): Path<(i32, i32)>) -> Html<String> {
+    let item = budget_plan_item::Entity::find_by_id(id).one(db.0).await.unwrap();
+    let all_budget_items = budget_item::Entity::find().all(db.0).await.unwrap_or_default();
+    let mut ctx = tera::Context::new();
+    ctx.insert("item", &item);
+    ctx.insert("budget_items", &all_budget_items);
+    ctx.insert("plan_id", &plan_id);
+    Html(tera.render("budget/plan_item_form.html.tera", &ctx).unwrap())
+}
+
+#[handler]
+pub async fn update_plan_item(db: Data<&DatabaseConnection>, Path((plan_id, id)): Path<(i32, i32)>, Form(form): Form<budget_plan_item::Model>) -> Redirect {
+    if let Some(mut item) = budget_plan_item::Entity::find_by_id(id).one(db.0).await.unwrap().map(Into::into) {
+        item.budget_item_id = Set(form.budget_item_id);
+        item.month = Set(form.month);
+        item.planned_amount = Set(form.planned_amount);
+        item.note = Set(form.note);
+        item.update(db.0).await.ok();
+    }
+    Redirect::see_other(format!("/budget/plans/{}/items", plan_id))
+}
+
+#[handler]
+pub async fn delete_plan_item(db: Data<&DatabaseConnection>, Path((plan_id, id)): Path<(i32, i32)>) -> Redirect {
+    budget_plan_item::Entity::delete_by_id(id).exec(db.0).await.ok();
+    Redirect::see_other(format!("/budget/plans/{}/items", plan_id))
+}
+
+pub fn budget_plan_routes() -> Route {
+    Route::new()
+        .at("/budget/plans", get(list_budget_plans))
+        .at("/budget/plans/new", get(new_budget_plan_form))
+        .at("/budget/plans", post(create_budget_plan))
+        .at("/budget/plans/:id/edit", get(edit_budget_plan_form))
+        .at("/budget/plans/:id", put(update_budget_plan))
+        .at("/budget/plans/:id", delete(delete_budget_plan))
+        // Plan items
+        .at("/budget/plans/:plan_id/items", get(list_plan_items))
+        .at("/budget/plans/:plan_id/items/new", get(new_plan_item_form))
+        .at("/budget/plans/:plan_id/items", post(create_plan_item))
+        .at("/budget/plans/:plan_id/items/:id/edit", get(edit_plan_item_form))
+        .at("/budget/plans/:plan_id/items/:id", put(update_plan_item))
+        .at("/budget/plans/:plan_id/items/:id", delete(delete_plan_item))
+}
