@@ -1,14 +1,19 @@
-use entities::prelude::User;
-use entities::{
-    bank_transaction, episode, episode::Entity as Episode, import, import::Entity as Import,
-    member, member::Entity as Member, user,
-};
+use entities::{member, member::Entity as Member};
+use entities::{episode, episode::Entity as Episode};
 use entities::{post, post::Entity as Post};
+use entities::{import, import::Entity as Import};
+use entities::{user, user::Entity as User};
+use entities::{bank_transaction, bank_transaction::Entity as BankTransaction};
+use entities::{budget_item,budget_item::Entity as BudgetItem};
+use entities::{budget_plan,budget_plan::Entity as BudgetPlan};
 use sea_orm::prelude::Uuid;
 use sea_orm::*;
+use rusty_macros::find_by_id;
 
 pub struct QueryCore;
 
+#[find_by_id(BudgetItem)]
+#[find_by_id(BudgetPlan)]
 impl QueryCore {
     pub async fn find_member_by_id(db: &DbConn, id: Uuid) -> Result<Option<member::Model>, DbErr> {
         Member::find_by_id(id).one(db).await

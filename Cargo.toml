@@ -1,13 +1,17 @@
-#cargo-features = ["codegen-backend"]
+cargo-features = ["codegen-backend"]
 
 [package]
 name = "pod-crab"
 version = "0.1.0"
 edition = "2021"
 
+[profile.dev]
+codegen-backend = "cranelift"
+
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [workspace]
-members = ["entities", "api", "service", "migration"]
+members = ["entities", "api", "service", "migration", "rusty_macros"]
 
 [dependencies]
 api = { path = "api" }

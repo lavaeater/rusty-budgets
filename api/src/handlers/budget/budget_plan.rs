@@ -1,4 +1,4 @@
-use poem::{handler, web::{Form, Path, Html, Data}, Route, get, post, put, delete};
+use poem::{handler, web::{Form, Path, Html, Data}, Route, get, post, put, delete, IntoResponse};
 use sea_orm::{DatabaseConnection, EntityTrait, ActiveModelTrait, Set};
 use entities::{budget_item, budget_plan, budget_plan_item};
 use tera::Tera;
@@ -18,7 +18,7 @@ pub async fn new_budget_plan_form(tera: Data<&Tera>) -> Html<String> {
 }
 
 #[handler]
-pub async fn create_budget_plan(db: Data<&DatabaseConnection>, Form(form): Form<budget_plan::Model>) -> Redirect {
+pub async fn create_budget_plan(db: Data<&DatabaseConnection>, Form(form): Form<budget_plan::Model>) -> poem::Result<impl IntoResponse> {
     let mut new_plan =  budget_plan::ActiveModel {
         user_id: Set(form.user_id),
         year: Set(form.year),
@@ -37,7 +37,7 @@ pub async fn edit_budget_plan_form(db: Data<&DatabaseConnection>, tera: Data<&Te
 }
 
 #[handler]
-pub async fn update_budget_plan(db: Data<&DatabaseConnection>, Path(id): Path<i32>, Form(form): Form<budget_plan::Model>) -> Redirect {
+pub async fn update_budget_plan(db: Data<&DatabaseConnection>, Path(id): Path<i32>, Form(form): Form<budget_plan::Model>) -> poem::Result<impl IntoResponse> {
     if let Some(mut plan) = budget_plan::Entity::find_by_id(id).one(db.0).await.unwrap().map(Into::into) {
         plan.year = Set(form.year);
         plan.update(db.0).await.ok();
@@ -47,7 +47,7 @@ pub async fn update_budget_plan(db: Data<&DatabaseConnection>, Path(id): Path<i3
 }
 
 #[handler]
-pub async fn delete_budget_plan(db: Data<&DatabaseConnection>, Path(id): Path<i32>) -> Redirect {
+pub async fn delete_budget_plan(db: Data<&DatabaseConnection>, Path(id): Path<i32>) -> poem::Result<impl IntoResponse> {
     budget_plan::Entity::delete_by_id(id).exec(db.0).await.ok();
     redirect("/budget/plans")
 
@@ -75,7 +75,7 @@ pub async fn new_plan_item_form(db: Data<&DatabaseConnection>, tera: Data<&Tera>
 }
 
 #[handler]
-pub async fn create_plan_item(db: Data<&DatabaseConnection>, Path(plan_id): Path<i32>, Form(form): Form<budget_plan_item::Model>) -> Redirect {
+pub async fn create_plan_item(db: Data<&DatabaseConnection>, Path(plan_id): Path<i32>, Form(form): Form<budget_plan_item::Model>) -> poem::Result<impl IntoResponse> {
     let mut new_item = budget_plan_item::ActiveModel {
         budget_plan_id: Set(plan_id),
         budget_item_id: Set(form.budget_item_id),
@@ -100,7 +100,7 @@ pub async fn edit_plan_item_form(db: Data<&DatabaseConnection>, tera: Data<&Tera
 }
 
 #[handler]
-pub async fn update_plan_item(db: Data<&DatabaseConnection>, Path((plan_id, id)): Path<(i32, i32)>, Form(form): Form<budget_plan_item::Model>) -> Redirect {
+pub async fn update_plan_item(db: Data<&DatabaseConnection>, Path((plan_id, id)): Path<(i32, i32)>, Form(form): Form<budget_plan_item::Model>) -> poem::Result<impl IntoResponse> {
     if let Some(mut item) = budget_plan_item::Entity::find_by_id(id).one(db.0).await.unwrap().map(Into::into) {
         item.budget_item_id = Set(form.budget_item_id);
         item.month = Set(form.month);
@@ -112,7 +112,7 @@ pub async fn update_plan_item(db: Data<&DatabaseConnection>, Path((plan_id, id))
 }
 
 #[handler]
-pub async fn delete_plan_item(db: Data<&DatabaseConnection>, Path((plan_id, id)): Path<(i32, i32)>) -> Redirect {
+pub async fn delete_plan_item(db: Data<&DatabaseConnection>, Path((plan_id, id)): Path<(i32, i32)>) -> poem::Result<impl IntoResponse> {
     budget_plan_item::Entity::delete_by_id(id).exec(db.0).await.ok();
     redirect(format!("/budget/plans/{}/items", plan_id).as_str())
 }

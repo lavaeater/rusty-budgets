@@ -1,0 +1,13 @@
+[package]
+name = "rusty_macros"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "2.0.102", features = ["full"] }
+quote = "1.0"
+convert_case = "0.8.0"
+proc-macro2 = "1.0"

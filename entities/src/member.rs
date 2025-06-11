@@ -4,6 +4,7 @@ use sea_orm::entity::prelude::*;
 use sea_orm::prelude::async_trait::async_trait;
 use sea_orm::Set;
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
 #[sea_orm(table_name = "members")]
