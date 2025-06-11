@@ -1,10 +1,8 @@
-use oauth2::http::StatusCode;
-use poem::{delete, get, handler, post, put, web::{Form, Html, Path}, Error, IntoResponse, Route};
+use poem::{delete, get, handler, post, put, web::{Form, Html, Path}, IntoResponse, Route};
 use poem::web::Data;
-use sea_orm::{ActiveModelTrait, DatabaseConnection, DbErr, EntityTrait, Set};
+use sea_orm::{ActiveModelTrait, DatabaseConnection, EntityTrait, Set};
 use tera::Tera;
-use entities::{budget_item, member};
-use entities::prelude::{BudgetItem, Member};
+use entities::{budget_item};
 use crate::redirect;
 
 #[handler]
@@ -30,7 +28,7 @@ pub async fn create_budget_item(db: Data<&DatabaseConnection>, Form(form): Form<
         ..Default::default()
     };
     new_item.insert(db.0).await.ok();
-    redirect("/budget/items")
+    redirect("/items")
 }
 
 #[handler]
@@ -51,23 +49,23 @@ pub async fn update_budget_item(db: Data<&DatabaseConnection>, Path(id): Path<i3
         item.is_active = Set(form.is_active);
         item.update(db.0).await.ok();
     }
-    redirect("/budget/items")
+    redirect("/items")
 }
 
 #[handler]
 pub async fn delete_budget_item(db: Data<&DatabaseConnection>, Path(id): Path<i32>) -> poem::Result<impl IntoResponse> {
     budget_item::Entity::delete_by_id(id).exec(db.0).await.ok();
-    redirect("/budget/items")
+    redirect("/items")
 }
 
 // Similar handlers can be created for BudgetPlan and BudgetPlanItem
 
 pub fn budget_routes() -> Route {
     Route::new()
-        .at("/budget/items", get(list_budget_items))
-        .at("/budget/items/new", get(new_budget_item_form))
-        .at("/budget/items", post(create_budget_item))
-        .at("/budget/items/:id/edit", get(edit_budget_item_form))
-        .at("/budget/items/:id", put(update_budget_item))
-        .at("/budget/items/:id", delete(delete_budget_item))
+        .at("/items", get(list_budget_items))
+        .at("/items/new", get(new_budget_item_form))
+        .at("/items", post(create_budget_item))
+        .at("/items/:id/edit", get(edit_budget_item_form))
+        .at("/items/:id", put(update_budget_item))
+        .at("/items/:id", delete(delete_budget_item))
 }

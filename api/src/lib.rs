@@ -2,9 +2,11 @@
 extern crate core;
 
 use crate::handlers::auth::setup_openid_client;
+use crate::handlers::budget::{budget_item, budget_plan};
 use crate::handlers::{auth, import, index, members, posts};
 use entities::user;
 use migration::{Migrator, MigratorTrait};
+use oauth2::http::StatusCode;
 use poem::endpoint::StaticFilesEndpoint;
 use poem::listener::TcpListener;
 use poem::session::{CookieConfig, CookieSession};
@@ -16,7 +18,6 @@ use serde::Deserialize;
 use std::env;
 use std::str::FromStr;
 use tera::Tera;
-use oauth2::http::StatusCode;
 
 mod handlers;
 
@@ -70,6 +71,8 @@ async fn start(root_path: Option<String>) -> std::io::Result<()> {
         .nest("/members", members::member_routes())
         .nest("/auth", auth::routes())
         .nest("/import", import::import_routes())
+        .nest("/budget_plan", budget_plan::budget_plan_routes())
+        .nest("/budget_item", budget_item::budget_routes())
         .nest(
             "/static",
             StaticFilesEndpoint::new(format!("{}/static", &root_path)),

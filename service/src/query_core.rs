@@ -3,21 +3,20 @@ use entities::{episode, episode::Entity as Episode};
 use entities::{post, post::Entity as Post};
 use entities::{import, import::Entity as Import};
 use entities::{user, user::Entity as User};
-use entities::{bank_transaction, bank_transaction::Entity as BankTransaction};
-use entities::{budget_item,budget_item::Entity as BudgetItem};
-use entities::{budget_plan,budget_plan::Entity as BudgetPlan};
+use entities::{bank_transaction};
+use entities::{budget_item::Entity as BudgetItem};
+use entities::{budget_plan::Entity as BudgetPlan};
 use sea_orm::prelude::Uuid;
 use sea_orm::*;
-use rusty_macros::find_by_id;
+use rusty_macros::*;
 
 pub struct QueryCore;
 
 #[find_by_id(BudgetItem)]
 #[find_by_id(BudgetPlan)]
+#[find_by_uuid(Member)]
+#[find_by_uuid(Post)]
 impl QueryCore {
-    pub async fn find_member_by_id(db: &DbConn, id: Uuid) -> Result<Option<member::Model>, DbErr> {
-        Member::find_by_id(id).one(db).await
-    }
     pub async fn find_episodes(
         db: &DatabaseConnection,
         page: u64,
@@ -46,9 +45,6 @@ impl QueryCore {
 
         // Fetch paginated members
         paginator.fetch_page(page - 1).await.map(|p| (p, num_pages))
-    }
-    pub async fn find_post_by_id(db: &DbConn, id: Uuid) -> Result<Option<post::Model>, DbErr> {
-        Post::find_by_id(id).one(db).await
     }
 
     /// If ok, returns (post models, num pages).

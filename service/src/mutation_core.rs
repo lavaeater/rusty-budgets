@@ -1,4 +1,7 @@
-use entities::{bank_transaction, episode, member, member::Entity as Member, RecordHash};
+use entities::{
+    RecordHash, bank_transaction, budget_plan, budget_plan::Entity as BudgetPlan, episode, member,
+    member::Entity as Member,
+};
 use entities::{post, post::Entity as Post};
 
 use sea_orm::prelude::Uuid;
@@ -18,7 +21,6 @@ impl MutationCore {
         db: &DbConn,
         form_data: member::Model,
     ) -> Result<member::ActiveModel, DbErr> {
-
         form_data.into_active_model().save(db).await
         // member::ActiveModel {
         //     first_name: Set(form_data.first_name.to_owned()),
@@ -72,6 +74,23 @@ impl MutationCore {
         }
         .update(db)
         .await
+    }
+
+    pub async fn update_budget_plan_by_id(
+        db: &DbConn,
+        id: i32,
+        form_data: budget_plan::Model,
+    ) -> Result<budget_plan::Model, DbErr> {
+        let b_plan: budget_plan::ActiveModel = BudgetPlan::find_by_id(id)
+            .one(db)
+            .await?
+            .ok_or(DbErr::Custom("Cannot find bplan.".to_owned()))
+            .map(Into::into)?;
+        budget_plan::ActiveModel {
+            id: b_plan.id,
+            year: Set(form_data.year),
+            ..Default::default()
+        }.update(db).await
     }
 
     pub async fn delete_member(db: &DbConn, id: Uuid) -> Result<DeleteResult, DbErr> {
