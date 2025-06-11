@@ -8,7 +8,7 @@ use migration::{Migrator, MigratorTrait};
 use poem::endpoint::StaticFilesEndpoint;
 use poem::listener::TcpListener;
 use poem::session::{CookieConfig, CookieSession};
-use poem::{get, EndpointExt, Route, Server};
+use poem::{get, EndpointExt, Error, IntoResponse, Route, Server};
 use sea_orm::prelude::Uuid;
 use sea_orm::ActiveValue::Set;
 use sea_orm::{ActiveModelTrait, Database, DatabaseConnection, EntityTrait};
@@ -16,6 +16,7 @@ use serde::Deserialize;
 use std::env;
 use std::str::FromStr;
 use tera::Tera;
+use oauth2::http::StatusCode;
 
 mod handlers;
 
@@ -109,4 +110,8 @@ pub fn main(root_path: Option<String>) {
     if let Some(err) = result.err() {
         println!("Error: {err}");
     }
+}
+
+pub fn redirect(path: &str) -> Result<impl IntoResponse, Error> {
+    Ok(StatusCode::ACCEPTED.with_header("HX-redirect", path))
 }

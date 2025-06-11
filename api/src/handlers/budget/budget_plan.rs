@@ -2,6 +2,7 @@ use poem::{handler, web::{Form, Path, Html, Data}, Route, get, post, put, delete
 use sea_orm::{DatabaseConnection, EntityTrait, ActiveModelTrait, Set};
 use entities::{budget_item, budget_plan, budget_plan_item};
 use tera::Tera;
+use crate::redirect;
 
 #[handler]
 pub async fn list_budget_plans(db: Data<&DatabaseConnection>, tera: Data<&Tera>) -> Html<String> {
@@ -24,7 +25,7 @@ pub async fn create_budget_plan(db: Data<&DatabaseConnection>, Form(form): Form<
         ..Default::default()
     };
     new_plan.insert(db.0).await.ok();
-    Redirect::see_other("/budget/plans")
+    redirect("/budget/plans")
 }
 
 #[handler]
@@ -41,13 +42,15 @@ pub async fn update_budget_plan(db: Data<&DatabaseConnection>, Path(id): Path<i3
         plan.year = Set(form.year);
         plan.update(db.0).await.ok();
     }
-    Redirect::see_other("/budget/plans")
+    redirect("/budget/plans")
+
 }
 
 #[handler]
 pub async fn delete_budget_plan(db: Data<&DatabaseConnection>, Path(id): Path<i32>) -> Redirect {
     budget_plan::Entity::delete_by_id(id).exec(db.0).await.ok();
-    Redirect::see_other("/budget/plans")
+    redirect("/budget/plans")
+
 }
 
 // BudgetPlanItem CRUD
@@ -82,7 +85,7 @@ pub async fn create_plan_item(db: Data<&DatabaseConnection>, Path(plan_id): Path
         ..Default::default()
     };
     new_item.insert(db.0).await.ok();
-    Redirect::see_other(format!("/budget/plans/{}/items", plan_id))
+    redirect(format!("/budget/plans/{}/items", plan_id).as_str())
 }
 
 #[handler]
@@ -105,13 +108,13 @@ pub async fn update_plan_item(db: Data<&DatabaseConnection>, Path((plan_id, id))
         item.note = Set(form.note);
         item.update(db.0).await.ok();
     }
-    Redirect::see_other(format!("/budget/plans/{}/items", plan_id))
+    redirect(format!("/budget/plans/{}/items", plan_id).as_str())
 }
 
 #[handler]
 pub async fn delete_plan_item(db: Data<&DatabaseConnection>, Path((plan_id, id)): Path<(i32, i32)>) -> Redirect {
     budget_plan_item::Entity::delete_by_id(id).exec(db.0).await.ok();
-    Redirect::see_other(format!("/budget/plans/{}/items", plan_id))
+    redirect(format!("/budget/plans/{}/items", plan_id).as_str())
 }
 
 pub fn budget_plan_routes() -> Route {

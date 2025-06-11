@@ -1,10 +1,11 @@
 use oauth2::http::StatusCode;
-use poem::{handler, web::{Form, Path, Html}, Route, get, post, put, delete, IntoResponse};
+use poem::{delete, get, handler, post, put, web::{Form, Html, Path}, Error, IntoResponse, Route};
 use poem::web::Data;
-use sea_orm::{DatabaseConnection, EntityTrait, ActiveModelTrait, Set, DbErr};
+use sea_orm::{ActiveModelTrait, DatabaseConnection, DbErr, EntityTrait, Set};
 use tera::Tera;
 use entities::{budget_item, member};
 use entities::prelude::{BudgetItem, Member};
+use crate::redirect;
 
 #[handler]
 pub async fn list_budget_items(db: Data<&DatabaseConnection>, tera: Data<&Tera>) -> Html<String> {
@@ -29,7 +30,7 @@ pub async fn create_budget_item(db: Data<&DatabaseConnection>, Form(form): Form<
         ..Default::default()
     };
     new_item.insert(db.0).await.ok();
-    Ok(StatusCode::ACCEPTED.with_header("HX-Redirect", "/budget/items"))
+    redirect("/budget/items")
 }
 
 #[handler]
@@ -50,13 +51,13 @@ pub async fn update_budget_item(db: Data<&DatabaseConnection>, Path(id): Path<i3
         item.is_active = Set(form.is_active);
         item.update(db.0).await.ok();
     }
-    Ok(StatusCode::ACCEPTED.with_header("HX-Redirect", "/budget/items"))
+    redirect("/budget/items")
 }
 
 #[handler]
 pub async fn delete_budget_item(db: Data<&DatabaseConnection>, Path(id): Path<i32>) -> poem::Result<impl IntoResponse> {
     budget_item::Entity::delete_by_id(id).exec(db.0).await.ok();
-    Ok(StatusCode::ACCEPTED.with_header("HX-Redirect", "/budget/items"))
+    redirect("/budget/items")
 }
 
 // Similar handlers can be created for BudgetPlan and BudgetPlanItem

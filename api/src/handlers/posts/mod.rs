@@ -18,7 +18,7 @@ pub async fn create(state: Data<&AppState>, form: Form<Post>) -> poem::Result<im
         .await
         .map_err(InternalServerError)?;
 
-    Ok(StatusCode::ACCEPTED.with_header("HX-Redirect", "/posts"))
+    Ok(StatusCode::ACCEPTED.with_header("HX-redirect", "/posts"))
 }
 
 #[handler]
@@ -110,7 +110,7 @@ pub async fn destroy(
         .await
         .map_err(InternalServerError)?;
 
-    Ok(StatusCode::ACCEPTED.with_header("HX-Redirect", "/posts"))
+    Ok(StatusCode::ACCEPTED.with_header("HX-redirect", "/posts"))
 }
 
 pub fn post_routes() -> Route {

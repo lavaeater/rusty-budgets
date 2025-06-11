@@ -17,7 +17,7 @@ pub async fn create(state: Data<&AppState>, form: Form<Member>) -> poem::Result<
     MutationCore::create_member(conn, form).await
         .map_err(InternalServerError)?;
 
-    Ok(StatusCode::ACCEPTED.with_header("HX-Redirect", "/members"))
+    Ok(StatusCode::ACCEPTED.with_header("HX-redirect", "/members"))
 }
 
 #[handler]
@@ -110,7 +110,7 @@ pub async fn destroy(
         .await
         .map_err(InternalServerError)?;
 
-    Ok(StatusCode::ACCEPTED.with_header("HX-Redirect", "/members"))
+    Ok(StatusCode::ACCEPTED.with_header("HX-redirect", "/members"))
 }
 
 // A function to define all routes related to posts
