@@ -18,17 +18,19 @@ impl MutationCore {
         db: &DbConn,
         form_data: member::Model,
     ) -> Result<member::ActiveModel, DbErr> {
-        member::ActiveModel {
-            first_name: Set(form_data.first_name.to_owned()),
-            last_name: Set(form_data.last_name.to_owned()),
-            email: Set(form_data.email.to_owned()),
-            mobile_phone: Set(form_data.mobile_phone.to_owned()),
-            birth_date: Set(form_data.birth_date.to_owned()),
-            hash: Set(form_data.hash()),
-            ..Default::default()
-        }
-        .save(db)
-        .await
+
+        form_data.into_active_model().save(db).await
+        // member::ActiveModel {
+        //     first_name: Set(form_data.first_name.to_owned()),
+        //     last_name: Set(form_data.last_name.to_owned()),
+        //     email: Set(form_data.email.to_owned()),
+        //     mobile_phone: Set(form_data.mobile_phone.to_owned()),
+        //     birth_date: Set(form_data.birth_date.to_owned()),
+        //     hash: Set(form_data.hash()),
+        //     ..Default::default()
+        // }
+        // .save(db)
+        // .await
     }
 
     pub async fn create_bank_transaction(

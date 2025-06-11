@@ -1,8 +1,10 @@
-use poem::{handler, web::{Form, Path, Html}, Route, get, post, put, delete};
+use oauth2::http::StatusCode;
+use poem::{handler, web::{Form, Path, Html}, Route, get, post, put, delete, IntoResponse};
 use poem::web::Data;
-use sea_orm::{DatabaseConnection, EntityTrait, ActiveModelTrait, Set};
-use entities::{budget_item, budget_plan, budget_plan_item};
+use sea_orm::{DatabaseConnection, EntityTrait, ActiveModelTrait, Set, DbErr};
 use tera::Tera;
+use entities::{budget_item, member};
+use entities::prelude::{BudgetItem, Member};
 
 #[handler]
 pub async fn list_budget_items(db: Data<&DatabaseConnection>, tera: Data<&Tera>) -> Html<String> {
@@ -18,7 +20,7 @@ pub async fn new_budget_item_form(tera: Data<&Tera>) -> Html<String> {
 }
 
 #[handler]
-pub async fn create_budget_item(db: Data<&DatabaseConnection>, Form(form): Form<budget_item::Model>) -> Redirect {
+pub async fn create_budget_item(db: Data<&DatabaseConnection>, Form(form): Form<budget_item::Model>) -> poem::Result<impl IntoResponse> {
     let mut new_item = budget_item::ActiveModel {
         name: Set(form.name),
         is_income: Set(form.is_income),
@@ -27,7 +29,7 @@ pub async fn create_budget_item(db: Data<&DatabaseConnection>, Form(form): Form<
         ..Default::default()
     };
     new_item.insert(db.0).await.ok();
-    Redirect::see_other("/budget/items")
+    Ok(StatusCode::ACCEPTED.with_header("HX-Redirect", "/budget/items"))
 }
 
 #[handler]
@@ -39,20 +41,22 @@ pub async fn edit_budget_item_form(db: Data<&DatabaseConnection>, tera: Data<&Te
 }
 
 #[handler]
-pub async fn update_budget_item(db: Data<&DatabaseConnection>, Path(id): Path<i32>, Form(form): Form<budget_item::Model>) -> Redirect {
-    if let Some(mut item) = budget_item::Entity::find_by_id(id).one(db.0).await.unwrap().map(Into::into) {
+pub async fn update_budget_item(db: Data<&DatabaseConnection>, Path(id): Path<i32>, Form(form): Form<budget_item::Model>) -> poem::Result<impl IntoResponse> {
+    
+    if let Some(mut item) = budget_item::Entity::find_by_id(id)
+        .one(db.0).await.unwrap().map(Into::<budget_item::ActiveModel>::into) {
         item.name = Set(form.name);
         item.is_income = Set(form.is_income);
         item.is_active = Set(form.is_active);
         item.update(db.0).await.ok();
     }
-    Redirect::see_other("/budget/items")
+    Ok(StatusCode::ACCEPTED.with_header("HX-Redirect", "/budget/items"))
 }
 
 #[handler]
-pub async fn delete_budget_item(db: Data<&DatabaseConnection>, Path(id): Path<i32>) -> Redirect {
+pub async fn delete_budget_item(db: Data<&DatabaseConnection>, Path(id): Path<i32>) -> poem::Result<impl IntoResponse> {
     budget_item::Entity::delete_by_id(id).exec(db.0).await.ok();
-    Redirect::see_other("/budget/items")
+    Ok(StatusCode::ACCEPTED.with_header("HX-Redirect", "/budget/items"))
 }
 
 // Similar handlers can be created for BudgetPlan and BudgetPlanItem
