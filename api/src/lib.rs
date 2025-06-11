@@ -2,8 +2,7 @@
 extern crate core;
 
 use crate::handlers::auth::setup_openid_client;
-use crate::handlers::budget::{budget_item, budget_plan};
-use crate::handlers::{auth, import, index, members, posts};
+use crate::handlers::{auth, budget, import, index, members, posts};
 use entities::user;
 use migration::{Migrator, MigratorTrait};
 use oauth2::http::StatusCode;
@@ -71,8 +70,7 @@ async fn start(root_path: Option<String>) -> std::io::Result<()> {
         .nest("/members", members::member_routes())
         .nest("/auth", auth::routes())
         .nest("/import", import::import_routes())
-        .nest("/budget_plan", budget_plan::budget_plan_routes())
-        .nest("/budget_item", budget_item::budget_routes())
+        .nest("/budget", budget::budget_routes())
         .nest(
             "/static",
             StaticFilesEndpoint::new(format!("{}/static", &root_path)),

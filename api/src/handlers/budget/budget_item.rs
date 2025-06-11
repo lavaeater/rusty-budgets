@@ -60,10 +60,3 @@ pub async fn delete_budget_item(db: Data<&DatabaseConnection>, Path(id): Path<i3
 
 // Similar handlers can be created for BudgetPlan and BudgetPlanItem
 
-pub fn budget_routes() -> Route {
-    Route::new()
-        .at("/items", get(list_budget_items).post(create_budget_item))
-        .at("/items/new", get(new_budget_item_form))
-        .at("/items/:id/edit", get(edit_budget_item_form))
-        .at("/items/:id", delete(delete_budget_item).put(update_budget_item))
-}

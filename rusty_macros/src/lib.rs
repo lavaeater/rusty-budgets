@@ -5,6 +5,77 @@ use syn::{parse_macro_input, ItemImpl, Path};
 use convert_case::{Case, Casing};
 
 /// Usage: #[find_by_uuid(post::Model)]
+/// Generates a paginated list function for a model.
+/// Usage: #[list_at_page(post::Model)]
+/// Generates: pub async fn list_posts_at_page(db: &DbConn, page: u64, per_page: u64) -> Result<(Vec<post::Model>, u64), DbErr>
+#[proc_macro_attribute]
+pub fn list_at_page(attr: TokenStream, item: TokenStream) -> TokenStream {
+    // Parse the model path (e.g., post::Model)
+    let model_path = parse_macro_input!(attr as Path);
+
+    // Get the model type and its prefix (e.g., post::Model -> post, Model)
+    let segments = &model_path.segments;
+    let (prefix, model_ty) = if segments.len() >= 1 {
+        if segments.len() == 1 {
+            (quote! {}, segments[0].ident.clone())
+        } else {
+            // Create a clearer range expression by first calculating the last index
+            let last_index = segments.len() - 1;
+            let prefix = segments.iter().take(last_index).map(|s| s.ident.clone()).collect::<Vec<_>>();
+            let model_ty = segments[last_index].ident.clone();
+            (quote! { #(#prefix)::* }, model_ty)
+        }
+    } else {
+        // This should be caught by the parser, but handle it just in case
+        return quote! {
+            compile_error!("Expected a path with at least one segment");
+        }
+        .into();
+    };
+    let model_ty_str = model_ty.to_string();
+
+    // Parse the input as an impl block
+    let mut item_impl = parse_macro_input!(item as ItemImpl);
+
+    // Generate the function name based on the model name (e.g., post -> list_posts_at_page)
+    let model_name = model_ty_str.trim_end_matches("Model").to_lowercase();
+    let fn_name = format_ident!("list_{}_at_page", model_name);
+    
+    // Get the model type identifier and struct name
+    let model_ty_ident = format_ident!("{}", model_ty_str);
+    let model_struct_name_ident = format_ident!("{}", model_ty_str.trim_end_matches("Model"));
+
+    // Generate the list_at_page function
+    let method = syn::parse_quote! {
+        pub async fn #fn_name(
+            db: &DbConn,
+            page: u64,
+            per_page: u64,
+        ) -> Result<(Vec<#prefix #model_ty_ident>, u64), DbErr> {
+            // Setup paginator
+            let paginator = #model_struct_name_ident::find()
+                .order_by_asc(sea_orm::ColumnTrait::default())
+                .paginate(db, per_page);
+                
+            let num_pages = paginator.num_pages().await?;
+
+            // Fetch paginated items
+            paginator
+                .fetch_page(if page == 0 { 0 } else { page - 1 })
+                .await
+                .map(|items| (items, num_pages))
+        }
+    };
+
+    // Add the function to the impl block
+    item_impl.items.push(syn::ImplItem::Fn(method));
+
+    // Output the modified impl block
+    TokenStream::from(quote! {
+        #item_impl
+    })
+}
+
 #[proc_macro_attribute]
 pub fn find_by_uuid(attr: TokenStream, item: TokenStream) -> TokenStream {
     // With syn 2.0, we can parse the attribute token stream directly into the expected type.

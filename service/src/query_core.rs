@@ -1,4 +1,4 @@
-use entities::{member, member::Entity as Member};
+use entities::{budget_plan, member, member::Entity as Member};
 use entities::{episode, episode::Entity as Episode};
 use entities::{post, post::Entity as Post};
 use entities::{import, import::Entity as Import};
@@ -32,7 +32,7 @@ impl QueryCore {
     }
 
     /// If ok, returns (member models, num pages).
-    pub async fn find_members_in_page(
+    pub async fn list_members_at_page(
         db: &DbConn,
         page: u64,
         members_per_page: u64,
@@ -44,6 +44,21 @@ impl QueryCore {
         let num_pages = paginator.num_pages().await?;
 
         // Fetch paginated members
+        paginator.fetch_page(page - 1).await.map(|p| (p, num_pages))
+    }
+
+    pub async fn list_budget_plans_at_page(
+        db: &DbConn,
+        page: u64,
+        plans_per_page: u64,
+    ) -> Result<(Vec<budget_plan::Model>, u64), DbErr> {
+        // Setup paginator
+        let paginator = BudgetPlan::find()
+            .order_by_asc(budget_plan::Column::Id)
+            .paginate(db, plans_per_page);
+        let num_pages = paginator.num_pages().await?;
+
+        // Fetch paginated plans
         paginator.fetch_page(page - 1).await.map(|p| (p, num_pages))
     }
 
