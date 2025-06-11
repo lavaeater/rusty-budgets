@@ -109,12 +109,10 @@ pub async fn delete_plan_item(db: Data<&DatabaseConnection>, Path((plan_id, id))
 
 pub fn budget_plan_routes() -> Route {
     Route::new()
-        .at("/plans", get(list_budget_plans))
+        .at("/plans", get(list_budget_plans).post(create_budget_plan))
         .at("/plans/new", get(new_budget_plan_form))
-        .at("/plans", post(create_budget_plan))
         .at("/plans/:id/edit", get(edit_budget_plan_form))
-        .at("/plans/:id", put(update_budget_plan))
-        .at("/plans/:id", delete(delete_budget_plan))
+        .at("/plans/:id", put(update_budget_plan).delete(delete_budget_plan))
         // Plan items
         // .at("/plans/:plan_id/items", get(list_plan_items))
         .at("/plans/:plan_id/items/new", get(new_plan_item_form))
