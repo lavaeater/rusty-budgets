@@ -11,13 +11,13 @@
   "devDependencies": {
     "@rspack/cli": "^1.1.4",
     "@rspack/core": "^1.1.4",
+    "@tailwindcss/postcss": "^4.1.8",
     "autoprefixer": "^10.4.20",
     "cross-env": "^7.0.3",
     "nodemon": "^3.1.7",
     "postcss": "^8.4.49",
     "postcss-loader": "^8.1.1",
-    "tailwindcss": "^4.1.8",
-    "@tailwindcss/postcss": "^4.1.8"
+    "tailwindcss": "^4.1.8"
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.4.1",
