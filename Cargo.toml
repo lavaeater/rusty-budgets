@@ -1,7 +1,7 @@
 cargo-features = ["codegen-backend"]
 
 [package]
-name = "pod-crab"
+name = "rusty-budgets"
 version = "0.1.0"
 edition = "2021"
 

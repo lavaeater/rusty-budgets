@@ -2605,13 +2605,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7edddbd0b52d732b21ad9a5fab5c704c14cd949e5e9a1ec5929a24fded1b904c"
 
 [[package]]
-name = "pod-crab"
-version = "0.1.0"
-dependencies = [
- "api",
-]
-
-[[package]]
 name = "poem"
 version = "3.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3257,6 +3250,13 @@ name = "rustversion"
 version = "1.0.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eded382c5f5f786b989652c49544c4877d9f015cc22e145a5ea8ea66c2921cd2"
+
+[[package]]
+name = "rusty-budgets"
+version = "0.1.0"
+dependencies = [
+ "api",
+]
 
 [[package]]
 name = "rusty_macros"
