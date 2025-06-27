@@ -6,79 +6,100 @@ pub struct Migration;
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        // users
-        // manager.create_table(
-        //     Table::create()
-        //         .table(User::Table)
-        //         .if_not_exists()
-        //         .col(ColumnDef::new(User::Id).integer().not_null().auto_increment().primary_key())
-        //         .col(ColumnDef::new(User::Email).string().not_null().unique_key())
-        //         .col(ColumnDef::new(User::Name).string().not_null())
-        //         .col(ColumnDef::new(User::CreatedAt).timestamp_with_time_zone().not_null().default(Expr::current_timestamp()))
-        //         .to_owned()
-        // ).await?;
-
-        // budget_item
+        
+        //Budget
+        manager.create_table(
+            Table::create()
+                .table(Budget::Table)
+                .if_not_exists()
+                .col(ColumnDef::new(Budget::Id).uuid().not_null().primary_key())
+                .col(ColumnDef::new(Budget::Name).string().not_null())
+                .col(ColumnDef::new(Budget::UserId).uuid().not_null())
+                .col(ColumnDef::new(Budget::CreatedAt).timestamp_with_time_zone().not_null().default(Expr::current_timestamp()))
+                .foreign_key(
+                    ForeignKey::create()
+                        .from(Budget::Table, Budget::UserId)
+                        .to(Users::Table, Users::Id)
+                        .on_delete(ForeignKeyAction::Cascade)
+                )
+                .to_owned()
+        ).await?;
+        
+        //BudgetYear
+        manager.create_table(
+            Table::create()
+                .table(BudgetYear::Table)
+                .if_not_exists()
+                .col(ColumnDef::new(BudgetYear::Id).integer().not_null().auto_increment().primary_key())
+                .col(ColumnDef::new(BudgetYear::Year).integer().not_null())
+                .col(ColumnDef::new(BudgetYear::CreatedAt).timestamp_with_time_zone().not_null().default(Expr::current_timestamp()))
+                .foreign_key(
+                    ForeignKey::create()
+                        .from(BudgetYear::Table, BudgetYear::BudgetId)
+                        .to(Budget::Table, Budget::Id)
+                        .on_delete(ForeignKeyAction::Cascade)
+                )
+                .to_owned()
+        ).await?;
+        
+        //BudgetMonth
+        manager.create_table(
+            Table::create()
+                .table(BudgetMonth::Table)
+                .if_not_exists()
+                .col(ColumnDef::new(BudgetMonth::Id).uuid().not_null().primary_key())
+                .col(ColumnDef::new(BudgetMonth::Month).integer().not_null())
+                .col(ColumnDef::new(BudgetMonth::CreatedAt).timestamp_with_time_zone().not_null().default(Expr::current_timestamp()))
+                .foreign_key(
+                    ForeignKey::create()
+                        .from(BudgetMonth::Table, BudgetMonth::BudgetYearId)
+                        .to(BudgetYear::Table, BudgetYear::Id)
+                        .on_delete(ForeignKeyAction::Cascade)
+                )
+                .to_owned()
+        ).await?;
+        
+        //BudgetItem
         manager.create_table(
             Table::create()
                 .table(BudgetItem::Table)
                 .if_not_exists()
-                .col(ColumnDef::new(BudgetItem::Id).integer().not_null().auto_increment().primary_key())
-                .col(ColumnDef::new(BudgetItem::UserId).uuid().not_null())
-                .col(ColumnDef::new(BudgetItem::Name).string().not_null())
-                .col(ColumnDef::new(BudgetItem::IsIncome).boolean().not_null().default(false))
-                .col(ColumnDef::new(BudgetItem::IsActive).boolean().not_null().default(true))
+                .col(ColumnDef::new(BudgetItem::Id).uuid().not_null().primary_key())
+                .col(ColumnDef::new(BudgetItem::BudgetCategoryId).integer().not_null())
+                .col(ColumnDef::new(BudgetItem::BudgetMonthId).integer().not_null())
+                .col(ColumnDef::new(BudgetItem::BudgetYearId).integer().not_null())
+                .col(ColumnDef::new(BudgetItem::Amount).integer().not_null())
                 .col(ColumnDef::new(BudgetItem::CreatedAt).timestamp_with_time_zone().not_null().default(Expr::current_timestamp()))
                 .foreign_key(
                     ForeignKey::create()
-                        .from(BudgetItem::Table, BudgetItem::UserId)
-                        .to(User::Table, User::Id)
+                        .from(BudgetItem::Table, BudgetItem::BudgetCategoryId)
+                        .to(BudgetCategory::Table, BudgetCategory::Id)
+                        .on_delete(ForeignKeyAction::Cascade)
+                )
+                .foreign_key(
+                    ForeignKey::create()
+                        .from(BudgetItem::Table, BudgetItem::BudgetMonthId)
+                        .to(BudgetMonth::Table, BudgetMonth::Id)
+                        .on_delete(ForeignKeyAction::Cascade)
+                )
+                .foreign_key(
+                    ForeignKey::create()
+                        .from(BudgetItem::Table, BudgetItem::BudgetYearId)
+                        .to(BudgetYear::Table, BudgetYear::Id)
                         .on_delete(ForeignKeyAction::Cascade)
                 )
                 .to_owned()
         ).await?;
-
-        // budget_plan
+        
+        //BudgetCategory
         manager.create_table(
             Table::create()
-                .table(BudgetPlan::Table)
+                .table(BudgetCategory::Table)
                 .if_not_exists()
-                .col(ColumnDef::new(BudgetPlan::Id).integer().not_null().auto_increment().primary_key())
-                .col(ColumnDef::new(BudgetPlan::UserId).uuid().not_null())
-                .col(ColumnDef::new(BudgetPlan::Year).integer().not_null())
-                .col(ColumnDef::new(BudgetPlan::CreatedAt).timestamp_with_time_zone().not_null().default(Expr::current_timestamp()))
-                .foreign_key(
-                    ForeignKey::create()
-                        .from(BudgetPlan::Table, BudgetPlan::UserId)
-                        .to(User::Table, User::Id)
-                        .on_delete(ForeignKeyAction::Cascade)
-                )
-                .to_owned()
-        ).await?;
-
-        // budget_plan_item
-        manager.create_table(
-            Table::create()
-                .table(BudgetPlanItem::Table)
-                .if_not_exists()
-                .col(ColumnDef::new(BudgetPlanItem::Id).integer().not_null().auto_increment().primary_key())
-                .col(ColumnDef::new(BudgetPlanItem::BudgetPlanId).integer().not_null())
-                .col(ColumnDef::new(BudgetPlanItem::BudgetItemId).integer().not_null())
-                .col(ColumnDef::new(BudgetPlanItem::Month).integer().not_null())
-                .col(ColumnDef::new(BudgetPlanItem::PlannedAmount).decimal().not_null())
-                .col(ColumnDef::new(BudgetPlanItem::Note).string())
-                .foreign_key(
-                    ForeignKey::create()
-                        .from(BudgetPlanItem::Table, BudgetPlanItem::BudgetPlanId)
-                        .to(BudgetPlan::Table, BudgetPlan::Id)
-                        .on_delete(ForeignKeyAction::Cascade)
-                )
-                .foreign_key(
-                    ForeignKey::create()
-                        .from(BudgetPlanItem::Table, BudgetPlanItem::BudgetItemId)
-                        .to(BudgetItem::Table, BudgetItem::Id)
-                        .on_delete(ForeignKeyAction::Cascade)
-                )
+                .col(ColumnDef::new(BudgetCategory::Id).integer().not_null().auto_increment().primary_key())
+                .col(ColumnDef::new(BudgetCategory::Name).string().not_null())
+                .col(ColumnDef::new(BudgetCategory::IsIncome).boolean().not_null())
+                .col(ColumnDef::new(BudgetCategory::CreatedAt).timestamp_with_time_zone().not_null().default(Expr::current_timestamp()))
                 .to_owned()
         ).await?;
 
@@ -86,8 +107,8 @@ impl MigrationTrait for Migration {
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(BudgetPlanItem::Table).to_owned()).await?;
-        manager.drop_table(Table::drop().table(BudgetPlan::Table).to_owned()).await?;
+        manager.drop_table(Table::drop().table(BudgetMonth::Table).to_owned()).await?;
+        manager.drop_table(Table::drop().table(BudgetYear::Table).to_owned()).await?;
         manager.drop_table(Table::drop().table(BudgetItem::Table).to_owned()).await?;
         // manager.drop_table(Table::drop().table(User::Table).to_owned()).await?;
         Ok(())
@@ -95,38 +116,57 @@ impl MigrationTrait for Migration {
 }
 
 #[derive(Iden)]
-enum User {
+enum BudgetCategory {
     Table,
     Id,
+    Name,
+    IsIncome,
+    CreatedAt,
 }
 
 #[derive(Iden)]
 enum BudgetItem {
     Table,
     Id,
-    UserId,
-    Name,
-    IsIncome,
-    IsActive,
+    BudgetCategoryId,
+    BudgetMonthId,
+    BudgetYearId,
+    Amount,
     CreatedAt,
 }
 
 #[derive(Iden)]
-enum BudgetPlan {
+enum Budget {
     Table,
     Id,
+    UserId,
+    Name,
+    CreatedAt,
+}
+
+
+#[derive(Iden)]
+enum BudgetYear {
+    Table,
+    Id,
+    BudgetId,
     UserId,
     Year,
     CreatedAt,
 }
 
 #[derive(Iden)]
-enum BudgetPlanItem {
+enum BudgetMonth {
     Table,
     Id,
-    BudgetPlanId,
-    BudgetItemId,
+    UserId,
+    BudgetYearId,
     Month,
-    PlannedAmount,
-    Note,
+    CreatedAt,
+}
+
+#[derive(DeriveIden, Copy, Clone)]
+enum Users {
+    Table,
+    Id,
 }
