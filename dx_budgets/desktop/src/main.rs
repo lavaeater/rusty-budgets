@@ -15,10 +15,16 @@ enum Route {
     Blog { id: i32 },
 }
 
+use DatabasePool;
 const MAIN_CSS: Asset = asset!("/assets/main.css");
 
 fn main() {
-    dioxus::launch(App);
+    LaunchBuilder::new()
+            .with_context(server_only! {
+            DatabasePool
+        })
+            .launch(App);
+    }
 }
 
 #[component]
