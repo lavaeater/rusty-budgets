@@ -2,8 +2,8 @@ use dioxus::prelude::*;
 
 use ui::Navbar;
 use views::{Blog, Home};
-
 mod views;
+use api::DatabasePool;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
@@ -15,21 +15,32 @@ enum Route {
     Blog { id: i32 },
 }
 
-use DatabasePool;
 const MAIN_CSS: Asset = asset!("/assets/main.css");
 
-fn main() {
-    LaunchBuilder::new()
-            .with_context(server_only! {
-            DatabasePool
-        })
-            .launch(App);
+#[tokio::main]
+async fn main() {
+    // Initialize database pool
+    let connection_string = "sqlite::./database.sqlite".to_string();
+    let db_pool = DatabasePool::new(connection_string);
+    
+    // Run migrations on startup
+    if let Err(e) = db_pool.initialize_with_migrations().await {
+        eprintln!("Failed to initialize database: {}", e);
+        std::process::exit(1);
     }
+    
+    println!("Database initialized successfully with migrations");
+    
+    LaunchBuilder::new()
+        .with_context(server_only! {
+            db_pool
+        })
+        .launch(App);
 }
 
 #[component]
 fn App() -> Element {
-    // Build cool things ✌️
+    // Build cool things 
 
     rsx! {
         // Global app resources

@@ -5,37 +5,60 @@ mod models;
 
 use dioxus::prelude::*;
 use welds::connections::any::AnyClient;
-use welds::prelude::*;
-
-use tokio::task_local;
-
-task_local! {
-    static DB_CLIENT: AnyClient;
-}
 
 /// Echo the user input on the server.
 #[server(Echo)]
 pub async fn echo(input: String) -> Result<String, ServerFnError> {
-    let connection_string = "sqlite::./database.sqlite";
-    let client = welds::connections::connect(connection_string).await?;
     Ok(input)
 }
 
-#[derive(Clone, Copy, Debug)]
-pub struct DatabasePool;
+#[derive(Clone, Debug)]
+pub struct DatabasePool {
+    connection_string: String,
+}
+
+impl DatabasePool {
+    pub fn new(connection_string: String) -> Self {
+        Self { connection_string }
+    }
+
+    pub async fn get_connection(&self) -> Result<AnyClient, ServerFnError> {
+        let client = welds::connections::connect(&self.connection_string).await?;
+        Ok(client)
+    }
+
+    pub async fn initialize_with_migrations(&self) -> Result<(), ServerFnError> {
+        let client = self.get_connection().await?;
+        
+        // Run migrations
+        migrations::up(&client).await.map_err(|e| {
+            ServerFnError::new(format!("Migration failed: {}", e))
+        })?;
+        
+        Ok(())
+    }
+}
 
 #[server]
 pub async fn my_wacky_server_fn(input: Vec<String>) -> Result<String, ServerFnError> {
     let FromContext(pool): FromContext<DatabasePool> = extract().await?;
-    Ok(format!("The server read {:?} from the shared context", pool))
+    let _connection = pool.get_connection().await?;
+    Ok(format!("The server read {:?} from the shared context with database pool", input))
 }
 
+#[server]
+pub async fn get_database_info() -> Result<String, ServerFnError> {
+    let FromContext(pool): FromContext<DatabasePool> = extract().await?;
+    let connection = pool.get_connection().await?;
+    
+    // Example: You can now use the connection for database operations
+    // For now, just return connection info
+    Ok(format!("Database connection established successfully to: {}", pool.connection_string))
+}
 
-// The database is only available to server code
-    async fn db() -> Result<AnyClient, ServerFnError> {
-        
-        let connection_string = "sqlite::./database.sqlite";
-        let client =welds::connections::connect(connection_string).await?;
-        Ok(client)
-        // Return the connection 
-    }
+// Legacy function - kept for compatibility
+pub async fn db() -> Result<AnyClient, ServerFnError> {
+    let connection_string = "sqlite::./database.sqlite";
+    let client = welds::connections::connect(connection_string).await?;
+    Ok(client)
+}
