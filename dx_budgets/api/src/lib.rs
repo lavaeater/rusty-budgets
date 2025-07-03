@@ -5,10 +5,16 @@ mod models;
 
 use dioxus::prelude::*;
 use welds::connections::any::AnyClient;
+use crate::models::user::User;
 
 /// Echo the user input on the server.
 #[server(Echo)]
 pub async fn echo(input: String) -> Result<String, ServerFnError> {
+    #[cfg(feature = "server")]
+    {
+        let FromContext(client): FromContext<AnyClient> = extract().await?;
+        let users = User::all().run(&client).await?;
+    }
     Ok(input)
 }
 
@@ -41,8 +47,8 @@ impl DatabasePool {
 
 #[server]
 pub async fn my_wacky_server_fn(input: Vec<String>) -> Result<String, ServerFnError> {
-    let FromContext(pool): FromContext<DatabasePool> = extract().await?;
-    let _connection = pool.get_connection().await?;
+    let FromContext(client): FromContext<AnyClient> = extract().await?;
+    let users = User::all().run(&client).await?;
     Ok(format!("The server read {:?} from the shared context with database pool", input))
 }
 
@@ -54,11 +60,4 @@ pub async fn get_database_info() -> Result<String, ServerFnError> {
     // Example: You can now use the connection for database operations
     // For now, just return connection info
     Ok(format!("Database connection established successfully to: {}", pool.connection_string))
-}
-
-// Legacy function - kept for compatibility
-pub async fn db() -> Result<AnyClient, ServerFnError> {
-    let connection_string = "sqlite::./database.sqlite";
-    let client = welds::connections::connect(connection_string).await?;
-    Ok(client)
 }

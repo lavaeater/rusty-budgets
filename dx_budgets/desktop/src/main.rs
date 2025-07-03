@@ -17,23 +17,23 @@ enum Route {
 
 const MAIN_CSS: Asset = asset!("/assets/main.css");
 
-#[tokio::main]
-async fn main() {
+fn main() {
     // Initialize database pool
-    let connection_string = "sqlite::./database.sqlite".to_string();
+    let connection_string = "sqlite://./database.sqlite".to_string();
     let db_pool = DatabasePool::new(connection_string);
     
-    // Run migrations on startup
-    if let Err(e) = db_pool.initialize_with_migrations().await {
-        eprintln!("Failed to initialize database: {}", e);
-        std::process::exit(1);
-    }
+    // Initialize database with migrations synchronously
+    let rt = tokio::runtime::Runtime::new().unwrap();
+    let client = rt.block_on(async {
+        db_pool.initialize_with_migrations().await.unwrap();
+        db_pool.get_connection().await.unwrap()
+    });
     
     println!("Database initialized successfully with migrations");
     
     LaunchBuilder::new()
         .with_context(server_only! {
-            db_pool
+            client
         })
         .launch(App);
 }
