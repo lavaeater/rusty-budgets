@@ -7,4 +7,6 @@ mod navbar;
 pub use navbar::Navbar;
 
 mod echo;
+mod users;
+
 pub use echo::Echo;

@@ -5,6 +5,7 @@ use ui::{Echo, Hero};
 pub fn Home() -> Element {
     rsx! {
         Hero {}
+        
         Echo {}
     }
 }
