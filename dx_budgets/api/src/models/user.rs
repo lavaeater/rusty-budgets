@@ -1,9 +1,10 @@
 use uuid::Uuid;
 use chrono::NaiveDate;
+use serde::{Deserialize, Serialize};
 #[cfg(feature = "server")]
 use welds::WeldsModel;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "server", derive(WeldsModel))]
 #[cfg_attr(feature = "server", welds(table = "users"))]
 pub struct User {

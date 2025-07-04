@@ -63,7 +63,6 @@ pub mod db {
 
 /// Echo the user input on the server.
 #[server(Echo)]
-#[cfg(feature = "server")]
 pub async fn echo(input: String) -> Result<String, ServerFnError> {
     match db::list_users().await {
         None => {Ok(input)}
