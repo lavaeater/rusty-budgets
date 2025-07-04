@@ -19,9 +19,7 @@ const MAIN_CSS: Asset = asset!("/assets/main.css");
 fn main() {
     #[cfg(feature = "server")]
     let _ = api::db::CLIENT.as_ref();
-    
-    LaunchBuilder::new()
-         .launch(App);
+    launch(App);
 }
 
 #[component]

@@ -1,11 +1,11 @@
 //! This crate contains all shared fullstack server functions.
-
 mod migrations;
 mod models;
 
 use dioxus::prelude::*;
 use crate::models::user::User;
 
+#[cfg(feature = "server")]
 pub mod db {
     use crate::migrations;
     use crate::models::user::User;
@@ -49,20 +49,24 @@ pub mod db {
             client
         })
     });
+    
+    pub async fn list_users() -> Option::<Vec<User>> {
+        match User::all().run(CLIENT.as_ref()).await {
+            Ok(users) => Some(users.into_iter().map(|u| u.into_inner()).collect()),
+            Err(e) => {
+                println!("{:?}", e);
+                None
+            }
+        }
+    }
 }
 
 /// Echo the user input on the server.
 #[server(Echo)]
+#[cfg(feature = "server")]
 pub async fn echo(input: String) -> Result<String, ServerFnError> {
-    let client = db::CLIENT.as_ref();
-    let users = User::all().run(client).await?;
-    if users.len() > 0 {
-        return Ok(format!(
-            "The server read {:?} from the shared context with database pool",
-            input
-        ));
-    } else {
-        return Ok("Gronk".to_string());
+    match db::list_users().await {
+        None => {Ok(input)}
+        Some(users) => {Ok(users.len().to_string())}
     }
-    Ok(input)
 }

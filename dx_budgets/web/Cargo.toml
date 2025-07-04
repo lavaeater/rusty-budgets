@@ -6,8 +6,8 @@ edition = "2021"
 [dependencies]
 dioxus = { workspace = true, features = ["router"] }
 ui = { workspace = true }
+api = { workspace = true, optional = true }
 
 [features]
-default = []
 web = ["dioxus/web"]
-server = ["dioxus/server"]
+server = ["dioxus/server", "api"]
