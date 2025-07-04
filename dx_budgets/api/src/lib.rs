@@ -38,7 +38,7 @@ pub mod db {
                         last_name: "Nygren".to_string(),
                         phone: Some("+46|0704382781".to_string()),
                         email: "tommie.nygren@gmail.com".to_string(),
-                        username: "tommie".to_string(),
+                        user_name: "tommie".to_string(),
                         birthday: Some(
                             NaiveDate::parse_from_str("1973-05-12", "%Y-%m-%d").unwrap_or_default(),
                         ),

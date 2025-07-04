@@ -6,7 +6,7 @@ use welds::WeldsModel;
 pub struct User {
     #[welds(primary_key)]
     pub id: Uuid,
-    pub username: String,
+    pub user_name: String,
     pub email: String,
     pub first_name: String,
     pub last_name: String,
