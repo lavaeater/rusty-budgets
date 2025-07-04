@@ -6,10 +6,9 @@ edition = "2021"
 [dependencies]
 dioxus = { workspace = true, features = ["router"] }
 ui = { workspace = true }
-api = { workspace = true }
-tokio = { version = "1.46.0", features = ["full"] }
+api = { workspace = true, optional = true }
 
 [features]
 default = []
 desktop = ["dioxus/desktop"]
-server = ["dioxus/server"]
+server = ["dioxus/server", "api"]

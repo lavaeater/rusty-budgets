@@ -3,7 +3,6 @@ use dioxus::prelude::*;
 use ui::Navbar;
 use views::{Blog, Home};
 mod views;
-use api::DatabasePool;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
@@ -18,6 +17,9 @@ enum Route {
 const MAIN_CSS: Asset = asset!("/assets/main.css");
 
 fn main() {
+    #[cfg(feature = "server")]
+    let _ = api::db::CLIENT.as_ref();
+    
     LaunchBuilder::new()
          .launch(App);
 }
