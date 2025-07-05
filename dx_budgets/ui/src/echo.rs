@@ -22,7 +22,7 @@ pub fn Echo() -> Element {
 
             if !response().is_empty() {
                 p {
-                    "Server echoed: "
+                    "Server snaked: "
                     i { "{response}" }
                 }
             }
