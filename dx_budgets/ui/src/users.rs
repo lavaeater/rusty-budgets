@@ -2,6 +2,7 @@ use dioxus::prelude::*;
 
 const ECHO_CSS: Asset = asset!("/assets/styling/echo.css");
 
+
 #[component]
 pub fn Users() -> Element {
     let users_2 = use_server_future(|| api::list_users())?().unwrap().unwrap_or_default();
