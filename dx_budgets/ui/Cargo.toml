@@ -6,4 +6,3 @@ edition = "2021"
 [dependencies]
 dioxus = { workspace = true }
 api = { workspace = true }
-daisy_rsx = "0.1.42"
