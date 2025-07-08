@@ -4,28 +4,27 @@ const ECHO_CSS: Asset = asset!("/assets/styling/echo.css");
 
 /// Echo component that demonstrates fullstack server functions.
 #[component]
-pub fn Echo() -> Element {
-    let mut response = use_signal(|| String::new());
+pub fn Users() -> Element {
+    let users = use_resource(api::list_users).suspend()?;
 
+    let users_2 = use_server_future(|| api::list_users())?;
+    let users_2 = users_2().unwrap();
     rsx! {
         document::Link { rel: "stylesheet", href: ECHO_CSS }
         div {
             id: "echo",
-            h4 { "ServerFn Echo" }
-            input {
-                placeholder: "Type here to echo...",
-                oninput:  move |event| async move {
-                    let data = api::echo(event.value()).await.unwrap();
-                    response.set(data);
-                },
+            h4 { "Users, bro" }
+            ul {
+                    for user in users().unwrap().iter() {
+                        li { key: "{user.id}", "{user.first_name} {user.last_name}" }
+                    }
             }
-
-            if !response().is_empty() {
-                p {
-                    "Server echoed: "
-                    i { "{response}" }
+            ul {
+                for user in users_2.unwrap().iter() {
+                    li { key: "{user.id}", "{user.first_name} {user.last_name}" }
                 }
             }
         }
     }
 }
+

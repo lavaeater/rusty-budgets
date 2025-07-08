@@ -63,9 +63,9 @@ pub mod db {
 
 /// Echo the user input on the server.
 #[server(Echo)]
-pub async fn echo(input: String) -> Result<String, ServerFnError> {
+pub async fn list_users() -> Result<Vec<User>, ServerFnError> {
     match db::list_users().await {
-        None => {Ok(input)}
-        Some(users) => {Ok(users.len().to_string())}
+        None => {Ok(Vec::new())}
+        Some(users) => {Ok(users)}
     }
 }
