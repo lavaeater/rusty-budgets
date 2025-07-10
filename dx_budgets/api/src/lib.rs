@@ -20,6 +20,7 @@ pub mod db {
     use welds::connections::any::AnyClient;
     use welds::state::DbState;
     use welds::{WeldsError, errors};
+    use crate::models::budget::Budget;
 
     pub static CLIENT: Lazy<AnyClient> = Lazy::new(|| {
         tracing::info!("Init DB Client");
@@ -98,6 +99,17 @@ pub mod db {
             .where_col(|u| u.email.equal(DEFAULT_USER_EMAIL))
             .fetch_one(client_from_option(client))
             .await
+    }
+    
+    pub async fn get_default_budget_for_user(user_id: uuid::Uuid, client: Option<&AnyClient>) -> errors::Result<DbState<Budget>> {
+        match Budget::all()
+            .where_col(|b| b.user_id.equal(user_id))
+            .where_col(|b| b.default.equal(true))
+            .fetch_one(client_from_option(client))
+            .await {
+            Ok(budget) => { Ok(budget) },
+            Err(_) => {}
+        }
     }
 
     pub async fn create_user(
