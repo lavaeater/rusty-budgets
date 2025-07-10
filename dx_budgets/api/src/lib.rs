@@ -2,28 +2,27 @@
 mod migrations;
 mod models;
 
+use crate::models::user::User;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
-use crate::models::user::User;
 
-const DEFAULT_USER_EMAIL : &str = "tommie.nygren@gmail.com";
+const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 
 #[cfg(feature = "server")]
 pub mod db {
+    use crate::models::user::User;
+    use crate::{DEFAULT_USER_EMAIL, migrations};
     use dioxus::logger::tracing;
     use dioxus::prelude::ServerFnError;
-    use crate::{migrations, DEFAULT_USER_EMAIL};
-    use crate::models::user::User;
     use once_cell::sync::Lazy;
     use sqlx::types::chrono::NaiveDate;
     use sqlx::types::uuid;
     use welds::connections::any::AnyClient;
     use welds::state::DbState;
-    use welds::{errors, WeldsError};
+    use welds::{WeldsError, errors};
 
     pub static CLIENT: Lazy<AnyClient> = Lazy::new(|| {
         tracing::info!("Init DB Client");
-        
 
         let rt = tokio::runtime::Runtime::new().unwrap();
         rt.block_on(async {
@@ -58,15 +57,15 @@ pub mod db {
                             NaiveDate::parse_from_str("1973-05-12", "%Y-%m-%d").unwrap_or_default(),
                         ),
                     });
-                    user.save(&client).await.unwrap_or_else(|e| { 
-                        tracing::error!(error = %e, "Could not create default user"); 
+                    user.save(&client).await.unwrap_or_else(|e| {
+                        tracing::error!(error = %e, "Could not create default user");
                     });
                 }
             }
             client
         })
     });
-    
+
     fn client_from_option(client: Option<&AnyClient>) -> &AnyClient {
         if let Some(c) = client {
             c
@@ -74,11 +73,11 @@ pub mod db {
             CLIENT.as_ref()
         }
     }
-    
+
     pub async fn list_users(client: Option<&AnyClient>) -> errors::Result<Vec<DbState<User>>> {
         User::all().run(client_from_option(client)).await
     }
-    
+
     pub async fn user_exists(email: &str, client: Option<&AnyClient>) -> bool {
         tracing::info!("user_exists");
         if let Ok(res) = User::all()
@@ -100,14 +99,16 @@ pub mod db {
             .fetch_one(client_from_option(client))
             .await
     }
-    
-    pub async fn create_user(user_name: &str,
-                             email: &str,
-                             first_name: &str,
-                             last_name: &str,
-                             phone: Option<String>,
-                             birthday: Option<NaiveDate>,
-    client: Option<&AnyClient>) -> errors::Result<DbState<User>> {
+
+    pub async fn create_user(
+        user_name: &str,
+        email: &str,
+        first_name: &str,
+        last_name: &str,
+        phone: Option<String>,
+        birthday: Option<NaiveDate>,
+        client: Option<&AnyClient>,
+    ) -> errors::Result<DbState<User>> {
         let mut user = DbState::new_uncreated(User {
             id: uuid::Uuid::new_v4(),
             first_name: first_name.to_string(),
@@ -131,7 +132,7 @@ pub mod db {
 #[server(Echo)]
 pub async fn list_users() -> Result<Vec<User>, ServerFnError> {
     match db::list_users(None).await {
-        Ok(users) => { Ok(users.into_iter().map(|u| u.into_inner()).collect()) },
+        Ok(users) => Ok(users.into_iter().map(|u| u.into_inner()).collect()),
         Err(e) => {
             tracing::error!(error = %e, "Could not list users");
             Err(ServerFnError::ServerError(e.to_string()))

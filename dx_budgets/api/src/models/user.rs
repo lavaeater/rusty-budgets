@@ -1,6 +1,6 @@
-use uuid::Uuid;
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 #[cfg(feature = "server")]
 use welds::WeldsModel;
 
