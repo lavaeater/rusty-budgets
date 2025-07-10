@@ -2,23 +2,31 @@
 mod migrations;
 mod models;
 
+use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use crate::models::user::User;
 
+const DEFAULT_USER_EMAIL : &str = "tommie.nygren@gmail.com";
+
 #[cfg(feature = "server")]
 pub mod db {
-    use crate::migrations;
+    use dioxus::logger::tracing;
+    use dioxus::prelude::ServerFnError;
+    use crate::{migrations, DEFAULT_USER_EMAIL};
     use crate::models::user::User;
     use once_cell::sync::Lazy;
     use sqlx::types::chrono::NaiveDate;
     use sqlx::types::uuid;
     use welds::connections::any::AnyClient;
     use welds::state::DbState;
+    use welds::{errors, WeldsError};
 
     pub static CLIENT: Lazy<AnyClient> = Lazy::new(|| {
+        tracing::debug!("Init DB Client");
+
         let rt = tokio::runtime::Runtime::new().unwrap();
         rt.block_on(async {
-            let client = welds::connections::connect("sqlite://./database.sqlite")
+            let client = welds::connections::connect("sqlite://./database.sqlite?mode=rwc")
                 .await
                 .expect("Could not create Client");
             // Run migrations
@@ -27,7 +35,7 @@ pub mod db {
                 .expect("Could not run migrations");
 
             if let Ok(res) = User::all()
-                .where_col(|u| u.email.equal("tommie.nygren@gmail.com"))
+                .where_col(|u| u.email.equal(DEFAULT_USER_EMAIL))
                 .run(&client)
                 .await
             {
@@ -37,25 +45,52 @@ pub mod db {
                         first_name: "Tommie".to_string(),
                         last_name: "Nygren".to_string(),
                         phone: Some("+46|0704382781".to_string()),
-                        email: "tommie.nygren@gmail.com".to_string(),
+                        email: DEFAULT_USER_EMAIL.to_string(),
                         user_name: "tommie".to_string(),
                         birthday: Some(
                             NaiveDate::parse_from_str("1973-05-12", "%Y-%m-%d").unwrap_or_default(),
                         ),
                     });
-                    user.save(&client).await.expect("Could not save user");
+                    user.save(&client).await.unwrap_or_else(|e| { 
+                        tracing::error!(error = %e, "Could not create default user"); 
+                    });
                 }
             }
             client
         })
     });
     
-    pub async fn list_users() -> Option::<Vec<User>> {
-        match User::all().run(CLIENT.as_ref()).await {
-            Ok(users) => Some(users.into_iter().map(|u| u.into_inner()).collect()),
+    pub async fn list_users() -> errors::Result<Vec<DbState<User>>> {
+        User::all().run(CLIENT.as_ref()).await
+    }
+    
+    pub async fn get_default_user() -> errors::Result<DbState<User>> {
+        User::all()
+            .where_col(|u| u.email.equal(DEFAULT_USER_EMAIL))
+            .fetch_one(CLIENT.as_ref())
+            .await
+    }
+    
+    pub async fn create_user(user_name: &str,
+                             email: &str,
+                             first_name: &str,
+                             last_name: &str,
+                             phone: Option<String>,
+                             birthday: Option<NaiveDate>) -> errors::Result<DbState<User>> {
+        let mut user = DbState::new_uncreated(User {
+            id: uuid::Uuid::new_v4(),
+            first_name: first_name.to_string(),
+            last_name: last_name.to_string(),
+            phone,
+            email: email.to_string(),
+            user_name: user_name.to_string(),
+            birthday,
+        });
+        match user.save(CLIENT.as_ref()).await {
+            Ok(_) => Ok(user),
             Err(e) => {
-                println!("{:?}", e);
-                None
+                tracing::error!(error = %e, "Could not create user");
+                Err(WeldsError::Other(e.into()))
             }
         }
     }
@@ -65,7 +100,10 @@ pub mod db {
 #[server(Echo)]
 pub async fn list_users() -> Result<Vec<User>, ServerFnError> {
     match db::list_users().await {
-        None => {Ok(Vec::new())}
-        Some(users) => {Ok(users)}
+        Ok(users) => { Ok(users.into_iter().map(|u| u.into_inner()).collect()) },
+        Err(e) => {
+            tracing::error!(error = %e, "Could not list users");
+            Err(ServerFnError::ServerError(e.to_string()))
+        }
     }
 }
