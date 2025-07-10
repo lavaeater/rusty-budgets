@@ -22,17 +22,24 @@ pub mod db {
     use welds::{errors, WeldsError};
 
     pub static CLIENT: Lazy<AnyClient> = Lazy::new(|| {
-        tracing::debug!("Init DB Client");
+        tracing::info!("Init DB Client");
+        
 
         let rt = tokio::runtime::Runtime::new().unwrap();
         rt.block_on(async {
+            tracing::info!("Create DB Client");
             let client = welds::connections::connect("sqlite://./database.sqlite?mode=rwc")
                 .await
                 .expect("Could not create Client");
             // Run migrations
+            tracing::info!("Run migrations");
             migrations::up(&client)
                 .await
                 .expect("Could not run migrations");
+
+            if user_exists(DEFAULT_USER_EMAIL, Some(&client)).await {
+                tracing::info!("Default user already exists");
+            }
 
             if let Ok(res) = User::all()
                 .where_col(|u| u.email.equal(DEFAULT_USER_EMAIL))
@@ -60,14 +67,37 @@ pub mod db {
         })
     });
     
-    pub async fn list_users() -> errors::Result<Vec<DbState<User>>> {
-        User::all().run(CLIENT.as_ref()).await
+    fn client_from_option(client: Option<&AnyClient>) -> &AnyClient {
+        if let Some(c) = client {
+            c
+        } else {
+            CLIENT.as_ref()
+        }
     }
     
-    pub async fn get_default_user() -> errors::Result<DbState<User>> {
+    pub async fn list_users(client: Option<&AnyClient>) -> errors::Result<Vec<DbState<User>>> {
+        User::all().run(client_from_option(client)).await
+    }
+    
+    pub async fn user_exists(email: &str, client: Option<&AnyClient>) -> bool {
+        tracing::info!("user_exists");
+        if let Ok(res) = User::all()
+            .where_col(|u| u.email.equal(email))
+            .run(client_from_option(client))
+            .await
+        {
+            tracing::info!("user_exists: {}", !res.is_empty());
+            !res.is_empty()
+        } else {
+            tracing::info!("user_exists: false, an error occurred");
+            false
+        }
+    }
+
+    pub async fn get_default_user(client: Option<&AnyClient>) -> errors::Result<DbState<User>> {
         User::all()
             .where_col(|u| u.email.equal(DEFAULT_USER_EMAIL))
-            .fetch_one(CLIENT.as_ref())
+            .fetch_one(client_from_option(client))
             .await
     }
     
@@ -76,7 +106,8 @@ pub mod db {
                              first_name: &str,
                              last_name: &str,
                              phone: Option<String>,
-                             birthday: Option<NaiveDate>) -> errors::Result<DbState<User>> {
+                             birthday: Option<NaiveDate>,
+    client: Option<&AnyClient>) -> errors::Result<DbState<User>> {
         let mut user = DbState::new_uncreated(User {
             id: uuid::Uuid::new_v4(),
             first_name: first_name.to_string(),
@@ -86,7 +117,7 @@ pub mod db {
             user_name: user_name.to_string(),
             birthday,
         });
-        match user.save(CLIENT.as_ref()).await {
+        match user.save(client_from_option(client)).await {
             Ok(_) => Ok(user),
             Err(e) => {
                 tracing::error!(error = %e, "Could not create user");
@@ -99,7 +130,7 @@ pub mod db {
 /// Echo the user input on the server.
 #[server(Echo)]
 pub async fn list_users() -> Result<Vec<User>, ServerFnError> {
-    match db::list_users().await {
+    match db::list_users(None).await {
         Ok(users) => { Ok(users.into_iter().map(|u| u.into_inner()).collect()) },
         Err(e) => {
             tracing::error!(error = %e, "Could not list users");
