@@ -71,8 +71,10 @@ pub mod db {
 
     pub async fn list_users(client: Option<&AnyClient>) -> anyhow::Result<Vec<User>> {
         match User::all().run(client_from_option(client)).await {
-            Ok(users) => { Ok(users.map(|u| u.into_inner()).collect()) },
-            Err(e) => {anyhow::Error::from(e) }
+            Ok(users) => { Ok(users.into_iter().map(|u| u.into_inner()).collect()) },
+            Err(e) => {
+                Err(anyhow::Error::from(e))
+            }
         }
     }
 
@@ -120,7 +122,7 @@ pub mod db {
     pub async fn get_default_budget_for_user(user_id: uuid::Uuid, client: Option<&AnyClient>) -> anyhow::Result<Budget> {
         match Budget::all()
             .where_col(|b| b.user_id.equal(user_id))
-            .where_col(|b| b.default.equal(true))
+            .where_col(|b| b.default_budget.equal(true))
             .fetch_one(client_from_option(client))
             .await {
             Ok(b) => Ok(b.into_inner()),
@@ -139,12 +141,12 @@ pub mod db {
         }
     }
     
-    pub async fn create_budget(name: &str, user_id: uuid::Uuid, default: bool, client: Option<&AnyClient>) -> anyhow::Result<Budget> {
+    pub async fn create_budget(name: &str, user_id: uuid::Uuid, default_budget: bool, client: Option<&AnyClient>) -> anyhow::Result<Budget> {
         let mut budget = DbState::new_uncreated(Budget {
             id: uuid::Uuid::new_v4(),
             name: name.to_string(),
             user_id,
-            default,
+            default_budget,
         });
         match budget.save(client_from_option(client)).await {
             Ok(_) => Ok(budget.into_inner()),

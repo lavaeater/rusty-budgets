@@ -15,6 +15,6 @@ pub struct Budget {
     #[cfg_attr(feature = "server", welds(primary_key))]
     pub id: Uuid,
     pub name: String,
-    pub default: bool,
+    pub default_budget: bool,
     pub user_id: Uuid,
 }
