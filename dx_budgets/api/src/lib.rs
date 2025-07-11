@@ -101,14 +101,41 @@ pub mod db {
             .await
     }
     
-    pub async fn get_default_budget_for_user(user_id: uuid::Uuid, client: Option<&AnyClient>) -> errors::Result<DbState<Budget>> {
+    pub async fn get_default_budget_for_user(user_id: uuid::Uuid, client: Option<&AnyClient>) ->anyhow::Result<Budget> {
         match Budget::all()
             .where_col(|b| b.user_id.equal(user_id))
             .where_col(|b| b.default.equal(true))
             .fetch_one(client_from_option(client))
             .await {
-            Ok(budget) => { Ok(budget) },
-            Err(_) => {}
+            Ok(b) => Ok(b.into_inner()),
+            Err(e) => {
+                match e {
+                    WeldsError::RowNowFound => {
+                        tracing::info!("No default budget exists, time to create one");
+                        create_budget("Default", user_id, true, client).await
+                    }
+                    _ => {
+                        tracing::error!(error = %e, "Could not get default budget for user");
+                        Err(anyhow::Error::from(e))
+                    }
+                }
+            },
+        }
+    }
+    
+    pub async fn create_budget(name: &str, user_id: uuid::Uuid, default: bool, client: Option<&AnyClient>) -> anyhow::Result<Budget> {
+        let mut budget = DbState::new_uncreated(Budget {
+            id: uuid::Uuid::new_v4(),
+            name: name.to_string(),
+            user_id,
+            default,
+        });
+        match budget.save(client_from_option(client)).await {
+            Ok(_) => Ok(budget.into_inner()),
+            Err(e) => {
+                tracing::error!(error = %e, "Could not create budget");
+                Err(anyhow::Error::from(e))
+            }
         }
     }
 
