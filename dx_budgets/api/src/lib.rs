@@ -10,6 +10,7 @@ const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 
 #[cfg(feature = "server")]
 pub mod db {
+    use std::future::Future;
     use crate::models::user::User;
     use crate::{DEFAULT_USER_EMAIL, migrations};
     use dioxus::logger::tracing;
@@ -36,31 +37,23 @@ pub mod db {
             migrations::up(&client)
                 .await
                 .expect("Could not run migrations");
-
-            if user_exists(DEFAULT_USER_EMAIL, Some(&client)).await {
-                tracing::info!("Default user already exists");
-            }
-
-            if let Ok(res) = User::all()
-                .where_col(|u| u.email.equal(DEFAULT_USER_EMAIL))
-                .run(&client)
-                .await
-            {
-                if res.is_empty() {
-                    let mut user = DbState::new_uncreated(User {
-                        id: uuid::Uuid::new_v4(),
-                        first_name: "Tommie".to_string(),
-                        last_name: "Nygren".to_string(),
-                        phone: Some("+46|0704382781".to_string()),
-                        email: DEFAULT_USER_EMAIL.to_string(),
-                        user_name: "tommie".to_string(),
-                        birthday: Some(
-                            NaiveDate::parse_from_str("1973-05-12", "%Y-%m-%d").unwrap_or_default(),
-                        ),
-                    });
-                    user.save(&client).await.unwrap_or_else(|e| {
-                        tracing::error!(error = %e, "Could not create default user");
-                    });
+            
+            match get_default_user(Some(&client)).await {
+                Ok(user) => {
+                    tracing::info!("Default user exists");
+                    match get_default_budget_for_user(user.id, Some(&client)).await {
+                        Ok(budget) => {
+                            tracing::info!("Default budget exists");
+                        }
+                        Err(e) => {
+                            tracing::error!(error = %e, "Could not get default budget for user");
+                            panic!("Could not get default budget for user");
+                        }
+                    }
+                },
+                Err(e) => {
+                    tracing::error!(error = %e, "Could not get default user");
+                    panic!("Could not get default user");
                 }
             }
             client
@@ -75,8 +68,11 @@ pub mod db {
         }
     }
 
-    pub async fn list_users(client: Option<&AnyClient>) -> errors::Result<Vec<DbState<User>>> {
-        User::all().run(client_from_option(client)).await
+    pub async fn list_users(client: Option<&AnyClient>) -> anyhow::Result<Vec<User>> {
+        match User::all().run(client_from_option(client)).await {
+            Ok(users) => { Ok(users.map(|u| u.into_inner()).collect()) },
+            Err(e) => {anyhow::Error::from(e) }
+        }
     }
 
     pub async fn user_exists(email: &str, client: Option<&AnyClient>) -> bool {
@@ -94,14 +90,33 @@ pub mod db {
         }
     }
 
-    pub async fn get_default_user(client: Option<&AnyClient>) -> errors::Result<DbState<User>> {
-        User::all()
+    pub async fn get_default_user(client: Option<&AnyClient>) -> anyhow::Result<User> {
+        match User::all()
             .where_col(|u| u.email.equal(DEFAULT_USER_EMAIL))
             .fetch_one(client_from_option(client))
-            .await
+            .await {
+            Ok(u) => {Ok(u.into_inner())},
+            Err(e) => { match e {
+                WeldsError::RowNowFound => {
+                    create_user(
+                        "tommie",
+                        DEFAULT_USER_EMAIL,
+                        "Tommie",
+                        "Nygren",
+                        Some("0704382781".to_string()),
+                        Some(NaiveDate::parse_from_str("1973-05-12", "%Y-%m-%d").unwrap_or_default()),
+                        client
+                    ).await
+                }
+                _ => {
+                    tracing::error!(error = %e, "Could not get default user");
+                    Err(anyhow::Error::from(e))
+                }
+            } }
+        }
     }
     
-    pub async fn get_default_budget_for_user(user_id: uuid::Uuid, client: Option<&AnyClient>) ->anyhow::Result<Budget> {
+    pub async fn get_default_budget_for_user(user_id: uuid::Uuid, client: Option<&AnyClient>) -> anyhow::Result<Budget> {
         match Budget::all()
             .where_col(|b| b.user_id.equal(user_id))
             .where_col(|b| b.default.equal(true))
@@ -147,7 +162,7 @@ pub mod db {
         phone: Option<String>,
         birthday: Option<NaiveDate>,
         client: Option<&AnyClient>,
-    ) -> errors::Result<DbState<User>> {
+    ) -> anyhow::Result<User> {
         let mut user = DbState::new_uncreated(User {
             id: uuid::Uuid::new_v4(),
             first_name: first_name.to_string(),
@@ -158,10 +173,10 @@ pub mod db {
             birthday,
         });
         match user.save(client_from_option(client)).await {
-            Ok(_) => Ok(user),
+            Ok(_) => Ok(user.into_inner()),
             Err(e) => {
                 tracing::error!(error = %e, "Could not create user");
-                Err(WeldsError::Other(e.into()))
+                Err(anyhow::Error::from(e))
             }
         }
     }
@@ -171,7 +186,7 @@ pub mod db {
 #[server(Echo)]
 pub async fn list_users() -> Result<Vec<User>, ServerFnError> {
     match db::list_users(None).await {
-        Ok(users) => Ok(users.into_iter().map(|u| u.into_inner()).collect()),
+        Ok(users) => Ok(users),
         Err(e) => {
             tracing::error!(error = %e, "Could not list users");
             Err(ServerFnError::ServerError(e.to_string()))
