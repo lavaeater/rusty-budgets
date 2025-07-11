@@ -5,6 +5,7 @@ mod models;
 use crate::models::user::User;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
+use crate::models::budget::Budget;
 
 const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 
@@ -42,7 +43,7 @@ pub mod db {
                 Ok(user) => {
                     tracing::info!("Default user exists");
                     match get_default_budget_for_user(user.id, Some(&client)).await {
-                        Ok(budget) => {
+                        Ok(_) => {
                             tracing::info!("Default budget exists");
                         }
                         Err(e) => {
@@ -183,12 +184,23 @@ pub mod db {
 }
 
 /// Echo the user input on the server.
-#[server(Echo)]
+#[server]
 pub async fn list_users() -> Result<Vec<User>, ServerFnError> {
     match db::list_users(None).await {
         Ok(users) => Ok(users),
         Err(e) => {
             tracing::error!(error = %e, "Could not list users");
+            Err(ServerFnError::ServerError(e.to_string()))
+        }
+    }
+}
+
+#[server]
+pub async fn get_default_budget() -> Result<Budget, ServerFnError> {
+    match db::get_default_budget_for_user(db::get_default_user(None).await.unwrap().id, None).await {
+        Ok(budget) => Ok(budget),
+        Err(e) => {
+            tracing::error!(error = %e, "Could not get default budget");
             Err(ServerFnError::ServerError(e.to_string()))
         }
     }

@@ -9,4 +9,6 @@ pub use navbar::Navbar;
 mod users;
 mod budget;
 
+
 pub use users::Users;
+pub use budget::budget_hero::BudgetHero;
