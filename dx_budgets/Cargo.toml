@@ -9,8 +9,7 @@ members = [
 ]
 
 [workspace.dependencies]
-dioxus = "=0.7.0-alpha.2"
-dioxus-primitives = {git = "https://github.com/DioxusLabs/components" }
+dioxus = "0.6.3"
 
 # workspace
 ui = { path = "ui" }
@@ -27,13 +26,3 @@ inherits = "dev"
 
 [profile.android-dev]
 inherits = "dev"
-
-[patch.crates-io]
-dioxus-geolocation = { git = "https://github.com/ealmloff/dioxus-std", branch = "0.7" }
-dioxus-notification = { git = "https://github.com/ealmloff/dioxus-std", branch = "0.7" }
-dioxus-sdk = { git = "https://github.com/ealmloff/dioxus-std", branch = "0.7" }
-dioxus_storage = { git = "https://github.com/ealmloff/dioxus-std", branch = "0.7" }
-dioxus-sync = { git = "https://github.com/ealmloff/dioxus-std", branch = "0.7" }
-dioxus-time = { git = "https://github.com/ealmloff/dioxus-std", branch = "0.7" }
-dioxus-util = { git = "https://github.com/ealmloff/dioxus-std", branch = "0.7" }
-dioxus-window = { git = "https://github.com/ealmloff/dioxus-std", branch = "0.7" }
