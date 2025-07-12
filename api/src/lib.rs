@@ -2,13 +2,14 @@
 extern crate core;
 
 use crate::handlers::auth::setup_openid_client;
-use crate::handlers::{auth, import, index, members, posts};
+use crate::handlers::{auth, budget, import, index, members, posts};
 use entities::user;
 use migration::{Migrator, MigratorTrait};
+use oauth2::http::StatusCode;
 use poem::endpoint::StaticFilesEndpoint;
 use poem::listener::TcpListener;
 use poem::session::{CookieConfig, CookieSession};
-use poem::{get, EndpointExt, Route, Server};
+use poem::{get, EndpointExt, Error, IntoResponse, Route, Server};
 use sea_orm::prelude::Uuid;
 use sea_orm::ActiveValue::Set;
 use sea_orm::{ActiveModelTrait, Database, DatabaseConnection, EntityTrait};
@@ -69,6 +70,7 @@ async fn start(root_path: Option<String>) -> std::io::Result<()> {
         .nest("/members", members::member_routes())
         .nest("/auth", auth::routes())
         .nest("/import", import::import_routes())
+        .nest("/budget", budget::budget_routes())
         .nest(
             "/static",
             StaticFilesEndpoint::new(format!("{}/static", &root_path)),
@@ -109,4 +111,8 @@ pub fn main(root_path: Option<String>) {
     if let Some(err) = result.err() {
         println!("Error: {err}");
     }
+}
+
+pub fn redirect(path: &str) -> Result<impl IntoResponse, Error> {
+    Ok(StatusCode::ACCEPTED.with_header("HX-redirect", path))
 }

@@ -175,7 +175,7 @@ async fn login(session: &Session, auth_client: Data<&GoogleClient>) -> Result<im
     
     // Access-Control-Allow-Origin
     Ok(StatusCode::FOUND
-        .with_header("HX-Redirect", authorize_url.to_string())
+        .with_header("HX-redirect", authorize_url.to_string())
         .with_header("Access-Control-Allow-Origin", "*"))
 }
 

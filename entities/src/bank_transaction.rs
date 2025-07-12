@@ -4,6 +4,7 @@ use sea_orm::entity::prelude::*;
 use sea_orm::prelude::async_trait::async_trait;
 use sea_orm::Set;
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
 #[sea_orm(table_name = "bank_transactions")]
@@ -30,7 +31,7 @@ impl ActiveModelBehavior for ActiveModel {
         C: ConnectionTrait,
     {
         if insert && self.id.is_not_set() {
-            self.id = Set(Uuid::new_v4());
+            self.id = Set(Uuid::new_v4().into());
         }
         Ok(self)
     }

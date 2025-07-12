@@ -11,6 +11,9 @@ pub mod import_row;
 pub mod member;
 pub mod post;
 pub mod user;
+pub mod budget_item;
+pub mod budget_plan;
+pub mod budget_plan_item;
 
 pub trait RecordHash {
     fn hash(&self) -> String;

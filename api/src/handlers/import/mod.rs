@@ -55,7 +55,7 @@ pub async fn upload(
                             "transactions" => ImportType::Transactions,
                             _ => {
                                 return Ok(
-                                    StatusCode::ACCEPTED.with_header("HX-Redirect", "/import")
+                                    StatusCode::ACCEPTED.with_header("HX-redirect", "/import")
                                 )
                             }
                         });
@@ -140,7 +140,7 @@ pub async fn upload(
                             _imported += 1;
                         }
                     }
-                    Ok(StatusCode::ACCEPTED.with_header("HX-Redirect", "/members"))
+                    Ok(StatusCode::ACCEPTED.with_header("HX-redirect", "/members"))
                 }
                 ImportType::Transactions => {
                     let mut csv_reader = csv::Reader::from_reader(bytes.as_slice());
@@ -221,11 +221,11 @@ pub async fn upload(
                             _imported += 1;
                         }
                     }
-                    Ok(StatusCode::ACCEPTED.with_header("HX-Redirect", "/members"))
+                    Ok(StatusCode::ACCEPTED.with_header("HX-redirect", "/members"))
                 }
             }
         }
-        _ => Ok(StatusCode::ACCEPTED.with_header("HX-Redirect", "/import")),
+        _ => Ok(StatusCode::ACCEPTED.with_header("HX-redirect", "/import")),
     }
 }
 

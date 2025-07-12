@@ -1,18 +1,22 @@
-use entities::prelude::User;
-use entities::{
-    bank_transaction, episode, episode::Entity as Episode, import, import::Entity as Import,
-    member, member::Entity as Member, user,
-};
+use entities::{budget_plan, member, member::Entity as Member};
+use entities::{episode, episode::Entity as Episode};
 use entities::{post, post::Entity as Post};
+use entities::{import, import::Entity as Import};
+use entities::{user, user::Entity as User};
+use entities::{bank_transaction};
+use entities::{budget_item::Entity as BudgetItem};
+use entities::{budget_plan::Entity as BudgetPlan};
 use sea_orm::prelude::Uuid;
 use sea_orm::*;
+use rusty_macros::*;
 
 pub struct QueryCore;
 
+#[find_by_id(BudgetItem)]
+#[find_by_id(BudgetPlan)]
+#[find_by_uuid(Member)]
+#[find_by_uuid(Post)]
 impl QueryCore {
-    pub async fn find_member_by_id(db: &DbConn, id: Uuid) -> Result<Option<member::Model>, DbErr> {
-        Member::find_by_id(id).one(db).await
-    }
     pub async fn find_episodes(
         db: &DatabaseConnection,
         page: u64,
@@ -28,7 +32,7 @@ impl QueryCore {
     }
 
     /// If ok, returns (member models, num pages).
-    pub async fn find_members_in_page(
+    pub async fn list_members_at_page(
         db: &DbConn,
         page: u64,
         members_per_page: u64,
@@ -42,8 +46,20 @@ impl QueryCore {
         // Fetch paginated members
         paginator.fetch_page(page - 1).await.map(|p| (p, num_pages))
     }
-    pub async fn find_post_by_id(db: &DbConn, id: Uuid) -> Result<Option<post::Model>, DbErr> {
-        Post::find_by_id(id).one(db).await
+
+    pub async fn list_budget_plans_at_page(
+        db: &DbConn,
+        page: u64,
+        plans_per_page: u64,
+    ) -> Result<(Vec<budget_plan::Model>, u64), DbErr> {
+        // Setup paginator
+        let paginator = BudgetPlan::find()
+            .order_by_asc(budget_plan::Column::Id)
+            .paginate(db, plans_per_page);
+        let num_pages = paginator.num_pages().await?;
+
+        // Fetch paginated plans
+        paginator.fetch_page(page - 1).await.map(|p| (p, num_pages))
     }
 
     /// If ok, returns (post models, num pages).

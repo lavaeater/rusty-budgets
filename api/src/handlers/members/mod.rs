@@ -17,7 +17,7 @@ pub async fn create(state: Data<&AppState>, form: Form<Member>) -> poem::Result<
     MutationCore::create_member(conn, form).await
         .map_err(InternalServerError)?;
 
-    Ok(StatusCode::ACCEPTED.with_header("HX-Redirect", "/members"))
+    Ok(StatusCode::ACCEPTED.with_header("HX-redirect", "/members"))
 }
 
 #[handler]
@@ -29,7 +29,7 @@ pub async fn list(
     let page = params.page.unwrap_or(1);
     let members_per_page = params.items_per_page.unwrap_or(DEFAULT_ITEMS_PER_PAGE);
 
-    let (members, num_pages) = QueryCore::find_members_in_page(conn, page, members_per_page)
+    let (members, num_pages) = QueryCore::list_members_at_page(conn, page, members_per_page)
         .await
         .map_err(InternalServerError)?;
 
@@ -110,7 +110,7 @@ pub async fn destroy(
         .await
         .map_err(InternalServerError)?;
 
-    Ok(StatusCode::ACCEPTED.with_header("HX-Redirect", "/members"))
+    Ok(StatusCode::ACCEPTED.with_header("HX-redirect", "/members"))
 }
 
 // A function to define all routes related to posts

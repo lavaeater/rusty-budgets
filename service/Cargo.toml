@@ -1,4 +1,4 @@
-#cargo-features = ["codegen-backend"]
+cargo-features = ["codegen-backend"]
 
 [package]
 name = "service"
@@ -10,4 +10,5 @@ path = "src/lib.rs"
 
 [dependencies]
 entities = { path = "../entities" }
+rusty_macros = { path = "../rusty_macros" }
 sea-orm = { version = "1.1.8", features = ["runtime-tokio-rustls", "sqlx-sqlite", "sqlx-postgres", "with-rust_decimal"] }
