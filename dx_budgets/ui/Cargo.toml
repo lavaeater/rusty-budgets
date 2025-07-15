@@ -6,4 +6,3 @@ edition = "2021"
 [dependencies]
 dioxus = { workspace = true }
 api = { workspace = true }
-freyr = "0.2.3"
