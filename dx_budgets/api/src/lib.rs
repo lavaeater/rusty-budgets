@@ -1,6 +1,6 @@
 //! This crate contains all shared fullstack server functions.
 mod migrations;
-mod models;
+pub mod models;
 
 use crate::models::user::User;
 use dioxus::logger::tracing;
@@ -119,6 +119,17 @@ pub mod db {
         }
     }
     
+    pub async fn save_budget(budget: Budget) -> anyhow::Result<()> {
+        let mut budget = DbState::db_loaded(budget);
+        match budget.save(client_from_option(None)).await {
+            Ok(_) => Ok(()),
+            Err(e) => {
+                tracing::error!(error = %e, "Could not save budget");
+                Err(anyhow::Error::from(e))
+            }
+        }
+    }
+    
     pub async fn get_default_budget_for_user(user_id: uuid::Uuid, client: Option<&AnyClient>) -> anyhow::Result<Budget> {
         match Budget::all()
             .where_col(|b| b.user_id.equal(user_id))
@@ -201,6 +212,17 @@ pub async fn list_users() -> Result<Vec<User>, ServerFnError> {
 pub async fn get_default_budget() -> Result<Budget, ServerFnError> {
     match db::get_default_budget_for_user(db::get_default_user(None).await.unwrap().id, None).await {
         Ok(budget) => Ok(budget),
+        Err(e) => {
+            tracing::error!(error = %e, "Could not get default budget");
+            Err(ServerFnError::ServerError(e.to_string()))
+        }
+    }
+}
+
+#[server]
+pub async fn save_budget(budget: Budget) -> Result<(), ServerFnError> {
+    match db::save_budget(budget).await {
+        Ok(_) => Ok(()),
         Err(e) => {
             tracing::error!(error = %e, "Could not get default budget");
             Err(ServerFnError::ServerError(e.to_string()))
