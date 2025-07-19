@@ -2,9 +2,11 @@
 mod migrations;
 pub mod models;
 
-use crate::models::user::User;
 use dioxus::logger::tracing;
+use crate::models::user::User;
 use dioxus::prelude::*;
+use serde::Serialize;
+use uuid::Uuid;
 use crate::models::budget::Budget;
 
 const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
@@ -12,13 +14,15 @@ const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 #[cfg(feature = "server")]
 pub mod db {
     use std::future::Future;
+    use dioxus::hooks::use_signal;
     use crate::models::user::User;
     use crate::{DEFAULT_USER_EMAIL, migrations};
     use dioxus::logger::tracing;
-    use dioxus::prelude::ServerFnError;
+    use dioxus::prelude::{ServerFnError, Signal, UnsyncStorage};
     use once_cell::sync::Lazy;
     use sqlx::types::chrono::NaiveDate;
     use sqlx::types::uuid;
+    use uuid::Uuid;
     use welds::connections::any::AnyClient;
     use welds::state::DbState;
     use welds::{WeldsError, errors};
@@ -118,9 +122,17 @@ pub mod db {
             } }
         }
     }
+
+    /***
+    I am totally done with this: we need to load the budget and modify
+    it OR return tracked entities to the ui, which might be cool as well.
+    
+    We'll figure it out, bro
+     */
     
     pub async fn save_budget(budget: Budget) -> anyhow::Result<()> {
         let mut budget = DbState::db_loaded(budget);
+        budget.
         match budget.save(client_from_option(None)).await {
             Ok(_) => Ok(()),
             Err(e) => {

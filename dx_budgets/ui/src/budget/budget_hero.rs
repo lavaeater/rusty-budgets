@@ -39,36 +39,28 @@ impl BudgetSignal {
     }
 }
 
+
 #[component]
 pub fn BudgetHero() -> Element {
     // Resource for fetching budget data
-    let mut budget_resource = use_resource(|| async move { 
-        api::get_default_budget().await 
-    });
+    let mut budget_resource = use_resource(|| async move { api::get_default_budget().await });
     
     // Persistent signal for budget data
-    let mut budget_signal = use_signal(|| None::<Budget>);
+    let mut budget_signal = use_signal(|| None::<BudgetSignal>);
     
     // Local state for editing
     let mut is_editing = use_signal(|| false);
-    let mut edit_name = use_signal(|| String::new());
     
     // Update budget signal when resource changes
     use_effect(move || {
-        if let Some(Ok(budget)) = budget_resource.read_unchecked().as_ref() {
-            budget_signal.set(Some(budget.clone()));
-            // Initialize edit_name when budget loads (only if not already set)
-            if edit_name.read().is_empty() {
-                edit_name.set(budget.name.clone());
-            }
+        if let Some(Ok(budget)) = budget_resource.read().as_ref() {
+            budget_signal.set(Some(BudgetSignal::from(&budget)));
         }
     });
     
     // Handle the resource state
     match budget_signal() {
-        Some(budget) => {
-            let budget_clone = budget.clone();
-            
+        Some(mut budget) => {
             rsx! {
                 document::Link { rel: "stylesheet", href: BUDGET_CSS }
                 div {
@@ -76,22 +68,17 @@ pub fn BudgetHero() -> Element {
                     if *is_editing.read() {
                         input {
                             r#type: "text",
-                            value: "{edit_name.read()}",
+                            value: "{budget.name.read()}",
                             oninput: move |e| {
-                                edit_name.set(e.value());
+                                budget.name.set(e.value());
                             },
                             onkeydown: move |e| {
                                 if e.code() == Code::Enter {
-                                    let budget_to_save = Budget {
-                                        id: budget_clone.id,
-                                        name: edit_name.read().clone(),
-                                        default_budget: budget_clone.default_budget,
-                                        user_id: budget_clone.user_id,
-                                    };
-                                    
+                                    let budget_to_save = budget.to_budget();
                                     spawn(async move {
                                         match api::save_budget(budget_to_save).await {
                                             Ok(_) => {
+                                                tracing::info!("Success");
                                                 // Update successful, refresh the resource
                                                 budget_resource.restart();
                                             }
@@ -110,7 +97,6 @@ pub fn BudgetHero() -> Element {
                     } else {
                         h4 {
                             onclick: move |_| {
-                                edit_name.set(budget.name.clone());
                                 is_editing.set(true);
                             },
                             "{budget.name}"
