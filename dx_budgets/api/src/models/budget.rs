@@ -6,7 +6,7 @@ use crate::models::budget_item::BudgetItem;
 #[cfg(feature = "server")]
 use welds::WeldsModel;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 #[cfg_attr(feature = "server", derive(WeldsModel))]
 #[cfg_attr(feature = "server", welds(table = "budgets"))]
 #[cfg_attr(feature = "server", welds(BelongsTo(user, User, "user_id")))]

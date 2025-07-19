@@ -131,9 +131,9 @@ pub mod db {
      */
     
     pub async fn save_budget(budget: Budget) -> anyhow::Result<()> {
-        let mut budget = DbState::db_loaded(budget);
-        budget.
-        match budget.save(client_from_option(None)).await {
+        let mut budget_to_save = DbState::db_loaded(Budget::default());
+        budget_to_save.replace_inner(budget);
+        match budget_to_save.save(client_from_option(None)).await {
             Ok(_) => Ok(()),
             Err(e) => {
                 tracing::error!(error = %e, "Could not save budget");
