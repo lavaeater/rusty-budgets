@@ -1,5 +1,5 @@
-use dioxus::logger::tracing;
 use api::models::budget::Budget;
+use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use uuid::Uuid;
 
@@ -39,25 +39,24 @@ impl BudgetSignal {
     }
 }
 
-
 #[component]
 pub fn BudgetHero() -> Element {
     // Resource for fetching budget data
     let mut budget_resource = use_resource(|| async move { api::get_default_budget().await });
-    
+
     // Persistent signal for budget data
     let mut budget_signal = use_signal(|| None::<BudgetSignal>);
-    
+
     // Local state for editing
     let mut is_editing = use_signal(|| false);
-    
+
     // Update budget signal when resource changes
     use_effect(move || {
         if let Some(Ok(budget)) = budget_resource.read().as_ref() {
             budget_signal.set(Some(BudgetSignal::from(&budget)));
         }
     });
-    
+
     // Handle the resource state
     match budget_signal() {
         Some(mut budget) => {
@@ -88,7 +87,7 @@ pub fn BudgetHero() -> Element {
                                             }
                                         }
                                     });
-                                    
+
                                     is_editing.set(false);
                                 }
                             },
@@ -101,6 +100,26 @@ pub fn BudgetHero() -> Element {
                             },
                             "{budget.name}"
                         }
+                        h3 {
+                            // onclick: move |_| {
+                            //     let derf = !*budget.default_budget.read();
+                            //     budget.default_budget.set(derf);
+                            //         let budget_to_save = budget.to_budget();
+                            //         spawn(async move {
+                            //             match api::save_budget(budget_to_save).await {
+                            //                 Ok(_) => {
+                            //                     tracing::info!("Success");
+                            //                     // Update successful, refresh the resource
+                            //                     budget_resource.restart();
+                            //                 }
+                            //                 Err(e) => {
+                            //                     // Handle error (could add error state here)
+                            //                     tracing::error!("Failed to save budget: {}", e);
+                            //                 }
+                            //             }
+                            //         });
+                            // },
+                            "Default: {budget.default_budget}" }
                     }
                 }
             }
@@ -116,10 +135,10 @@ pub fn BudgetHero() -> Element {
                 },
                 _ => rsx! {
                     div {
-                        id: "budget_hero", 
+                        id: "budget_hero",
                         h4 { "Loading..." }
                     }
-                }
+                },
             }
         }
     }
