@@ -27,6 +27,7 @@ pub struct Budget {
     pub user_id: Uuid,
 }
 
+#[cfg(feature = "server")]
 pub fn before_create(budget: &mut Budget) -> welds::errors::Result<()>{
     budget.id = Uuid::new_v4();
     budget.created_at = chrono::Utc::now().naive_utc();
@@ -34,6 +35,7 @@ pub fn before_create(budget: &mut Budget) -> welds::errors::Result<()>{
     Ok(())
 }
 
+#[cfg(feature = "server")]
 pub fn before_update(budget: &mut Budget) -> welds::errors::Result<()>{
     budget.updated_at = chrono::Utc::now().naive_utc();
     Ok(())
