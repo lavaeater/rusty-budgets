@@ -1,3 +1,4 @@
+use dioxus::html::track::default;
 use api::models::budget::Budget;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
@@ -34,6 +35,7 @@ impl BudgetSignal {
             name: temp.name.read().to_string(),
             user_id: temp.user_id,
             default_budget: *temp.default_budget.read(),
+            ..Default::default()
         };
         x
     }
