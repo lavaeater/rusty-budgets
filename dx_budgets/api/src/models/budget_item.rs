@@ -1,9 +1,9 @@
+#[cfg(feature = "server")]
+use crate::models::budget::Budget;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 #[cfg(feature = "server")]
 use welds::WeldsModel;
-#[cfg(feature = "server")]
-use crate::models::budget::Budget;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "server", derive(WeldsModel))]
