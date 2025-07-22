@@ -175,10 +175,12 @@ pub mod db {
         client: Option<&AnyClient>,
     ) -> anyhow::Result<Budget> {
         let mut budget = DbState::new_uncreated(Budget {
-            id: uuid::Uuid::new_v4(),
+            id: Uuid::default(),
             name: name.to_string(),
             user_id,
             default_budget,
+            created_at: Default::default(),
+            updated_at: Default::default(),
         });
         match budget.save(client_from_option(client)).await {
             Ok(_) => Ok(budget.into_inner()),
