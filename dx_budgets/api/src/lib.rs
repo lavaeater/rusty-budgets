@@ -2,31 +2,31 @@
 mod migrations;
 pub mod models;
 
-use dioxus::logger::tracing;
+use crate::models::budget::Budget;
 use crate::models::user::User;
+use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use serde::Serialize;
 use uuid::Uuid;
-use crate::models::budget::Budget;
 
 const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 
 #[cfg(feature = "server")]
 pub mod db {
-    use std::future::Future;
-    use dioxus::hooks::use_signal;
+    use crate::models::budget::Budget;
     use crate::models::user::User;
     use crate::{DEFAULT_USER_EMAIL, migrations};
+    use dioxus::hooks::use_signal;
     use dioxus::logger::tracing;
     use dioxus::prelude::{ServerFnError, Signal, UnsyncStorage};
     use once_cell::sync::Lazy;
     use sqlx::types::chrono::NaiveDate;
     use sqlx::types::uuid;
+    use std::future::Future;
     use uuid::Uuid;
     use welds::connections::any::AnyClient;
     use welds::state::DbState;
     use welds::{WeldsError, errors};
-    use crate::models::budget::Budget;
 
     pub static CLIENT: Lazy<AnyClient> = Lazy::new(|| {
         tracing::info!("Init DB Client");
@@ -42,7 +42,7 @@ pub mod db {
             migrations::up(&client)
                 .await
                 .expect("Could not run migrations");
-            
+
             match get_default_user(Some(&client)).await {
                 Ok(user) => {
                     tracing::info!("Default user exists");
@@ -55,7 +55,7 @@ pub mod db {
                             panic!("Could not get default budget for user");
                         }
                     }
-                },
+                }
                 Err(e) => {
                     tracing::error!(error = %e, "Could not get default user");
                     panic!("Could not get default user");
@@ -75,10 +75,8 @@ pub mod db {
 
     pub async fn list_users(client: Option<&AnyClient>) -> anyhow::Result<Vec<User>> {
         match User::all().run(client_from_option(client)).await {
-            Ok(users) => { Ok(users.into_iter().map(|u| u.into_inner()).collect()) },
-            Err(e) => {
-                Err(anyhow::Error::from(e))
-            }
+            Ok(users) => Ok(users.into_iter().map(|u| u.into_inner()).collect()),
+            Err(e) => Err(anyhow::Error::from(e)),
         }
     }
 
@@ -101,9 +99,10 @@ pub mod db {
         match User::all()
             .where_col(|u| u.email.equal(DEFAULT_USER_EMAIL))
             .fetch_one(client_from_option(client))
-            .await {
-            Ok(u) => {Ok(u.into_inner())},
-            Err(e) => { match e {
+            .await
+        {
+            Ok(u) => Ok(u.into_inner()),
+            Err(e) => match e {
                 WeldsError::RowNowFound => {
                     create_user(
                         "tommie",
@@ -111,25 +110,28 @@ pub mod db {
                         "Tommie",
                         "Nygren",
                         Some("0704382781".to_string()),
-                        Some(NaiveDate::parse_from_str("1973-05-12", "%Y-%m-%d").unwrap_or_default()),
-                        client
-                    ).await
+                        Some(
+                            NaiveDate::parse_from_str("1973-05-12", "%Y-%m-%d").unwrap_or_default(),
+                        ),
+                        client,
+                    )
+                    .await
                 }
                 _ => {
                     tracing::error!(error = %e, "Could not get default user");
                     Err(anyhow::Error::from(e))
                 }
-            } }
+            },
         }
     }
 
     /***
     I am totally done with this: we need to load the budget and modify
     it OR return tracked entities to the ui, which might be cool as well.
-    
+
     We'll figure it out, bro
      */
-    
+
     pub async fn save_budget(budget: Budget) -> anyhow::Result<()> {
         let mut budget_to_save = DbState::db_loaded(Budget::default());
         budget_to_save.replace_inner(budget);
@@ -141,30 +143,37 @@ pub mod db {
             }
         }
     }
-    
-    pub async fn get_default_budget_for_user(user_id: uuid::Uuid, client: Option<&AnyClient>) -> anyhow::Result<Budget> {
+
+    pub async fn get_default_budget_for_user(
+        user_id: uuid::Uuid,
+        client: Option<&AnyClient>,
+    ) -> anyhow::Result<Budget> {
         match Budget::all()
             .where_col(|b| b.user_id.equal(user_id))
             .where_col(|b| b.default_budget.equal(true))
             .fetch_one(client_from_option(client))
-            .await {
+            .await
+        {
             Ok(b) => Ok(b.into_inner()),
-            Err(e) => {
-                match e {
-                    WeldsError::RowNowFound => {
-                        tracing::info!("No default budget exists, time to create one");
-                        create_budget("Default", user_id, true, client).await
-                    }
-                    _ => {
-                        tracing::error!(error = %e, "Could not get default budget for user");
-                        Err(anyhow::Error::from(e))
-                    }
+            Err(e) => match e {
+                WeldsError::RowNowFound => {
+                    tracing::info!("No default budget exists, time to create one");
+                    create_budget("Default", user_id, true, client).await
+                }
+                _ => {
+                    tracing::error!(error = %e, "Could not get default budget for user");
+                    Err(anyhow::Error::from(e))
                 }
             },
         }
     }
-    
-    pub async fn create_budget(name: &str, user_id: uuid::Uuid, default_budget: bool, client: Option<&AnyClient>) -> anyhow::Result<Budget> {
+
+    pub async fn create_budget(
+        name: &str,
+        user_id: uuid::Uuid,
+        default_budget: bool,
+        client: Option<&AnyClient>,
+    ) -> anyhow::Result<Budget> {
         let mut budget = DbState::new_uncreated(Budget {
             id: uuid::Uuid::new_v4(),
             name: name.to_string(),
@@ -222,7 +231,8 @@ pub async fn list_users() -> Result<Vec<User>, ServerFnError> {
 
 #[server]
 pub async fn get_default_budget() -> Result<Budget, ServerFnError> {
-    match db::get_default_budget_for_user(db::get_default_user(None).await.unwrap().id, None).await {
+    match db::get_default_budget_for_user(db::get_default_user(None).await.unwrap().id, None).await
+    {
         Ok(budget) => Ok(budget),
         Err(e) => {
             tracing::error!(error = %e, "Could not get default budget");
