@@ -7,6 +7,10 @@ pub(super) fn step(_state: &TableState) -> Result<MigrationStep> {
         .id(|c| c("id", Type::Uuid))
         .column(|c| c("name", Type::String))
         .column(|c| c("amount", Type::Float))
+        .column(|c| c("created_at", Type::Datetime))
+        .column(|c| c("updated_at", Type::Datetime))
+        .column(|c| c("created_by", Type::Uuid)
+            .create_foreign_key("users", "id", OnDelete::Cascade))
         .column(|c| {
             c("budget_id", Type::Uuid)
                 .create_foreign_key("budgets", "id", OnDelete::Cascade)
