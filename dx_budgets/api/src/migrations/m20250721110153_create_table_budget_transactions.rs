@@ -13,6 +13,11 @@ pub(super) fn step(_state: &TableState) -> Result<MigrationStep> {
             .create_foreign_key("budget_items", "id", OnDelete::Cascade)
         )
         .column(|c| c("amount", Type::Float))
+        .column(|c| c("created_at", Type::Datetime))
+        .column(|c| c("updated_at", Type::Datetime))
+        .column(|c| c("created_by", Type::Uuid)
+            .create_foreign_key("users", "id", OnDelete::Cascade))
+
         ;
     Ok(MigrationStep::new(
         "m20250721110153_create_table_add_transactions",
