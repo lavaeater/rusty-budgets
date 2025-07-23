@@ -1,5 +1,7 @@
 #[cfg(feature = "server")]
 use crate::models::budget::Budget;
+#[cfg(feature = "server")]
+use crate::models::budget_transaction::BudgetTransaction;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 #[cfg(feature = "server")]
@@ -9,10 +11,33 @@ use welds::WeldsModel;
 #[cfg_attr(feature = "server", derive(WeldsModel))]
 #[cfg_attr(feature = "server", welds(table = "budget_items"))]
 #[cfg_attr(feature = "server", welds(BelongsTo(budget, Budget, "budget_id")))]
+#[cfg_attr(feature = "server", welds(HasMany(outgoing_budget_transactions, BudgetTransaction, "from_budget_item")))]
+#[cfg_attr(feature = "server", welds(HasMany(incoming_budget_transactions, BudgetTransaction, "to_budget_item")))]
+#[cfg_attr(feature = "server", welds(BeforeCreate(before_create)))]
+#[cfg_attr(feature = "server", welds(BeforeUpdate(before_update)))]
 pub struct BudgetItem {
     #[cfg_attr(feature = "server", welds(primary_key))]
     pub id: Uuid,
     pub name: String,
     pub amount: f32,
+    pub expected_at: chrono::NaiveDate,
+    pub created_at: chrono::NaiveDateTime,
+    pub updated_at: chrono::NaiveDateTime,
+    pub created_by: Uuid,
     pub budget_id: Uuid,
 }
+
+#[cfg(feature = "server")]
+pub fn before_create(budget_item: &mut BudgetItem) -> welds::errors::Result<()>{
+    budget_item.id = Uuid::new_v4();
+    budget_item.created_at = chrono::Utc::now().naive_utc();
+    budget_item.updated_at = chrono::Utc::now().naive_utc();
+    Ok(())
+}
+
+#[cfg(feature = "server")]
+pub fn before_update(budget_item: &mut BudgetItem) -> welds::errors::Result<()>{
+    budget_item.updated_at = chrono::Utc::now().naive_utc();
+    Ok(())
+}
+

@@ -7,6 +7,7 @@ pub(super) fn step(_state: &TableState) -> Result<MigrationStep> {
         .id(|c| c("id", Type::Uuid))
         .column(|c| c("name", Type::String))
         .column(|c| c("amount", Type::Float))
+        .column(|c| c("expected_at", Type::Date))
         .column(|c| c("created_at", Type::Datetime))
         .column(|c| c("updated_at", Type::Datetime))
         .column(|c| c("created_by", Type::Uuid)
