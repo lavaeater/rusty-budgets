@@ -96,13 +96,13 @@ pub fn BudgetHero() -> Element {
                             autofocus: true,
                         }
                     } else {
-                        h4 {
+                        h2 {
                             onclick: move |_| {
                                 is_editing.set(true);
                             },
                             "{budget.name}"
                         }
-                        h3 {
+                        h4 {
                             // onclick: move |_| {
                             //     let derf = !*budget.default_budget.read();
                             //     budget.default_budget.set(derf);
