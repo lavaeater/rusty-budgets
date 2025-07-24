@@ -2974,6 +2974,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "lucide-dioxus"
+version = "2.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0d06f27420e7a960d76a02f43819fba2fb3a513738714cc6262c02d9fd256e5c"
+dependencies = [
+ "dioxus",
+]
+
+[[package]]
 name = "mac"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5566,6 +5575,7 @@ version = "0.1.0"
 dependencies = [
  "api",
  "dioxus",
+ "lucide-dioxus",
  "uuid",
 ]
 
