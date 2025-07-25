@@ -14,6 +14,7 @@ pub fn BudgetItem() -> Element {
 
 #[component]
 pub fn NewBudgetItem(budget_id: Uuid) -> Element {
+    let nav = navigator();
     let mut name = use_signal(|| "Budgetkategori".to_string());
     let mut first_item = use_signal(|| "Första post".to_string());
     let mut amount = use_signal(|| 0.0);
@@ -65,8 +66,9 @@ pub fn NewBudgetItem(budget_id: Uuid) -> Element {
                             amount.read().clone(),
                             NaiveDate::parse_from_str(expected_at.read().as_str(), "%Y-%m-%d").unwrap(),
                         ).await {  
-                            Ok(_) => {                                                
+                            Ok(_) => {     
                                 tracing::info!("Success");
+                                nav.replace("/");
                             }
                             Err(e) => {                                                
                                 tracing::error!("Failed to save budget: {}", e);
