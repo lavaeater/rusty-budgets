@@ -3,7 +3,7 @@ use dioxus::logger::tracing::Level;
 use dioxus::prelude::*;
 use uuid::Uuid;
 use ui::Navbar;
-use views::{Blog, Home, NewBudgetItem,PageNotFound, Budget };
+use views::{Blog, Home, NewBudgetItem, PageNotFound, BudgetOverview};
 mod views;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
@@ -17,7 +17,7 @@ enum Route {
     #[end_layout]
     #[nest("/budget")]
         #[route("/:id")]
-        Budget {
+        BudgetOverview {
             id: Uuid
         },
         #[nest("/:budget_id")]

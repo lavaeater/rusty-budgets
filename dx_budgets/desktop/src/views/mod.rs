@@ -7,4 +7,4 @@ mod budgets;
 pub use blog::Blog;
 pub use budgets::NewBudgetItem;
 pub use budgets::PageNotFound;
-pub use budgets::Budget;
+pub use budgets::BudgetOverview;
