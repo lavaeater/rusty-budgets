@@ -1,7 +1,8 @@
-use dioxus::html::track::default;
 use api::models::budget::Budget;
+use dioxus::html::track::default;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
+use lucide_dioxus::{Plus};
 use uuid::Uuid;
 
 const BUDGET_CSS: Asset = asset!("/assets/styling/budget.css");
@@ -101,6 +102,10 @@ pub fn BudgetHero() -> Element {
                                 is_editing.set(true);
                             },
                             "{budget.name}"
+                        }
+                        Plus {
+                            size: 48,
+                            color: "green",
                         }
                         h4 {
                             // onclick: move |_| {
