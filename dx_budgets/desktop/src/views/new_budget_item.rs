@@ -1,13 +1,6 @@
 use dioxus::prelude::*;
 
-const BUDGET_CSS: Asset = asset!("/assets/styling/budget.css");
-
-#[component]
-pub fn BudgetItem() -> Element {
-    rsx! {
-        h1 { "Blog" }
-    }
-}
+const BUDGET_CSS: Asset = asset!("/assets/main.css");
 
 #[component]
 pub fn NewBudgetItem() -> Element {

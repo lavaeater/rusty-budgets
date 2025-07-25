@@ -2,9 +2,8 @@ use dioxus::logger::tracing;
 use dioxus::logger::tracing::Level;
 use dioxus::prelude::*;
 use ui::Navbar;
-use views::{Blog, Home};
+use views::{Blog, Home, NewBudgetItem};
 mod views;
-// use dioxus_provider::global::init_global_providers;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
@@ -14,6 +13,8 @@ enum Route {
     Home {},
     #[route("/blog/:id")]
     Blog { id: i32 },
+    #[route("/new_budget_item")]
+    NewBudgetItem {},
 }
 
 const MAIN_CSS: Asset = asset!("/assets/main.css");

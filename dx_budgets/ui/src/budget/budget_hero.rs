@@ -1,5 +1,4 @@
 use api::models::budget::Budget;
-use dioxus::html::track::default;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use lucide_dioxus::{Plus};
@@ -103,29 +102,7 @@ pub fn BudgetHero() -> Element {
                             },
                             "{budget.name}"
                         }
-                        Plus {
-                            size: 48,
-                            color: "green",
-                        }
                         h4 {
-                            // onclick: move |_| {
-                            //     let derf = !*budget.default_budget.read();
-                            //     budget.default_budget.set(derf);
-                            //         let budget_to_save = budget.to_budget();
-                            //         spawn(async move {
-                            //             match api::save_budget(budget_to_save).await {
-                            //                 Ok(_) => {
-                            //                     tracing::info!("Success");
-                            //                     // Update successful, refresh the resource
-                            //                     budget_resource.restart();
-                            //                 }
-                            //                 Err(e) => {
-                            //                     // Handle error (could add error state here)
-                            //                     tracing::error!("Failed to save budget: {}", e);
-                            //                 }
-                            //             }
-                            //         });
-                            // },
                             "Default: {budget.default_budget}" }
                     }
                 }

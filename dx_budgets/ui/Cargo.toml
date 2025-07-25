@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dioxus = { workspace = true }
+dioxus = { features= ["router", "fullstack"], workspace = true }
 api = { workspace = true }
 uuid = { version = "1.17.0", features = ["v4"] }
-lucide-dioxus = { version = "2.15.0", features = ["all-icons"] }
+lucide-dioxus = { workspace = true }
