@@ -2,9 +2,9 @@
 mod migrations;
 pub mod models;
 
-use chrono::NaiveDate;
 use crate::models::budget::Budget;
 use crate::models::user::User;
+use chrono::NaiveDate;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use serde::Serialize;
@@ -15,8 +15,10 @@ const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 #[cfg(feature = "server")]
 pub mod db {
     use crate::models::budget::Budget;
+    use crate::models::budget_item::BudgetItem;
+    use crate::models::budget_transaction::BudgetTransaction;
     use crate::models::user::User;
-    use crate::{DEFAULT_USER_EMAIL, migrations};
+    use crate::{migrations, DEFAULT_USER_EMAIL};
     use dioxus::hooks::use_signal;
     use dioxus::logger::tracing;
     use dioxus::prelude::{ServerFnError, Signal, UnsyncStorage};
@@ -27,7 +29,8 @@ pub mod db {
     use uuid::Uuid;
     use welds::connections::any::AnyClient;
     use welds::state::DbState;
-    use welds::{WeldsError, errors};
+    use welds::{errors, WeldsError};
+    use Default;
 
     pub static CLIENT: Lazy<AnyClient> = Lazy::new(|| {
         tracing::info!("Init DB Client");
@@ -145,8 +148,56 @@ pub mod db {
         }
     }
 
-    pub async fn add_budget_item(budget_id: uuid::Uuid, text: String, amount: f32, expected_at: NaiveDate) -> anyhow::Result<()> {
-        Ok(())
+    pub async fn add_budget_transaction(
+        text: String,
+        from_budget_item: Option<Uuid>,
+        to_budget_item: Uuid,
+        amount: f32,
+    ) -> anyhow::Result<()> {
+        let user = get_default_user(None).await?;
+        let mut budget_transaction_to_save =
+            DbState::new_uncreated(BudgetTransaction::new_from_user(
+                &text,
+                amount,
+                from_budget_item,
+                to_budget_item,
+                user.id,
+            ));
+        match budget_transaction_to_save
+            .save(client_from_option(None))
+            .await
+        {
+            Ok(_) => {
+                tracing::info!("Saved budget transaction");
+                Ok(())
+            }
+            Err(e) => {
+                tracing::error!(error = %e, "Could not save budget transaction");
+                Err(anyhow::Error::from(e))
+            }
+        }
+    }
+
+    pub async fn add_budget_item(
+        budget_id: Uuid,
+        name: String,
+        first_item: String,
+        amount: f32,
+        expected_at: NaiveDate,
+    ) -> anyhow::Result<()> {
+        let user = get_default_user(None).await?;
+        let mut budget_item_to_save =
+            DbState::new_uncreated(BudgetItem::new_from_user(&name, expected_at, user.id));
+        match budget_item_to_save.save(client_from_option(None)).await {
+            Ok(_) => {
+                tracing::info!("Saved budget item");
+                add_budget_transaction(first_item, None, budget_item_to_save.id, amount).await
+            }
+            Err(e) => {
+                tracing::error!(error = %e, "Could not save budget item");
+                Err(anyhow::Error::from(e))
+            }
+        }
     }
 
     pub async fn get_default_budget_for_user(
@@ -260,8 +311,14 @@ pub async fn save_budget(budget: Budget) -> Result<(), ServerFnError> {
 }
 
 #[server]
-pub async fn add_budget_item(budget_id: uuid::Uuid, text: String, amount: f32, expected_at: NaiveDate) -> Result<(), ServerFnError> {
-    match db::add_budget_item(budget_id, text, amount, expected_at).await {
+pub async fn add_budget_item(
+    budget_id: Uuid,
+    name: String,
+    first_item: String,
+    amount: f32,
+    expected_at: NaiveDate,
+) -> Result<(), ServerFnError> {
+    match db::add_budget_item(budget_id, name, first_item, amount, expected_at).await {
         Ok(_) => Ok(()),
         Err(e) => {
             tracing::error!(error = %e, "Could not save new budget item");

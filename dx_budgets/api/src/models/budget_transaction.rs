@@ -5,7 +5,7 @@ use uuid::Uuid;
 #[cfg(feature = "server")]
 use welds::WeldsModel;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(WeldsModel))]
 #[cfg_attr(feature = "server", welds(table = "budget_transactions"))]
 #[cfg_attr(feature = "server", welds(BelongsTo(to_budget_item, BudgetItem, "to_budget_item")))]
@@ -23,6 +23,19 @@ pub struct BudgetTransaction {
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: chrono::NaiveDateTime,
     pub created_by: Uuid,
+}
+
+impl BudgetTransaction {
+    pub fn new_from_user(text: &str, amount: f32, from_budget_item: Option<Uuid>, to_budget_item: Uuid, created_by: Uuid) -> BudgetTransaction {
+        BudgetTransaction {
+            text: text.to_string(),
+            amount,
+            to_budget_item,
+            from_budget_item,
+            created_by,
+            ..Default::default()
+        }
+    }
 }
 
 

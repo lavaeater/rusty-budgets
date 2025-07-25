@@ -1,6 +1,7 @@
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use uuid::Uuid;
+use chrono::NaiveDate;
 
 const BUDGET_CSS: Asset = asset!("/assets/styling/budget.css");
 
@@ -13,7 +14,8 @@ pub fn BudgetItem() -> Element {
 
 #[component]
 pub fn NewBudgetItem(budget_id: Uuid) -> Element {
-    let mut text = use_signal(|| "What is it?".to_string());
+    let mut name = use_signal(|| "Budgetkategori".to_string());
+    let mut first_item = use_signal(|| "Första post".to_string());
     let mut amount = use_signal(|| 0.0);
     let mut expected_at = use_signal(|| "2025-08-25".to_string());
     rsx! {
@@ -22,13 +24,20 @@ pub fn NewBudgetItem(budget_id: Uuid) -> Element {
                 div {
                     input {
                         oninput: move |e| {
-                            *text.write() = e.value().clone();
+                            *name.write() = e.value().clone();
                         },
                         r#type: "text",
-                        value: "{text.read()}"
+                        value: "{name.read()}"
                     }
                 }
                 div {
+                    input {
+                        oninput: move |e| {
+                            *first_item.write() = e.value().clone();
+                        },
+                        r#type: "text",
+                        value: "{first_item.read()}"
+                    }
                     input {
                         oninput: move |e| {
                             *amount.write() = e.value().parse().unwrap();
@@ -51,9 +60,10 @@ pub fn NewBudgetItem(budget_id: Uuid) -> Element {
                         spawn(async move {
                         match api::add_budget_item(
                             budget_id,
-                            text.read().clone(),
+                            name.read().clone(),
+                            first_item.read().clone(),
                             amount.read().clone(),
-                            expected_at.read().clone(),
+                            NaiveDate::parse_from_str(expected_at.read().as_str(), "%Y-%m-%d").unwrap(),
                         ).await {  
                             Ok(_) => {                                                
                                 tracing::info!("Success");
