@@ -17,7 +17,7 @@ enum Route {
     #[end_layout]
     #[nest("/budget")]
         #[route("/:id")]
-        BudgetOverview {
+        Budget {
             id: Uuid
         },
         #[nest("/:budget_id")]

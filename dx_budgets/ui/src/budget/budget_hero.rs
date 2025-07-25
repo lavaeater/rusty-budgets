@@ -1,7 +1,7 @@
 use api::models::budget::Budget;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
-use lucide_dioxus::{Plus};
+use lucide_dioxus::{Plus, Pen, Hamburger};
 use uuid::Uuid;
 
 const BUDGET_CSS: Asset = asset!("/assets/styling/budget.css");
@@ -45,6 +45,7 @@ impl BudgetSignal {
 
 #[component]
 pub fn BudgetHero() -> Element {
+    let nav = navigator();
     // Resource for fetching budget data
     let mut budget_resource = use_resource(|| async move { api::get_default_budget().await });
 
@@ -99,12 +100,27 @@ pub fn BudgetHero() -> Element {
                             autofocus: true,
                         }
                     } else {
-                        h2 {
-                            onclick: move |_| {
-                                is_editing.set(true);
-                            },
-                            "{budget.name}"
+                        span {
+                            h2 {"{budget.name}"},
+                            Link { 
+                                to: "/budget/{budget.id}",
+                                Hamburger {
+                                    color: "white",
+                                size: 32 }
+                            } 
+                            span {
+                                onclick: move |_| {
+                                    is_editing.set(true);
+                                },
+                                Pen {
+                                    color: "white",
+                                    size: 32
+                                }
+                            }
+
+                            
                         }
+
                         h4 {
                             "Default: {budget.default_budget}" }
                     }

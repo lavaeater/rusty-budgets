@@ -8,8 +8,9 @@ const BUDGET_CSS: Asset = asset!("/assets/styling/budget.css");
 
 #[component]
 pub fn BudgetOverview(id: Uuid) -> Element {
+    // let id = id.clone();
     let mut budget_resource = 
-        use_resource(|| async move { api::get_budget_overview(id).await });
+        use_resource(move || async move { api::get_budget_overview(id).await });
 
     // Persistent signal for budget data
     let mut budget_signal = use_signal(|| None::<Budget>);
@@ -26,7 +27,7 @@ pub fn BudgetOverview(id: Uuid) -> Element {
             rsx! {
                 document::Link { rel: "stylesheet", href: BUDGET_CSS }
                 div {
-                    id: "budget_hero",
+                    id: "budget_overview",
                         h2 {
                             "{budget.name}"
                         }

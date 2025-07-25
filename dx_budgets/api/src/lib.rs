@@ -100,18 +100,18 @@ pub mod db {
             .iter()
             .map(|bi| {
                 let incoming_budget_transactions =
-                    bi.get_owned(|bi| &bi.incoming_budget_transactions);
+                    bi.get_owned(|bi| bi.incoming_budget_transactions);
                 let outgoing_budget_transactions =
-                    bi.get_owned(|bi| &bi.outgoing_budget_transactions);
+                    bi.get_owned(|bi| bi.outgoing_budget_transactions);
 
                 let aggregate_amount = incoming_budget_transactions
                     .iter()
                     .map(|bt| bt.amount)
-                    .sum()
+                    .sum::<f32>()
                     - outgoing_budget_transactions
                         .iter()
                         .map(|bt| bt.amount)
-                        .sum();
+                        .sum::<f32>();
                 BudgetItemView {
                     id: bi.id,
                     name: bi.name.clone(),
