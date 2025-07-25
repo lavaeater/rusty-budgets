@@ -2,6 +2,7 @@
 mod migrations;
 pub mod models;
 
+use chrono::NaiveDate;
 use crate::models::budget::Budget;
 use crate::models::user::User;
 use dioxus::logger::tracing;
@@ -144,6 +145,10 @@ pub mod db {
         }
     }
 
+    pub async fn add_budget_item(budget_id: uuid::Uuid, text: String, amount: f32, expected_at: NaiveDate) -> anyhow::Result<()> {
+        Ok(())
+    }
+
     pub async fn get_default_budget_for_user(
         user_id: uuid::Uuid,
         client: Option<&AnyClient>,
@@ -249,6 +254,17 @@ pub async fn save_budget(budget: Budget) -> Result<(), ServerFnError> {
         Ok(_) => Ok(()),
         Err(e) => {
             tracing::error!(error = %e, "Could not get default budget");
+            Err(ServerFnError::ServerError(e.to_string()))
+        }
+    }
+}
+
+#[server]
+pub async fn add_budget_item(budget_id: uuid::Uuid, text: String, amount: f32, expected_at: NaiveDate) -> Result<(), ServerFnError> {
+    match db::add_budget_item(budget_id, text, amount, expected_at).await {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            tracing::error!(error = %e, "Could not save new budget item");
             Err(ServerFnError::ServerError(e.to_string()))
         }
     }
