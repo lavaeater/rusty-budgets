@@ -7,8 +7,9 @@ use crate::models::user::User;
 use chrono::NaiveDate;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use crate::models::budget_transaction::BudgetTransaction;
 
 const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 
@@ -18,7 +19,7 @@ pub mod db {
     use crate::models::budget_item::BudgetItem;
     use crate::models::budget_transaction::BudgetTransaction;
     use crate::models::user::User;
-    use crate::{migrations, DEFAULT_USER_EMAIL};
+    use crate::{migrations, BudgetItemView, BudgetOverview, DEFAULT_USER_EMAIL};
     use dioxus::hooks::use_signal;
     use dioxus::logger::tracing;
     use dioxus::prelude::{ServerFnError, Signal, UnsyncStorage};
@@ -28,6 +29,7 @@ pub mod db {
     use std::future::Future;
     use uuid::Uuid;
     use welds::connections::any::AnyClient;
+    use welds::dataset::DataSet;
     use welds::state::DbState;
     use welds::{errors, WeldsError};
     use Default;
@@ -75,6 +77,58 @@ pub mod db {
         } else {
             CLIENT.as_ref()
         }
+    }
+
+    pub async fn get_budget_overview(
+        id: Uuid,
+        client: Option<&AnyClient>,
+    ) -> anyhow::Result<BudgetOverview> {
+        let budget: Budget = Budget::all()
+            .where_col(|b| b.id.equal(id))
+            .fetch_one(client_from_option(client))
+            .await?
+            .into_inner();
+
+        let budget_item_set: DataSet<BudgetItem> =
+            BudgetItem::where_col(|bi| bi.budget_id.equal(id))
+                .include(|bi| bi.incoming_budget_transactions)
+                .include(|bi| bi.outgoing_budget_transactions)
+                .run(client_from_option(client))
+                .await?;
+
+        let budget_items_view = budget_item_set
+            .iter()
+            .map(|bi| {
+                let incoming_budget_transactions =
+                    bi.get_owned(|bi| &bi.incoming_budget_transactions);
+                let outgoing_budget_transactions =
+                    bi.get_owned(|bi| &bi.outgoing_budget_transactions);
+
+                let aggregate_amount = incoming_budget_transactions
+                    .iter()
+                    .map(|bt| bt.amount)
+                    .sum()
+                    - outgoing_budget_transactions
+                        .iter()
+                        .map(|bt| bt.amount)
+                        .sum();
+                BudgetItemView {
+                    id: bi.id,
+                    name: bi.name.clone(),
+                    aggregate_amount,
+                    expected_at: bi.expected_at,
+                    incoming_budget_transactions,
+                    outgoing_budget_transactions,
+                }
+            })
+            .collect();
+        
+        Ok(BudgetOverview {
+            id,
+            default_budget: budget.default_budget,
+            name: budget.name,
+            budget_items: budget_items_view,
+        })
     }
 
     pub async fn list_users(client: Option<&AnyClient>) -> anyhow::Result<Vec<User>> {
@@ -322,6 +376,35 @@ pub async fn add_budget_item(
         Ok(_) => Ok(()),
         Err(e) => {
             tracing::error!(error = %e, "Could not save new budget item");
+            Err(ServerFnError::ServerError(e.to_string()))
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct BudgetItemView {
+    pub id: Uuid,
+    pub name: String,
+    pub aggregate_amount: f32,
+    pub expected_at: NaiveDate,
+    pub incoming_budget_transactions: Vec<BudgetTransaction>,
+    pub outgoing_budget_transactions: Vec<BudgetTransaction>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct BudgetOverview {
+    pub id: Uuid,
+    pub name: String,
+    pub default_budget: bool,
+    pub budget_items: Vec<BudgetItemView>,
+}
+
+#[server]
+pub async fn get_budget_overview(id: Uuid) -> Result<BudgetOverview, ServerFnError> {
+    match db::get_budget_overview(id, None).await {
+        Ok(overview) => Ok(overview),
+        Err(e) => {
+            tracing::error!(error = %e, "Could not get budget overview");
             Err(ServerFnError::ServerError(e.to_string()))
         }
     }

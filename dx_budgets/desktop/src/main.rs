@@ -3,7 +3,7 @@ use dioxus::logger::tracing::Level;
 use dioxus::prelude::*;
 use uuid::Uuid;
 use ui::Navbar;
-use views::{Blog, Home, NewBudgetItem, PageNotFound, BudgetOverview};
+use views::{Blog, Home, NewBudgetItem, PageNotFound, Budget};
 mod views;
 
 #[derive(Debug, Clone, Routable, PartialEq)]

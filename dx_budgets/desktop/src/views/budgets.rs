@@ -1,6 +1,7 @@
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use uuid::Uuid;
+use ui::BudgetOverview;
 use crate::Route;
 
 #[component]
@@ -13,9 +14,9 @@ pub fn PageNotFound(route: Vec<String>) -> Element {
 }
 
 #[component]
-pub fn BudgetOverview(id: Uuid) -> Element {
+pub fn Budget(id: Uuid) -> Element {
     rsx! {
-        h1 { "Budget" }
+        BudgetOverview { id: id }
     }
 }
 
