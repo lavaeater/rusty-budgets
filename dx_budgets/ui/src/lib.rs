@@ -7,7 +7,7 @@ mod navbar;
 pub use navbar::Navbar;
 
 mod users;
-mod budget;
+pub mod budget;
 
 
 pub use users::Users;

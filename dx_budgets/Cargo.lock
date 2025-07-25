@@ -959,7 +959,9 @@ dependencies = [
  "api",
  "dioxus",
  "lucide-dioxus",
+ "serde",
  "ui",
+ "uuid",
 ]
 
 [[package]]

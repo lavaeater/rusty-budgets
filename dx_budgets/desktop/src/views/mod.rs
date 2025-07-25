@@ -2,7 +2,9 @@ mod home;
 pub use home::Home;
 
 mod blog;
-mod new_budget_item;
+mod budgets;
 
 pub use blog::Blog;
-pub use new_budget_item::NewBudgetItem;
+pub use budgets::NewBudgetItem;
+pub use budgets::PageNotFound;
+pub use budgets::Budget;

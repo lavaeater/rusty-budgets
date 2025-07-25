@@ -6,6 +6,8 @@ use uuid::Uuid;
 
 const BUDGET_CSS: Asset = asset!("/assets/styling/budget.css");
 
+pub static DEFAULT_BUDGET_ID: GlobalSignal<Uuid> = Signal::global(|| Uuid::default());
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct BudgetSignal {
     id: Uuid,
@@ -55,6 +57,7 @@ pub fn BudgetHero() -> Element {
     // Update budget signal when resource changes
     use_effect(move || {
         if let Some(Ok(budget)) = budget_resource.read().as_ref() {
+            *DEFAULT_BUDGET_ID.write() = budget.id;
             budget_signal.set(Some(BudgetSignal::from(&budget)));
         }
     });
