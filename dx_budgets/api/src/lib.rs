@@ -241,7 +241,7 @@ pub mod db {
     ) -> anyhow::Result<()> {
         let user = get_default_user(None).await?;
         let mut budget_item_to_save =
-            DbState::new_uncreated(BudgetItem::new_from_user(&name, expected_at, user.id));
+            DbState::new_uncreated(BudgetItem::new_from_user(budget_id, &name, expected_at, user.id));
         match budget_item_to_save.save(client_from_option(None)).await {
             Ok(_) => {
                 tracing::info!("Saved budget item");
@@ -372,6 +372,7 @@ pub async fn add_budget_item(
     amount: f32,
     expected_at: NaiveDate,
 ) -> Result<(), ServerFnError> {
+    tracing::info!("add_budget_item: {}, {}, {}, {}", budget_id, name, first_item, amount);
     match db::add_budget_item(budget_id, name, first_item, amount, expected_at).await {
         Ok(_) => Ok(()),
         Err(e) => {

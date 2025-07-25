@@ -1,4 +1,5 @@
 use dioxus::dioxus_core::Element;
+use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use uuid::Uuid;
 use crate::budget::budget_hero::{BudgetSignal, DEFAULT_BUDGET_ID};
@@ -24,17 +25,26 @@ pub fn BudgetOverview(id: Uuid) -> Element {
     
     match budget_signal() {
         Some(budget) => {
+            tracing::info!("Budget items: {:#?}", budget.budget_items);
             rsx! {
                 document::Link { rel: "stylesheet", href: BUDGET_CSS }
                 div {
                     id: "budget_overview",
-                        h2 {
+                        h1 {
                             "{budget.name}"
                         }
                         h4 {
-                            "Default: {budget.default_budget}" }
+                            "Default: {budget.default_budget}"
+                        }
+                }
+                for item in budget.budget_items {
+                    h3 {
+                        "{item.name}"
+                    } 
+                    h4 {
+                        "Current amount:{item.aggregate_amount}"
                     }
-                
+                }
             }
         }
         None => {
