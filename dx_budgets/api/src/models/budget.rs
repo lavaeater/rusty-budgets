@@ -6,7 +6,6 @@ use uuid::Uuid;
 #[cfg(feature = "server")]
 use welds::WeldsModel;
 
-
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 #[cfg_attr(feature = "server", derive(WeldsModel))]
 #[cfg_attr(feature = "server", welds(table = "budgets"))]
@@ -28,7 +27,7 @@ pub struct Budget {
 }
 
 #[cfg(feature = "server")]
-pub fn before_create(budget: &mut Budget) -> welds::errors::Result<()>{
+pub fn before_create(budget: &mut Budget) -> welds::errors::Result<()> {
     budget.id = Uuid::new_v4();
     budget.created_at = chrono::Utc::now().naive_utc();
     budget.updated_at = chrono::Utc::now().naive_utc();
@@ -36,7 +35,7 @@ pub fn before_create(budget: &mut Budget) -> welds::errors::Result<()>{
 }
 
 #[cfg(feature = "server")]
-pub fn before_update(budget: &mut Budget) -> welds::errors::Result<()>{
+pub fn before_update(budget: &mut Budget) -> welds::errors::Result<()> {
     budget.updated_at = chrono::Utc::now().naive_utc();
     Ok(())
 }

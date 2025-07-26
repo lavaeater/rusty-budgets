@@ -11,8 +11,14 @@ use welds::WeldsModel;
 #[cfg_attr(feature = "server", derive(WeldsModel))]
 #[cfg_attr(feature = "server", welds(table = "budget_items"))]
 #[cfg_attr(feature = "server", welds(BelongsTo(budget, Budget, "budget_id")))]
-#[cfg_attr(feature = "server", welds(HasMany(outgoing_budget_transactions, BudgetTransaction, "from_budget_item")))]
-#[cfg_attr(feature = "server", welds(HasMany(incoming_budget_transactions, BudgetTransaction, "to_budget_item")))]
+#[cfg_attr(
+    feature = "server",
+    welds(HasMany(outgoing_budget_transactions, BudgetTransaction, "from_budget_item"))
+)]
+#[cfg_attr(
+    feature = "server",
+    welds(HasMany(incoming_budget_transactions, BudgetTransaction, "to_budget_item"))
+)]
 #[cfg_attr(feature = "server", welds(BeforeCreate(before_create)))]
 #[cfg_attr(feature = "server", welds(BeforeUpdate(before_update)))]
 pub struct BudgetItem {
@@ -39,7 +45,7 @@ impl BudgetItem {
 }
 
 #[cfg(feature = "server")]
-pub fn before_create(budget_item: &mut BudgetItem) -> welds::errors::Result<()>{
+pub fn before_create(budget_item: &mut BudgetItem) -> welds::errors::Result<()> {
     budget_item.id = Uuid::new_v4();
     budget_item.created_at = chrono::Utc::now().naive_utc();
     budget_item.updated_at = chrono::Utc::now().naive_utc();
@@ -47,8 +53,7 @@ pub fn before_create(budget_item: &mut BudgetItem) -> welds::errors::Result<()>{
 }
 
 #[cfg(feature = "server")]
-pub fn before_update(budget_item: &mut BudgetItem) -> welds::errors::Result<()>{
+pub fn before_update(budget_item: &mut BudgetItem) -> welds::errors::Result<()> {
     budget_item.updated_at = chrono::Utc::now().naive_utc();
     Ok(())
 }
-
