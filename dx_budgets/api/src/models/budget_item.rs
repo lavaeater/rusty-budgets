@@ -25,6 +25,7 @@ pub struct BudgetItem {
     #[cfg_attr(feature = "server", welds(primary_key))]
     pub id: Uuid,
     pub name: String,
+    pub item_type: String,
     pub expected_at: chrono::NaiveDate,
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: chrono::NaiveDateTime,
@@ -33,10 +34,11 @@ pub struct BudgetItem {
 }
 
 impl BudgetItem {
-    pub fn new_from_user(budget_id: Uuid, name: &str, expected_at: chrono::NaiveDate, created_by: Uuid) -> BudgetItem {
+    pub fn new_from_user(budget_id: Uuid, name: &str, expected_at: chrono::NaiveDate, created_by: Uuid, item_type: &str) -> BudgetItem {
         BudgetItem {
             budget_id,
             name: name.to_string(),
+            item_type: item_type.to_string(),
             expected_at,
             created_by,
             ..Default::default()
