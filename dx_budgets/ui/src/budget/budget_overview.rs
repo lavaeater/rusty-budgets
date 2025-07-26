@@ -25,7 +25,6 @@ pub fn BudgetOverview(id: Uuid) -> Element {
     
     match budget_signal() {
         Some(budget) => {
-            tracing::info!("Budget items: {:#?}", budget.budget_items);
             rsx! {
                 document::Link { rel: "stylesheet", href: BUDGET_CSS }
                 div {
@@ -37,12 +36,64 @@ pub fn BudgetOverview(id: Uuid) -> Element {
                             "Default: {budget.default_budget}"
                         }
                 }
-                for item in budget.budget_items {
+                for item in budget.incomes {
                     h3 {
                         "{item.name}"
-                    } 
-                    h4 {
-                        "Current amount:{item.aggregate_amount}"
+                    }
+                    if item.money_needs_job {
+                        h4 {
+                            "Money left to spend: {item.aggregate_amount}"
+                        }
+                    }
+                    if item.too_much_job {
+                        h4 {
+                            "Money over budget: {item.aggregate_amount}"
+                        }
+                    }
+                    if item.is_balanced {
+                        h4 {
+                            "There is balance to the force"
+                        }
+                    }
+                }
+                for item in budget.expenses {
+                    h3 {
+                        "{item.name}"
+                    }
+                    if item.money_needs_job {
+                        h4 {
+                            "Money left to spend: {item.aggregate_amount}"
+                        }
+                    }
+                    if item.too_much_job {
+                        h4 {
+                            "Money over budget: {item.aggregate_amount}"
+                        }
+                    }
+                    if item.is_balanced {
+                        h4 {
+                            "There is balance to the force"
+                        }
+                    }
+                }
+                for item in budget.savings {
+                    h3 {
+                        "{item.name}"
+                    }
+                    if item.money_needs_job {
+                        h4 {
+                            "Money left to spend: {item.aggregate_amount}"
+                        }
+                    }
+                    if item.too_much_job {
+                        h4 {
+                            "Money over budget: {item.aggregate_amount}"
+                        }
+                    }
+                    if item.is_balanced {
+                        h4 {
+                            "There is balance to the force"
+                        }
                     }
                 }
             }

@@ -91,6 +91,7 @@ pub mod db {
 
         let budget_item_set: DataSet<BudgetItem> =
             BudgetItem::where_col(|bi| bi.budget_id.equal(id))
+                .where_col(|bi| bi.item_type.equal("income"))
                 .include(|bi| bi.incoming_budget_transactions)
                 .include(|bi| bi.outgoing_budget_transactions)
                 .run(client_from_option(client))
@@ -112,22 +113,44 @@ pub mod db {
                         .iter()
                         .map(|bt| bt.amount)
                         .sum::<f32>();
+                
+                let is_balanced = aggregate_amount == 0.0;
+                let money_needs_job = aggregate_amount > 0.0;
+                let too_much_job= aggregate_amount < 0.0;
                 BudgetItemView {
                     id: bi.id,
                     name: bi.name.clone(),
+                    item_type: bi.item_type.clone(),
                     aggregate_amount,
+                    is_balanced,
+                    money_needs_job,
+                    too_much_job,
                     expected_at: bi.expected_at,
                     incoming_budget_transactions,
                     outgoing_budget_transactions,
                 }
             })
-            .collect();
+            .collect::<Vec<_>>();
 
         Ok(BudgetOverview {
             id,
             default_budget: budget.default_budget,
             name: budget.name,
-            budget_items: budget_items_view,
+            incomes: budget_items_view
+                .iter()
+                .filter(|bi| bi.item_type == "income")
+                .cloned()
+                .collect(),
+            expenses: budget_items_view
+                .iter()
+                .filter(|bi| bi.item_type == "expense")
+                .cloned()
+                .collect(),
+            savings: budget_items_view
+                .iter()
+                .filter(|bi| bi.item_type == "savings")
+                .cloned()
+                .collect(),
         })
     }
 
@@ -399,7 +422,11 @@ pub async fn add_budget_item(
 pub struct BudgetItemView {
     pub id: Uuid,
     pub name: String,
+    pub item_type: String,
     pub aggregate_amount: f32,
+    pub is_balanced: bool,
+    pub money_needs_job: bool,
+    pub too_much_job: bool,
     pub expected_at: NaiveDate,
     pub incoming_budget_transactions: Vec<BudgetTransaction>,
     pub outgoing_budget_transactions: Vec<BudgetTransaction>,
@@ -410,7 +437,9 @@ pub struct BudgetOverview {
     pub id: Uuid,
     pub name: String,
     pub default_budget: bool,
-    pub budget_items: Vec<BudgetItemView>,
+    pub incomes: Vec<BudgetItemView>,
+    pub expenses: Vec<BudgetItemView>,
+    pub savings: Vec<BudgetItemView>,
 }
 
 #[server]
