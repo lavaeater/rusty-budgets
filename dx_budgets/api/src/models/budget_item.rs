@@ -34,7 +34,7 @@ pub struct BudgetItem {
 }
 
 impl BudgetItem {
-    pub fn new_from_user(budget_id: Uuid, name: &str, expected_at: chrono::NaiveDate, created_by: Uuid, item_type: &str) -> BudgetItem {
+    pub fn new_from_user(budget_id: Uuid, name: &str, item_type: &str, expected_at: chrono::NaiveDate, created_by: Uuid) -> BudgetItem {
         BudgetItem {
             budget_id,
             name: name.to_string(),

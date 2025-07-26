@@ -23,8 +23,8 @@ pub fn Budget(id: Uuid) -> Element {
 const BUDGET_CSS: Asset = asset!("/assets/main.css");
 
 #[component]
-pub fn NewBudgetItem(budget_id: Uuid) -> Element {
+pub fn NewBudgetItem(budget_id: Uuid, item_type: String) -> Element {
     rsx! {
-        ui::NewBudgetItem { budget_id: budget_id }
+        ui::NewBudgetItem { budget_id: budget_id, item_type: item_type }
     }
 }

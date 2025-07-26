@@ -21,10 +21,11 @@ enum Route {
             id: Uuid
         },
         #[nest("/:budget_id")]
-            #[route("/new_budget_item")]
+            #[route("/new_budget_item/:item_type")]
             NewBudgetItem {
                 // You must include parent dynamic segments in child variants
                 budget_id: Uuid,
+                item_type: String
             },
     // End nests manually with #[end_nest]
         #[end_nest]

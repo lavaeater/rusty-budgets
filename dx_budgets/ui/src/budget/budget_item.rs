@@ -13,7 +13,7 @@ pub fn BudgetItem() -> Element {
 }
 
 #[component]
-pub fn NewBudgetItem(budget_id: Uuid) -> Element {
+pub fn NewBudgetItem(budget_id: Uuid, item_type: String) -> Element {
     let nav = navigator();
     let mut name = use_signal(|| "Budgetkategori".to_string());
     let mut first_item = use_signal(|| "Första post".to_string());
@@ -58,10 +58,13 @@ pub fn NewBudgetItem(budget_id: Uuid) -> Element {
                 div {
                     button {
                         onclick: move |_| {
+                        let item_type = item_type.clone();
+
                         spawn(async move {
                         match api::add_budget_item(
                             budget_id,
                             name.read().clone(),
+                            item_type.clone(),
                             first_item.read().clone(),
                             amount.read().clone(),
                             NaiveDate::parse_from_str(expected_at.read().as_str(), "%Y-%m-%d").unwrap(),
