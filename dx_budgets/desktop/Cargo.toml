@@ -7,6 +7,9 @@ edition = "2021"
 dioxus = { workspace = true, features = ["router"] }
 ui = { workspace = true }
 api = { workspace = true, features = ["server"], optional = true }
+lucide-dioxus = {workspace = true, features = ["all-icons"] }
+uuid = { workspace = true, features = ["v4", "js", "serde"] }
+serde = { workspace = true, features = ["derive"] }
 
 [features]
 desktop = ["dioxus/desktop"]

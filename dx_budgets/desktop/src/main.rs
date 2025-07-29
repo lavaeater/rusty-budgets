@@ -1,29 +1,47 @@
 use dioxus::logger::tracing;
 use dioxus::logger::tracing::Level;
 use dioxus::prelude::*;
+use uuid::Uuid;
 use ui::Navbar;
-use views::{Blog, Home};
+use views::{Blog, Home, NewBudgetItem, PageNotFound, Budget};
 mod views;
-// use dioxus_provider::global::init_global_providers;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
 enum Route {
     #[layout(DesktopNavbar)]
-    #[route("/")]
-    Home {},
-    #[route("/blog/:id")]
-    Blog { id: i32 },
+        #[route("/")]
+        Home {},
+        #[route("/blog/:id")]
+        Blog { id: i32 },
+    #[end_layout]
+    #[nest("/budget")]
+        #[route("/:id")]
+        Budget {
+            id: Uuid
+        },
+        #[nest("/:budget_id")]
+            #[route("/new_budget_item/:item_type")]
+            NewBudgetItem {
+                // You must include parent dynamic segments in child variants
+                budget_id: Uuid,
+                item_type: String
+            },
+    // End nests manually with #[end_nest]
+        #[end_nest]
+    #[end_nest]
+    #[route("/:..route")]
+    PageNotFound { route: Vec<String> },
 }
 
 const MAIN_CSS: Asset = asset!("/assets/main.css");
 
 fn main() {
     dioxus::logger::init(Level::INFO).expect("failed to init logger");
-    // init_global_providers();
 
     #[cfg(feature = "server")]
     let _ = api::db::CLIENT.as_ref();
+    
     
     launch(App);
 }

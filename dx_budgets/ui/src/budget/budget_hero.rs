@@ -1,9 +1,12 @@
 use api::models::budget::Budget;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
+use lucide_dioxus::{Plus, Pen, Hamburger};
 use uuid::Uuid;
 
 const BUDGET_CSS: Asset = asset!("/assets/styling/budget.css");
+
+pub static DEFAULT_BUDGET_ID: GlobalSignal<Uuid> = Signal::global(|| Uuid::default());
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct BudgetSignal {
@@ -34,6 +37,7 @@ impl BudgetSignal {
             name: temp.name.read().to_string(),
             user_id: temp.user_id,
             default_budget: *temp.default_budget.read(),
+            ..Default::default()
         };
         x
     }
@@ -41,6 +45,7 @@ impl BudgetSignal {
 
 #[component]
 pub fn BudgetHero() -> Element {
+    let nav = navigator();
     // Resource for fetching budget data
     let mut budget_resource = use_resource(|| async move { api::get_default_budget().await });
 
@@ -53,6 +58,7 @@ pub fn BudgetHero() -> Element {
     // Update budget signal when resource changes
     use_effect(move || {
         if let Some(Ok(budget)) = budget_resource.read().as_ref() {
+            *DEFAULT_BUDGET_ID.write() = budget.id;
             budget_signal.set(Some(BudgetSignal::from(&budget)));
         }
     });
@@ -94,31 +100,28 @@ pub fn BudgetHero() -> Element {
                             autofocus: true,
                         }
                     } else {
-                        h4 {
-                            onclick: move |_| {
-                                is_editing.set(true);
-                            },
-                            "{budget.name}"
+                        span {
+                            h2 {"{budget.name}"},
+                            Link { 
+                                to: "/budget/{budget.id}",
+                                Hamburger {
+                                    color: "white",
+                                size: 32 }
+                            } 
+                            span {
+                                onclick: move |_| {
+                                    is_editing.set(true);
+                                },
+                                Pen {
+                                    color: "white",
+                                    size: 32
+                                }
+                            }
+
+                            
                         }
-                        h3 {
-                            // onclick: move |_| {
-                            //     let derf = !*budget.default_budget.read();
-                            //     budget.default_budget.set(derf);
-                            //         let budget_to_save = budget.to_budget();
-                            //         spawn(async move {
-                            //             match api::save_budget(budget_to_save).await {
-                            //                 Ok(_) => {
-                            //                     tracing::info!("Success");
-                            //                     // Update successful, refresh the resource
-                            //                     budget_resource.restart();
-                            //                 }
-                            //                 Err(e) => {
-                            //                     // Handle error (could add error state here)
-                            //                     tracing::error!("Failed to save budget: {}", e);
-                            //                 }
-                            //             }
-                            //         });
-                            // },
+
+                        h4 {
                             "Default: {budget.default_budget}" }
                     }
                 }
