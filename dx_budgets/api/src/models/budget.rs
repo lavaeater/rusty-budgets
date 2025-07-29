@@ -14,6 +14,23 @@ pub struct Budget {
     pub user_id: Uuid,
 }
 
+impl Budget {
+    pub fn new(name: &str, default_budget: bool, user_id: Uuid) -> Budget {
+        Budget {
+            id: Uuid::new_v4(),
+            name: name.to_string(),
+            default_budget,
+            created_at: chrono::Utc::now().naive_utc(),
+            updated_at: chrono::Utc::now().naive_utc(),
+            user_id,
+        }
+    }
+    
+    pub fn touch(&mut self) {
+        self.updated_at = chrono::Utc::now().naive_utc();
+    }
+}
+
 pub fn before_create(budget: &mut Budget) -> welds::errors::Result<()> {
     budget.id = Uuid::new_v4();
     budget.created_at = chrono::Utc::now().naive_utc();

@@ -6,6 +6,7 @@ use crate::models::budget::Budget;
 use crate::models::budget_transaction::BudgetTransaction;
 use crate::models::user::User;
 use chrono::NaiveDate;
+use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -23,8 +24,9 @@ pub mod db {
     use once_cell::sync::Lazy;
     use uuid::Uuid;
     use Default;
+    use chrono::NaiveDate;
     use joydb::adapters::JsonAdapter;
-    use joydb::Joydb;
+    use joydb::{Joydb, JoydbError};
 
     // Define the state
     joydb::state! {
@@ -37,16 +39,14 @@ pub mod db {
 
     pub static CLIENT: Lazy<Db> = Lazy::new(|| {
         tracing::info!("Init DB Client");
-
         let client = Db::open("./data.json").unwrap();        
         
         // Run migrations
         tracing::info!("Insert Default Data");
-
         match get_default_user(Some(&client)) {
             Ok(user) => {
                 tracing::info!("Default user exists");
-                match get_default_budget_for_user(user.id, Some(&client)).await {
+                match get_default_budget_for_user(user.id, Some(&client)) {
                     Ok(_) => {
                         tracing::info!("Default budget exists");
                     }
@@ -74,7 +74,7 @@ pub mod db {
 
     pub async fn get_budget_overview(
         id: Uuid,
-        client: Option<&AnyClient>,
+        client: Option<&Db>,
     ) -> anyhow::Result<BudgetOverview> {
         let budget: Budget = Budget::all()
             .where_col(|b| b.id.equal(id))
@@ -147,14 +147,14 @@ pub mod db {
         })
     }
 
-    pub async fn list_users(client: Option<&AnyClient>) -> anyhow::Result<Vec<User>> {
+    pub async fn list_users(client: Option<&Db>) -> anyhow::Result<Vec<User>> {
         match User::all().run(client_from_option(client)).await {
             Ok(users) => Ok(users.into_iter().map(|u| u.into_inner()).collect()),
             Err(e) => Err(anyhow::Error::from(e)),
         }
     }
 
-    pub async fn user_exists(email: &str, client: Option<&AnyClient>) -> bool {
+    pub async fn user_exists(email: &str, client: Option<&Db>) -> bool {
         tracing::info!("user_exists");
         if let Ok(res) = User::all()
             .where_col(|u| u.email.equal(email))
@@ -170,17 +170,9 @@ pub mod db {
     }
 
     pub fn get_default_user(client: Option<&Db>) -> anyhow::Result<User> {
-        
-        match client_from_option(client).get_all_by(|| {})
-            
-        match User::all()
-            .where_col(|u| u.email.equal(DEFAULT_USER_EMAIL))
-            .fetch_one(client_from_option(client))
-            .await
-        {
-            Ok(u) => Ok(u.into_inner()),
-            Err(e) => match e {
-                WeldsError::RowNotFound => {
+        match client_from_option(client).get_all_by(|u: &User| u.email == DEFAULT_USER_EMAIL) {
+            Ok(users) => {
+                if users.is_empty() {
                     create_user(
                         "tommie",
                         DEFAULT_USER_EMAIL,
@@ -192,13 +184,14 @@ pub mod db {
                         ),
                         client,
                     )
-                    .await
+                } else {
+                    Ok(users[0].clone())
                 }
-                _ => {
-                    tracing::error!(error = %e, "Could not get default user");
-                    Err(anyhow::Error::from(e))
-                }
-            },
+            }
+            Err(e) => {
+                tracing::error!(error = %e, "Could not get default user");
+                Err(anyhow::Error::from(e))
+            }
         }
     }
 
@@ -279,46 +272,37 @@ pub mod db {
         }
     }
 
-    pub async fn get_default_budget_for_user(
-        user_id: uuid::Uuid,
-        client: Option<&AnyClient>,
+    pub fn get_default_budget_for_user(
+        user_id: Uuid,
+        client: Option<&Db>,
     ) -> anyhow::Result<Budget> {
-        match Budget::all()
-            .where_col(|b| b.user_id.equal(user_id))
-            .where_col(|b| b.default_budget.equal(true))
-            .fetch_one(client_from_option(client))
-            .await
-        {
-            Ok(b) => Ok(b.into_inner()),
-            Err(e) => match e {
-                WeldsError::RowNotFound => {
+        match client_from_option(client).get_all_by(|b: &Budget| b.user_id == user_id && b.default_budget) {
+            Ok(budgets) => {
+                if budgets.is_empty() {
                     tracing::info!("No default budget exists, time to create one");
-                    create_budget("Default", user_id, true, client).await
+                    create_budget("Default", user_id, true, client)
+                } else {
+                    Ok(budgets[0].clone())
+                } else {
+                    Err(anyhow::Error::from(WeldsError::RowNotFound))
                 }
-                _ => {
-                    tracing::error!(error = %e, "Could not get default budget for user");
-                    Err(anyhow::Error::from(e))
-                }
-            },
+            }
+            Err(e) => {
+                tracing::error!(error = %e, "Could not get default budget for user");
+                Err(anyhow::Error::from(e))
+            }            
         }
     }
 
-    pub async fn create_budget(
+    pub fn create_budget(
         name: &str,
-        user_id: uuid::Uuid,
+        user_id: Uuid,
         default_budget: bool,
-        client: Option<&AnyClient>,
+        client: Option<&Db>,
     ) -> anyhow::Result<Budget> {
-        let mut budget = DbState::new_uncreated(Budget {
-            id: Uuid::default(),
-            name: name.to_string(),
-            user_id,
-            default_budget,
-            created_at: Default::default(),
-            updated_at: Default::default(),
-        });
-        match budget.save(client_from_option(client)).await {
-            Ok(_) => Ok(budget.into_inner()),
+        let mut budget = Budget::new(name, default_budget, user_id);
+        match client_from_option(client).insert(&mut budget) {
+            Ok(_) => Ok(budget.clone()),
             Err(e) => {
                 tracing::error!(error = %e, "Could not create budget");
                 Err(anyhow::Error::from(e))
@@ -326,14 +310,14 @@ pub mod db {
         }
     }
 
-    pub async fn create_user(
+    pub fn create_user(
         user_name: &str,
         email: &str,
         first_name: &str,
         last_name: &str,
         phone: Option<String>,
         birthday: Option<NaiveDate>,
-        client: Option<&AnyClient>,
+        client: Option<&Db>,
     ) -> anyhow::Result<User> {
         let mut user = DbState::new_uncreated(User {
             id: uuid::Uuid::new_v4(),
