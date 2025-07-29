@@ -1,7 +1,7 @@
 use welds::errors::Result;
-#[cfg(feature = "server")]
+
 use welds::migrations::prelude::*;
-#[cfg(feature = "server")]
+
 pub(super) fn step(_state: &TableState) -> Result<MigrationStep> {
     let m = create_table("budget_items")
         .id(|c| c("id", Type::Uuid))

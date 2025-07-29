@@ -39,7 +39,7 @@ const MAIN_CSS: Asset = asset!("/assets/main.css");
 fn main() {
     dioxus::logger::init(Level::INFO).expect("failed to init logger");
 
-    #[cfg(feature = "server")]
+    
     let _ = api::db::CLIENT.as_ref();
     
     

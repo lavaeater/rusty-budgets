@@ -60,6 +60,7 @@ dependencies = [
  "anyhow",
  "chrono",
  "dioxus",
+ "joydb",
  "once_cell",
  "serde",
  "sqlx",
@@ -2795,6 +2796,29 @@ name = "jni-sys"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8eaf4bc02d17cbdd7ff4c7438cafcdf7fb9a4613313ad11b4f8fefe7d3fa0130"
+
+[[package]]
+name = "joydb"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2a32fef7d1be0bdde33fc8a63844f384672fbc432a67d0b82964dc6692427b88"
+dependencies = [
+ "joydb_macros",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.12",
+]
+
+[[package]]
+name = "joydb_macros"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "28d1d00053c2832bf50ba1e320ee39fbbe77808147aaf909d2bde62bf842cde6"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.104",
+]
 
 [[package]]
 name = "js-sys"

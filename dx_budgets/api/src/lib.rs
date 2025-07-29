@@ -6,76 +6,69 @@ use crate::models::budget::Budget;
 use crate::models::budget_transaction::BudgetTransaction;
 use crate::models::user::User;
 use chrono::NaiveDate;
-use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 
-#[cfg(feature = "server")]
 pub mod db {
     use crate::models::budget::Budget;
     use crate::models::budget_item::BudgetItem;
     use crate::models::budget_transaction::BudgetTransaction;
     use crate::models::user::User;
     use crate::{migrations, BudgetItemView, BudgetOverview, DEFAULT_USER_EMAIL};
-    use dioxus::hooks::use_signal;
     use dioxus::logger::tracing;
-    use dioxus::prelude::{ServerFnError, Signal, UnsyncStorage};
+    use dioxus::prelude::{Signal, UnsyncStorage};
     use once_cell::sync::Lazy;
-    use sqlx::types::chrono::NaiveDate;
-    use sqlx::types::uuid;
-    use std::future::Future;
     use uuid::Uuid;
-    use welds::connections::any::AnyClient;
-    use welds::dataset::DataSet;
-    use welds::state::DbState;
-    use welds::{errors, WeldsError};
     use Default;
+    use joydb::adapters::JsonAdapter;
+    use joydb::Joydb;
 
-    pub static CLIENT: Lazy<AnyClient> = Lazy::new(|| {
+    // Define the state
+    joydb::state! {
+        AppState,
+        models: [User, Budget, BudgetItem, BudgetTransaction],
+    }
+
+    // Define the database (combination of state and adapter)
+    type Db = Joydb<AppState, JsonAdapter>;
+
+    pub static CLIENT: Lazy<Db> = Lazy::new(|| {
         tracing::info!("Init DB Client");
 
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        rt.block_on(async {
-            tracing::info!("Create DB Client");
-            let client = welds::connections::connect("sqlite://./database.sqlite?mode=rwc")
-                .await
-                .expect("Could not create Client");
-            // Run migrations
-            tracing::info!("Run migrations");
-            migrations::up(&client)
-                .await
-                .expect("Could not run migrations");
+        let client = Db::open("./data.json").unwrap();        
+        
+        // Run migrations
+        tracing::info!("Insert Default Data");
 
-            match get_default_user(Some(&client)).await {
-                Ok(user) => {
-                    tracing::info!("Default user exists");
-                    match get_default_budget_for_user(user.id, Some(&client)).await {
-                        Ok(_) => {
-                            tracing::info!("Default budget exists");
-                        }
-                        Err(e) => {
-                            tracing::error!(error = %e, "Could not get default budget for user");
-                            panic!("Could not get default budget for user");
-                        }
+        match get_default_user(Some(&client)) {
+            Ok(user) => {
+                tracing::info!("Default user exists");
+                match get_default_budget_for_user(user.id, Some(&client)).await {
+                    Ok(_) => {
+                        tracing::info!("Default budget exists");
+                    }
+                    Err(e) => {
+                        tracing::error!(error = %e, "Could not get default budget for user");
+                        panic!("Could not get default budget for user");
                     }
                 }
-                Err(e) => {
-                    tracing::error!(error = %e, "Could not get default user");
-                    panic!("Could not get default user");
-                }
             }
-            client
-        })
+            Err(e) => {
+                tracing::error!(error = %e, "Could not get default user");
+                panic!("Could not get default user");
+            }
+        }
+        client
     });
 
-    fn client_from_option(client: Option<&AnyClient>) -> &AnyClient {
+    fn client_from_option(client: Option<&Db>) -> &Db {
         if let Some(c) = client {
             c
         } else {
-            CLIENT.as_ref()
+            &CLIENT
         }
     }
 
@@ -176,7 +169,10 @@ pub mod db {
         }
     }
 
-    pub async fn get_default_user(client: Option<&AnyClient>) -> anyhow::Result<User> {
+    pub fn get_default_user(client: Option<&Db>) -> anyhow::Result<User> {
+        
+        match client_from_option(client).get_all_by(|| {})
+            
         match User::all()
             .where_col(|u| u.email.equal(DEFAULT_USER_EMAIL))
             .fetch_one(client_from_option(client))

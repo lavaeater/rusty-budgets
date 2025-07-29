@@ -18,7 +18,7 @@ const FAVICON: Asset = asset!("/assets/favicon.ico");
 const MAIN_CSS: Asset = asset!("/assets/main.css");
 
 fn main() {
-    #[cfg(feature = "server")]
+    
     let _ = api::db::CLIENT.as_ref();
     launch(App);
 }

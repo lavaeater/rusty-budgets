@@ -1,14 +1,10 @@
 use chrono::NaiveDate;
+use joydb::Model;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-#[cfg(feature = "server")]
-use welds::WeldsModel;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(WeldsModel))]
-#[cfg_attr(feature = "server", welds(table = "users"))]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default, Model)]
 pub struct User {
-    #[cfg_attr(feature = "server", welds(primary_key))]
     pub id: Uuid,
     pub user_name: String,
     pub email: String,
