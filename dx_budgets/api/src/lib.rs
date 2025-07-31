@@ -2,6 +2,7 @@
 pub mod models;
 
 use crate::models::budget::Budget;
+use crate::models::budget_item::BudgetItem;
 use crate::models::budget_transaction::BudgetTransaction;
 use crate::models::user::User;
 use chrono::NaiveDate;
@@ -11,14 +12,13 @@ use joydb::adapters::JsonAdapter;
 use joydb::Joydb;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use crate::models::budget_item::BudgetItem;
 
 const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 // Define the state
 joydb::state! {
-        AppState,
-        models: [User, Budget, BudgetItem, BudgetTransaction],
-    }
+    AppState,
+    models: [User, Budget, BudgetItem, BudgetTransaction],
+}
 
 // Define the database (combination of state and adapter)
 #[cfg(feature = "server")]
@@ -30,16 +30,16 @@ pub mod db {
     use crate::models::budget_transaction::BudgetTransaction;
     use crate::models::user::User;
     use crate::{BudgetItemView, BudgetOverview, Db, DEFAULT_USER_EMAIL};
-    use dioxus::logger::tracing;
-    use dioxus::prelude::{Signal, UnsyncStorage};
-    use uuid::Uuid;
-    use Default;
     use chrono::NaiveDate;
     use dioxus::fullstack::once_cell::sync::Lazy;
+    use dioxus::logger::tracing;
+    use dioxus::prelude::{Signal, UnsyncStorage};
     use joydb::JoydbError;
+    use uuid::Uuid;
+    use Default;
     pub static CLIENT: Lazy<Db> = Lazy::new(|| {
         tracing::info!("Init DB Client");
-        let client = Db::open("~/data.json").unwrap();
+        let client = Db::open("/home/tommie/data.json").unwrap();
         // Run migrations
         tracing::info!("Insert Default Data");
         match get_default_user(Some(&client)) {
@@ -62,7 +62,7 @@ pub mod db {
         }
         client
     });
-    
+
     fn client_from_option(client: Option<&Db>) -> &Db {
         if let Some(c) = client {
             c
@@ -71,36 +71,33 @@ pub mod db {
         }
     }
 
-    pub fn get_budget_overview(
-        id: Uuid,
-        client: Option<&Db>,
-    ) -> anyhow::Result<BudgetOverview> {
-        if let Some(budget) = client_from_option(client)
-            .get::<Budget>(&id)? {
-
-            let budget_items = client_from_option(client).get_all_by(|bi: &BudgetItem| bi.budget_id == id)?;
+    pub fn get_budget_overview(id: Uuid, client: Option<&Db>) -> anyhow::Result<BudgetOverview> {
+        if let Some(budget) = client_from_option(client).get::<Budget>(&id)? {
+            let budget_items =
+                client_from_option(client).get_all_by(|bi: &BudgetItem| bi.budget_id == id)?;
             let budget_items_view = budget_items
                 .iter()
                 .map(|bi| {
                     let incoming_budget_transactions = client_from_option(client)
-                        .get_all_by(|bt: &BudgetTransaction| bt.to_budget_item == bi.id).unwrap();
-                    let outgoing_budget_transactions = client_from_option(client).get_all_by(
-                        |bt: &BudgetTransaction| bt.from_budget_item == Some(bi.id),
-                    ).unwrap();
+                        .get_all_by(|bt: &BudgetTransaction| bt.to_budget_item == bi.id)
+                        .unwrap();
+                    let outgoing_budget_transactions = client_from_option(client)
+                        .get_all_by(|bt: &BudgetTransaction| bt.from_budget_item == Some(bi.id))
+                        .unwrap();
 
                     let aggregate_amount = incoming_budget_transactions
                         .iter()
                         .map(|bt| bt.amount)
                         .sum::<f32>()
                         - outgoing_budget_transactions
-                        .iter()
-                        .map(|bt| bt.amount)
-                        .sum::<f32>();
-                    
+                            .iter()
+                            .map(|bt| bt.amount)
+                            .sum::<f32>();
+
                     let is_balanced = aggregate_amount == 0.0;
                     let money_needs_job = aggregate_amount > 0.0;
                     let too_much_job = aggregate_amount < 0.0;
-                    
+
                     BudgetItemView {
                         id: bi.id,
                         name: bi.name.clone(),
@@ -113,8 +110,9 @@ pub mod db {
                         incoming_budget_transactions,
                         outgoing_budget_transactions,
                     }
-                }).collect::<Vec<BudgetItemView>>();
-            
+                })
+                .collect::<Vec<BudgetItemView>>();
+
             Ok(BudgetOverview {
                 id,
                 default_budget: budget.default_budget,
@@ -137,7 +135,9 @@ pub mod db {
             })
         } else {
             Err(anyhow::Error::from(JoydbError::NotFound {
-                id: id.to_string(), model: "Budget".to_string()}))
+                id: id.to_string(),
+                model: "Budget".to_string(),
+            }))
         }
     }
 
@@ -153,12 +153,12 @@ pub mod db {
 
     pub fn user_exists(email: &str, client: Option<&Db>) -> anyhow::Result<bool> {
         match client_from_option(client).get_all_by(|u: &User| u.email == email) {
-            Ok(users) => {Ok(!users.is_empty())},
+            Ok(users) => Ok(!users.is_empty()),
             Err(e) => {
                 tracing::error!(error = %e, "Could not get default user");
                 Err(anyhow::Error::from(e))
             }
-        }   
+        }
     }
 
     pub fn get_default_user(client: Option<&Db>) -> anyhow::Result<User> {
@@ -211,8 +211,7 @@ pub mod db {
             to_budget_item,
             user.id,
         );
-        match client_from_option(None)
-            .insert(&budget_transaction_to_save) {
+        match client_from_option(None).insert(&budget_transaction_to_save) {
             Ok(_) => {
                 tracing::info!("Saved budget transaction");
                 Ok(())
@@ -222,7 +221,6 @@ pub mod db {
                 Err(anyhow::Error::from(e))
             }
         }
-        
     }
 
     pub fn add_budget_item(
@@ -234,13 +232,8 @@ pub mod db {
         expected_at: NaiveDate,
     ) -> anyhow::Result<()> {
         let user = get_default_user(None)?;
-        let mut budget_item_to_save = BudgetItem::new_from_user(
-            budget_id,
-            &name,
-            &item_type,
-            expected_at,
-            user.id,
-        );
+        let mut budget_item_to_save =
+            BudgetItem::new_from_user(budget_id, &name, &item_type, expected_at, user.id);
         match client_from_option(None).insert(&budget_item_to_save) {
             Ok(_) => {
                 tracing::info!("Saved budget item");
@@ -258,14 +251,15 @@ pub mod db {
         client: Option<&Db>,
     ) -> anyhow::Result<Budget> {
         match client_from_option(client)
-            .get_all_by(|b: &Budget| b.user_id == user_id && b.default_budget) {
+            .get_all_by(|b: &Budget| b.user_id == user_id && b.default_budget)
+        {
             Ok(mut budgets) => {
                 if budgets.is_empty() {
                     tracing::info!("No default budget exists, time to create one");
                     create_budget("Default", user_id, true, client)
                 } else {
                     Ok(budgets.remove(0))
-                } 
+                }
             }
             Err(e) => {
                 tracing::error!(error = %e, "Could not get default budget for user");
@@ -299,12 +293,7 @@ pub mod db {
         birthday: Option<NaiveDate>,
         client: Option<&Db>,
     ) -> anyhow::Result<User> {
-        let user = User::new(user_name,
-                                 first_name,
-                                 last_name,
-                                 email,
-                                phone,  
-                                 birthday);
+        let user = User::new(user_name, email, first_name, last_name, phone, birthday);
         match client_from_option(client).insert(&user) {
             Ok(_) => Ok(user),
             Err(e) => {
@@ -329,8 +318,7 @@ pub async fn list_users() -> Result<Vec<User>, ServerFnError> {
 
 #[server]
 pub async fn get_default_budget() -> Result<Budget, ServerFnError> {
-    match db::get_default_budget_for_user(db::get_default_user(None).unwrap().id, None)
-    {
+    match db::get_default_budget_for_user(db::get_default_user(None).unwrap().id, None) {
         Ok(budget) => Ok(budget),
         Err(e) => {
             tracing::error!(error = %e, "Could not get default budget");
