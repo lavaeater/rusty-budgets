@@ -2,8 +2,6 @@ use chrono::NaiveDate;
 use joydb::Model;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use crate::Db;
-use crate::models::budget::Budget;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default, Model)]
 pub struct User {
@@ -26,13 +24,6 @@ impl User {
             last_name: last_name.to_string(),
             phone,
             birthday,
-        }
-    }
-    
-    pub fn get_default_budget(&self, db: &Db) -> anyhow::Result<Budget> {
-        match db.get_all_by(|b: &Budget| b.user_id == self.id && b.default_budget) {
-            Ok(mut budgets) => { Ok(budgets.remove(0)) },
-            Err(e) => { Err(anyhow::Error::from(e)) }
         }
     }
 }

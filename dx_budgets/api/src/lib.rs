@@ -21,7 +21,9 @@ joydb::state! {
     }
 
 // Define the database (combination of state and adapter)
+#[cfg(feature = "server")]
 type Db = Joydb<AppState, JsonAdapter>;
+#[cfg(feature = "server")]
 pub mod db {
     use crate::models::budget::Budget;
     use crate::models::budget_item::BudgetItem;
@@ -32,15 +34,12 @@ pub mod db {
     use dioxus::prelude::{Signal, UnsyncStorage};
     use uuid::Uuid;
     use Default;
-    use std::time::Duration;
     use chrono::NaiveDate;
     use dioxus::fullstack::once_cell::sync::Lazy;
     use joydb::JoydbError;
-    const DATA_PATH: &str = "data.json";
     pub static CLIENT: Lazy<Db> = Lazy::new(|| {
         tracing::info!("Init DB Client");
-        let client = Db::open("./data.json").unwrap();
-
+        let client = Db::open("~/data.json").unwrap();
         // Run migrations
         tracing::info!("Insert Default Data");
         match get_default_user(Some(&client)) {
