@@ -17,12 +17,14 @@ pub struct BudgetItem {
 impl BudgetItem {
     pub fn new_from_user(budget_id: Uuid, name: &str, item_type: &str, expected_at: chrono::NaiveDate, created_by: Uuid) -> BudgetItem {
         BudgetItem {
+            id: Uuid::new_v4(),
             budget_id,
             name: name.to_string(),
             item_type: item_type.to_string(),
             expected_at,
+            created_at: chrono::Utc::now().naive_utc(),
+            updated_at: chrono::Utc::now().naive_utc(),
             created_by,
-            ..Default::default()
         }
     }
 }

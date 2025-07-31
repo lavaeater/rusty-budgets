@@ -63,7 +63,7 @@ pub mod db {
         }
         client
     });
-
+    
     fn client_from_option(client: Option<&Db>) -> &Db {
         if let Some(c) = client {
             c
@@ -76,97 +76,89 @@ pub mod db {
         id: Uuid,
         client: Option<&Db>,
     ) -> anyhow::Result<BudgetOverview> {
-        let budget: Budget = Budget::all()
-            .where_col(|b| b.id.equal(id))
-            .fetch_one(client_from_option(client))
-            .await?
-            .into_inner();
+        if let Some(budget) = client_from_option(client)
+            .get::<Budget>(&id)? {
 
-        let budget_item_set: DataSet<BudgetItem> =
-            BudgetItem::where_col(|bi| bi.budget_id.equal(id))
-                .where_col(|bi| bi.item_type.equal("income"))
-                .include(|bi| bi.incoming_budget_transactions)
-                .include(|bi| bi.outgoing_budget_transactions)
-                .run(client_from_option(client))
-                .await?;
+            let budget_items = client_from_option(client).get_all_by(|bi: &BudgetItem| bi.budget_id == id)?;
+            let budget_items_view = budget_items
+                .iter()
+                .map(|bi| {
+                    let incoming_budget_transactions = client_from_option(client)
+                        .get_all_by(|bt: &BudgetTransaction| bt.to_budget_item == bi.id).unwrap();
+                    let outgoing_budget_transactions = client_from_option(client).get_all_by(
+                        |bt: &BudgetTransaction| bt.from_budget_item == Some(bi.id),
+                    ).unwrap();
 
-        let budget_items_view = budget_item_set
-            .iter()
-            .map(|bi| {
-                let incoming_budget_transactions =
-                    bi.get_owned(|bi| bi.incoming_budget_transactions);
-                let outgoing_budget_transactions =
-                    bi.get_owned(|bi| bi.outgoing_budget_transactions);
-
-                let aggregate_amount = incoming_budget_transactions
+                    let aggregate_amount = incoming_budget_transactions
+                        .iter()
+                        .map(|bt| bt.amount)
+                        .sum::<f32>()
+                        - outgoing_budget_transactions
+                        .iter()
+                        .map(|bt| bt.amount)
+                        .sum::<f32>();
+                    
+                    let is_balanced = aggregate_amount == 0.0;
+                    let money_needs_job = aggregate_amount > 0.0;
+                    let too_much_job = aggregate_amount < 0.0;
+                    
+                    BudgetItemView {
+                        id: bi.id,
+                        name: bi.name.clone(),
+                        item_type: bi.item_type.clone(),
+                        aggregate_amount,
+                        is_balanced,
+                        money_needs_job,
+                        too_much_job,
+                        expected_at: bi.expected_at,
+                        incoming_budget_transactions,
+                        outgoing_budget_transactions,
+                    }
+                }).collect::<Vec<BudgetItemView>>();
+            
+            Ok(BudgetOverview {
+                id,
+                default_budget: budget.default_budget,
+                name: budget.name,
+                incomes: budget_items_view
                     .iter()
-                    .map(|bt| bt.amount)
-                    .sum::<f32>()
-                    - outgoing_budget_transactions
+                    .filter(|bi| bi.item_type == "income")
+                    .cloned()
+                    .collect(),
+                expenses: budget_items_view
                     .iter()
-                    .map(|bt| bt.amount)
-                    .sum::<f32>();
-
-                let is_balanced = aggregate_amount == 0.0;
-                let money_needs_job = aggregate_amount > 0.0;
-                let too_much_job = aggregate_amount < 0.0;
-                BudgetItemView {
-                    id: bi.id,
-                    name: bi.name.clone(),
-                    item_type: bi.item_type.clone(),
-                    aggregate_amount,
-                    is_balanced,
-                    money_needs_job,
-                    too_much_job,
-                    expected_at: bi.expected_at,
-                    incoming_budget_transactions,
-                    outgoing_budget_transactions,
-                }
+                    .filter(|bi| bi.item_type == "expense")
+                    .cloned()
+                    .collect(),
+                savings: budget_items_view
+                    .iter()
+                    .filter(|bi| bi.item_type == "savings")
+                    .cloned()
+                    .collect(),
             })
-            .collect::<Vec<_>>();
-
-        Ok(BudgetOverview {
-            id,
-            default_budget: budget.default_budget,
-            name: budget.name,
-            incomes: budget_items_view
-                .iter()
-                .filter(|bi| bi.item_type == "income")
-                .cloned()
-                .collect(),
-            expenses: budget_items_view
-                .iter()
-                .filter(|bi| bi.item_type == "expense")
-                .cloned()
-                .collect(),
-            savings: budget_items_view
-                .iter()
-                .filter(|bi| bi.item_type == "savings")
-                .cloned()
-                .collect(),
-        })
-    }
-
-    pub async fn list_users(client: Option<&Db>) -> anyhow::Result<Vec<User>> {
-        match User::all().run(client_from_option(client)).await {
-            Ok(users) => Ok(users.into_iter().map(|u| u.into_inner()).collect()),
-            Err(e) => Err(anyhow::Error::from(e)),
-        }
-    }
-
-    pub async fn user_exists(email: &str, client: Option<&Db>) -> bool {
-        tracing::info!("user_exists");
-        if let Ok(res) = User::all()
-            .where_col(|u| u.email.equal(email))
-            .run(client_from_option(client))
-            .await
-        {
-            tracing::info!("user_exists: {}", !res.is_empty());
-            !res.is_empty()
         } else {
-            tracing::info!("user_exists: false, an error occurred");
-            false
+            Err(anyhow::Error::from(JoydbError::NotFound))
         }
+    }
+
+    pub fn list_users(client: Option<&Db>) -> anyhow::Result<Vec<User>> {
+        match client_from_option(client).get_all::<User>() {
+            Ok(users) => Ok(users),
+            Err(e) => {
+                tracing::error!(error = %e, "Could not list users");
+                Err(anyhow::Error::from(e))
+            }
+        }
+    }
+
+    pub async fn user_exists(email: &str, client: Option<&Db>) -> anyhow::Result<bool> {
+        match client_from_option(client).get_all_by(|u: &User| u.email == DEFAULT_USER_EMAIL) {
+            Ok(mut users) => {Ok(!users.is_empty())},
+            Err(e) => {
+                tracing::error!(error = %e, "Could not get default user");
+                Err(anyhow::Error::from(e))
+            }
+        }   
     }
 
     pub fn get_default_user(client: Option<&Db>) -> anyhow::Result<User> {
@@ -195,17 +187,8 @@ pub mod db {
         }
     }
 
-    /***
-    I am totally done with this: we need to load the budget and modify
-    it OR return tracked entities to the ui, which might be cool as well.
-
-    We'll figure it out, bro
-     */
-
-    pub async fn save_budget(budget: Budget) -> anyhow::Result<()> {
-        let mut budget_to_save = DbState::db_loaded(Budget::default());
-        budget_to_save.replace_inner(budget);
-        match budget_to_save.save(client_from_option(None)).await {
+    pub fn save_budget(budget: Budget) -> anyhow::Result<()> {
+        match client_from_option(None).update(&budget) {
             Ok(_) => Ok(()),
             Err(e) => {
                 tracing::error!(error = %e, "Could not save budget");
@@ -214,26 +197,22 @@ pub mod db {
         }
     }
 
-    pub async fn add_budget_transaction(
+    pub fn add_budget_transaction(
         text: String,
         from_budget_item: Option<Uuid>,
         to_budget_item: Uuid,
         amount: f32,
     ) -> anyhow::Result<()> {
-        let user = get_default_user(None).await?;
-        let mut budget_transaction_to_save =
-            DbState::new_uncreated(BudgetTransaction::new_from_user(
-                &text,
-                amount,
-                from_budget_item,
-                to_budget_item,
-                user.id,
-            )
-            );
-        match budget_transaction_to_save
-            .save(client_from_option(None))
-            .await
-        {
+        let user = get_default_user(None)?;
+        let budget_transaction_to_save = BudgetTransaction::new_from_user(
+            &text,
+            amount,
+            from_budget_item,
+            to_budget_item,
+            user.id,
+        );
+        match client_from_option(None)
+            .insert(&budget_transaction_to_save) {
             Ok(_) => {
                 tracing::info!("Saved budget transaction");
                 Ok(())
@@ -243,6 +222,7 @@ pub mod db {
                 Err(anyhow::Error::from(e))
             }
         }
+        
     }
 
     pub async fn add_budget_item(
@@ -254,17 +234,17 @@ pub mod db {
         expected_at: NaiveDate,
     ) -> anyhow::Result<()> {
         let user = get_default_user(None).await?;
-        let mut budget_item_to_save = DbState::new_uncreated(BudgetItem::new_from_user(
+        let mut budget_item_to_save = BudgetItem::new_from_user(
             budget_id,
             &name,
             &item_type,
             expected_at,
             user.id,
-        ));
-        match budget_item_to_save.save(client_from_option(None)).await {
+        );
+        match client_from_option(None).insert(&budget_item_to_save) {
             Ok(_) => {
                 tracing::info!("Saved budget item");
-                add_budget_transaction(first_item, None, budget_item_to_save.id, amount).await
+                add_budget_transaction(first_item, None, budget_item_to_save.id, amount)
             }
             Err(e) => {
                 tracing::error!(error = %e, "Could not save budget item");
