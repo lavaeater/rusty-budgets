@@ -40,7 +40,7 @@ fn main() {
     dioxus::logger::init(Level::INFO).expect("failed to init logger");
 
     
-    let _ = api::db::CLIENT.as_ref();
+    let _ = api::db::CLIENT;
     
     
     launch(App);

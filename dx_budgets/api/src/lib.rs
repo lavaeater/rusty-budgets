@@ -32,11 +32,11 @@ pub mod db {
     use dioxus::prelude::{Signal, UnsyncStorage};
     use uuid::Uuid;
     use Default;
+    use std::time::Duration;
     use chrono::NaiveDate;
     use dioxus::fullstack::once_cell::sync::Lazy;
-    use joydb::adapters::JsonAdapter;
-    use joydb::{Joydb, JoydbError};
-
+    use joydb::JoydbError;
+    const DATA_PATH: &str = "data.json";
     pub static CLIENT: Lazy<Db> = Lazy::new(|| {
         tracing::info!("Init DB Client");
         let client = Db::open("./data.json").unwrap();
@@ -72,7 +72,7 @@ pub mod db {
         }
     }
 
-    pub async fn get_budget_overview(
+    pub fn get_budget_overview(
         id: Uuid,
         client: Option<&Db>,
     ) -> anyhow::Result<BudgetOverview> {
@@ -152,7 +152,7 @@ pub mod db {
         }
     }
 
-    pub async fn user_exists(email: &str, client: Option<&Db>) -> anyhow::Result<bool> {
+    pub fn user_exists(email: &str, client: Option<&Db>) -> anyhow::Result<bool> {
         match client_from_option(client).get_all_by(|u: &User| u.email == email) {
             Ok(users) => {Ok(!users.is_empty())},
             Err(e) => {
@@ -226,7 +226,7 @@ pub mod db {
         
     }
 
-    pub async fn add_budget_item(
+    pub fn add_budget_item(
         budget_id: Uuid,
         name: String,
         item_type: String,
@@ -402,7 +402,7 @@ pub struct BudgetOverview {
 
 #[server]
 pub async fn get_budget_overview(id: Uuid) -> Result<BudgetOverview, ServerFnError> {
-    match db::get_budget_overview(id, None).await {
+    match db::get_budget_overview(id, None) {
         Ok(overview) => Ok(overview),
         Err(e) => {
             tracing::error!(error = %e, "Could not get budget overview");
