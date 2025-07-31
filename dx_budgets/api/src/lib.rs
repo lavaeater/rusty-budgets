@@ -39,8 +39,8 @@ pub mod db {
 
     pub static CLIENT: Lazy<Db> = Lazy::new(|| {
         tracing::info!("Init DB Client");
-        let client = Db::open("./data.json").unwrap();        
-        
+        let client = Db::open("./data.json").unwrap();
+
         // Run migrations
         tracing::info!("Insert Default Data");
         match get_default_user(Some(&client)) {
@@ -103,13 +103,13 @@ pub mod db {
                     .map(|bt| bt.amount)
                     .sum::<f32>()
                     - outgoing_budget_transactions
-                        .iter()
-                        .map(|bt| bt.amount)
-                        .sum::<f32>();
-                
+                    .iter()
+                    .map(|bt| bt.amount)
+                    .sum::<f32>();
+
                 let is_balanced = aggregate_amount == 0.0;
                 let money_needs_job = aggregate_amount > 0.0;
-                let too_much_job= aggregate_amount < 0.0;
+                let too_much_job = aggregate_amount < 0.0;
                 BudgetItemView {
                     id: bi.id,
                     name: bi.name.clone(),
@@ -171,7 +171,7 @@ pub mod db {
 
     pub fn get_default_user(client: Option<&Db>) -> anyhow::Result<User> {
         match client_from_option(client).get_all_by(|u: &User| u.email == DEFAULT_USER_EMAIL) {
-            Ok(users) => {
+            Ok(mut users) => {
                 if users.is_empty() {
                     create_user(
                         "tommie",
@@ -185,7 +185,7 @@ pub mod db {
                         client,
                     )
                 } else {
-                    Ok(users[0].clone())
+                    Ok(users.remove(0))
                 }
             }
             Err(e) => {
@@ -228,7 +228,8 @@ pub mod db {
                 from_budget_item,
                 to_budget_item,
                 user.id,
-            ));
+            )
+            );
         match budget_transaction_to_save
             .save(client_from_option(None))
             .await
@@ -276,21 +277,20 @@ pub mod db {
         user_id: Uuid,
         client: Option<&Db>,
     ) -> anyhow::Result<Budget> {
-        match client_from_option(client).get_all_by(|b: &Budget| b.user_id == user_id && b.default_budget) {
-            Ok(budgets) => {
+        match client_from_option(client)
+            .get_all_by(|b: &Budget| b.user_id == user_id && b.default_budget) {
+            Ok(mut budgets) => {
                 if budgets.is_empty() {
                     tracing::info!("No default budget exists, time to create one");
                     create_budget("Default", user_id, true, client)
                 } else {
-                    Ok(budgets[0].clone())
-                } else {
-                    Err(anyhow::Error::from(WeldsError::RowNotFound))
-                }
+                    Ok(budgets.remove(0))
+                } 
             }
             Err(e) => {
                 tracing::error!(error = %e, "Could not get default budget for user");
                 Err(anyhow::Error::from(e))
-            }            
+            }
         }
     }
 
@@ -319,17 +319,14 @@ pub mod db {
         birthday: Option<NaiveDate>,
         client: Option<&Db>,
     ) -> anyhow::Result<User> {
-        let mut user = DbState::new_uncreated(User {
-            id: uuid::Uuid::new_v4(),
-            first_name: first_name.to_string(),
-            last_name: last_name.to_string(),
-            phone,
-            email: email.to_string(),
-            user_name: user_name.to_string(),
-            birthday,
-        });
-        match user.save(client_from_option(client)).await {
-            Ok(_) => Ok(user.into_inner()),
+        let user = User::new(user_name,
+                                 first_name,
+                                 last_name,
+                                 email,
+                                phone,  
+                                 birthday);
+        match client_from_option(client).insert(&user) {
+            Ok(_) => Ok(user),
             Err(e) => {
                 tracing::error!(error = %e, "Could not create user");
                 Err(anyhow::Error::from(e))
