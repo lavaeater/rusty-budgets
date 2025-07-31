@@ -1,5 +1,5 @@
 use chrono::NaiveDate;
-use joydb::{JoydbError, Model};
+use joydb::Model;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use crate::Db;

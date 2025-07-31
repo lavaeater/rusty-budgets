@@ -1,8 +1,6 @@
-use crate::User;
-use crate::models::budget_item::BudgetItem;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use joydb::{Joydb, adapters::JsonAdapter, Model};
+use joydb::Model;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default, Model)]
 pub struct Budget {
@@ -29,16 +27,4 @@ impl Budget {
     pub fn touch(&mut self) {
         self.updated_at = chrono::Utc::now().naive_utc();
     }
-}
-
-pub fn before_create(budget: &mut Budget) -> welds::errors::Result<()> {
-    budget.id = Uuid::new_v4();
-    budget.created_at = chrono::Utc::now().naive_utc();
-    budget.updated_at = chrono::Utc::now().naive_utc();
-    Ok(())
-}
-
-pub fn before_update(budget: &mut Budget) -> welds::errors::Result<()> {
-    budget.updated_at = chrono::Utc::now().naive_utc();
-    Ok(())
 }

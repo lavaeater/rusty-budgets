@@ -5,9 +5,6 @@ edition = "2021"
 
 [dependencies]
 dioxus = { workspace = true, features = ["fullstack"] }
-welds = { version = "0.4.16", features = ["sqlite", "migrations"], optional = true }
-sqlx = { version = "0.8.6", features = ["runtime-tokio-rustls", "tls-rustls", "sqlite", "chrono", "uuid"], optional = true }
-once_cell = { version = "1.21.3", optional = true }
 tokio = { version = "1.46.0", features = ["full"], optional = true }
 uuid = { workspace = true, features = ["v4", "js", "serde"] }
 chrono = { workspace = true, features = ["serde"] }
@@ -19,4 +16,4 @@ joydb = { version = "0.1.0", features = ["json"], workspace = true }
 web = []
 desktop = []
 mobile = []
-server = ["once_cell", "welds", "sqlx", "tokio"]
+server = ["tokio"]

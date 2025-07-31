@@ -1,5 +1,4 @@
 //! This crate contains all shared fullstack server functions.
-mod migrations;
 pub mod models;
 
 use crate::models::budget::Budget;
@@ -28,17 +27,15 @@ pub mod db {
     use crate::models::budget_item::BudgetItem;
     use crate::models::budget_transaction::BudgetTransaction;
     use crate::models::user::User;
-    use crate::{migrations, BudgetItemView, BudgetOverview, Db, DEFAULT_USER_EMAIL};
+    use crate::{BudgetItemView, BudgetOverview, Db, DEFAULT_USER_EMAIL};
     use dioxus::logger::tracing;
     use dioxus::prelude::{Signal, UnsyncStorage};
-    use once_cell::sync::Lazy;
     use uuid::Uuid;
     use Default;
     use chrono::NaiveDate;
+    use dioxus::fullstack::once_cell::sync::Lazy;
     use joydb::adapters::JsonAdapter;
     use joydb::{Joydb, JoydbError};
-
-    
 
     pub static CLIENT: Lazy<Db> = Lazy::new(|| {
         tracing::info!("Init DB Client");
@@ -140,7 +137,8 @@ pub mod db {
                     .collect(),
             })
         } else {
-            Err(anyhow::Error::from(JoydbError::NotFound))
+            Err(anyhow::Error::from(JoydbError::NotFound {
+                id: id.to_string(), model: "Budget".to_string()}))
         }
     }
 
@@ -155,8 +153,8 @@ pub mod db {
     }
 
     pub async fn user_exists(email: &str, client: Option<&Db>) -> anyhow::Result<bool> {
-        match client_from_option(client).get_all_by(|u: &User| u.email == DEFAULT_USER_EMAIL) {
-            Ok(mut users) => {Ok(!users.is_empty())},
+        match client_from_option(client).get_all_by(|u: &User| u.email == email) {
+            Ok(users) => {Ok(!users.is_empty())},
             Err(e) => {
                 tracing::error!(error = %e, "Could not get default user");
                 Err(anyhow::Error::from(e))
@@ -236,7 +234,7 @@ pub mod db {
         amount: f32,
         expected_at: NaiveDate,
     ) -> anyhow::Result<()> {
-        let user = get_default_user(None).await?;
+        let user = get_default_user(None)?;
         let mut budget_item_to_save = BudgetItem::new_from_user(
             budget_id,
             &name,
@@ -321,7 +319,7 @@ pub mod db {
 /// Echo the user input on the server.
 #[server]
 pub async fn list_users() -> Result<Vec<User>, ServerFnError> {
-    match db::list_users(None).await {
+    match db::list_users(None) {
         Ok(users) => Ok(users),
         Err(e) => {
             tracing::error!(error = %e, "Could not list users");
@@ -332,7 +330,7 @@ pub async fn list_users() -> Result<Vec<User>, ServerFnError> {
 
 #[server]
 pub async fn get_default_budget() -> Result<Budget, ServerFnError> {
-    match db::get_default_budget_for_user(db::get_default_user(None).await.unwrap().id, None).await
+    match db::get_default_budget_for_user(db::get_default_user(None).unwrap().id, None)
     {
         Ok(budget) => Ok(budget),
         Err(e) => {
@@ -344,7 +342,7 @@ pub async fn get_default_budget() -> Result<Budget, ServerFnError> {
 
 #[server]
 pub async fn save_budget(budget: Budget) -> Result<(), ServerFnError> {
-    match db::save_budget(budget).await {
+    match db::save_budget(budget) {
         Ok(_) => Ok(()),
         Err(e) => {
             tracing::error!(error = %e, "Could not get default budget");
@@ -369,7 +367,7 @@ pub async fn add_budget_item(
         first_item,
         amount
     );
-    match db::add_budget_item(budget_id, name, item_type, first_item, amount, expected_at).await {
+    match db::add_budget_item(budget_id, name, item_type, first_item, amount, expected_at) {
         Ok(_) => Ok(()),
         Err(e) => {
             tracing::error!(error = %e, "Could not save new budget item");

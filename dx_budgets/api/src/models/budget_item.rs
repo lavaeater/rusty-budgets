@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use joydb::{Model};
+use joydb::Model;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default, Model)]
 pub struct BudgetItem {
@@ -27,18 +27,4 @@ impl BudgetItem {
             created_by,
         }
     }
-}
-
-
-pub fn before_create(budget_item: &mut BudgetItem) -> welds::errors::Result<()> {
-    budget_item.id = Uuid::new_v4();
-    budget_item.created_at = chrono::Utc::now().naive_utc();
-    budget_item.updated_at = chrono::Utc::now().naive_utc();
-    Ok(())
-}
-
-
-pub fn before_update(budget_item: &mut BudgetItem) -> welds::errors::Result<()> {
-    budget_item.updated_at = chrono::Utc::now().naive_utc();
-    Ok(())
 }

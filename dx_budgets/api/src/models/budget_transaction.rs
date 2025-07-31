@@ -28,20 +28,3 @@ impl BudgetTransaction {
         }
     }
 }
-
-
-
-
-pub fn before_create(budget_transaction: &mut BudgetTransaction) -> welds::errors::Result<()>{
-    budget_transaction.id = Uuid::new_v4();
-    budget_transaction.created_at = chrono::Utc::now().naive_utc();
-    budget_transaction.updated_at = chrono::Utc::now().naive_utc();
-    Ok(())
-}
-
-
-pub fn before_update(budget_transaction: &mut BudgetTransaction) -> welds::errors::Result<()>{
-    budget_transaction.updated_at = chrono::Utc::now().naive_utc();
-    Ok(())
-}
-
