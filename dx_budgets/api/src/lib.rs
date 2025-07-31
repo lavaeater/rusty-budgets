@@ -8,17 +8,27 @@ use crate::models::user::User;
 use chrono::NaiveDate;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
+use joydb::adapters::JsonAdapter;
+use joydb::Joydb;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use crate::models::budget_item::BudgetItem;
 
 const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
+// Define the state
+joydb::state! {
+        AppState,
+        models: [User, Budget, BudgetItem, BudgetTransaction],
+    }
 
+// Define the database (combination of state and adapter)
+type Db = Joydb<AppState, JsonAdapter>;
 pub mod db {
     use crate::models::budget::Budget;
     use crate::models::budget_item::BudgetItem;
     use crate::models::budget_transaction::BudgetTransaction;
     use crate::models::user::User;
-    use crate::{migrations, BudgetItemView, BudgetOverview, DEFAULT_USER_EMAIL};
+    use crate::{migrations, BudgetItemView, BudgetOverview, Db, DEFAULT_USER_EMAIL};
     use dioxus::logger::tracing;
     use dioxus::prelude::{Signal, UnsyncStorage};
     use once_cell::sync::Lazy;
@@ -28,14 +38,7 @@ pub mod db {
     use joydb::adapters::JsonAdapter;
     use joydb::{Joydb, JoydbError};
 
-    // Define the state
-    joydb::state! {
-        AppState,
-        models: [User, Budget, BudgetItem, BudgetTransaction],
-    }
-
-    // Define the database (combination of state and adapter)
-    type Db = Joydb<AppState, JsonAdapter>;
+    
 
     pub static CLIENT: Lazy<Db> = Lazy::new(|| {
         tracing::info!("Init DB Client");
