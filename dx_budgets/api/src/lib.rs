@@ -39,7 +39,7 @@ pub mod db {
     use Default;
     pub static CLIENT: Lazy<Db> = Lazy::new(|| {
         tracing::info!("Init DB Client");
-        let client = Db::open("/home/tommie/data.json").unwrap();
+        let client = Db::open("./data.json").unwrap();
         // Run migrations
         tracing::info!("Insert Default Data");
         match get_default_user(Some(&client)) {
