@@ -1,8 +1,8 @@
 use welds::errors::Result;
-#[cfg(feature = "server")]
+
 use welds::migrations::prelude::*;
 
-#[cfg(feature = "server")]
+
 pub(super) fn step(state: &TableState) -> Result<MigrationStep> {
     let alter = change_table(state, "budget_items")?;
     let m = alter.add_column("item_type", Type::String);
