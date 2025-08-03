@@ -6,7 +6,7 @@ use crate::models::user::User;
 use chrono::NaiveDate;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
-use joydb::adapters::JsonAdapter;
+use joydb::adapters::{JsonAdapter, RonAdapter};
 use joydb::Joydb;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -20,7 +20,7 @@ joydb::state! {
 
 // Define the database (combination of state and adapter)
 #[cfg(feature = "server")]
-type Db = Joydb<AppState, JsonAdapter>;
+type Db = Joydb<AppState, RonAdapter>;
 #[cfg(feature = "server")]
 pub mod db {
     use crate::models::budget::*;
