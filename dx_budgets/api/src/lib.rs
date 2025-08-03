@@ -1,6 +1,7 @@
 //! This crate contains all shared fullstack server functions.
 pub mod models;
 
+use crate::models::bank_transaction::BankTransaction;
 use crate::models::budget::Budget;
 use crate::models::budget_item::BudgetItem;
 use crate::models::budget_transaction::BudgetTransaction;
@@ -12,7 +13,6 @@ use joydb::adapters::JsonAdapter;
 use joydb::Joydb;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use crate::models::bank_transaction::BankTransaction;
 
 const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 // Define the state
@@ -28,7 +28,7 @@ type Db = Joydb<AppState, JsonAdapter>;
 pub mod db {
     use crate::models::budget::Budget;
     use crate::models::budget_item::{BudgetItem, BudgetItemPeriodicity, BudgetItemType};
-    use crate::models::budget_transaction::BudgetTransaction;
+    use crate::models::budget_transaction::{BudgetTransaction, BudgetTransactionType};
     use crate::models::user::User;
     use crate::{BudgetItemView, BudgetOverview, Db, DEFAULT_USER_EMAIL};
     use chrono::NaiveDate;
@@ -38,7 +38,7 @@ pub mod db {
     use joydb::JoydbError;
     use uuid::Uuid;
     use Default;
-    
+
     pub static CLIENT: Lazy<Db> = Lazy::new(|| {
         tracing::info!("Init DB Client");
         let client = Db::open("./data.json").unwrap();
@@ -207,7 +207,7 @@ pub mod db {
     ) -> anyhow::Result<()> {
         let user = get_default_user(None)?;
         let budget_transaction_to_save = BudgetTransaction::new_from_user(
-            &text,
+            BudgetTransactionType::default(),
             amount,
             from_budget_item,
             to_budget_item,
@@ -233,8 +233,14 @@ pub mod db {
         expected_at: NaiveDate,
     ) -> anyhow::Result<()> {
         let user = get_default_user(None)?;
-        let budget_item_to_save =
-            BudgetItem::new_from_user(budget_id, &name, BudgetItemType::Expense, BudgetItemPeriodicity::Once, expected_at, &user.id);
+        let budget_item_to_save = BudgetItem::new_from_user(
+            budget_id,
+            &name,
+            BudgetItemType::Expense,
+            BudgetItemPeriodicity::Once,
+            expected_at,
+            user.id,
+        );
         match client_from_option(None).insert(&budget_item_to_save) {
             Ok(_) => {
                 tracing::info!("Saved budget item");
@@ -269,13 +275,42 @@ pub mod db {
         }
     }
 
+    pub fn create_test_budget(user_id: Uuid, client: Option<&Db>) -> anyhow::Result<Budget> {
+        let mut budget = Budget::new("Default test budget", true, user_id);
+        //Create budget items
+        //Incomes
+        let mut bi = BudgetItem::new_with_amount(
+            budget.id,
+            "Lön Tommie",
+            BudgetItemType::Income,
+            BudgetItemPeriodicity::Monthly,
+            NaiveDate::from_ymd_opt(2025, 8, 25).unwrap(),
+            39450.0,
+            user_id,
+        );
+
+        budget.store_budget_item(&bi);
+
+        //Expenses
+
+        //Savings
+
+        match client_from_option(client).insert(&budget) {
+            Ok(_) => Ok(budget.clone()),
+            Err(e) => {
+                tracing::error!(error = %e, "Could not create budget");
+                Err(anyhow::Error::from(e))
+            }
+        }
+    }
+
     pub fn create_budget(
         name: &str,
         user_id: Uuid,
         default_budget: bool,
         client: Option<&Db>,
     ) -> anyhow::Result<Budget> {
-        let mut budget = Budget::new(name, default_budget, &user_id);
+        let mut budget = Budget::new(name, default_budget, user_id);
         match client_from_option(client).insert(&budget) {
             Ok(_) => Ok(budget.clone()),
             Err(e) => {

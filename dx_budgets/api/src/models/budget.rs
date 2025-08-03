@@ -5,11 +5,19 @@ use uuid::Uuid;
 use joydb::Model;
 use crate::models::budget_item::BudgetItem;
 
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Default)]
+pub enum MonthBeginsOn {
+    #[default]
+    PreviousMonth(u32),
+    CurrentMonth(u32),
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default, Model)]
 pub struct Budget {
     pub id: Uuid,
     pub name: String,
     pub default_budget: bool,
+    pub month_begins_on: MonthBeginsOn,
     pub budget_items: HashMap<Uuid, BudgetItem>,
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: chrono::NaiveDateTime,
@@ -17,14 +25,15 @@ pub struct Budget {
 }
 
 impl Budget {
-    pub fn new(name: &str, default_budget: bool, user_id: &Uuid) -> Budget {
+    pub fn new(name: &str, default_budget: bool, user_id: Uuid) -> Budget {
         Budget {
             id: Uuid::new_v4(),
             name: name.to_string(),
             default_budget,
+            month_begins_on: MonthBeginsOn::PreviousMonth(25),
             created_at: chrono::Utc::now().naive_utc(),
             updated_at: chrono::Utc::now().naive_utc(),
-            user_id: *user_id,
+            user_id,
             ..Default::default()
         }
     }

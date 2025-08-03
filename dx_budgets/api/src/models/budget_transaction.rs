@@ -2,10 +2,17 @@ use joydb::Model;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Default)]
+pub enum BudgetTransactionType {
+    #[default]
+    StartValue,
+    Adjustment,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default, Model)]
 pub struct BudgetTransaction {
     pub id: Uuid,
-    pub text: String,
+    pub transaction_type: BudgetTransactionType,
     pub amount: f32,
     pub from_budget_item: Option<Uuid>,
     pub to_budget_item: Uuid,
@@ -16,7 +23,7 @@ pub struct BudgetTransaction {
 
 impl BudgetTransaction {
     pub fn new_from_user(
-        text: &str,
+        transaction_type: BudgetTransactionType,
         amount: f32,
         from_budget_item: Option<Uuid>,
         to_budget_item: Uuid,
@@ -24,7 +31,7 @@ impl BudgetTransaction {
     ) -> Self {
         Self {
             id: Uuid::new_v4(),
-            text: text.to_string(),
+            transaction_type,
             amount,
             to_budget_item,
             from_budget_item,

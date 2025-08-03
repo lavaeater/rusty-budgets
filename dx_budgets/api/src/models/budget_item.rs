@@ -5,9 +5,9 @@ use joydb::Model;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use crate::models::bank_transaction::BankTransaction;
-use crate::models::budget_transaction::BudgetTransaction;
+use crate::models::budget_transaction::{BudgetTransaction, BudgetTransactionType};
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub enum BudgetItemType {
     Income,
     #[default]
@@ -25,7 +25,7 @@ impl Display for BudgetItemType {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub enum BudgetItemPeriodicity {
     Once,
     #[default]
@@ -51,13 +51,26 @@ pub struct BudgetItem {
 }
 
 impl BudgetItem {
+    pub fn new_with_amount(
+        budget_id: Uuid,
+        name: &str,
+        budget_item_type: BudgetItemType,
+        periodicity: BudgetItemPeriodicity,
+        starts_date: chrono::NaiveDate,
+        amount: f32,
+        created_by: Uuid,) -> Self {
+        let mut bi = Self::new_from_user(budget_id, name, budget_item_type, periodicity, starts_date, created_by);
+        bi.store_incoming_transaction(&BudgetTransaction::new_from_user(BudgetTransactionType::default(), amount, None, bi.id, created_by));
+        bi
+    }
+
     pub fn new_from_user(
         budget_id: Uuid,
         name: &str,
         budget_item_type: BudgetItemType,
         periodicity: BudgetItemPeriodicity,
         starts_date: chrono::NaiveDate,
-        created_by: &Uuid,
+        created_by: Uuid,
     ) -> Self {
         Self {
             id: Uuid::new_v4(),
@@ -68,7 +81,7 @@ impl BudgetItem {
             starts_date,
             created_at: chrono::Utc::now().naive_utc(),
             updated_at: chrono::Utc::now().naive_utc(),
-            created_by: *created_by,
+            created_by,
             ..Default::default()
         }
     }
