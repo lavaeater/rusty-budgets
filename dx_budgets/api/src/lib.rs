@@ -30,13 +30,13 @@ pub mod db {
     use dioxus::fullstack::once_cell::sync::Lazy;
     use dioxus::logger::tracing;
     use dioxus::prelude::{Signal, UnsyncStorage};
-    use joydb::JoydbError;
+    use joydb::{JoydbConfig, JoydbError};
     use uuid::Uuid;
     use Default;
 
     pub static CLIENT: Lazy<Db> = Lazy::new(|| {
         tracing::info!("Init DB Client");
-        let client = Db::open("./data.json").unwrap();
+        let client = Db::open("./data.ron").unwrap();
         // Run migrations
         tracing::info!("Insert Default Data");
         match get_default_user(Some(&client)) {
@@ -340,7 +340,7 @@ pub mod db {
         match client_from_option(client).insert(&budget) {
             Ok(_) => Ok(budget.clone()),
             Err(e) => {
-                tracing::error!(error = %e, "Could not create budget");
+                tracing::error!(error = %e, "Could not create test budget");
                 Err(anyhow::Error::from(e))
             }
         }
