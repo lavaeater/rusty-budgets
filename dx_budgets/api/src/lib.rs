@@ -12,6 +12,7 @@ use joydb::adapters::JsonAdapter;
 use joydb::Joydb;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use crate::models::bank_transaction::BankTransaction;
 
 const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 // Define the state
@@ -26,7 +27,7 @@ type Db = Joydb<AppState, JsonAdapter>;
 #[cfg(feature = "server")]
 pub mod db {
     use crate::models::budget::Budget;
-    use crate::models::budget_item::BudgetItem;
+    use crate::models::budget_item::{BudgetItem, BudgetItemPeriodicity, BudgetItemType};
     use crate::models::budget_transaction::BudgetTransaction;
     use crate::models::user::User;
     use crate::{BudgetItemView, BudgetOverview, Db, DEFAULT_USER_EMAIL};
@@ -102,12 +103,12 @@ pub mod db {
                     BudgetItemView {
                         id: bi.id,
                         name: bi.name.clone(),
-                        item_type: bi.item_type.clone(),
+                        item_type: bi.budget_item_type.to_string(),
                         aggregate_amount,
                         is_balanced,
                         money_needs_job,
                         too_much_job,
-                        expected_at: bi.expected_at,
+                        expected_at: bi.starts_date,
                         incoming_budget_transactions,
                         outgoing_budget_transactions,
                     }
@@ -227,14 +228,13 @@ pub mod db {
     pub fn add_budget_item(
         budget_id: Uuid,
         name: String,
-        item_type: String,
         first_item: String,
         amount: f32,
         expected_at: NaiveDate,
     ) -> anyhow::Result<()> {
         let user = get_default_user(None)?;
-        let mut budget_item_to_save =
-            BudgetItem::new_from_user(budget_id, &name, &item_type, expected_at, user.id);
+        let budget_item_to_save =
+            BudgetItem::new_from_user(budget_id, &name, BudgetItemType::Expense, BudgetItemPeriodicity::Once, expected_at, &user.id);
         match client_from_option(None).insert(&budget_item_to_save) {
             Ok(_) => {
                 tracing::info!("Saved budget item");
@@ -355,7 +355,7 @@ pub async fn add_budget_item(
         first_item,
         amount
     );
-    match db::add_budget_item(budget_id, name, item_type, first_item, amount, expected_at) {
+    match db::add_budget_item(budget_id, name, first_item, amount, expected_at) {
         Ok(_) => Ok(()),
         Err(e) => {
             tracing::error!(error = %e, "Could not save new budget item");

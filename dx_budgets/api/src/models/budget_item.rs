@@ -13,6 +13,7 @@ pub enum BudgetItemType {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub enum BudgetItemPeriodicity {
+    Once,
     #[default]
     Monthly,
     Quarterly,
