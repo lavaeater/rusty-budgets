@@ -1,10 +1,7 @@
 //! This crate contains all shared fullstack server functions.
 pub mod models;
 
-use crate::models::bank_transaction::BankTransaction;
-use crate::models::budget::Budget;
-use crate::models::budget_item::BudgetItem;
-use crate::models::budget_transaction::BudgetTransaction;
+use crate::models::budget::*;
 use crate::models::user::User;
 use chrono::NaiveDate;
 use dioxus::logger::tracing;
@@ -18,7 +15,7 @@ const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 // Define the state
 joydb::state! {
     AppState,
-    models: [User, Budget, BudgetItem, BudgetTransaction, BankTransaction],
+    models: [User, Budget, BudgetAccount, BudgetTransaction, BankTransaction],
 }
 
 // Define the database (combination of state and adapter)
@@ -26,9 +23,7 @@ joydb::state! {
 type Db = Joydb<AppState, JsonAdapter>;
 #[cfg(feature = "server")]
 pub mod db {
-    use crate::models::budget::Budget;
-    use crate::models::budget_item::{BudgetItem, BudgetItemPeriodicity, BudgetItemType};
-    use crate::models::budget_transaction::{BudgetTransaction, BudgetTransactionType};
+    use crate::models::budget::*;
     use crate::models::user::User;
     use crate::{BudgetItemView, BudgetOverview, Db, DEFAULT_USER_EMAIL};
     use chrono::NaiveDate;
@@ -76,7 +71,7 @@ pub mod db {
     pub fn get_budget_overview(id: Uuid, client: Option<&Db>) -> anyhow::Result<BudgetOverview> {
         if let Some(budget) = client_from_option(client).get::<Budget>(&id)? {
             let budget_items =
-                client_from_option(client).get_all_by(|bi: &BudgetItem| bi.budget_id == id)?;
+                client_from_option(client).get_all_by(|bi: &BudgetAccount| bi.budget_id == id)?;
             let budget_items_view = budget_items
                 .iter()
                 .map(|bi| {
@@ -102,13 +97,13 @@ pub mod db {
 
                     BudgetItemView {
                         id: bi.id,
-                        name: bi.name.clone(),
-                        item_type: bi.budget_item_type.to_string(),
+                        name: bi.budget_account_type.to_string(),
+                        item_type: bi.budget_account_type.to_string(),
                         aggregate_amount,
                         is_balanced,
                         money_needs_job,
+                        expected_at: NaiveDate::from_ymd_opt(2000, 1, 1).unwrap(),
                         too_much_job,
-                        expected_at: bi.starts_date,
                         incoming_budget_transactions,
                         outgoing_budget_transactions,
                     }
@@ -200,13 +195,14 @@ pub mod db {
     }
 
     pub fn add_budget_transaction(
-        text: String,
+        text: &str,
         from_budget_item: Option<Uuid>,
         to_budget_item: Uuid,
         amount: f32,
     ) -> anyhow::Result<()> {
         let user = get_default_user(None)?;
-        let budget_transaction_to_save = BudgetTransaction::new_from_user(
+        let budget_transaction_to_save = BudgetTransaction::new(
+            text,
             BudgetTransactionType::default(),
             amount,
             from_budget_item,
@@ -228,23 +224,20 @@ pub mod db {
     pub fn add_budget_item(
         budget_id: Uuid,
         name: String,
-        first_item: String,
+        first_item: &str,
         amount: f32,
         expected_at: NaiveDate,
     ) -> anyhow::Result<()> {
         let user = get_default_user(None)?;
-        let budget_item_to_save = BudgetItem::new_from_user(
+        let budget_account_to_save = BudgetAccount::new(
             budget_id,
-            &name,
-            BudgetItemType::Expense,
-            BudgetItemPeriodicity::Once,
-            expected_at,
+            BudgetAccountType::Expense(name),
             user.id,
         );
-        match client_from_option(None).insert(&budget_item_to_save) {
+        match client_from_option(None).insert(&budget_account_to_save) {
             Ok(_) => {
                 tracing::info!("Saved budget item");
-                add_budget_transaction(first_item, None, budget_item_to_save.id, amount)
+                add_budget_transaction(first_item, None, budget_account_to_save.id, amount)
             }
             Err(e) => {
                 tracing::error!(error = %e, "Could not save budget item");
@@ -279,18 +272,47 @@ pub mod db {
         let mut budget = Budget::new("Default test budget", true, user_id);
         //Create budget items
         //Incomes
-        let mut bi = BudgetItem::new_with_amount(
+        let mut salaries = BudgetAccount::new(
             budget.id,
-            "Lön Tommie",
-            BudgetItemType::Income,
-            BudgetItemPeriodicity::Monthly,
-            NaiveDate::from_ymd_opt(2025, 8, 25).unwrap(),
-            39450.0,
+            BudgetAccountType::Income("Lön".to_string()),
             user_id,
         );
+        
+        let bt = BudgetTransaction::new(
+            "Lön Tommie",
+            BudgetTransactionType::default(),
+            39500.0,
+            None,
+            salaries.id,
+            user_id,
+        );
+        salaries.store_incoming_transaction(&bt);
+        
+        let bt = BudgetTransaction::new(
+            "Lön Lisa",
+            BudgetTransactionType::default(),
+            39500.0,
+            None,
+            salaries.id,
+            user_id,
+        );
+        salaries.store_incoming_transaction(&bt);
+        
+        
+        let mut recurring = BudgetAccount::new(
+            budget.id,
+            BudgetAccountType::Expense("Fasta utgifter".to_string()),
+            user_id,
+        );
+        
+        salaries.put_money_towards(&mut recurring, 5000.0, "Mortgage house");
+               
+        
+        budget.store_budget_account(&salaries);
+        
+        budget.store_budget_account(&salaries);
 
-        budget.store_budget_item(&bi);
-
+        
         //Expenses
 
         //Savings
