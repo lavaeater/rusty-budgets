@@ -1,3 +1,5 @@
+use std::collections::hash_map::Entry::{Occupied, Vacant};
+use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use joydb::Model;
@@ -8,23 +10,35 @@ pub struct Budget {
     pub id: Uuid,
     pub name: String,
     pub default_budget: bool,
-    pub budget_items: Vec<BudgetItem>,
+    pub budget_items: HashMap<Uuid, BudgetItem>,
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: chrono::NaiveDateTime,
     pub user_id: Uuid,
 }
 
 impl Budget {
-    pub fn new(name: &str, default_budget: bool, user_id: Uuid) -> Budget {
+    pub fn new(name: &str, default_budget: bool, user_id: &Uuid) -> Budget {
         Budget {
             id: Uuid::new_v4(),
             name: name.to_string(),
             default_budget,
             created_at: chrono::Utc::now().naive_utc(),
             updated_at: chrono::Utc::now().naive_utc(),
-            user_id,
+            user_id: *user_id,
             ..Default::default()
         }
+    }
+    
+    pub fn store_budget_item(&mut self, budget_item: &BudgetItem) {
+        match self.budget_items.entry(budget_item.id) {
+            Vacant(e) => {
+                e.insert(budget_item.clone());
+            }
+            Occupied(mut e) => {
+                e.insert(budget_item.clone());
+            }
+        }
+        self.touch();
     }
     
     pub fn touch(&mut self) {

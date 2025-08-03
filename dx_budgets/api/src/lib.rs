@@ -275,8 +275,8 @@ pub mod db {
         default_budget: bool,
         client: Option<&Db>,
     ) -> anyhow::Result<Budget> {
-        let mut budget = Budget::new(name, default_budget, user_id);
-        match client_from_option(client).insert(&mut budget) {
+        let mut budget = Budget::new(name, default_budget, &user_id);
+        match client_from_option(client).insert(&budget) {
             Ok(_) => Ok(budget.clone()),
             Err(e) => {
                 tracing::error!(error = %e, "Could not create budget");
