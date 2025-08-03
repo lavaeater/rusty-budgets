@@ -17,7 +17,7 @@ const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 // Define the state
 joydb::state! {
     AppState,
-    models: [User, Budget, BudgetItem, BudgetTransaction],
+    models: [User, Budget, BudgetItem, BudgetTransaction, BankTransaction],
 }
 
 // Define the database (combination of state and adapter)
