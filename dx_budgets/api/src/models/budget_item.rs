@@ -1,13 +1,34 @@
+use joydb::Model;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use joydb::Model;
+use crate::models::budget_transaction::BudgetTransaction;
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+pub enum BudgetItemType {
+    Income,
+    #[default]
+    Expense,
+    Savings,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+pub enum BudgetItemPeriodicity {
+    #[default]
+    Monthly,
+    Quarterly,
+    Yearly,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default, Model)]
 pub struct BudgetItem {
     pub id: Uuid,
     pub name: String,
-    pub item_type: String,
-    pub expected_at: chrono::NaiveDate,
+    pub budget_item_type: BudgetItemType,
+    pub periodicity: BudgetItemPeriodicity,
+    pub starts_date: chrono::NaiveDate,
+    pub incoming_transactions: Vec<BudgetTransaction>,
+    pub outgoing_transactions: Vec<BudgetTransaction>,
+    pub bank_transactions: Vec<BudgetTransaction>,
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: chrono::NaiveDateTime,
     pub created_by: Uuid,
@@ -15,16 +36,25 @@ pub struct BudgetItem {
 }
 
 impl BudgetItem {
-    pub fn new_from_user(budget_id: Uuid, name: &str, item_type: &str, expected_at: chrono::NaiveDate, created_by: Uuid) -> BudgetItem {
-        BudgetItem {
+    pub fn new_from_user(
+        budget_id: Uuid,
+        name: &str,
+        budget_item_type: BudgetItemType,
+        periodicity: BudgetItemPeriodicity,
+        starts_date: chrono::NaiveDate,
+        created_by: &Uuid,
+    ) -> Self {
+        Self {
             id: Uuid::new_v4(),
             budget_id,
             name: name.to_string(),
-            item_type: item_type.to_string(),
-            expected_at,
+            budget_item_type,
+            periodicity,
+            starts_date,
             created_at: chrono::Utc::now().naive_utc(),
             updated_at: chrono::Utc::now().naive_utc(),
-            created_by,
+            created_by: created_by.clone(),
+            ..Default::default()
         }
     }
 }

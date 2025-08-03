@@ -37,6 +37,7 @@ pub mod db {
     use joydb::JoydbError;
     use uuid::Uuid;
     use Default;
+    
     pub static CLIENT: Lazy<Db> = Lazy::new(|| {
         tracing::info!("Init DB Client");
         let client = Db::open("./data.json").unwrap();
