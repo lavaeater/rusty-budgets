@@ -412,7 +412,7 @@ pub async fn add_budget_item(
         first_item,
         amount
     );
-    match db::add_budget_item(budget_id, name, first_item, amount, expected_at) {
+    match db::add_budget_item(budget_id, name, &first_item, amount, expected_at) {
         Ok(_) => Ok(()),
         Err(e) => {
             tracing::error!(error = %e, "Could not save new budget item");
