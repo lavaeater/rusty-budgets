@@ -15,7 +15,7 @@ const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 // Define the state
 joydb::state! {
     AppState,
-    models: [User, Budget, BudgetAccount, BudgetTransaction, BankTransaction],
+    models: [User, Budget, BudgetItem, BudgetTransaction, BankTransaction],
 }
 
 // Define the database (combination of state and adapter)
@@ -71,7 +71,7 @@ pub mod db {
     pub fn get_budget_overview(id: Uuid, client: Option<&Db>) -> anyhow::Result<BudgetOverview> {
         if let Some(budget) = client_from_option(client).get::<Budget>(&id)? {
             let budget_items =
-                client_from_option(client).get_all_by(|bi: &BudgetAccount| bi.budget_id == id)?;
+                client_from_option(client).get_all_by(|bi: &BudgetItem| bi.budget_id == id)?;
             let budget_items_view = budget_items
                 .iter()
                 .map(|bi| {
@@ -97,8 +97,8 @@ pub mod db {
 
                     BudgetItemView {
                         id: bi.id,
-                        name: bi.budget_account_type.to_string(),
-                        item_type: bi.budget_account_type.to_string(),
+                        name: bi.budget_category.to_string(),
+                        item_type: bi.budget_category.to_string(),
                         aggregate_amount,
                         is_balanced,
                         money_needs_job,
@@ -229,15 +229,16 @@ pub mod db {
         expected_at: NaiveDate,
     ) -> anyhow::Result<()> {
         let user = get_default_user(None)?;
-        let budget_account_to_save = BudgetAccount::new(
+        let budget_item_to_save = BudgetItem::new(
             budget_id,
-            BudgetAccountType::Expense(name),
+            &name,
+            &BudgetCategory::Expense(name.clone()),
             user.id,
         );
-        match client_from_option(None).insert(&budget_account_to_save) {
+        match client_from_option(None).insert(&budget_item_to_save) {
             Ok(_) => {
                 tracing::info!("Saved budget item");
-                add_budget_transaction(first_item, None, budget_account_to_save.id, amount)
+                add_budget_transaction(first_item, None, budget_item_to_save.id, amount)
             }
             Err(e) => {
                 tracing::error!(error = %e, "Could not save budget item");
@@ -256,6 +257,7 @@ pub mod db {
             Ok(mut budgets) => {
                 if budgets.is_empty() {
                     tracing::info!("No default budget exists, time to create one");
+                    let _ = create_test_budget(user_id, client);
                     create_budget("Default", user_id, true, client)
                 } else {
                     Ok(budgets.remove(0))
@@ -271,10 +273,12 @@ pub mod db {
     pub fn create_test_budget(user_id: Uuid, client: Option<&Db>) -> anyhow::Result<Budget> {
         let mut budget = Budget::new("Default test budget", true, user_id);
         //Create budget items
+        let category = budget.new_income_category("Löner");
         //Incomes
-        let mut salaries = BudgetAccount::new(
+        let mut salary_one = BudgetItem::new(
             budget.id,
-            BudgetAccountType::Income("Lön".to_string()),
+            "Lön Tommie",
+            &category,
             user_id,
         );
         
@@ -283,36 +287,52 @@ pub mod db {
             BudgetTransactionType::default(),
             39500.0,
             None,
-            salaries.id,
+            salary_one.id,
             user_id,
         );
-        salaries.store_incoming_transaction(&bt);
+        
+        salary_one.store_incoming_transaction(&bt);
+        budget.store_budget_item(&salary_one);
+        
+        let mut salary_two = BudgetItem::new(
+            budget.id,
+            "Lön Lisa",
+            &category,
+            user_id,
+        );
         
         let bt = BudgetTransaction::new(
             "Lön Lisa",
             BudgetTransactionType::default(),
-            39500.0,
+            19500.0,
             None,
-            salaries.id,
+            salary_two.id,
             user_id,
         );
-        salaries.store_incoming_transaction(&bt);
+        salary_two.store_incoming_transaction(&bt);
+        budget.store_budget_item(&salary_two);
         
+        let category = budget.new_expense_category("Fasta Utgifter");
         
-        let mut recurring = BudgetAccount::new(
+        let mut mortgage = BudgetItem::new(
             budget.id,
-            BudgetAccountType::Expense("Fasta utgifter".to_string()),
+            "Huslånet",
+            &category,
             user_id,
         );
         
-        salaries.put_money_towards(&mut recurring, 5000.0, "Mortgage house");
-               
-        
-        budget.store_budget_account(&salaries);
-        
-        budget.store_budget_account(&salaries);
+        budget.spend_money_on(&mut mortgage, 5660.0);
+        budget.store_budget_item(&mortgage);
 
-        
+        let mut utgift = BudgetItem::new(
+            budget.id,
+            "Hyra lägenheten",
+            &category,
+            user_id,
+        );
+
+        budget.spend_money_on(&mut utgift, 7500.0);
+        budget.store_budget_item(&utgift);
         //Expenses
 
         //Savings
