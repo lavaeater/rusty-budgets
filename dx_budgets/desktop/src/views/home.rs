@@ -1,5 +1,4 @@
 use crate::Route;
-use api::models::budget::Budget;
 use dioxus::prelude::*;
 use lucide_dioxus::Plus;
 use uuid::Uuid;
@@ -9,7 +8,7 @@ use api::*;
 
 #[component]
 pub fn Home() -> Element {
-    let mut budget = use_server_future(api::get_default_budget)?;
+    let mut budget = use_server_future(get_default_budget)?;
 
     rsx! {
         BudgetHero {}
