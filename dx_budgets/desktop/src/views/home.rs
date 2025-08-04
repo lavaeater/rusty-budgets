@@ -5,6 +5,7 @@ use lucide_dioxus::Plus;
 use uuid::Uuid;
 use ui::budget::budget_hero::DEFAULT_BUDGET_ID;
 use ui::{BudgetHero, Users};
+use api::*;
 
 #[component]
 pub fn Home() -> Element {
