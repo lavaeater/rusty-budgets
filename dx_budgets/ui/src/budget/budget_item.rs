@@ -64,7 +64,6 @@ pub fn NewBudgetItem(budget_id: Uuid, item_type: String) -> Element {
                         match api::add_budget_item(
                             budget_id,
                             name.read().clone(),
-                            item_type.clone(),
                             first_item.read().clone(),
                             amount.read().clone(),
                             NaiveDate::parse_from_str(expected_at.read().as_str(), "%Y-%m-%d").unwrap(),

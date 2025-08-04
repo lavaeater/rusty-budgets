@@ -1,7 +1,7 @@
 use joydb::Model;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::hash_map::Entry::{Occupied, Vacant};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::fmt::Display;
 use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;

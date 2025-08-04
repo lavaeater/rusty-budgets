@@ -6,7 +6,7 @@ use crate::models::user::User;
 use chrono::NaiveDate;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
-use joydb::adapters::{JsonAdapter, RonAdapter};
+use joydb::adapters::JsonAdapter;
 use joydb::Joydb;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -29,8 +29,8 @@ pub mod db {
     use chrono::NaiveDate;
     use dioxus::fullstack::once_cell::sync::Lazy;
     use dioxus::logger::tracing;
-    use dioxus::prelude::{Signal, UnsyncStorage};
-    use joydb::{JoydbConfig, JoydbError};
+    use dioxus::prelude::*;
+    use joydb::JoydbError;
     use uuid::Uuid;
     use Default;
 
@@ -225,8 +225,7 @@ pub mod db {
         budget_id: Uuid,
         name: String,
         first_item: &str,
-        amount: f32,
-        expected_at: NaiveDate,
+        amount: f32
     ) -> anyhow::Result<()> {
         let user = get_default_user(None)?;
         let budget_item_to_save = BudgetItem::new(
@@ -361,7 +360,7 @@ pub mod db {
         default_budget: bool,
         client: Option<&Db>,
     ) -> anyhow::Result<Budget> {
-        let mut budget = Budget::new(name, default_budget, user_id);
+        let budget = Budget::new(name, default_budget, user_id);
         match client_from_option(client).insert(&budget) {
             Ok(_) => Ok(budget.clone()),
             Err(e) => {
@@ -429,7 +428,6 @@ pub async fn save_budget(budget: Budget) -> Result<(), ServerFnError> {
 pub async fn add_budget_item(
     budget_id: Uuid,
     name: String,
-    item_type: String,
     first_item: String,
     amount: f32,
     expected_at: NaiveDate,
@@ -441,7 +439,7 @@ pub async fn add_budget_item(
         first_item,
         amount
     );
-    match db::add_budget_item(budget_id, name, &first_item, amount, expected_at) {
+    match db::add_budget_item(budget_id, name, &first_item, amount) {
         Ok(_) => Ok(()),
         Err(e) => {
             tracing::error!(error = %e, "Could not save new budget item");
