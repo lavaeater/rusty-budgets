@@ -1,9 +1,12 @@
 use joydb::Model;
-use serde::{Deserialize, Serialize, Serializer};
+use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::collections::{HashMap, HashSet};
 use std::fmt::Display;
 use std::hash::{Hash, Hasher};
+use std::marker::PhantomData;
+use std::str::FromStr;
+use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeMap;
 use uuid::Uuid;
 
@@ -25,7 +28,8 @@ pub struct Budget {
     pub name: String,
     pub default_budget: bool,
     pub month_begins_on: MonthBeginsOn,
-    #[serde(serialize_with = "serialize_budget_items_as_string_keys")]
+    #[serde(serialize_with = "serialize_budget_items_as_string_keys",
+        deserialize_with = "deserialize_budget_items_with_string_keys")]
     pub budget_items: HashMap<BudgetCategory, Vec<BudgetItem>>,
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: chrono::NaiveDateTime,
@@ -209,6 +213,59 @@ impl Display for BudgetCategory {
     }
 }
 
+
+impl FromStr for BudgetCategory {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        // Basic format: "VariantName(value)"
+        if let Some(rest) = s.strip_prefix("Income(").and_then(|s| s.strip_suffix(")")) {
+            return Ok(BudgetCategory::Income(rest.to_string()));
+        } else if let Some(rest) = s.strip_prefix("Expense(").and_then(|s| s.strip_suffix(")")) {
+            return Ok(BudgetCategory::Expense(rest.to_string()));
+        } else if let Some(rest) = s.strip_prefix("Savings(").and_then(|s| s.strip_suffix(")")) {
+            return Ok(BudgetCategory::Savings(rest.to_string()));
+        }
+        Err(format!("Unknown BudgetCategory format: {}", s))
+    }
+}
+
+fn deserialize_budget_items_with_string_keys<'de, D>(
+    deserializer: D,
+) -> Result<HashMap<BudgetCategory, Vec<BudgetItem>>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    struct BudgetMapVisitor {
+        marker: PhantomData<fn() -> HashMap<BudgetCategory, Vec<BudgetItem>>>,
+    }
+
+    impl<'de> Visitor<'de> for BudgetMapVisitor {
+        type Value = HashMap<BudgetCategory, Vec<BudgetItem>>;
+
+        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+            formatter.write_str("a map with stringified BudgetCategory keys")
+        }
+
+        fn visit_map<M>(self, mut access: M) -> Result<Self::Value, M::Error>
+        where
+            M: MapAccess<'de>,
+        {
+            let mut map = HashMap::new();
+            while let Some((key_str, value)) = access.next_entry::<String, Vec<BudgetItem>>()? {
+                let key = BudgetCategory::from_str(&key_str)
+                    .map_err(|e| de::Error::custom(format!("Key parse error: {}", e)))?;
+                map.insert(key, value);
+            }
+            Ok(map)
+        }
+    }
+
+    deserializer.deserialize_map(BudgetMapVisitor {
+        marker: PhantomData,
+    })
+}
+
 fn serialize_budget_items_as_string_keys<S>(
     map: &HashMap<BudgetCategory, Vec<BudgetItem>>,
     serializer: S,
@@ -283,14 +340,10 @@ impl BudgetItem {
     }
     
     pub fn remaining_spendable_amount(&self) -> f32 {
-        self.incoming_transactions
-            .iter()
-            .map(|(_, v)| v.amount)
+        self.incoming_transactions.values().map(|v| v.amount)
             .sum::<f32>()
             - self
-            .outgoing_transactions
-            .iter()
-            .map(|(_, v)| v.amount)
+            .outgoing_transactions.values().map(|v| v.amount)
             .sum::<f32>()
     }
 
