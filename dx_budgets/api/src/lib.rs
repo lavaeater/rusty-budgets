@@ -257,8 +257,8 @@ pub mod db {
             Ok(mut budgets) => {
                 if budgets.is_empty() {
                     tracing::info!("No default budget exists, time to create one");
-                    let _ = create_test_budget(user_id, client);
-                    create_budget("Default", user_id, true, client)
+                    create_test_budget(user_id, client)
+//                    create_budget("Default", user_id, true, client)
                 } else {
                     Ok(budgets.remove(0))
                 }
