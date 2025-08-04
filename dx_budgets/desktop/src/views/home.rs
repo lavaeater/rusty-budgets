@@ -8,7 +8,7 @@ use ui::{BudgetHero, Users};
 
 #[component]
 pub fn Home() -> Element {
-    let mut budget = use_server_future(api::get_default_budget())?;
+    let mut budget = use_server_future(api::get_default_budget)?;
 
     rsx! {
         BudgetHero {}
