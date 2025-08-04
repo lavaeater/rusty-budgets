@@ -1,11 +1,13 @@
 use joydb::Model;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer};
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::collections::{HashMap, HashSet};
 use std::fmt::Display;
+use std::hash::{Hash, Hasher};
+use serde::ser::SerializeMap;
 use uuid::Uuid;
 
-#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum MonthBeginsOn {
     PreviousMonth(u32),
     CurrentMonth(u32),
@@ -17,27 +19,33 @@ impl Default for MonthBeginsOn {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default, Model)]
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, Default, Model)]
 pub struct Budget {
     pub id: Uuid,
     pub name: String,
     pub default_budget: bool,
     pub month_begins_on: MonthBeginsOn,
-    pub budget_categories: HashSet<BudgetCategory>,
-    pub budget_items: HashMap<BudgetCategory, BudgetItem>,
+    #[serde(serialize_with = "serialize_budget_items_as_string_keys")]
+    pub budget_items: HashMap<BudgetCategory, Vec<BudgetItem>>,
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: chrono::NaiveDateTime,
     pub user_id: Uuid,
+}
+
+impl PartialEq for Budget {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
 }
 
 impl Budget {
     pub fn get_available_spendable_budget(&self) -> f32 {
         self.budget_items
             .iter()
-            .filter_map(|(key, item)| {
+            .filter_map(|(key, items)| {
                 if matches!(key, BudgetCategory::Income(_)) {
                     Some(
-                        item.remaining_spendable_amount()
+                        items.iter().map(|i| i.remaining_spendable_amount()).sum::<f32>(),
                     )
                 } else {
                     None
@@ -53,35 +61,38 @@ impl Budget {
             over multiple budget items if not one can fit the entire amount
              */
             let mut amount_left = amount;
-            for (category, item) in &mut self.budget_items {
+            for (category, items) in &mut self.budget_items {
                 if matches!(category, BudgetCategory::Income(_)) {
-                    if item.remaining_spendable_amount() > amount_left {
-                        let transaction = BudgetTransaction::new(
-                            "Spend Money",
-                            BudgetTransactionType::default(),
-                            amount_left,
-                            Some(item.id),
-                            target.id,
-                            self.user_id,
-                        );
-                        item.store_outgoing_transaction(&transaction);
-                        target.store_incoming_transaction(&transaction);
-                        amount_left = 0.0;
-                        break;
-                    } else if item.remaining_spendable_amount() > 0.0 {
-                        let amount_to_spend = item.remaining_spendable_amount();
-                        let transaction = BudgetTransaction::new(
-                            "Spend Money",
-                            BudgetTransactionType::default(),
-                            amount_to_spend,
-                            Some(item.id),
-                            target.id,
-                            self.user_id,
-                        );
-                        item.store_outgoing_transaction(&transaction);
-                        target.store_incoming_transaction(&transaction);
-                        amount_left -= amount_to_spend;
+                    for item in items.iter_mut().filter(|i| i.remaining_spendable_amount() > 0.0) {
+                        if item.remaining_spendable_amount() > amount_left {
+                            let transaction = BudgetTransaction::new(
+                                "Spend Money",
+                                BudgetTransactionType::default(),
+                                amount_left,
+                                Some(item.id),
+                                target.id,
+                                self.user_id,
+                            );
+                            item.store_outgoing_transaction(&transaction);
+                            target.store_incoming_transaction(&transaction);
+                            amount_left = 0.0;
+                            break;
+                        } else {
+                            let amount_to_spend = item.remaining_spendable_amount();
+                            let transaction = BudgetTransaction::new(
+                                "Spend Money",
+                                BudgetTransactionType::default(),
+                                amount_to_spend,
+                                Some(item.id),
+                                target.id,
+                                self.user_id,
+                            );
+                            item.store_outgoing_transaction(&transaction);
+                            target.store_incoming_transaction(&transaction);
+                            amount_left -= amount_to_spend;
+                        }                        
                     }
+
                 }
             }
         }
@@ -105,26 +116,31 @@ impl Budget {
 
     pub fn new_income_category(&mut self, category_name: &str) -> BudgetCategory {
         let category = BudgetCategory::Income(category_name.to_string());
-        self.budget_categories.insert(category.clone());
+        self.store_category(&category);
         category
+    }
+    
+    pub fn store_category(&mut self, category: &BudgetCategory) {
+        if let Vacant(e) = self.budget_items.entry(category.clone()) {
+            e.insert(Vec::new());
+        }
+        self.touch();
     }
 
     pub fn new_expense_category(&mut self, category_name: &str) -> BudgetCategory {
         let category = BudgetCategory::Expense(category_name.to_string());
-        self.budget_categories.insert(category.clone());
+        self.store_category(&category);
         category
+
     }
 
     pub fn store_budget_item(&mut self, budget_item: &BudgetItem) {
-        self.budget_categories
-            .insert(budget_item.budget_category.clone());
-
         match self.budget_items.entry(budget_item.budget_category.clone()) {
             Vacant(e) => {
-                e.insert(budget_item.clone());
+                e.insert(vec![budget_item.clone()]);
             }
             Occupied(mut e) => {
-                e.insert(budget_item.clone());
+                e.get_mut().push(budget_item.clone());
             }
         }
 
@@ -147,6 +163,8 @@ pub struct BankTransaction {
     pub updated_at: chrono::NaiveDateTime,
     pub created_by: Uuid,
 }
+
+impl Eq for BankTransaction {}
 
 impl BankTransaction {
     pub fn new_from_user(
@@ -184,11 +202,25 @@ impl Default for BudgetCategory {
 impl Display for BudgetCategory {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            BudgetCategory::Income(category) => write!(f, "Income: {}", category),
-            BudgetCategory::Expense(category) => write!(f, "Expense: {}", category),
-            BudgetCategory::Savings(category) => write!(f, "Savings: {}", category),
+            BudgetCategory::Income(s) => write!(f, "Income({})", s),
+            BudgetCategory::Expense(s) => write!(f, "Expense({})", s),
+            BudgetCategory::Savings(s) => write!(f, "Savings({})", s),
         }
     }
+}
+
+fn serialize_budget_items_as_string_keys<S>(
+    map: &HashMap<BudgetCategory, Vec<BudgetItem>>,
+    serializer: S,
+) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    let mut map_ser = serializer.serialize_map(Some(map.len()))?;
+    for (k, v) in map {
+        map_ser.serialize_entry(&k.to_string(), v)?;
+    }
+    map_ser.end()
 }
 
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -211,7 +243,7 @@ impl Display for BudgetItemPeriodicity {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default, Model)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default, Model)]
 pub struct BudgetItem {
     pub id: Uuid,
     pub name: String,
@@ -223,6 +255,12 @@ pub struct BudgetItem {
     pub updated_at: chrono::NaiveDateTime,
     pub created_by: Uuid,
     pub budget_id: Uuid,
+}
+
+impl Hash for BudgetItem {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.id.hash(state);
+    }
 }
 
 impl BudgetItem {
@@ -297,14 +335,14 @@ impl BudgetItem {
     }
 }
 
-#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Default)]
 pub enum BudgetTransactionType {
     #[default]
     StartValue,
     Adjustment,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default, Model)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, Model)]
 pub struct BudgetTransaction {
     pub id: Uuid,
     pub text: String,
@@ -315,6 +353,20 @@ pub struct BudgetTransaction {
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: chrono::NaiveDateTime,
     pub created_by: Uuid,
+}
+
+impl PartialEq for BudgetTransaction {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
+impl Eq for BudgetTransaction {}
+
+impl Hash for BudgetTransaction {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.id.hash(state);
+    }
 }
 
 impl BudgetTransaction {

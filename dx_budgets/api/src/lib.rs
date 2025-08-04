@@ -20,7 +20,7 @@ joydb::state! {
 
 // Define the database (combination of state and adapter)
 #[cfg(feature = "server")]
-type Db = Joydb<AppState, RonAdapter>;
+type Db = Joydb<AppState, JsonAdapter>;
 #[cfg(feature = "server")]
 pub mod db {
     use crate::models::budget::*;
@@ -36,7 +36,7 @@ pub mod db {
 
     pub static CLIENT: Lazy<Db> = Lazy::new(|| {
         tracing::info!("Init DB Client");
-        let client = Db::open("./data.ron").unwrap();
+        let client = Db::open("./data.json").unwrap();
         // Run migrations
         tracing::info!("Insert Default Data");
         match get_default_user(Some(&client)) {
@@ -334,6 +334,15 @@ pub mod db {
         budget.spend_money_on(&mut utgift, 7500.0);
         budget.store_budget_item(&utgift);
         //Expenses
+        
+        match serde_json::to_string(&budget) {
+            Ok(b) => {
+                tracing::info!(budget = %b, "Created test budget");
+            }
+            Err(e) => {
+                tracing::error!(error = %e, "Could not serialize test budget");
+            }
+        }
 
         //Savings
 
