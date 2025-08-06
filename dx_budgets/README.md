@@ -70,3 +70,19 @@ and serve:
 dx serve
 ```
 
+### Alternative Run Options
+
+In addition to using the `dx serve` command, you can also run the application using:
+
+1. **Shell Script**: A convenience script that replicates the functionality of `dx serve`:
+   ```bash
+   ./run_dioxus.sh
+   ```
+
+2. **RustRover Run Configurations**: For development with debugging capabilities:
+   - Set up separate run configurations for server and client components
+   - Use compound run configurations for a more integrated experience
+   - See `RUSTOVER_RUN_CONFIG.md` for detailed instructions
+
+These alternative options allow you to launch and debug the application directly from RustRover without using the command line.
+
