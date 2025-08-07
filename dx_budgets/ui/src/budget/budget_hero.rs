@@ -1,3 +1,5 @@
+use std::cell::Ref;
+use dioxus::dioxus_core::internal::generational_box::GenerationalRef;
 use api::models::budget::Budget;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
@@ -46,6 +48,22 @@ impl BudgetSignal {
 #[component]
 pub fn BudgetHero() -> Element {
     let nav = navigator();
+    
+    let mut borken = use_server_future(api::get_default_budget)?;
+    
+    match borken.value().read_unchecked().as_ref() {
+        Some(Ok(budget)) => {
+            tracing::info!("Got budget: {}", budget.name);
+        },
+        Some(Err(e)) => {
+            tracing::info!("Got error: {}", e);
+        },
+        None => {
+            tracing::info!("None");
+        }
+    }
+
+    
     // Resource for fetching budget data
     let mut budget_resource = use_resource(|| async move { api::get_default_budget().await });
 
