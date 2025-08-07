@@ -8,7 +8,7 @@ use uuid::Uuid;
 
 const BUDGET_CSS: Asset = asset!("/assets/styling/budget.css");
 
-pub static DEFAULT_BUDGET_ID: GlobalSignal<Uuid> = Signal::global(|| Uuid::default());
+pub static CURRENT_BUDGET_ID: GlobalSignal<Uuid> = Signal::global(|| Uuid::default());
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct BudgetSignal {
@@ -48,24 +48,10 @@ impl BudgetSignal {
 #[component]
 pub fn BudgetHero() -> Element {
     let nav = navigator();
-    
-    let mut borken = use_server_future(api::get_default_budget)?;
-    
-    match borken.value().read_unchecked().as_ref() {
-        Some(Ok(budget)) => {
-            tracing::info!("Got budget: {}", budget.name);
-        },
-        Some(Err(e)) => {
-            tracing::info!("Got error: {}", e);
-        },
-        None => {
-            tracing::info!("None");
-        }
-    }
-
-    
     // Resource for fetching budget data
-    let mut budget_resource = use_resource(|| async move { api::get_default_budget().await });
+    let mut budget_resource = use_server_future(api::get_default_budget)?;
+       
+    // let mut budget_resource = use_resource(|| async move { api::get_default_budget().await });
 
     // Persistent signal for budget data
     let mut budget_signal = use_signal(|| None::<BudgetSignal>);
@@ -76,7 +62,7 @@ pub fn BudgetHero() -> Element {
     // Update budget signal when resource changes
     use_effect(move || {
         if let Some(Ok(budget)) = budget_resource.read().as_ref() {
-            *DEFAULT_BUDGET_ID.write() = budget.id;
+            *CURRENT_BUDGET_ID.write() = budget.id;
             budget_signal.set(Some(BudgetSignal::from(&budget)));
         }
     });

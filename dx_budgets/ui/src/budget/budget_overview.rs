@@ -2,7 +2,7 @@ use dioxus::dioxus_core::Element;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use uuid::Uuid;
-use crate::budget::budget_hero::{BudgetSignal, DEFAULT_BUDGET_ID};
+use crate::budget::budget_hero::{BudgetSignal, CURRENT_BUDGET_ID};
 use api::BudgetOverview as Budget;
 
 const BUDGET_CSS: Asset = asset!("/assets/styling/budget.css");
