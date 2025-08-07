@@ -1,15 +1,11 @@
 use crate::Route;
 use dioxus::prelude::*;
 use lucide_dioxus::Plus;
-use uuid::Uuid;
-use ui::budget::budget_hero::DEFAULT_BUDGET_ID;
 use ui::{BudgetHero, Users};
-use api::*;
+use ui::budget::budget_hero::DEFAULT_BUDGET_ID;
 
 #[component]
 pub fn Home() -> Element {
-    let mut budget = use_server_future(get_default_budget)?;
-
     rsx! {
         BudgetHero {}
         Link { to: Route::NewBudgetItem {
