@@ -1,17 +1,35 @@
-cargo-features = ["codegen-backend"]
-
-[package]
-name = "rusty-budgets"
-version = "0.1.0"
-edition = "2021"
-
-[profile.dev]
-codegen-backend = "cranelift"
-
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [workspace]
-members = ["entities", "api", "service", "migration", "rusty_macros", "dx_budgets"]
+resolver = "2"
+members = [
+    "ui",
+    "web",
+    "desktop",
+    "mobile",
+    "api",
+]
 
-[dependencies]
+[workspace.dependencies]
+dioxus = "0.6.3"
+lucide-dioxus = { version = "2.15.0", features = ["all-icons"] }
+uuid = { version = "1.1.2", features = ["v4", "js", "serde"] }
+chrono = { version="0.4.41", features = ["serde"] }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = { version = "1.0.142" }
+anyhow = "1.0.98"
+joydb = { version = "0.1.0", features = ["json"] }
+
+# workspace
+ui = { path = "ui" }
 api = { path = "api" }
+
+[profile]
+
+[profile.wasm-dev]
+inherits = "dev"
+opt-level = 1
+
+[profile.server-dev]
+inherits = "dev"
+
+[profile.android-dev]
+inherits = "dev"
