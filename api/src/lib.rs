@@ -43,8 +43,8 @@ pub mod db {
             Ok(user) => {
                 tracing::info!("Default user exists");
                 match get_default_budget_for_user(user.id, Some(&client)) {
-                    Ok(_) => {
-                        tracing::info!("Default budget exists");
+                    Ok(budget) => {
+                        tracing::info!("Default budget exists: {}", budget);
                     }
                     Err(e) => {
                         tracing::error!(error = %e, "Could not get default budget for user");

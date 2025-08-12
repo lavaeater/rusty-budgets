@@ -2,7 +2,7 @@ use joydb::Model;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::collections::HashMap;
-use std::fmt::Display;
+use std::fmt::{Display, Formatter};
 use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
 use std::str::FromStr;
@@ -34,6 +34,12 @@ pub struct Budget {
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: chrono::NaiveDateTime,
     pub user_id: Uuid,
+}
+
+impl Display for Budget {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        
+    }
 }
 
 impl PartialEq for Budget {
