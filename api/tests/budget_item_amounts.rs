@@ -12,7 +12,7 @@ fn new_budget_item(name: &str, category: BudgetCategory) -> BudgetItem {
 
 #[test]
 fn amounts_are_zero_for_empty_budget_item() {
-    let mut item = new_budget_item("Empty", BudgetCategory::Expense("Misc".into()));
+    let item = new_budget_item("Empty", BudgetCategory::Expense("Misc".into()));
 
     assert_eq!(item.incoming_amount(), 0.0);
     assert_eq!(item.outgoing_amount(), 0.0);
