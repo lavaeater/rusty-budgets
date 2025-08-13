@@ -551,3 +551,6 @@ impl BudgetTransaction {
         }
     }
 }
+
+#[cfg(test)]
+mod budget_item_tests;
