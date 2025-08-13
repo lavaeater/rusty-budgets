@@ -3,6 +3,7 @@ mod budget_item_tests {
     use super::*;
     use chrono::{NaiveDate, Utc};
     use uuid::Uuid;
+    use api::models::budget::{BankTransaction, BudgetCategory, BudgetItem, BudgetTransaction, BudgetTransactionType};
 
     /// Helper function to create a test BudgetItem
     fn create_test_budget_item() -> BudgetItem {
