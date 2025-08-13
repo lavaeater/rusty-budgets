@@ -1,8 +1,7 @@
 //! This crate contains all shared fullstack server functions.
 pub mod models;
 
-use crate::models::budget::*;
-use crate::models::user::User;
+use crate::models::*;
 use chrono::NaiveDate;
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -14,7 +13,6 @@ use joydb::Joydb;
 use dioxus::logger::tracing;
 #[cfg(feature = "server")]
 use joydb::adapters::JsonAdapter;
-
 
 #[cfg(feature = "server")]
 const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
@@ -29,8 +27,7 @@ joydb::state! {
 type Db = Joydb<AppState, JsonAdapter>;
 #[cfg(feature = "server")]
 pub mod db {
-    use crate::models::budget::*;
-    use crate::models::user::User;
+    use crate::models::*;
     use crate::{BudgetItemView, BudgetOverview, Db, DEFAULT_USER_EMAIL};
     use chrono::NaiveDate;
     use dioxus::fullstack::once_cell::sync::Lazy;
