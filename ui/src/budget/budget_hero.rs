@@ -1,9 +1,7 @@
-use std::cell::Ref;
-use dioxus::dioxus_core::internal::generational_box::GenerationalRef;
 use api::models::budget::Budget;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
-use lucide_dioxus::{Plus, Pen, Hamburger};
+use lucide_dioxus::{Pen, Hamburger};
 use uuid::Uuid;
 
 const BUDGET_CSS: Asset = asset!("/assets/styling/budget.css");
@@ -47,7 +45,7 @@ impl BudgetSignal {
 
 #[component]
 pub fn BudgetHero() -> Element {
-    let nav = navigator();
+    let _ = navigator();
     // Resource for fetching budget data
     let mut budget_resource = use_server_future(api::get_default_budget)?;
        

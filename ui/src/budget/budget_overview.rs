@@ -1,16 +1,13 @@
 use dioxus::dioxus_core::Element;
-use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use uuid::Uuid;
-use crate::budget::budget_hero::{BudgetSignal, CURRENT_BUDGET_ID};
 use api::BudgetOverview as Budget;
 
 const BUDGET_CSS: Asset = asset!("/assets/styling/budget.css");
 
 #[component]
 pub fn BudgetOverview(id: Uuid) -> Element {
-    // let id = id.clone();
-    let mut budget_resource = 
+    let budget_resource = 
         use_resource(move || async move { api::get_budget_overview(id).await });
 
     // Persistent signal for budget data

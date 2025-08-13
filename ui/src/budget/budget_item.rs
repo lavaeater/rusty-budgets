@@ -1,7 +1,6 @@
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use uuid::Uuid;
-use chrono::NaiveDate;
 
 const BUDGET_CSS: Asset = asset!("/assets/styling/budget.css");
 
@@ -20,66 +19,63 @@ pub fn NewBudgetItem(budget_id: Uuid, item_type: String) -> Element {
     let mut amount = use_signal(|| 0.0);
     let mut expected_at = use_signal(|| "2025-08-25".to_string());
     rsx! {
-                document::Link { rel: "stylesheet", href: BUDGET_CSS}
+            document::Link { rel: "stylesheet", href: BUDGET_CSS}
 
-                div {
-                    input {
-                        oninput: move |e| {
-                            *name.write() = e.value().clone();
-                        },
-                        r#type: "text",
-                        value: "{name.read()}"
-                    }
-                }
-                div {
-                    input {
-                        oninput: move |e| {
-                            *first_item.write() = e.value().clone();
-                        },
-                        r#type: "text",
-                        value: "{first_item.read()}"
-                    }
-                    input {
-                        oninput: move |e| {
-                            *amount.write() = e.value().parse().unwrap();
-                        },
-                        r#type: "number",
-                        value: "{amount.read()}"
-                    }
-                }
-                div {
-                    input { oninput: move |e| {
-                            *expected_at.write() = e.value().clone();
-                        },
-                        r#type: "date",
-                        value: "{expected_at.read()}"
-                    }
-                }
-                div {
-                    button {
-                        onclick: move |_| {
-                        let item_type = item_type.clone();
-
-                        spawn(async move {
-                        match api::add_budget_item(
-                            budget_id,
-                            name.read().clone(),
-                            first_item.read().clone(),
-                            amount.read().clone(),
-                            NaiveDate::parse_from_str(expected_at.read().as_str(), "%Y-%m-%d").unwrap(),
-                        ).await {  
-                            Ok(_) => {     
-                                tracing::info!("Success");
-                                nav.replace("/");
-                            }
-                            Err(e) => {                                                
-                                tracing::error!("Failed to save budget: {}", e);
-                            }
-                        };
-                        });
+            div {
+                input {
+                    oninput: move |e| {
+                        *name.write() = e.value().clone();
                     },
-                        "Spara"
-                    }
+                    r#type: "text",
+                    value: "{name.read()}"
                 }
-        }
+            }
+            div {
+                input {
+                    oninput: move |e| {
+                        *first_item.write() = e.value().clone();
+                    },
+                    r#type: "text",
+                    value: "{first_item.read()}"
+                }
+                input {
+                    oninput: move |e| {
+                        *amount.write() = e.value().parse().unwrap();
+                    },
+                    r#type: "number",
+                    value: "{amount.read()}"
+                }
+            }
+            div {
+                input { oninput: move |e| {
+                        *expected_at.write() = e.value().clone();
+                    },
+                    r#type: "date",
+                    value: "{expected_at.read()}"
+                }
+            }
+            div {
+                button {
+                    onclick: move |_| {
+                    spawn(async move {
+                    match api::add_budget_item(
+                        budget_id,
+                        name.read().clone(),
+                        first_item.read().clone(),
+                        amount.read().clone(),
+                    ).await {
+                        Ok(_) => {
+                            tracing::info!("Success");
+                            nav.replace("/");
+                        }
+                        Err(e) => {
+                            tracing::error!("Failed to save budget: {}", e);
+                        }
+                    };
+                    });
+                },
+                    "Spara"
+                }
+            }
+    }
 }

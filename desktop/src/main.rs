@@ -1,4 +1,3 @@
-use dioxus::logger::tracing;
 use dioxus::logger::tracing::Level;
 use dioxus::prelude::*;
 use uuid::Uuid;

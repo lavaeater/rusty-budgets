@@ -4,13 +4,19 @@ pub mod models;
 use crate::models::budget::*;
 use crate::models::user::User;
 use chrono::NaiveDate;
-use dioxus::logger::tracing;
 use dioxus::prelude::*;
-use joydb::adapters::JsonAdapter;
-use joydb::Joydb;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+#[cfg(feature = "server")]
+use joydb::Joydb;
+#[cfg(feature = "server")]
+use dioxus::logger::tracing;
+#[cfg(feature = "server")]
+use joydb::adapters::JsonAdapter;
+
+
+#[cfg(feature = "server")]
 const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 // Define the state
 joydb::state! {
@@ -29,7 +35,6 @@ pub mod db {
     use chrono::NaiveDate;
     use dioxus::fullstack::once_cell::sync::Lazy;
     use dioxus::logger::tracing;
-    use dioxus::prelude::*;
     use joydb::JoydbError;
     use uuid::Uuid;
     use Default;
@@ -430,7 +435,6 @@ pub async fn add_budget_item(
     name: String,
     first_item: String,
     amount: f32,
-    expected_at: NaiveDate,
 ) -> Result<(), ServerFnError> {
     tracing::info!(
         "add_budget_item: {}, {}, {}, {}",

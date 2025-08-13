@@ -1,8 +1,6 @@
-use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use uuid::Uuid;
 use ui::BudgetOverview;
-use crate::Route;
 
 #[component]
 pub fn PageNotFound(route: Vec<String>) -> Element {
@@ -20,7 +18,7 @@ pub fn Budget(id: Uuid) -> Element {
     }
 }
 
-const BUDGET_CSS: Asset = asset!("/assets/main.css");
+const _BUDGET_CSS: Asset = asset!("/assets/main.css");
 
 #[component]
 pub fn NewBudgetItem(budget_id: Uuid, item_type: String) -> Element {
