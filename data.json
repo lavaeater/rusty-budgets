@@ -12,7 +12,7 @@
   ],
   "Budget": [
     {
-      "id": "d955e4cf-9a20-4e6a-b9af-f035d66b8935",
+      "id": "fd7b2ffc-758e-4e81-8ccd-d43c87da6ad0",
       "name": "Default test budget",
       "default_budget": true,
       "month_begins_on": {
@@ -21,138 +21,138 @@
       "budget_items": {
         "Expense(Fasta Utgifter)": [
           {
-            "id": "3887c63e-6933-4f98-8e65-6de5911fd187",
+            "id": "c0cf0eed-4d9d-4cc2-989b-34fca316ae8b",
             "name": "Huslånet",
             "budget_category": {
               "Expense": "Fasta Utgifter"
             },
             "incoming_transactions": {
-              "411782b4-14ed-4b64-b449-c3e2fa088876": {
-                "id": "411782b4-14ed-4b64-b449-c3e2fa088876",
+              "e7cbd052-81d5-49d5-bc17-e157dccf2d1a": {
+                "id": "e7cbd052-81d5-49d5-bc17-e157dccf2d1a",
                 "text": "Spend Money",
                 "transaction_type": "StartValue",
                 "amount": 5660.0,
-                "from_budget_item": "ebe9622c-9e28-4791-9c2b-cac44f0e442c",
-                "to_budget_item": "3887c63e-6933-4f98-8e65-6de5911fd187",
-                "created_at": "2025-08-04T06:24:27.590693652",
-                "updated_at": "2025-08-04T06:24:27.590693863",
+                "from_budget_item": "b2a1af36-944f-416d-884d-fb76b848c988",
+                "to_budget_item": "c0cf0eed-4d9d-4cc2-989b-34fca316ae8b",
+                "created_at": "2025-08-13T12:40:00.698668787",
+                "updated_at": "2025-08-13T12:40:00.698668927",
                 "created_by": "4a54d276-0d47-43d7-a344-144dd6f284d9"
               }
             },
             "outgoing_transactions": {},
             "bank_transactions": {},
-            "created_at": "2025-08-04T06:24:27.590685755",
-            "updated_at": "2025-08-04T06:24:27.590696532",
+            "created_at": "2025-08-13T12:40:00.698661964",
+            "updated_at": "2025-08-13T12:40:00.698670460",
             "created_by": "4a54d276-0d47-43d7-a344-144dd6f284d9",
-            "budget_id": "d955e4cf-9a20-4e6a-b9af-f035d66b8935"
+            "budget_id": "fd7b2ffc-758e-4e81-8ccd-d43c87da6ad0"
           },
           {
-            "id": "507d9636-87d6-4793-bbd1-acc568d370a4",
+            "id": "a1edf5a8-5726-4d4f-b647-74bc8f52c3bf",
             "name": "Hyra lägenheten",
             "budget_category": {
               "Expense": "Fasta Utgifter"
             },
             "incoming_transactions": {
-              "100e6b80-d6f0-4b7b-b047-c6b2cfb5e5b6": {
-                "id": "100e6b80-d6f0-4b7b-b047-c6b2cfb5e5b6",
+              "c58defe3-89f7-4e11-9e71-1cf6f01d1c46": {
+                "id": "c58defe3-89f7-4e11-9e71-1cf6f01d1c46",
                 "text": "Spend Money",
                 "transaction_type": "StartValue",
                 "amount": 7500.0,
-                "from_budget_item": "ebe9622c-9e28-4791-9c2b-cac44f0e442c",
-                "to_budget_item": "507d9636-87d6-4793-bbd1-acc568d370a4",
-                "created_at": "2025-08-04T06:24:27.590705911",
-                "updated_at": "2025-08-04T06:24:27.590706156",
+                "from_budget_item": "b2a1af36-944f-416d-884d-fb76b848c988",
+                "to_budget_item": "a1edf5a8-5726-4d4f-b647-74bc8f52c3bf",
+                "created_at": "2025-08-13T12:40:00.698676692",
+                "updated_at": "2025-08-13T12:40:00.698676832",
                 "created_by": "4a54d276-0d47-43d7-a344-144dd6f284d9"
               }
             },
             "outgoing_transactions": {},
             "bank_transactions": {},
-            "created_at": "2025-08-04T06:24:27.590701961",
-            "updated_at": "2025-08-04T06:24:27.590708582",
+            "created_at": "2025-08-13T12:40:00.698674377",
+            "updated_at": "2025-08-13T12:40:00.698678104",
             "created_by": "4a54d276-0d47-43d7-a344-144dd6f284d9",
-            "budget_id": "d955e4cf-9a20-4e6a-b9af-f035d66b8935"
+            "budget_id": "fd7b2ffc-758e-4e81-8ccd-d43c87da6ad0"
           }
         ],
         "Income(Löner)": [
           {
-            "id": "ebe9622c-9e28-4791-9c2b-cac44f0e442c",
+            "id": "b2a1af36-944f-416d-884d-fb76b848c988",
             "name": "Lön Tommie",
             "budget_category": {
               "Income": "Löner"
             },
             "incoming_transactions": {
-              "e1682edf-ad46-44dd-9a07-e02255b08c67": {
-                "id": "e1682edf-ad46-44dd-9a07-e02255b08c67",
+              "f81eb79e-56b0-412d-8ebc-063988182cfd": {
+                "id": "f81eb79e-56b0-412d-8ebc-063988182cfd",
                 "text": "Lön Tommie",
                 "transaction_type": "StartValue",
                 "amount": 39500.0,
                 "from_budget_item": null,
-                "to_budget_item": "ebe9622c-9e28-4791-9c2b-cac44f0e442c",
-                "created_at": "2025-08-04T06:24:27.590664227",
-                "updated_at": "2025-08-04T06:24:27.590664481",
+                "to_budget_item": "b2a1af36-944f-416d-884d-fb76b848c988",
+                "created_at": "2025-08-13T12:40:00.698646545",
+                "updated_at": "2025-08-13T12:40:00.698646685",
                 "created_by": "4a54d276-0d47-43d7-a344-144dd6f284d9"
               }
             },
             "outgoing_transactions": {
-              "411782b4-14ed-4b64-b449-c3e2fa088876": {
-                "id": "411782b4-14ed-4b64-b449-c3e2fa088876",
+              "e7cbd052-81d5-49d5-bc17-e157dccf2d1a": {
+                "id": "e7cbd052-81d5-49d5-bc17-e157dccf2d1a",
                 "text": "Spend Money",
                 "transaction_type": "StartValue",
                 "amount": 5660.0,
-                "from_budget_item": "ebe9622c-9e28-4791-9c2b-cac44f0e442c",
-                "to_budget_item": "3887c63e-6933-4f98-8e65-6de5911fd187",
-                "created_at": "2025-08-04T06:24:27.590693652",
-                "updated_at": "2025-08-04T06:24:27.590693863",
+                "from_budget_item": "b2a1af36-944f-416d-884d-fb76b848c988",
+                "to_budget_item": "c0cf0eed-4d9d-4cc2-989b-34fca316ae8b",
+                "created_at": "2025-08-13T12:40:00.698668787",
+                "updated_at": "2025-08-13T12:40:00.698668927",
                 "created_by": "4a54d276-0d47-43d7-a344-144dd6f284d9"
               },
-              "100e6b80-d6f0-4b7b-b047-c6b2cfb5e5b6": {
-                "id": "100e6b80-d6f0-4b7b-b047-c6b2cfb5e5b6",
+              "c58defe3-89f7-4e11-9e71-1cf6f01d1c46": {
+                "id": "c58defe3-89f7-4e11-9e71-1cf6f01d1c46",
                 "text": "Spend Money",
                 "transaction_type": "StartValue",
                 "amount": 7500.0,
-                "from_budget_item": "ebe9622c-9e28-4791-9c2b-cac44f0e442c",
-                "to_budget_item": "507d9636-87d6-4793-bbd1-acc568d370a4",
-                "created_at": "2025-08-04T06:24:27.590705911",
-                "updated_at": "2025-08-04T06:24:27.590706156",
+                "from_budget_item": "b2a1af36-944f-416d-884d-fb76b848c988",
+                "to_budget_item": "a1edf5a8-5726-4d4f-b647-74bc8f52c3bf",
+                "created_at": "2025-08-13T12:40:00.698676692",
+                "updated_at": "2025-08-13T12:40:00.698676832",
                 "created_by": "4a54d276-0d47-43d7-a344-144dd6f284d9"
               }
             },
             "bank_transactions": {},
-            "created_at": "2025-08-04T06:24:27.590662069",
-            "updated_at": "2025-08-04T06:24:27.590707310",
+            "created_at": "2025-08-13T12:40:00.698645172",
+            "updated_at": "2025-08-13T12:40:00.698677403",
             "created_by": "4a54d276-0d47-43d7-a344-144dd6f284d9",
-            "budget_id": "d955e4cf-9a20-4e6a-b9af-f035d66b8935"
+            "budget_id": "fd7b2ffc-758e-4e81-8ccd-d43c87da6ad0"
           },
           {
-            "id": "468ebd7a-20f8-4131-96c0-f09d657c8f4e",
+            "id": "fba13245-db9f-410b-898a-fcc7c49f89bc",
             "name": "Lön Lisa",
             "budget_category": {
               "Income": "Löner"
             },
             "incoming_transactions": {
-              "83880fc5-db46-4214-a087-94bcf9e726ce": {
-                "id": "83880fc5-db46-4214-a087-94bcf9e726ce",
+              "0a1ea2dc-f536-48d4-8f8b-74d8761fefbf": {
+                "id": "0a1ea2dc-f536-48d4-8f8b-74d8761fefbf",
                 "text": "Lön Lisa",
                 "transaction_type": "StartValue",
                 "amount": 19500.0,
                 "from_budget_item": null,
-                "to_budget_item": "468ebd7a-20f8-4131-96c0-f09d657c8f4e",
-                "created_at": "2025-08-04T06:24:27.590679762",
-                "updated_at": "2025-08-04T06:24:27.590679991",
+                "to_budget_item": "fba13245-db9f-410b-898a-fcc7c49f89bc",
+                "created_at": "2025-08-13T12:40:00.698658357",
+                "updated_at": "2025-08-13T12:40:00.698658477",
                 "created_by": "4a54d276-0d47-43d7-a344-144dd6f284d9"
               }
             },
             "outgoing_transactions": {},
             "bank_transactions": {},
-            "created_at": "2025-08-04T06:24:27.590677982",
-            "updated_at": "2025-08-04T06:24:27.590681410",
+            "created_at": "2025-08-13T12:40:00.698657415",
+            "updated_at": "2025-08-13T12:40:00.698659269",
             "created_by": "4a54d276-0d47-43d7-a344-144dd6f284d9",
-            "budget_id": "d955e4cf-9a20-4e6a-b9af-f035d66b8935"
+            "budget_id": "fd7b2ffc-758e-4e81-8ccd-d43c87da6ad0"
           }
         ]
       },
-      "created_at": "2025-08-04T06:24:27.590629951",
-      "updated_at": "2025-08-04T06:24:27.590710803",
+      "created_at": "2025-08-13T12:40:00.698625706",
+      "updated_at": "2025-08-13T12:40:00.698679266",
       "user_id": "4a54d276-0d47-43d7-a344-144dd6f284d9"
     }
   ],

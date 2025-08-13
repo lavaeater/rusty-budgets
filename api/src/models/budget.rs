@@ -38,7 +38,100 @@ pub struct Budget {
 
 impl Display for Budget {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "╭─ Budget: {} ─╮", self.name)?;
+        writeln!(f, "│ ID: {}", self.id)?;
+        writeln!(f, "│ Default Budget: {}", if self.default_budget { "Yes" } else { "No" })?;
+        writeln!(f, "│ User ID: {}", self.user_id)?;
         
+        // Format month begins on
+        let month_info = match self.month_begins_on {
+            MonthBeginsOn::PreviousMonth(day) => format!("Previous month, day {}", day),
+            MonthBeginsOn::CurrentMonth(day) => format!("Current month, day {}", day),
+        };
+        writeln!(f, "│ Month Begins On: {}", month_info)?;
+        
+        writeln!(f, "│ Created: {}", self.created_at.format("%Y-%m-%d %H:%M:%S"))?;
+        writeln!(f, "│ Updated: {}", self.updated_at.format("%Y-%m-%d %H:%M:%S"))?;
+        
+        // Calculate totals
+        let total_income = self.budget_items.iter()
+            .filter(|(category, _)| matches!(category, BudgetCategory::Income(_)))
+            .flat_map(|(_, items)| items)
+            .map(|item| item.budgeted_amount())
+            .sum::<f32>();
+            
+        let total_expenses = self.budget_items.iter()
+            .filter(|(category, _)| matches!(category, BudgetCategory::Expense(_)))
+            .flat_map(|(_, items)| items)
+            .map(|item| item.budgeted_amount())
+            .sum::<f32>();
+            
+        let available_spendable = self.get_available_spendable_budget();
+        
+        writeln!(f, "│")?;
+        writeln!(f, "│ 💰 Financial Summary:")?;
+        writeln!(f, "│   Total Income:     ${:.2}", total_income)?;
+        writeln!(f, "│   Total Expenses:   ${:.2}", total_expenses)?;
+        writeln!(f, "│   Available:        ${:.2}", available_spendable)?;
+        writeln!(f, "│   Balance:          ${:.2}", total_income - total_expenses)?;
+        
+        writeln!(f, "│")?;
+        writeln!(f, "│ 📊 Budget Categories ({} total):", self.budget_items.len())?;
+        
+        // Sort categories for consistent display
+        let mut sorted_categories: Vec<_> = self.budget_items.iter().collect();
+        sorted_categories.sort_by(|a, b| {
+            match (a.0, b.0) {
+                (BudgetCategory::Income(_), BudgetCategory::Expense(_)) => std::cmp::Ordering::Less,
+                (BudgetCategory::Expense(_), BudgetCategory::Income(_)) => std::cmp::Ordering::Greater,
+                (BudgetCategory::Income(a), BudgetCategory::Income(b)) => a.cmp(b),
+                (BudgetCategory::Expense(a), BudgetCategory::Expense(b)) => a.cmp(b),
+                (_, _) => { std::cmp::Ordering::Less }
+            }
+        });
+        
+        for (category, items) in sorted_categories {
+            let category_icon = match category {
+                BudgetCategory::Income(_) => "💵",
+                BudgetCategory::Expense(_) => "💸",
+                BudgetCategory::Savings(_) => "💰"
+            };
+            
+            let category_total: f32 = items.iter().map(|item| item.budgeted_amount()).sum();
+            let category_spent: f32 = items.iter().map(|item| item.total_bank_amount()).sum();
+            let category_remaining: f32 = category_total - category_spent;
+            
+            writeln!(f, "│")?;
+            writeln!(f, "│   {} {} ({} items)", category_icon, category, items.len())?;
+            writeln!(f, "│     Budgeted: ${:.2} | Spent: ${:.2} | Remaining: ${:.2}", 
+                     category_total, category_spent, category_remaining)?;
+            
+            // Show individual budget items if there are any
+            if !items.is_empty() {
+                for (i, item) in items.iter().enumerate() {
+                    let item_remaining = item.budgeted_amount();
+                    let progress_bar = if item.budgeted_amount() > 0.0 {
+                        let percentage = (item.total_bank_amount() / item.budgeted_amount() * 100.0).min(100.0);
+                        let filled = (percentage / 10.0) as usize;
+                        let empty = 10 - filled;
+                        format!("[{}{}] {:.1}%", 
+                               "█".repeat(filled), 
+                               "░".repeat(empty), 
+                               percentage)
+                    } else {
+                        "[──────────] N/A".to_string()
+                    };
+                    
+                    let prefix = if i == items.len() - 1 { "└─" } else { "├─" };
+                    writeln!(f, "│       {} {}", prefix, item.name)?;
+                    writeln!(f, "│       {}   ${:.2}/${:.2} remaining | {}",
+                             if i == items.len() - 1 { "   " } else { "│  " },
+                             item_remaining, item.budgeted_amount(), progress_bar)?;
+                }
+            }
+        }
+        
+        writeln!(f, "╰{}╯", "─".repeat(self.name.len() + 12))
     }
 }
 
@@ -55,7 +148,7 @@ impl Budget {
             .filter_map(|(key, items)| {
                 if matches!(key, BudgetCategory::Income(_)) {
                     Some(
-                        items.iter().map(|i| i.remaining_spendable_amount()).sum::<f32>(),
+                        items.iter().map(|i| i.budgeted_amount()).sum::<f32>(),
                     )
                 } else {
                     None
@@ -73,8 +166,8 @@ impl Budget {
             let mut amount_left = amount;
             for (category, items) in &mut self.budget_items {
                 if matches!(category, BudgetCategory::Income(_)) {
-                    for item in items.iter_mut().filter(|i| i.remaining_spendable_amount() > 0.0) {
-                        if item.remaining_spendable_amount() > amount_left {
+                    for item in items.iter_mut().filter(|i| i.budgeted_amount() > 0.0) {
+                        if item.budgeted_amount() > amount_left {
                             let transaction = BudgetTransaction::new(
                                 "Spend Money",
                                 BudgetTransactionType::default(),
@@ -88,7 +181,7 @@ impl Budget {
                             amount_left = 0.0;
                             break;
                         } else {
-                            let amount_to_spend = item.remaining_spendable_amount();
+                            let amount_to_spend = item.budgeted_amount();
                             let transaction = BudgetTransaction::new(
                                 "Spend Money",
                                 BudgetTransactionType::default(),
@@ -107,10 +200,7 @@ impl Budget {
             }
         }
     }
-}
 
-
-impl Budget {
     pub fn new(name: &str, default_budget: bool, user_id: Uuid) -> Budget {
         Budget {
             id: Uuid::new_v4(),
@@ -345,11 +435,22 @@ impl BudgetItem {
         }
     }
     
-    pub fn remaining_spendable_amount(&self) -> f32 {
+    pub fn incoming_amount(&self) -> f32 {
         self.incoming_transactions.values().map(|v| v.amount)
             .sum::<f32>()
-            - self
-            .outgoing_transactions.values().map(|v| v.amount)
+    }
+    
+    pub fn outgoing_amount(&self) -> f32 {
+        self.outgoing_transactions.values().map(|v| v.amount)
+            .sum::<f32>()
+    }
+    
+    pub fn budgeted_amount(&self) -> f32 {
+        self.incoming_amount() - self.outgoing_amount()
+    }
+    
+    pub fn total_bank_amount(&self) -> f32 {
+        self.bank_transactions.values().map(|v| v.amount)
             .sum::<f32>()
     }
 
