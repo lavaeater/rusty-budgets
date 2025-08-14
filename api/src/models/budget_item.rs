@@ -57,7 +57,7 @@ impl BudgetItem {
             .sum::<f32>()
     }
     
-    pub fn budgeted_amount(&self) -> f32 {
+    pub fn budgeted_item_amount(&self) -> f32 {
         self.incoming_amount() - self.outgoing_amount()
     }
     
@@ -104,5 +104,24 @@ impl BudgetItem {
 
     pub fn touch(&mut self) {
         self.updated_at = chrono::Utc::now().naive_utc();
+    }
+
+    /// Returns true if the item is balanced.
+    /// An item is balanced if:
+    /// - It is in the Income category
+    /// - It has both incoming and outgoing budget transactions
+    /// - The budgeted_item_amount is zero (incoming equals outgoing)
+    pub fn is_balanced(&self) -> bool {
+        // Check if it's an Income category
+        let is_income = matches!(self.budget_category, BudgetCategory::Income(_));
+        
+        // Check if it has both incoming and outgoing transactions
+        let has_incoming = !self.incoming_transactions.is_empty();
+        let has_outgoing = !self.outgoing_transactions.is_empty();
+        
+        // Check if budgeted amount is zero (balanced)
+        let is_amount_balanced = self.budgeted_item_amount() == 0.0;
+        
+        is_income && has_incoming && has_outgoing && is_amount_balanced
     }
 }

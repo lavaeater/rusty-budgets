@@ -15,7 +15,7 @@ fn amounts_are_zero_for_empty_budget_item() {
 
     assert_eq!(item.incoming_amount(), 0.0);
     assert_eq!(item.outgoing_amount(), 0.0);
-    assert_eq!(item.budgeted_amount(), 0.0);
+    assert_eq!(item.budgeted_item_amount(), 0.0);
     assert_eq!(item.total_bank_amount(), 0.0);
 }
 
@@ -86,7 +86,7 @@ fn sums_multiple_transactions_correctly() {
 
     assert!((item.incoming_amount() - 350.0).abs() < f32::EPSILON);
     assert!((item.outgoing_amount() - 50.0).abs() < f32::EPSILON);
-    assert!((item.budgeted_amount() - 300.0).abs() < f32::EPSILON);
+    assert!((item.budgeted_item_amount() - 300.0).abs() < f32::EPSILON);
     assert!((item.total_bank_amount() - 40.0).abs() < f32::EPSILON);
 }
 
@@ -128,6 +128,6 @@ fn negative_amounts_affect_sums() {
 
     assert!((item.incoming_amount() - (-20.0)).abs() < f32::EPSILON);
     assert!((item.outgoing_amount() - (-5.0)).abs() < f32::EPSILON);
-    assert!((item.budgeted_amount() - (-15.0)).abs() < f32::EPSILON); // -20 - (-5) = -15
+    assert!((item.budgeted_item_amount() - (-15.0)).abs() < f32::EPSILON); // -20 - (-5) = -15
     assert!((item.total_bank_amount() - (-12.5)).abs() < f32::EPSILON);
 }

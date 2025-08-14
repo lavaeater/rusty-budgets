@@ -49,13 +49,13 @@ impl Display for Budget {
         let total_income = self.budget_items.iter()
             .filter(|(category, _)| matches!(category, BudgetCategory::Income(_)))
             .flat_map(|(_, items)| items)
-            .map(|item| item.budgeted_amount())
+            .map(|item| item.budgeted_item_amount())
             .sum::<f32>();
             
         let total_expenses = self.budget_items.iter()
             .filter(|(category, _)| matches!(category, BudgetCategory::Expense(_)))
             .flat_map(|(_, items)| items)
-            .map(|item| item.budgeted_amount())
+            .map(|item| item.budgeted_item_amount())
             .sum::<f32>();
             
         let available_spendable = self.get_available_spendable_budget();
@@ -89,7 +89,7 @@ impl Display for Budget {
                 BudgetCategory::Savings(_) => "💰"
             };
             
-            let category_total: f32 = items.iter().map(|item| item.budgeted_amount()).sum();
+            let category_total: f32 = items.iter().map(|item| item.budgeted_item_amount()).sum();
             let category_spent: f32 = items.iter().map(|item| item.total_bank_amount()).sum();
             let category_remaining: f32 = category_total - category_spent;
             
@@ -101,9 +101,9 @@ impl Display for Budget {
             // Show individual budget items if there are any
             if !items.is_empty() {
                 for (i, item) in items.iter().enumerate() {
-                    let item_remaining = item.budgeted_amount();
-                    let progress_bar = if item.budgeted_amount() > 0.0 {
-                        let percentage = (item.total_bank_amount() / item.budgeted_amount() * 100.0).min(100.0);
+                    let item_remaining = item.budgeted_item_amount();
+                    let progress_bar = if item.budgeted_item_amount() > 0.0 {
+                        let percentage = (item.total_bank_amount() / item.budgeted_item_amount() * 100.0).min(100.0);
                         let filled = (percentage / 10.0) as usize;
                         let empty = 10 - filled;
                         format!("[{}{}] {:.1}%", 
@@ -118,7 +118,7 @@ impl Display for Budget {
                     writeln!(f, "│       {} {}", prefix, item.name)?;
                     writeln!(f, "│       {}   ${:.2}/${:.2} remaining | {}",
                              if i == items.len() - 1 { "   " } else { "│  " },
-                             item_remaining, item.budgeted_amount(), progress_bar)?;
+                             item_remaining, item.budgeted_item_amount(), progress_bar)?;
                 }
             }
         }
@@ -140,7 +140,7 @@ impl Budget {
             .filter_map(|(key, items)| {
                 if matches!(key, BudgetCategory::Income(_)) {
                     Some(
-                        items.iter().map(|i| i.budgeted_amount()).sum::<f32>(),
+                        items.iter().map(|i| i.budgeted_item_amount()).sum::<f32>(),
                     )
                 } else {
                     None
@@ -158,8 +158,8 @@ impl Budget {
             let mut amount_left = amount;
             for (category, items) in &mut self.budget_items {
                 if matches!(category, BudgetCategory::Income(_)) {
-                    for item in items.iter_mut().filter(|i| i.budgeted_amount() > 0.0) {
-                        if item.budgeted_amount() > amount_left {
+                    for item in items.iter_mut().filter(|i| i.budgeted_item_amount() > 0.0) {
+                        if item.budgeted_item_amount() > amount_left {
                             let transaction = BudgetTransaction::new(
                                 "Spend Money",
                                 BudgetTransactionType::default(),
@@ -173,7 +173,7 @@ impl Budget {
                             amount_left = 0.0;
                             break;
                         } else {
-                            let amount_to_spend = item.budgeted_amount();
+                            let amount_to_spend = item.budgeted_item_amount();
                             let transaction = BudgetTransaction::new(
                                 "Spend Money",
                                 BudgetTransactionType::default(),

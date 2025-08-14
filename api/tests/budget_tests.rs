@@ -1,7 +1,6 @@
 use api::models::{
     Budget, BudgetCategory, BudgetItem, BudgetTransaction, BudgetTransactionType, MonthBeginsOn,
 };
-use std::collections::HashMap;
 use uuid::Uuid;
 
 fn create_test_user_id() -> Uuid {
@@ -234,18 +233,18 @@ fn test_spend_money_on_sufficient_funds() {
     budget.store_budget_item(&income_item);
     budget.store_budget_item(&expense_item);
 
-    let initial_income_amount = budget.budget_items[&income_category][0].budgeted_amount();
-    let initial_expense_amount = expense_item.budgeted_amount();
+    let initial_income_amount = budget.budget_items[&income_category][0].budgeted_item_amount();
+    let initial_expense_amount = expense_item.budgeted_item_amount();
 
     budget.spend_money_on(&mut expense_item, 1000.0);
 
     // Check that money was transferred
     assert_eq!(
-        budget.budget_items[&income_category][0].budgeted_amount(),
+        budget.budget_items[&income_category][0].budgeted_item_amount(),
         initial_income_amount - 1000.0
     );
     assert_eq!(
-        expense_item.budgeted_amount(),
+        expense_item.budgeted_item_amount(),
         initial_expense_amount + 1000.0
     );
 
@@ -272,17 +271,17 @@ fn test_spend_money_on_insufficient_funds() {
 
     budget.store_budget_item(&income_item);
 
-    let initial_income_amount = budget.budget_items[&income_category][0].budgeted_amount();
-    let initial_expense_amount = expense_item.budgeted_amount();
+    let initial_income_amount = budget.budget_items[&income_category][0].budgeted_item_amount();
+    let initial_expense_amount = expense_item.budgeted_item_amount();
 
     budget.spend_money_on(&mut expense_item, 2000.0); // More than available
 
     // Check that no money was transferred
     assert_eq!(
-        budget.budget_items[&income_category][0].budgeted_amount(),
+        budget.budget_items[&income_category][0].budgeted_item_amount(),
         initial_income_amount
     );
-    assert_eq!(expense_item.budgeted_amount(), initial_expense_amount);
+    assert_eq!(expense_item.budgeted_item_amount(), initial_expense_amount);
 
     // Check that no transactions were created
     assert_eq!(
@@ -307,17 +306,17 @@ fn test_spend_money_on_zero_amount() {
 
     budget.store_budget_item(&income_item);
 
-    let initial_income_amount = budget.budget_items[&income_category][0].budgeted_amount();
-    let initial_expense_amount = expense_item.budgeted_amount();
+    let initial_income_amount = budget.budget_items[&income_category][0].budgeted_item_amount();
+    let initial_expense_amount = expense_item.budgeted_item_amount();
 
     budget.spend_money_on(&mut expense_item, 0.0);
 
     // Check that no money was transferred
     assert_eq!(
-        budget.budget_items[&income_category][0].budgeted_amount(),
+        budget.budget_items[&income_category][0].budgeted_item_amount(),
         initial_income_amount
     );
-    assert_eq!(expense_item.budgeted_amount(), initial_expense_amount);
+    assert_eq!(expense_item.budgeted_item_amount(), initial_expense_amount);
 }
 
 #[test]
@@ -333,17 +332,17 @@ fn test_spend_money_on_negative_amount() {
 
     budget.store_budget_item(&income_item);
 
-    let initial_income_amount = budget.budget_items[&income_category][0].budgeted_amount();
-    let initial_expense_amount = expense_item.budgeted_amount();
+    let initial_income_amount = budget.budget_items[&income_category][0].budgeted_item_amount();
+    let initial_expense_amount = expense_item.budgeted_item_amount();
 
     budget.spend_money_on(&mut expense_item, -500.0);
 
     // Check that no money was transferred
     assert_eq!(
-        budget.budget_items[&income_category][0].budgeted_amount(),
+        budget.budget_items[&income_category][0].budgeted_item_amount(),
         initial_income_amount
     );
-    assert_eq!(expense_item.budgeted_amount(), initial_expense_amount);
+    assert_eq!(expense_item.budgeted_item_amount(), initial_expense_amount);
 }
 
 #[test]
@@ -365,14 +364,14 @@ fn test_spend_money_splits_across_multiple_income_items() {
 
     // Check that money was split correctly
     assert_eq!(
-        budget.budget_items[&income_category][0].budgeted_amount(),
+        budget.budget_items[&income_category][0].budgeted_item_amount(),
         0.0
     ); // First item fully spent
     assert_eq!(
-        budget.budget_items[&income_category][1].budgeted_amount(),
+        budget.budget_items[&income_category][1].budgeted_item_amount(),
         300.0
     ); // Second item partially spent
-    assert_eq!(expense_item.budgeted_amount(), 1000.0);
+    assert_eq!(expense_item.budgeted_item_amount(), 1000.0);
 
     // Check that transactions were created for both income items
     assert_eq!(
