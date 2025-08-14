@@ -1,6 +1,5 @@
-use api::models::{
-    Budget, BudgetCategory, BudgetItem, BudgetTransaction, BudgetTransactionType, MonthBeginsOn,
-};
+use chrono::NaiveDate;
+use api::models::*;
 use uuid::Uuid;
 
 fn create_test_user_id() -> Uuid {
@@ -456,4 +455,102 @@ fn test_budget_with_items_display() {
     assert!(display_string.contains("Food Budget"));
     assert!(display_string.contains("Income(Salary)"));
     assert!(display_string.contains("Expense(Groceries)"));
+}
+
+#[test]
+fn test_generate_actionable_overview_no_issues() {
+    let budget = create_test_budget("Test Budget", create_test_user_id());
+    let overview = budget.generate_actionable_overview();
+
+    assert_eq!(overview.budget_id, budget.id);
+    assert_eq!(overview.budget_name, budget.name);
+    assert_eq!(overview.action_items.len(), 0);
+    assert_eq!(overview.total_unallocated_income, 0.0);
+    assert_eq!(overview.total_overdrawn_amount, 0.0);
+}
+
+#[test]
+fn test_generate_actionable_overview_unallocated_income() {
+    let user_id = create_test_user_id();
+    let mut budget = create_test_budget("Test Budget", user_id);  
+
+    // Create an income item with incoming transactions but no outgoing
+    let income_category = budget.new_income_category("Salary");
+    let mut income_item = BudgetItem::new(budget.id, "Monthly Salary", &income_category, user_id);
+
+    let salary_transaction = create_budget_transaction(5000.0, income_item.id, None);
+    income_item.store_incoming_transaction(&salary_transaction);
+
+    budget.store_budget_item(&income_item);
+
+    let overview = budget.generate_actionable_overview();
+
+    assert_eq!(overview.action_items.len(), 1);
+    assert_eq!(overview.total_unallocated_income, 5000.0);
+    assert_eq!(overview.total_overdrawn_amount, 0.0);
+
+    let action_item = &overview.action_items[0];
+    assert_eq!(action_item.id, income_item.id);
+    assert_eq!(action_item.name, "Monthly Salary");
+    assert!(matches!(action_item.category, BudgetCategory::Income(_)));
+    assert!(matches!(action_item.issue_type, ActionItemType::UnallocatedIncome));
+    assert_eq!(action_item.amount, 5000.0);
+    assert!(action_item.description.contains("5000.00"));
+}
+
+fn create_budget_transaction(amount: f64, user_id: Uuid, from_item: Option<Uuid>) -> BudgetTransaction {
+    BudgetTransaction::new(
+        "Test Transaction",
+        BudgetTransactionType::default(),
+        amount as f32,
+        from_item,
+        Uuid::new_v4(),
+        user_id,
+    )
+}
+
+#[test]
+fn test_generate_actionable_overview_overdrawn_expense() {
+    let user_id = create_test_user_id();
+    let mut budget = create_test_budget("Test Budget", user_id);
+
+    // Create an expense item with bank spending exceeding budget
+    let expense_category = budget.new_expense_category("Groceries");
+    let mut expense_item = BudgetItem::new(budget.id, "Food Shopping", &expense_category, user_id);
+
+    // Budget only $300
+    let budget_transaction = create_budget_transaction(300.0, expense_item.id, None);
+    expense_item.store_incoming_transaction(&budget_transaction);
+
+    // But spend $450 in bank transactions
+    let bank_transaction1 = create_bank_transaction(-200.0, expense_item.id, user_id);
+    let bank_transaction2 = create_bank_transaction(-250.0, expense_item.id, user_id);
+    expense_item.store_bank_transaction(&bank_transaction1);
+    expense_item.store_bank_transaction(&bank_transaction2);
+
+    budget.store_budget_item(&expense_item);
+
+    let overview = budget.generate_actionable_overview();
+
+    assert_eq!(overview.action_items.len(), 1);
+    assert_eq!(overview.total_unallocated_income, 0.0);
+    assert_eq!(overview.total_overdrawn_amount, 150.0); // 450 - 300
+
+    let action_item = &overview.action_items[0];
+    assert_eq!(action_item.id, expense_item.id);
+    assert_eq!(action_item.name, "Food Shopping");
+    assert!(matches!(action_item.category, BudgetCategory::Expense(_)));
+    assert!(matches!(action_item.issue_type, ActionItemType::OverdrawnExpense));
+    assert_eq!(action_item.amount, 150.0);
+    assert!(action_item.description.contains("150.00"));
+}
+
+fn create_bank_transaction(amount: f32, budget_item_id: Uuid, user_id: Uuid) -> BankTransaction {
+    BankTransaction::new_from_user(
+        "Test Bank Transaction",
+        amount as f32,
+        budget_item_id,
+        NaiveDate::default(),
+        user_id,
+    )
 }

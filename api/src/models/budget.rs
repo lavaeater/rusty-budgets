@@ -239,9 +239,108 @@ impl Budget {
         self.touch();
     }
 
+    /// Generates an overview of budget items that require user attention or action.
+    ///
+    /// Returns:
+    /// - Income items that are not balanced (have unallocated money)
+    /// - Expense items that are overdrawn (bank spending exceeds budgeted amount)
+    pub fn generate_actionable_overview(&self) -> BudgetActionOverview {
+        let mut action_items = Vec::new();
+        let mut total_unallocated_income = 0.0;
+        let mut total_overdrawn_amount = 0.0;
+
+        for (category, items) in &self.budget_items {
+            for item in items {
+                match category {
+                    BudgetCategory::Income(_) => {
+                        // Income items with unallocated money (not all money has outgoing transactions)
+                        let unallocated = item.budgeted_item_amount();
+                        if unallocated > 0.0 {
+                            action_items.push(BudgetActionItem {
+                                id: item.id,
+                                name: item.name.clone(),
+                                category: category.clone(),
+                                issue_type: ActionItemType::UnallocatedIncome,
+                                amount: unallocated,
+                                description: format!(
+                                    "Has ${:.2} unallocated income that needs to be budgeted",
+                                    unallocated
+                                ),
+                            });
+                            total_unallocated_income += unallocated;
+                        }
+                    }
+                    BudgetCategory::Expense(_) => {
+                        // Expense items where bank spending exceeds budgeted amount
+                        let bank_spending = item.total_bank_amount().abs(); // Use abs since bank transactions are typically negative
+                        let budgeted_amount = item.budgeted_item_amount();
+
+                        if bank_spending > budgeted_amount {
+                            let overdrawn_amount = bank_spending - budgeted_amount;
+                            action_items.push(BudgetActionItem {
+                                id: item.id,
+                                name: item.name.clone(),
+                                category: category.clone(),
+                                issue_type: ActionItemType::OverdrawnExpense,
+                                amount: overdrawn_amount,
+                                description: format!(
+                                    "Overdrawn by ${:.2} (spent ${:.2}, budgeted ${:.2})",
+                                    overdrawn_amount, bank_spending, budgeted_amount
+                                ),
+                            });
+                            total_overdrawn_amount += overdrawn_amount;
+                        }
+                    }
+                    BudgetCategory::Savings(_) => {
+                        // Savings items could be handled similarly to expenses if needed
+                        // For now, we'll skip them as they weren't mentioned in requirements
+                    }
+                }
+            }
+        }
+
+        BudgetActionOverview {
+            budget_id: self.id,
+            budget_name: self.name.clone(),
+            action_items,
+            total_unallocated_income,
+            total_overdrawn_amount,
+        }
+    }
+
     pub fn touch(&mut self) {
         self.updated_at = chrono::Utc::now().naive_utc();
     }
+}
+
+/// Represents an item that requires user attention or action
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct BudgetActionItem {
+    pub id: Uuid,
+    pub name: String,
+    pub category: BudgetCategory,
+    pub issue_type: ActionItemType,
+    pub amount: f32,
+    pub description: String,
+}
+
+/// Types of issues that require user action
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum ActionItemType {
+    /// Income item has unallocated money (not balanced)
+    UnallocatedIncome,
+    /// Expense item is overdrawn (bank spending exceeds budget)
+    OverdrawnExpense,
+}
+
+/// Overview of items requiring user attention
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct BudgetActionOverview {
+    pub budget_id: Uuid,
+    pub budget_name: String,
+    pub action_items: Vec<BudgetActionItem>,
+    pub total_unallocated_income: f32,
+    pub total_overdrawn_amount: f32,
 }
 
 
