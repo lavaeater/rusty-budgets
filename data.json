@@ -1,0 +1,162 @@
+{
+  "User": [
+    {
+      "id": "4a54d276-0d47-43d7-a344-144dd6f284d9",
+      "user_name": "tommie",
+      "email": "tommie.nygren@gmail.com",
+      "first_name": "Tommie",
+      "last_name": "Nygren",
+      "phone": "0704382781",
+      "birthday": "1973-05-12"
+    }
+  ],
+  "Budget": [
+    {
+      "id": "fd7b2ffc-758e-4e81-8ccd-d43c87da6ad0",
+      "name": "Default test budget",
+      "default_budget": true,
+      "month_begins_on": {
+        "PreviousMonth": 25
+      },
+      "budget_items": {
+        "Expense(Fasta Utgifter)": [
+          {
+            "id": "c0cf0eed-4d9d-4cc2-989b-34fca316ae8b",
+            "name": "Huslånet",
+            "budget_category": {
+              "Expense": "Fasta Utgifter"
+            },
+            "incoming_transactions": {
+              "e7cbd052-81d5-49d5-bc17-e157dccf2d1a": {
+                "id": "e7cbd052-81d5-49d5-bc17-e157dccf2d1a",
+                "text": "Spend Money",
+                "transaction_type": "StartValue",
+                "amount": 5660.0,
+                "from_budget_item": "b2a1af36-944f-416d-884d-fb76b848c988",
+                "to_budget_item": "c0cf0eed-4d9d-4cc2-989b-34fca316ae8b",
+                "created_at": "2025-08-13T12:40:00.698668787",
+                "updated_at": "2025-08-13T12:40:00.698668927",
+                "created_by": "4a54d276-0d47-43d7-a344-144dd6f284d9"
+              }
+            },
+            "outgoing_transactions": {},
+            "bank_transactions": {},
+            "created_at": "2025-08-13T12:40:00.698661964",
+            "updated_at": "2025-08-13T12:40:00.698670460",
+            "created_by": "4a54d276-0d47-43d7-a344-144dd6f284d9",
+            "budget_id": "fd7b2ffc-758e-4e81-8ccd-d43c87da6ad0"
+          },
+          {
+            "id": "a1edf5a8-5726-4d4f-b647-74bc8f52c3bf",
+            "name": "Hyra lägenheten",
+            "budget_category": {
+              "Expense": "Fasta Utgifter"
+            },
+            "incoming_transactions": {
+              "c58defe3-89f7-4e11-9e71-1cf6f01d1c46": {
+                "id": "c58defe3-89f7-4e11-9e71-1cf6f01d1c46",
+                "text": "Spend Money",
+                "transaction_type": "StartValue",
+                "amount": 7500.0,
+                "from_budget_item": "b2a1af36-944f-416d-884d-fb76b848c988",
+                "to_budget_item": "a1edf5a8-5726-4d4f-b647-74bc8f52c3bf",
+                "created_at": "2025-08-13T12:40:00.698676692",
+                "updated_at": "2025-08-13T12:40:00.698676832",
+                "created_by": "4a54d276-0d47-43d7-a344-144dd6f284d9"
+              }
+            },
+            "outgoing_transactions": {},
+            "bank_transactions": {},
+            "created_at": "2025-08-13T12:40:00.698674377",
+            "updated_at": "2025-08-13T12:40:00.698678104",
+            "created_by": "4a54d276-0d47-43d7-a344-144dd6f284d9",
+            "budget_id": "fd7b2ffc-758e-4e81-8ccd-d43c87da6ad0"
+          }
+        ],
+        "Income(Löner)": [
+          {
+            "id": "b2a1af36-944f-416d-884d-fb76b848c988",
+            "name": "Lön Tommie",
+            "budget_category": {
+              "Income": "Löner"
+            },
+            "incoming_transactions": {
+              "f81eb79e-56b0-412d-8ebc-063988182cfd": {
+                "id": "f81eb79e-56b0-412d-8ebc-063988182cfd",
+                "text": "Lön Tommie",
+                "transaction_type": "StartValue",
+                "amount": 39500.0,
+                "from_budget_item": null,
+                "to_budget_item": "b2a1af36-944f-416d-884d-fb76b848c988",
+                "created_at": "2025-08-13T12:40:00.698646545",
+                "updated_at": "2025-08-13T12:40:00.698646685",
+                "created_by": "4a54d276-0d47-43d7-a344-144dd6f284d9"
+              }
+            },
+            "outgoing_transactions": {
+              "e7cbd052-81d5-49d5-bc17-e157dccf2d1a": {
+                "id": "e7cbd052-81d5-49d5-bc17-e157dccf2d1a",
+                "text": "Spend Money",
+                "transaction_type": "StartValue",
+                "amount": 5660.0,
+                "from_budget_item": "b2a1af36-944f-416d-884d-fb76b848c988",
+                "to_budget_item": "c0cf0eed-4d9d-4cc2-989b-34fca316ae8b",
+                "created_at": "2025-08-13T12:40:00.698668787",
+                "updated_at": "2025-08-13T12:40:00.698668927",
+                "created_by": "4a54d276-0d47-43d7-a344-144dd6f284d9"
+              },
+              "c58defe3-89f7-4e11-9e71-1cf6f01d1c46": {
+                "id": "c58defe3-89f7-4e11-9e71-1cf6f01d1c46",
+                "text": "Spend Money",
+                "transaction_type": "StartValue",
+                "amount": 7500.0,
+                "from_budget_item": "b2a1af36-944f-416d-884d-fb76b848c988",
+                "to_budget_item": "a1edf5a8-5726-4d4f-b647-74bc8f52c3bf",
+                "created_at": "2025-08-13T12:40:00.698676692",
+                "updated_at": "2025-08-13T12:40:00.698676832",
+                "created_by": "4a54d276-0d47-43d7-a344-144dd6f284d9"
+              }
+            },
+            "bank_transactions": {},
+            "created_at": "2025-08-13T12:40:00.698645172",
+            "updated_at": "2025-08-13T12:40:00.698677403",
+            "created_by": "4a54d276-0d47-43d7-a344-144dd6f284d9",
+            "budget_id": "fd7b2ffc-758e-4e81-8ccd-d43c87da6ad0"
+          },
+          {
+            "id": "fba13245-db9f-410b-898a-fcc7c49f89bc",
+            "name": "Lön Lisa",
+            "budget_category": {
+              "Income": "Löner"
+            },
+            "incoming_transactions": {
+              "0a1ea2dc-f536-48d4-8f8b-74d8761fefbf": {
+                "id": "0a1ea2dc-f536-48d4-8f8b-74d8761fefbf",
+                "text": "Lön Lisa",
+                "transaction_type": "StartValue",
+                "amount": 19500.0,
+                "from_budget_item": null,
+                "to_budget_item": "fba13245-db9f-410b-898a-fcc7c49f89bc",
+                "created_at": "2025-08-13T12:40:00.698658357",
+                "updated_at": "2025-08-13T12:40:00.698658477",
+                "created_by": "4a54d276-0d47-43d7-a344-144dd6f284d9"
+              }
+            },
+            "outgoing_transactions": {},
+            "bank_transactions": {},
+            "created_at": "2025-08-13T12:40:00.698657415",
+            "updated_at": "2025-08-13T12:40:00.698659269",
+            "created_by": "4a54d276-0d47-43d7-a344-144dd6f284d9",
+            "budget_id": "fd7b2ffc-758e-4e81-8ccd-d43c87da6ad0"
+          }
+        ]
+      },
+      "created_at": "2025-08-13T12:40:00.698625706",
+      "updated_at": "2025-08-13T12:40:00.698679266",
+      "user_id": "4a54d276-0d47-43d7-a344-144dd6f284d9"
+    }
+  ],
+  "BudgetItem": [],
+  "BudgetTransaction": [],
+  "BankTransaction": []
+}
