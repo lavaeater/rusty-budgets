@@ -10,10 +10,7 @@ pub struct Budget {
     pub id: Uuid,
     pub name: String,
     pub user_id: Uuid,
-
-    /// Total income available for budgeting (single pool)
-    pub total_income: f32,
-
+    
     /// Organized budget items by group
     pub budget_groups: HashMap<String, BudgetGroup>,
 
@@ -71,6 +68,7 @@ impl PartialEq for BudgetItem {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum BudgetItemType {
+    Income,
     Expense,
     Savings,
 }
@@ -142,17 +140,16 @@ pub enum BudgetIssueType {
 
 impl Display for Budget {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Budget: {}\nTotal Income: ${:.2}\n", self.name, self.total_income)
+        write!(f, "Budget: {}\nTotal Income: ${:.2}\n", self.name, self.total_income())
     }
 }
 
 impl Budget {
-    pub fn new(name: String, user_id: Uuid, total_income: f32, default_budget: bool) -> Self {
+    pub fn new(name: String, user_id: Uuid, default_budget: bool) -> Self {
         Self {
             id: Uuid::new_v4(),
             name,
             user_id,
-            total_income,
             budget_groups: HashMap::new(),
             created_at: chrono::Utc::now().naive_utc(),
             updated_at: chrono::Utc::now().naive_utc(),
@@ -161,16 +158,16 @@ impl Budget {
     }
 
     /// Add a new budget group
-    pub fn add_group(&mut self, group_name: String) -> &mut BudgetGroup {
+    pub fn add_group(&mut self, group_name: &str) -> &mut BudgetGroup {
         let group = BudgetGroup {
             id: Uuid::new_v4(),
-            name: group_name.clone(),
+            name: group_name.to_string(),
             items: Vec::new(),
         };
 
-        self.budget_groups.insert(group_name.clone(), group);
+        self.budget_groups.insert(group_name.to_string(), group);
         self.touch();
-        self.budget_groups.get_mut(&group_name).unwrap()
+        self.budget_groups.get_mut(group_name).unwrap()
     }
 
     /// Add a budget item to a specific group
@@ -188,13 +185,13 @@ impl Budget {
     pub fn create_budget_item(
         &mut self,
         group_name: &str,
-        name: String,
+        name: &str,
         item_type: BudgetItemType,
         budgeted_amount: f32,
     ) -> Result<Uuid, String> {
         let item = BudgetItem {
             id: Uuid::new_v4(),
-            name,
+            name: name.to_string(),
             item_type,
             budgeted_amount,
             actual_spent: 0.0,
@@ -211,6 +208,7 @@ impl Budget {
         self.budget_groups
             .values()
             .flat_map(|group| &group.items)
+            .filter(|item| item.item_type != BudgetItemType::Income)
             .map(|item| item.budgeted_amount)
             .sum()
     }
@@ -223,15 +221,24 @@ impl Budget {
             .map(|item| item.actual_spent)
             .sum()
     }
+    
+    pub fn total_income(&self) -> f32 {
+        self.budget_groups
+            .values()
+            .flat_map(|group| &group.items)
+            .filter(|item| item.item_type == BudgetItemType::Income)
+            .map(|item| item.budgeted_amount)
+            .sum()
+    }
 
     /// Calculate unallocated income (income not yet budgeted)
     pub fn unallocated_income(&self) -> f32 {
-        self.total_income - self.total_budgeted()
+        self.total_income() - self.total_budgeted()
     }
 
     /// Check if budget is balanced (all income is allocated)
     pub fn is_balanced(&self) -> bool {
-        (self.total_income - self.total_budgeted()).abs() < 0.01 // Allow for floating point precision
+        (self.total_income() - self.total_budgeted()).abs() < 0.01 // Allow for floating point precision
     }
 
     /// Record a bank transaction against a budget item
@@ -325,7 +332,7 @@ impl Budget {
         BudgetSummary {
             id: self.id,
             name: self.name.clone(),
-            total_income: self.total_income,
+            total_income: self.total_income(),
             total_budgeted: self.total_budgeted(),
             total_spent: self.total_spent(),
             is_balanced: self.is_balanced(),
@@ -383,16 +390,24 @@ mod tests {
     use super::*;
 
     fn create_test_budget() -> Budget {
-        Budget::new("Test Budget".to_string(), Uuid::new_v4(), 5000.0, true)
+        let mut b = Budget::new("Test Budget".to_string(), Uuid::new_v4(), true);
+        b.add_group("Löner");
+        b.create_budget_item("Löner", "Tommie's Lön", BudgetItemType::Income, 5000.0).unwrap();
+        b
     }
 
     #[test]
     fn test_budget_creation() {
-        let budget = create_test_budget();
+        let mut budget = create_test_budget();
+        
+        let group_name = "Löner";
+        
+        budget.add_group(group_name);
+        budget.create_budget_item(group_name, "Tommie's Lön", BudgetItemType::Income, 5000.0).unwrap();
         assert_eq!(budget.name, "Test Budget");
-        assert_eq!(budget.total_income, 5000.0);
+        assert_eq!(budget.total_income(), 5000.0);
         assert_eq!(budget.total_budgeted(), 0.0);
-        assert!(budget.is_balanced()); // Empty budget is balanced
+        assert!(!budget.is_balanced()); // Empty budget is balanced
     }
 
     #[test]
@@ -400,12 +415,12 @@ mod tests {
         let mut budget = create_test_budget();
 
         // Add a group
-        budget.add_group("Household".to_string());
+        budget.add_group("Household");
 
         // Add an item
         let item_id = budget.create_budget_item(
             "Household",
-            "Rent".to_string(),
+            "Rent",
             BudgetItemType::Expense,
             1500.0,
         ).unwrap();
@@ -418,18 +433,18 @@ mod tests {
     #[test]
     fn test_reallocation() {
         let mut budget = create_test_budget();
-        budget.add_group("Household".to_string());
+        budget.add_group("Household");
 
         let rent_id = budget.create_budget_item(
             "Household",
-            "Rent".to_string(),
+            "Rent",
             BudgetItemType::Expense,
             1500.0,
         ).unwrap();
 
         let groceries_id = budget.create_budget_item(
             "Household",
-            "Groceries".to_string(),
+            "Groceries",
             BudgetItemType::Expense,
             500.0,
         ).unwrap();
@@ -448,11 +463,11 @@ mod tests {
     #[test]
     fn test_overspending_detection() {
         let mut budget = create_test_budget();
-        budget.add_group("Household".to_string());
+        budget.add_group("Household");
 
         let groceries_id = budget.create_budget_item(
             "Household",
-            "Groceries".to_string(),
+            "Groceries",
             BudgetItemType::Expense,
             500.0,
         ).unwrap();
