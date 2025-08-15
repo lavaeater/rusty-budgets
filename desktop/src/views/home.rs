@@ -8,14 +8,5 @@ use ui::budget::budget_hero::CURRENT_BUDGET_ID;
 pub fn Home() -> Element {
     rsx! {
         BudgetHero {}
-        Link { to: Route::NewBudgetItem {
-            budget_id: *CURRENT_BUDGET_ID.read(),
-            item_type: "income".to_string(),
-        },
-            Plus {
-                size: 48,
-                color: "green",
-            }
-        }
     }
 }

@@ -1,4 +1,4 @@
-use api::models::budget::Budget;
+use api::models::Budget;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use lucide_dioxus::{Pen, Hamburger};
