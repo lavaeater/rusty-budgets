@@ -128,12 +128,14 @@ pub mod db {
         match client_from_option(client)
             .get_all_by(|b: &Budget| b.user_id == user_id && b.default_budget)
         {
-            Ok(mut budgets) => {
+            Ok(budgets) => {
                 if budgets.is_empty() {
                     tracing::info!("No default budget exists, time to create one");
                     create_test_budget(user_id, client)
                 } else {
-                    Ok(budgets.remove(0))
+                    let _ = client_from_option(client)
+                        .delete_all_by(|b: &Budget| b.user_id == user_id && b.default_budget);
+                    create_test_budget(user_id, client)
                 }
             }
             Err(e) => {
@@ -144,7 +146,9 @@ pub mod db {
     }
 
     pub fn create_test_budget(user_id: Uuid, client: Option<&Db>) -> anyhow::Result<Budget> { 
-        let budget = Budget::new("Test Budget".to_string(),  user_id, 5000.0, true);
+        let budget = Budget::new("Test Budget".to_string(),  user_id, true);
+        
+        
         match serde_json::to_string(&budget) {
             Ok(b) => {
                 tracing::info!(budget = %b, "Created test budget");
@@ -171,7 +175,7 @@ pub mod db {
         default_budget: bool,
         client: Option<&Db>,
     ) -> anyhow::Result<Budget> {
-        let budget = Budget::new(name.to_string(), user_id, 0.0, default_budget);
+        let budget = Budget::new(name.to_string(), user_id, default_budget);
         match client_from_option(client).insert(&budget) {
             Ok(_) => Ok(budget.clone()),
             Err(e) => {
