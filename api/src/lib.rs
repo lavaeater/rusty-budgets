@@ -28,7 +28,7 @@ type Db = Joydb<AppState, JsonAdapter>;
 #[cfg(feature = "server")]
 pub mod db {
     use crate::models::*;
-    use crate::{BudgetItemView, BudgetOverview, Db, DEFAULT_USER_EMAIL};
+    use crate::{Db, DEFAULT_USER_EMAIL};
     use chrono::NaiveDate;
     use dioxus::fullstack::once_cell::sync::Lazy;
     use dioxus::logger::tracing;
@@ -69,77 +69,7 @@ pub mod db {
             &CLIENT
         }
     }
-
-    pub fn get_budget_overview(id: Uuid, client: Option<&Db>) -> anyhow::Result<BudgetOverview> {
-        if let Some(budget) = client_from_option(client).get::<Budget>(&id)? {
-            let budget_items =
-                client_from_option(client).get_all_by(|bi: &BudgetItem| bi.budget_id == id)?;
-            let budget_items_view = budget_items
-                .iter()
-                .map(|bi| {
-                    let incoming_budget_transactions = client_from_option(client)
-                        .get_all_by(|bt: &BudgetTransaction| bt.to_budget_item == bi.id)
-                        .unwrap();
-                    let outgoing_budget_transactions = client_from_option(client)
-                        .get_all_by(|bt: &BudgetTransaction| bt.from_budget_item == Some(bi.id))
-                        .unwrap();
-
-                    let aggregate_amount = incoming_budget_transactions
-                        .iter()
-                        .map(|bt| bt.amount)
-                        .sum::<f32>()
-                        - outgoing_budget_transactions
-                            .iter()
-                            .map(|bt| bt.amount)
-                            .sum::<f32>();
-
-                    let is_balanced = aggregate_amount == 0.0;
-                    let money_needs_job = aggregate_amount > 0.0;
-                    let too_much_job = aggregate_amount < 0.0;
-
-                    BudgetItemView {
-                        id: bi.id,
-                        name: bi.budget_category.to_string(),
-                        item_type: bi.budget_category.to_string(),
-                        aggregate_amount,
-                        is_balanced,
-                        money_needs_job,
-                        expected_at: NaiveDate::from_ymd_opt(2000, 1, 1).unwrap(),
-                        too_much_job,
-                        incoming_budget_transactions,
-                        outgoing_budget_transactions,
-                    }
-                })
-                .collect::<Vec<BudgetItemView>>();
-
-            Ok(BudgetOverview {
-                id,
-                default_budget: budget.default_budget,
-                name: budget.name,
-                incomes: budget_items_view
-                    .iter()
-                    .filter(|bi| bi.item_type == "income")
-                    .cloned()
-                    .collect(),
-                expenses: budget_items_view
-                    .iter()
-                    .filter(|bi| bi.item_type == "expense")
-                    .cloned()
-                    .collect(),
-                savings: budget_items_view
-                    .iter()
-                    .filter(|bi| bi.item_type == "savings")
-                    .cloned()
-                    .collect(),
-            })
-        } else {
-            Err(anyhow::Error::from(JoydbError::NotFound {
-                id: id.to_string(),
-                model: "Budget".to_string(),
-            }))
-        }
-    }
-
+    
     pub fn list_users(client: Option<&Db>) -> anyhow::Result<Vec<User>> {
         match client_from_option(client).get_all::<User>() {
             Ok(users) => Ok(users),
@@ -259,7 +189,6 @@ pub mod db {
                 if budgets.is_empty() {
                     tracing::info!("No default budget exists, time to create one");
                     create_test_budget(user_id, client)
-//                    create_budget("Default", user_id, true, client)
                 } else {
                     Ok(budgets.remove(0))
                 }
@@ -416,6 +345,17 @@ pub async fn get_default_budget() -> Result<Budget, ServerFnError> {
 }
 
 #[server]
+pub async fn get_default_budget_overview() -> Result<BudgetActionOverview, ServerFnError> {
+    match db::get_default_budget_for_user(db::get_default_user(None).unwrap().id, None) {
+        Ok(budget) => Ok(budget.generate_actionable_overview()),
+        Err(e) => {
+            tracing::error!(error = %e, "Could not get default budget");
+            Err(ServerFnError::ServerError(e.to_string()))
+        }
+    }
+}
+
+#[server]
 pub async fn save_budget(budget: Budget) -> Result<(), ServerFnError> {
     match db::save_budget(budget) {
         Ok(_) => Ok(()),
@@ -444,41 +384,6 @@ pub async fn add_budget_item(
         Ok(_) => Ok(()),
         Err(e) => {
             tracing::error!(error = %e, "Could not save new budget item");
-            Err(ServerFnError::ServerError(e.to_string()))
-        }
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct BudgetItemView {
-    pub id: Uuid,
-    pub name: String,
-    pub item_type: String,
-    pub aggregate_amount: f32,
-    pub is_balanced: bool,
-    pub money_needs_job: bool,
-    pub too_much_job: bool,
-    pub expected_at: NaiveDate,
-    pub incoming_budget_transactions: Vec<BudgetTransaction>,
-    pub outgoing_budget_transactions: Vec<BudgetTransaction>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct BudgetOverview {
-    pub id: Uuid,
-    pub name: String,
-    pub default_budget: bool,
-    pub incomes: Vec<BudgetItemView>,
-    pub expenses: Vec<BudgetItemView>,
-    pub savings: Vec<BudgetItemView>,
-}
-
-#[server]
-pub async fn get_budget_overview(id: Uuid) -> Result<BudgetOverview, ServerFnError> {
-    match db::get_budget_overview(id, None) {
-        Ok(overview) => Ok(overview),
-        Err(e) => {
-            tracing::error!(error = %e, "Could not get budget overview");
             Err(ServerFnError::ServerError(e.to_string()))
         }
     }

@@ -462,7 +462,7 @@ fn test_generate_actionable_overview_no_issues() {
     let budget = create_test_budget("Test Budget", create_test_user_id());
     let overview = budget.generate_actionable_overview();
 
-    assert_eq!(overview.budget_id, budget.id);
+    assert_eq!(overview.id, budget.id);
     assert_eq!(overview.budget_name, budget.name);
     assert_eq!(overview.action_items.len(), 0);
     assert_eq!(overview.total_unallocated_income, 0.0);

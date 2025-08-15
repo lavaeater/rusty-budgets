@@ -300,8 +300,8 @@ impl Budget {
         }
 
         BudgetActionOverview {
-            budget_id: self.id,
-            budget_name: self.name.clone(),
+            id: self.id,
+            name: self.name.clone(),
             action_items,
             total_unallocated_income,
             total_overdrawn_amount,
@@ -336,8 +336,8 @@ pub enum ActionItemType {
 /// Overview of items requiring user attention
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct BudgetActionOverview {
-    pub budget_id: Uuid,
-    pub budget_name: String,
+    pub id: Uuid,
+    pub name: String,
     pub action_items: Vec<BudgetActionItem>,
     pub total_unallocated_income: f32,
     pub total_overdrawn_amount: f32,
