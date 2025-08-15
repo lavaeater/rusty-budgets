@@ -11,7 +11,7 @@ members = [
 [workspace.dependencies]
 dioxus = "0.6.3"
 lucide-dioxus = { version = "2.15.0", features = ["all-icons"] }
-uuid = { version = "1.1.2", features = ["v4", "js", "serde"] }
+uuid = { version = "1.18.0", features = ["v4", "js", "serde", "default"] }
 chrono = { version="0.4.41", features = ["serde"] }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = { version = "1.0.142" }

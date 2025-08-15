@@ -6,8 +6,8 @@ use dioxus::prelude::*;
 
 #[cfg(feature = "server")]
 use joydb::Joydb;
-// #[cfg(feature = "server")]
-// use dioxus::logger::tracing;
+#[cfg(feature = "server")]
+use dioxus::logger::tracing;
 #[cfg(feature = "server")]
 use joydb::adapters::JsonAdapter;
 

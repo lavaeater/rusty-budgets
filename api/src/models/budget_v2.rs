@@ -10,13 +10,13 @@ pub struct Budget {
     pub id: Uuid,
     pub name: String,
     pub user_id: Uuid,
-    
+
     /// Total income available for budgeting (single pool)
     pub total_income: f32,
-    
+
     /// Organized budget items by group
     pub budget_groups: HashMap<String, BudgetGroup>,
-    
+
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: chrono::NaiveDateTime,
     pub default_budget: bool,
@@ -31,20 +31,42 @@ pub struct BudgetGroup {
 }
 
 /// Individual budget item (expense or savings)
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Model)]
+#[derive(Debug, Clone, Serialize, Deserialize, Model)]
 pub struct BudgetItem {
     pub id: Uuid,
     pub name: String,
     pub item_type: BudgetItemType,
-    
+
     /// Amount allocated to this item from income pool
     pub budgeted_amount: f32,
-    
+
     /// Actual spending tracked from bank transactions
     pub actual_spent: f32,
-    
     /// Optional notes or description
     pub notes: Option<String>,
+}
+
+impl PartialEq for BudgetItem {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+            && self.name == other.name
+            && self.item_type == other.item_type
+            && self.budgeted_amount == other.budgeted_amount
+            && self.actual_spent == other.actual_spent
+            && (
+            match &self.notes {
+                None => {
+                    match other.notes {
+                        None => true,
+                        _ => false,
+                    }
+                }
+                Some(self_id) => match &other.notes {
+                    None => false,
+                    Some(other_id) => self_id == other_id,
+                },
+            })
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -54,13 +76,35 @@ pub enum BudgetItemType {
 }
 
 /// Represents a bank transaction that affects budget items
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Model)]
+#[derive(Debug, Clone, Serialize, Deserialize, Model)]
 pub struct BankTransaction {
     pub id: Uuid,
     pub amount: f32,
     pub description: String,
     pub date: chrono::NaiveDate,
     pub budget_item_id: Option<Uuid>, // Which budget item this affects
+}
+
+impl PartialEq for BankTransaction {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+            && self.amount == other.amount
+            && self.description == other.description
+            && self.date == other.date
+            && (
+            match self.budget_item_id {
+                None => {
+                    match other.budget_item_id {
+                        None => true,
+                        _ => false,
+                    }
+                }
+                    Some(self_id) => match other.budget_item_id {
+                        None => false,
+                        Some(other_id) => self_id == other_id,
+                    },
+            })
+    }
 }
 
 /// Summary of budget status and issues requiring attention
@@ -123,7 +167,7 @@ impl Budget {
             name: group_name.clone(),
             items: Vec::new(),
         };
-        
+
         self.budget_groups.insert(group_name.clone(), group);
         self.touch();
         self.budget_groups.get_mut(&group_name).unwrap()
@@ -156,7 +200,7 @@ impl Budget {
             actual_spent: 0.0,
             notes: None,
         };
-        
+
         let item_id = item.id;
         self.add_item_to_group(group_name, item)?;
         Ok(item_id)
@@ -219,7 +263,7 @@ impl Budget {
         // Find both items
         let from_item = self.find_item(from_item_id)
             .ok_or("Source item not found")?;
-        
+
         if from_item.budgeted_amount < amount {
             return Err("Insufficient funds in source item".to_string());
         }
@@ -287,7 +331,7 @@ impl Budget {
             is_balanced: self.is_balanced(),
             unallocated_income: self.unallocated_income(),
             issues,
-            default_budget: self.default_budget
+            default_budget: self.default_budget,
         }
     }
 
@@ -354,10 +398,10 @@ mod tests {
     #[test]
     fn test_adding_groups_and_items() {
         let mut budget = create_test_budget();
-        
+
         // Add a group
         budget.add_group("Household".to_string());
-        
+
         // Add an item
         let item_id = budget.create_budget_item(
             "Household",
@@ -375,7 +419,7 @@ mod tests {
     fn test_reallocation() {
         let mut budget = create_test_budget();
         budget.add_group("Household".to_string());
-        
+
         let rent_id = budget.create_budget_item(
             "Household",
             "Rent".to_string(),
@@ -405,7 +449,7 @@ mod tests {
     fn test_overspending_detection() {
         let mut budget = create_test_budget();
         budget.add_group("Household".to_string());
-        
+
         let groceries_id = budget.create_budget_item(
             "Household",
             "Groceries".to_string(),
@@ -426,7 +470,7 @@ mod tests {
 
         let summary = budget.generate_summary();
         assert_eq!(summary.issues.len(), 2); // Overspent + Unbalanced
-        
+
         let overspent_issue = summary.issues.iter()
             .find(|i| matches!(i.issue_type, BudgetIssueType::Overspent))
             .unwrap();
