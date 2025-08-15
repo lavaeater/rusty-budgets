@@ -1,7 +1,5 @@
-use api::models::{Budget, BudgetActionOverview};
-use dioxus::logger::tracing;
+use api::models::*;
 use dioxus::prelude::*;
-use lucide_dioxus::{Hamburger, Pen};
 use uuid::Uuid;
 
 const BUDGET_CSS: Asset = asset!("/assets/styling/budget.css");
@@ -10,8 +8,8 @@ pub static CURRENT_BUDGET_ID: GlobalSignal<Uuid> = Signal::global(|| Uuid::defau
 
 #[component]
 pub fn BudgetHero() -> Element {
-    let mut budget_resource = use_server_future(api::get_default_budget_overview)?;
-    let mut budget_signal = use_signal(|| None::<BudgetActionOverview>);
+    let budget_resource = use_server_future(api::get_default_budget_overview)?;
+    let mut budget_signal = use_signal(|| None::<BudgetSummary>);
 
     use_effect(move || {
         if let Some(Ok(budget)) = budget_resource.read().as_ref() {
@@ -22,7 +20,7 @@ pub fn BudgetHero() -> Element {
 
     // Handle the resource state
     match budget_signal() {
-        Some(mut budget) => {
+        Some(budget) => {
             rsx! {
             document::Link { rel: "stylesheet", href: BUDGET_CSS }
             div {

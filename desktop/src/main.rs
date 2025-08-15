@@ -1,6 +1,5 @@
 use dioxus::logger::tracing::Level;
 use dioxus::prelude::*;
-use uuid::Uuid;
 use ui::Navbar;
 mod views;
 use views::*;

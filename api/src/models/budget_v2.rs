@@ -1,9 +1,11 @@
+use std::fmt::Display;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use joydb::Model;
 use uuid::Uuid;
 
 /// A simplified, more intuitive budget model
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Model)]
 pub struct Budget {
     pub id: Uuid,
     pub name: String,
@@ -17,6 +19,7 @@ pub struct Budget {
     
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: chrono::NaiveDateTime,
+    pub default_budget: bool,
 }
 
 /// A group of related budget items (e.g., "Household", "Utilities", "Entertainment")
@@ -28,7 +31,7 @@ pub struct BudgetGroup {
 }
 
 /// Individual budget item (expense or savings)
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Model)]
 pub struct BudgetItem {
     pub id: Uuid,
     pub name: String,
@@ -51,7 +54,7 @@ pub enum BudgetItemType {
 }
 
 /// Represents a bank transaction that affects budget items
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Model)]
 pub struct BankTransaction {
     pub id: Uuid,
     pub amount: f32,
@@ -63,14 +66,15 @@ pub struct BankTransaction {
 /// Summary of budget status and issues requiring attention
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct BudgetSummary {
-    pub budget_id: Uuid,
-    pub budget_name: String,
+    pub id: Uuid,
+    pub name: String,
     pub total_income: f32,
     pub total_budgeted: f32,
     pub total_spent: f32,
     pub is_balanced: bool,
     pub unallocated_income: f32,
     pub issues: Vec<BudgetIssue>,
+    pub default_budget: bool,
 }
 
 /// Issues that require user attention
@@ -92,8 +96,14 @@ pub enum BudgetIssueType {
     Unbalanced,
 }
 
+impl Display for Budget {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Budget: {}\nTotal Income: ${:.2}\n", self.name, self.total_income)
+    }
+}
+
 impl Budget {
-    pub fn new(name: String, user_id: Uuid, total_income: f32) -> Self {
+    pub fn new(name: String, user_id: Uuid, total_income: f32, default_budget: bool) -> Self {
         Self {
             id: Uuid::new_v4(),
             name,
@@ -102,6 +112,7 @@ impl Budget {
             budget_groups: HashMap::new(),
             created_at: chrono::Utc::now().naive_utc(),
             updated_at: chrono::Utc::now().naive_utc(),
+            default_budget,
         }
     }
 
@@ -268,14 +279,15 @@ impl Budget {
         }
 
         BudgetSummary {
-            budget_id: self.id,
-            budget_name: self.name.clone(),
+            id: self.id,
+            name: self.name.clone(),
             total_income: self.total_income,
             total_budgeted: self.total_budgeted(),
             total_spent: self.total_spent(),
             is_balanced: self.is_balanced(),
             unallocated_income: self.unallocated_income(),
             issues,
+            default_budget: self.default_budget
         }
     }
 
@@ -327,7 +339,7 @@ mod tests {
     use super::*;
 
     fn create_test_budget() -> Budget {
-        Budget::new("Test Budget".to_string(), Uuid::new_v4(), 5000.0)
+        Budget::new("Test Budget".to_string(), Uuid::new_v4(), 5000.0, true)
     }
 
     #[test]

@@ -2,15 +2,12 @@
 pub mod models;
 
 use crate::models::*;
-use chrono::NaiveDate;
 use dioxus::prelude::*;
-use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 #[cfg(feature = "server")]
 use joydb::Joydb;
-#[cfg(feature = "server")]
-use dioxus::logger::tracing;
+// #[cfg(feature = "server")]
+// use dioxus::logger::tracing;
 #[cfg(feature = "server")]
 use joydb::adapters::JsonAdapter;
 
@@ -19,7 +16,7 @@ const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 // Define the state
 joydb::state! {
     AppState,
-    models: [User, Budget, BudgetItem, BudgetTransaction, BankTransaction],
+    models: [User, Budget, BudgetItem, BankTransaction],
 }
 
 // Define the database (combination of state and adapter)
@@ -32,9 +29,7 @@ pub mod db {
     use chrono::NaiveDate;
     use dioxus::fullstack::once_cell::sync::Lazy;
     use dioxus::logger::tracing;
-    use joydb::JoydbError;
     use uuid::Uuid;
-    use Default;
 
     pub static CLIENT: Lazy<Db> = Lazy::new(|| {
         tracing::info!("Init DB Client");
@@ -125,59 +120,7 @@ pub mod db {
             }
         }
     }
-
-    pub fn add_budget_transaction(
-        text: &str,
-        from_budget_item: Option<Uuid>,
-        to_budget_item: Uuid,
-        amount: f32,
-    ) -> anyhow::Result<()> {
-        let user = get_default_user(None)?;
-        let budget_transaction_to_save = BudgetTransaction::new(
-            text,
-            BudgetTransactionType::default(),
-            amount,
-            from_budget_item,
-            to_budget_item,
-            user.id,
-        );
-        match client_from_option(None).insert(&budget_transaction_to_save) {
-            Ok(_) => {
-                tracing::info!("Saved budget transaction");
-                Ok(())
-            }
-            Err(e) => {
-                tracing::error!(error = %e, "Could not save budget transaction");
-                Err(anyhow::Error::from(e))
-            }
-        }
-    }
-
-    pub fn add_budget_item(
-        budget_id: Uuid,
-        name: String,
-        first_item: &str,
-        amount: f32
-    ) -> anyhow::Result<()> {
-        let user = get_default_user(None)?;
-        let budget_item_to_save = BudgetItem::new(
-            budget_id,
-            &name,
-            &BudgetCategory::Expense(name.clone()),
-            user.id,
-        );
-        match client_from_option(None).insert(&budget_item_to_save) {
-            Ok(_) => {
-                tracing::info!("Saved budget item");
-                add_budget_transaction(first_item, None, budget_item_to_save.id, amount)
-            }
-            Err(e) => {
-                tracing::error!(error = %e, "Could not save budget item");
-                Err(anyhow::Error::from(e))
-            }
-        }
-    }
-
+    
     pub fn get_default_budget_for_user(
         user_id: Uuid,
         client: Option<&Db>,
@@ -200,71 +143,8 @@ pub mod db {
         }
     }
 
-    pub fn create_test_budget(user_id: Uuid, client: Option<&Db>) -> anyhow::Result<Budget> {
-        let mut budget = Budget::new("Default test budget", true, user_id);
-        //Create budget items
-        let category = budget.new_income_category("Löner");
-        //Incomes
-        let mut salary_one = BudgetItem::new(
-            budget.id,
-            "Lön Tommie",
-            &category,
-            user_id,
-        );
-        
-        let bt = BudgetTransaction::new(
-            "Lön Tommie",
-            BudgetTransactionType::default(),
-            39500.0,
-            None,
-            salary_one.id,
-            user_id,
-        );
-        
-        salary_one.store_incoming_transaction(&bt);
-        budget.store_budget_item(&salary_one);
-        
-        let mut salary_two = BudgetItem::new(
-            budget.id,
-            "Lön Lisa",
-            &category,
-            user_id,
-        );
-        
-        let bt = BudgetTransaction::new(
-            "Lön Lisa",
-            BudgetTransactionType::default(),
-            19500.0,
-            None,
-            salary_two.id,
-            user_id,
-        );
-        salary_two.store_incoming_transaction(&bt);
-        budget.store_budget_item(&salary_two);
-        
-        let category = budget.new_expense_category("Fasta Utgifter");
-        
-        let mut mortgage = BudgetItem::new(
-            budget.id,
-            "Huslånet",
-            &category,
-            user_id,
-        );
-        
-        budget.spend_money_on(&mut mortgage, 5660.0);
-        budget.store_budget_item(&mortgage);
-
-        let mut utgift = BudgetItem::new(
-            budget.id,
-            "Hyra lägenheten",
-            &category,
-            user_id,
-        );
-
-        budget.spend_money_on(&mut utgift, 7500.0);
-        budget.store_budget_item(&utgift);
-        //Expenses
-        
+    pub fn create_test_budget(user_id: Uuid, client: Option<&Db>) -> anyhow::Result<Budget> { 
+        let budget = Budget::new("Test Budget".to_string(),  user_id, 5000.0, true);
         match serde_json::to_string(&budget) {
             Ok(b) => {
                 tracing::info!(budget = %b, "Created test budget");
@@ -291,7 +171,7 @@ pub mod db {
         default_budget: bool,
         client: Option<&Db>,
     ) -> anyhow::Result<Budget> {
-        let budget = Budget::new(name, default_budget, user_id);
+        let budget = Budget::new(name.to_string(), user_id, 0.0, default_budget);
         match client_from_option(client).insert(&budget) {
             Ok(_) => Ok(budget.clone()),
             Err(e) => {
@@ -345,9 +225,9 @@ pub async fn get_default_budget() -> Result<Budget, ServerFnError> {
 }
 
 #[server]
-pub async fn get_default_budget_overview() -> Result<BudgetActionOverview, ServerFnError> {
+pub async fn get_default_budget_overview() -> Result<BudgetSummary, ServerFnError> {
     match db::get_default_budget_for_user(db::get_default_user(None).unwrap().id, None) {
-        Ok(budget) => Ok(budget.generate_actionable_overview()),
+        Ok(budget) => Ok(budget.generate_summary()),
         Err(e) => {
             tracing::error!(error = %e, "Could not get default budget");
             Err(ServerFnError::ServerError(e.to_string()))
@@ -361,29 +241,6 @@ pub async fn save_budget(budget: Budget) -> Result<(), ServerFnError> {
         Ok(_) => Ok(()),
         Err(e) => {
             tracing::error!(error = %e, "Could not get default budget");
-            Err(ServerFnError::ServerError(e.to_string()))
-        }
-    }
-}
-
-#[server]
-pub async fn add_budget_item(
-    budget_id: Uuid,
-    name: String,
-    first_item: String,
-    amount: f32,
-) -> Result<(), ServerFnError> {
-    tracing::info!(
-        "add_budget_item: {}, {}, {}, {}",
-        budget_id,
-        name,
-        first_item,
-        amount
-    );
-    match db::add_budget_item(budget_id, name, &first_item, amount) {
-        Ok(_) => Ok(()),
-        Err(e) => {
-            tracing::error!(error = %e, "Could not save new budget item");
             Err(ServerFnError::ServerError(e.to_string()))
         }
     }
