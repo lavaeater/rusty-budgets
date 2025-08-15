@@ -45,7 +45,6 @@ impl BudgetSignal {
 
 #[component]
 pub fn BudgetHero() -> Element {
-    let _ = navigator();
     // Resource for fetching budget data
     let mut budget_resource = use_server_future(api::get_default_budget)?;
        
