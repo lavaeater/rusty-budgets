@@ -53,10 +53,7 @@ impl PartialEq for BudgetItem {
             && self.budgeted_amount == other.budgeted_amount
             && self.actual_spent == other.actual_spent
             && (match &self.notes {
-            None => match other.notes {
-                None => true,
-                _ => false,
-            },
+            None => other.notes.is_none(),
             Some(self_id) => match &other.notes {
                 None => false,
                 Some(other_id) => self_id == other_id,
@@ -132,9 +129,6 @@ pub struct BudgetSummary {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct BudgetIssue {
     pub issue_type: BudgetIssueType,
-    pub item_id: Uuid,
-    pub item_name: String,
-    pub group_name: String,
     pub amount: f32,
     pub description: String,
 }
@@ -142,9 +136,10 @@ pub struct BudgetIssue {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum BudgetIssueType {
     /// Item has been overspent (actual > budgeted)
-    Overspent,
+    Overspent(BudgetItem),
     /// Budget is not balanced (total budgeted != total income)
     Unbalanced,
+    TransactionNotConnected(BankTransaction),
 }
 
 impl Display for Budget {
@@ -365,10 +360,7 @@ impl Budget {
                     if item.actual_spent > item.budgeted_amount {
                         let overspent_amount = item.actual_spent - item.budgeted_amount;
                         issues.push(BudgetIssue {
-                            issue_type: BudgetIssueType::Overspent,
-                            item_id: item.id,
-                            item_name: item.name.clone(),
-                            group_name: group.name.clone(),
+                            issue_type: BudgetIssueType::Overspent(item.clone()),
                             amount: overspent_amount,
                             description: format!(
                                 "Overspent by ${:.2} (spent ${:.2}, budgeted ${:.2})",
@@ -385,9 +377,6 @@ impl Budget {
                 if unallocated.abs() > 0.01 {
                     issues.push(BudgetIssue {
                         issue_type: BudgetIssueType::Unbalanced,
-                        item_id: Uuid::nil(), // No specific item
-                        item_name: "Budget Balance".to_string(),
-                        group_name: "Overall".to_string(),
                         amount: unallocated.abs(),
                         description: if unallocated > 0.0 {
                             format!(
@@ -399,6 +388,13 @@ impl Budget {
                         },
                     });
                 }
+            }
+            for transaction in &self.non_handled_bank_transactions() {
+                issues.push(BudgetIssue {
+                    issue_type: BudgetIssueType::TransactionNotConnected(transaction.clone()),
+                    amount: transaction.amount,
+                    description: transaction.description.clone(),
+                });
             }
 
             BudgetSummary {
