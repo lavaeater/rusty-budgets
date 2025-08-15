@@ -19,7 +19,6 @@ pub fn Budget(id: Uuid) -> Element {
 }
 
 const _BUDGET_CSS: Asset = asset!("/assets/main.css");
-
 #[component]
 pub fn NewBudgetItem(budget_id: Uuid, item_type: String) -> Element {
     rsx! {
