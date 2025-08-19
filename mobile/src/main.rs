@@ -1,3 +1,4 @@
+use dioxus::logger::tracing::Level;
 use dioxus::prelude::*;
 
 use ui::Navbar;
@@ -18,7 +19,13 @@ enum Route {
 const MAIN_CSS: Asset = asset!("/assets/main.css");
 
 fn main() {
-    dioxus::launch(App);
+
+    dioxus::logger::init(Level::INFO).expect("failed to init logger");
+
+    #[cfg(feature = "server")]
+    let _ = api::db::CLIENT;
+
+    launch(App);
 }
 
 #[component]

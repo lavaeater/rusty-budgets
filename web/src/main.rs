@@ -1,3 +1,4 @@
+use dioxus::logger::tracing::Level;
 use dioxus::prelude::*;
 use ui::Navbar;
 use views::{Blog, Home};
@@ -18,8 +19,11 @@ const FAVICON: Asset = asset!("/assets/favicon.ico");
 const MAIN_CSS: Asset = asset!("/assets/main.css");
 
 fn main() {
-    
-    let _ = api::db::CLIENT.as_ref();
+    dioxus::logger::init(Level::INFO).expect("failed to init logger");
+
+    #[cfg(feature = "server")]
+    let _ = api::db::CLIENT;
+
     launch(App);
 }
 

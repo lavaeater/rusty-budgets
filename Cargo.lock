@@ -898,12 +898,8 @@ name = "desktop"
 version = "0.1.0"
 dependencies = [
  "api",
- "chrono",
  "dioxus",
- "lucide-dioxus",
- "serde",
  "ui",
- "uuid",
 ]
 
 [[package]]
