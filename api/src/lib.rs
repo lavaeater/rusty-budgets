@@ -2,10 +2,7 @@
 pub mod models;
 
 use crate::models::*;
-use chrono::NaiveDate;
 use dioxus::prelude::*;
-use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 #[cfg(feature = "server")]
 use joydb::Joydb;
@@ -19,7 +16,7 @@ const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 // Define the state
 joydb::state! {
     AppState,
-    models: [User, Budget, BudgetItem, BudgetTransaction, BankTransaction],
+    models: [User, Budget, BudgetItem, BankTransaction],
 }
 
 // Define the database (combination of state and adapter)
@@ -28,13 +25,11 @@ type Db = Joydb<AppState, JsonAdapter>;
 #[cfg(feature = "server")]
 pub mod db {
     use crate::models::*;
-    use crate::{BudgetItemView, BudgetOverview, Db, DEFAULT_USER_EMAIL};
+    use crate::{Db, DEFAULT_USER_EMAIL};
     use chrono::NaiveDate;
     use dioxus::fullstack::once_cell::sync::Lazy;
     use dioxus::logger::tracing;
-    use joydb::JoydbError;
     use uuid::Uuid;
-    use Default;
 
     pub static CLIENT: Lazy<Db> = Lazy::new(|| {
         tracing::info!("Init DB Client");
@@ -69,77 +64,7 @@ pub mod db {
             &CLIENT
         }
     }
-
-    pub fn get_budget_overview(id: Uuid, client: Option<&Db>) -> anyhow::Result<BudgetOverview> {
-        if let Some(budget) = client_from_option(client).get::<Budget>(&id)? {
-            let budget_items =
-                client_from_option(client).get_all_by(|bi: &BudgetItem| bi.budget_id == id)?;
-            let budget_items_view = budget_items
-                .iter()
-                .map(|bi| {
-                    let incoming_budget_transactions = client_from_option(client)
-                        .get_all_by(|bt: &BudgetTransaction| bt.to_budget_item == bi.id)
-                        .unwrap();
-                    let outgoing_budget_transactions = client_from_option(client)
-                        .get_all_by(|bt: &BudgetTransaction| bt.from_budget_item == Some(bi.id))
-                        .unwrap();
-
-                    let aggregate_amount = incoming_budget_transactions
-                        .iter()
-                        .map(|bt| bt.amount)
-                        .sum::<f32>()
-                        - outgoing_budget_transactions
-                            .iter()
-                            .map(|bt| bt.amount)
-                            .sum::<f32>();
-
-                    let is_balanced = aggregate_amount == 0.0;
-                    let money_needs_job = aggregate_amount > 0.0;
-                    let too_much_job = aggregate_amount < 0.0;
-
-                    BudgetItemView {
-                        id: bi.id,
-                        name: bi.budget_category.to_string(),
-                        item_type: bi.budget_category.to_string(),
-                        aggregate_amount,
-                        is_balanced,
-                        money_needs_job,
-                        expected_at: NaiveDate::from_ymd_opt(2000, 1, 1).unwrap(),
-                        too_much_job,
-                        incoming_budget_transactions,
-                        outgoing_budget_transactions,
-                    }
-                })
-                .collect::<Vec<BudgetItemView>>();
-
-            Ok(BudgetOverview {
-                id,
-                default_budget: budget.default_budget,
-                name: budget.name,
-                incomes: budget_items_view
-                    .iter()
-                    .filter(|bi| bi.item_type == "income")
-                    .cloned()
-                    .collect(),
-                expenses: budget_items_view
-                    .iter()
-                    .filter(|bi| bi.item_type == "expense")
-                    .cloned()
-                    .collect(),
-                savings: budget_items_view
-                    .iter()
-                    .filter(|bi| bi.item_type == "savings")
-                    .cloned()
-                    .collect(),
-            })
-        } else {
-            Err(anyhow::Error::from(JoydbError::NotFound {
-                id: id.to_string(),
-                model: "Budget".to_string(),
-            }))
-        }
-    }
-
+    
     pub fn list_users(client: Option<&Db>) -> anyhow::Result<Vec<User>> {
         match client_from_option(client).get_all::<User>() {
             Ok(users) => Ok(users),
@@ -195,59 +120,7 @@ pub mod db {
             }
         }
     }
-
-    pub fn add_budget_transaction(
-        text: &str,
-        from_budget_item: Option<Uuid>,
-        to_budget_item: Uuid,
-        amount: f32,
-    ) -> anyhow::Result<()> {
-        let user = get_default_user(None)?;
-        let budget_transaction_to_save = BudgetTransaction::new(
-            text,
-            BudgetTransactionType::default(),
-            amount,
-            from_budget_item,
-            to_budget_item,
-            user.id,
-        );
-        match client_from_option(None).insert(&budget_transaction_to_save) {
-            Ok(_) => {
-                tracing::info!("Saved budget transaction");
-                Ok(())
-            }
-            Err(e) => {
-                tracing::error!(error = %e, "Could not save budget transaction");
-                Err(anyhow::Error::from(e))
-            }
-        }
-    }
-
-    pub fn add_budget_item(
-        budget_id: Uuid,
-        name: String,
-        first_item: &str,
-        amount: f32
-    ) -> anyhow::Result<()> {
-        let user = get_default_user(None)?;
-        let budget_item_to_save = BudgetItem::new(
-            budget_id,
-            &name,
-            &BudgetCategory::Expense(name.clone()),
-            user.id,
-        );
-        match client_from_option(None).insert(&budget_item_to_save) {
-            Ok(_) => {
-                tracing::info!("Saved budget item");
-                add_budget_transaction(first_item, None, budget_item_to_save.id, amount)
-            }
-            Err(e) => {
-                tracing::error!(error = %e, "Could not save budget item");
-                Err(anyhow::Error::from(e))
-            }
-        }
-    }
-
+    
     pub fn get_default_budget_for_user(
         user_id: Uuid,
         client: Option<&Db>,
@@ -255,13 +128,14 @@ pub mod db {
         match client_from_option(client)
             .get_all_by(|b: &Budget| b.user_id == user_id && b.default_budget)
         {
-            Ok(mut budgets) => {
+            Ok(budgets) => {
                 if budgets.is_empty() {
                     tracing::info!("No default budget exists, time to create one");
                     create_test_budget(user_id, client)
-//                    create_budget("Default", user_id, true, client)
                 } else {
-                    Ok(budgets.remove(0))
+                    let _ = client_from_option(client)
+                        .delete_all_by(|b: &Budget| b.user_id == user_id && b.default_budget);
+                    create_test_budget(user_id, client)
                 }
             }
             Err(e) => {
@@ -271,81 +145,174 @@ pub mod db {
         }
     }
 
-    pub fn create_test_budget(user_id: Uuid, client: Option<&Db>) -> anyhow::Result<Budget> {
-        let mut budget = Budget::new("Default test budget", true, user_id);
-        //Create budget items
-        let category = budget.new_income_category("Löner");
-        //Incomes
-        let mut salary_one = BudgetItem::new(
-            budget.id,
-            "Lön Tommie",
-            &category,
-            user_id,
-        );
+    pub fn create_test_budget(user_id: Uuid, client: Option<&Db>) -> anyhow::Result<Budget> { 
+        let mut budget = Budget::new("Test Budget".to_string(), user_id, true);
         
-        let bt = BudgetTransaction::new(
-            "Lön Tommie",
-            BudgetTransactionType::default(),
-            39500.0,
-            None,
-            salary_one.id,
-            user_id,
-        );
+        // Create Income group with salary
+        budget.add_group("Income");
+        let salary_id = budget.create_budget_item(
+            "Income", 
+            "Monthly Salary", 
+            BudgetItemType::Income, 
+            45000.0
+        ).unwrap();
         
-        salary_one.store_incoming_transaction(&bt);
-        budget.store_budget_item(&salary_one);
+        // Create Household group with essential expenses
+        budget.add_group("Household");
+        let rent_id = budget.create_budget_item(
+            "Household", 
+            "Rent", 
+            BudgetItemType::Expense, 
+            15000.0
+        ).unwrap();
         
-        let mut salary_two = BudgetItem::new(
-            budget.id,
-            "Lön Lisa",
-            &category,
-            user_id,
-        );
+        let utilities_id = budget.create_budget_item(
+            "Household", 
+            "Utilities", 
+            BudgetItemType::Expense, 
+            2500.0
+        ).unwrap();
         
-        let bt = BudgetTransaction::new(
-            "Lön Lisa",
-            BudgetTransactionType::default(),
-            19500.0,
-            None,
-            salary_two.id,
-            user_id,
-        );
-        salary_two.store_incoming_transaction(&bt);
-        budget.store_budget_item(&salary_two);
+        let groceries_id = budget.create_budget_item(
+            "Household", 
+            "Groceries", 
+            BudgetItemType::Expense, 
+            4000.0
+        ).unwrap();
         
-        let category = budget.new_expense_category("Fasta Utgifter");
+        let internet_id = budget.create_budget_item(
+            "Household", 
+            "Internet", 
+            BudgetItemType::Expense, 
+            500.0
+        ).unwrap();
         
-        let mut mortgage = BudgetItem::new(
-            budget.id,
-            "Huslånet",
-            &category,
-            user_id,
-        );
+        // Create Pleasure group with entertainment expenses
+        budget.add_group("Pleasure");
+        let restaurants_id = budget.create_budget_item(
+            "Pleasure", 
+            "Restaurants", 
+            BudgetItemType::Expense, 
+            3000.0
+        ).unwrap();
         
-        budget.spend_money_on(&mut mortgage, 5660.0);
-        budget.store_budget_item(&mortgage);
-
-        let mut utgift = BudgetItem::new(
-            budget.id,
-            "Hyra lägenheten",
-            &category,
-            user_id,
-        );
-
-        budget.spend_money_on(&mut utgift, 7500.0);
-        budget.store_budget_item(&utgift);
-        //Expenses
+        let entertainment_id = budget.create_budget_item(
+            "Pleasure", 
+            "Entertainment", 
+            BudgetItemType::Expense, 
+            2000.0
+        ).unwrap();
+        
+        let hobbies_id = budget.create_budget_item(
+            "Pleasure", 
+            "Hobbies", 
+            BudgetItemType::Expense, 
+            1500.0
+        ).unwrap();
+        
+        // Create Savings group
+        budget.add_group("Savings");
+        let emergency_fund_id = budget.create_budget_item(
+            "Savings", 
+            "Emergency Fund", 
+            BudgetItemType::Savings, 
+            5000.0
+        ).unwrap();
+        
+        let investments_id = budget.create_budget_item(
+            "Savings", 
+            "Investments", 
+            BudgetItemType::Savings, 
+            8000.0
+        ).unwrap();
+        
+        // Add realistic bank transactions
+        use chrono::NaiveDate;
+        
+        // Income transactions
+        budget.add_bank_transaction(45000.0, "Monthly Salary - Company ABC", 
+            NaiveDate::from_ymd_opt(2024, 8, 1).unwrap());
+        
+        // Household transactions
+        budget.add_bank_transaction(-15000.0, "Rent Payment - Landlord", 
+            NaiveDate::from_ymd_opt(2024, 8, 1).unwrap());
+        budget.add_bank_transaction(-1200.0, "Electricity Bill", 
+            NaiveDate::from_ymd_opt(2024, 8, 3).unwrap());
+        budget.add_bank_transaction(-800.0, "Water Bill", 
+            NaiveDate::from_ymd_opt(2024, 8, 5).unwrap());
+        budget.add_bank_transaction(-500.0, "Gas Bill", 
+            NaiveDate::from_ymd_opt(2024, 8, 7).unwrap());
+        budget.add_bank_transaction(-500.0, "Internet Bill - ISP", 
+            NaiveDate::from_ymd_opt(2024, 8, 10).unwrap());
+        budget.add_bank_transaction(-1500.0, "ICA Supermarket", 
+            NaiveDate::from_ymd_opt(2024, 8, 2).unwrap());
+        budget.add_bank_transaction(-800.0, "Coop Grocery Store", 
+            NaiveDate::from_ymd_opt(2024, 8, 8).unwrap());
+        budget.add_bank_transaction(-1200.0, "Willys Supermarket", 
+            NaiveDate::from_ymd_opt(2024, 8, 15).unwrap());
+        budget.add_bank_transaction(-500.0, "Local Market", 
+            NaiveDate::from_ymd_opt(2024, 8, 12).unwrap());
+        
+        // Pleasure transactions
+        budget.add_bank_transaction(-850.0, "Restaurant Frantzén", 
+            NaiveDate::from_ymd_opt(2024, 8, 4).unwrap());
+        budget.add_bank_transaction(-450.0, "Café Saturnus", 
+            NaiveDate::from_ymd_opt(2024, 8, 6).unwrap());
+        budget.add_bank_transaction(-650.0, "Restaurant Oaxen", 
+            NaiveDate::from_ymd_opt(2024, 8, 11).unwrap());
+        budget.add_bank_transaction(-320.0, "Pizza Place", 
+            NaiveDate::from_ymd_opt(2024, 8, 13).unwrap());
+        budget.add_bank_transaction(-730.0, "Fine Dining", 
+            NaiveDate::from_ymd_opt(2024, 8, 14).unwrap());
+        budget.add_bank_transaction(-300.0, "Cinema Tickets", 
+            NaiveDate::from_ymd_opt(2024, 8, 9).unwrap());
+        budget.add_bank_transaction(-150.0, "Spotify Premium", 
+            NaiveDate::from_ymd_opt(2024, 8, 1).unwrap());
+        budget.add_bank_transaction(-1200.0, "Concert Tickets", 
+            NaiveDate::from_ymd_opt(2024, 8, 16).unwrap());
+        budget.add_bank_transaction(-350.0, "Netflix & Streaming", 
+            NaiveDate::from_ymd_opt(2024, 8, 1).unwrap());
+        budget.add_bank_transaction(-800.0, "Photography Equipment", 
+            NaiveDate::from_ymd_opt(2024, 8, 7).unwrap());
+        budget.add_bank_transaction(-700.0, "Sports Equipment", 
+            NaiveDate::from_ymd_opt(2024, 8, 10).unwrap());
+        
+        // Savings transactions
+        budget.add_bank_transaction(-5000.0, "Transfer to Emergency Fund", 
+            NaiveDate::from_ymd_opt(2024, 8, 2).unwrap());
+        budget.add_bank_transaction(-8000.0, "Investment Account Transfer", 
+            NaiveDate::from_ymd_opt(2024, 8, 3).unwrap());
+        
+        // Connect transactions to budget items
+        let transactions = budget.bank_transactions.clone();
+        for transaction in transactions {
+            let item_id = match transaction.description.as_str() {
+                desc if desc.contains("Salary") => Some(salary_id),
+                desc if desc.contains("Rent") => Some(rent_id),
+                desc if desc.contains("Electricity") || desc.contains("Water") || desc.contains("Gas") => Some(utilities_id),
+                desc if desc.contains("Internet") => Some(internet_id),
+                desc if desc.contains("ICA") || desc.contains("Coop") || desc.contains("Willys") || desc.contains("Market") => Some(groceries_id),
+                desc if desc.contains("Restaurant") || desc.contains("Café") || desc.contains("Pizza") || desc.contains("Fine Dining") => Some(restaurants_id),
+                desc if desc.contains("Cinema") || desc.contains("Spotify") || desc.contains("Concert") || desc.contains("Netflix") => Some(entertainment_id),
+                desc if desc.contains("Photography") || desc.contains("Sports") => Some(hobbies_id),
+                desc if desc.contains("Emergency Fund") => Some(emergency_fund_id),
+                desc if desc.contains("Investment") => Some(investments_id),
+                _ => None,
+            };
+            
+            if let Some(id) = item_id {
+                budget.connect_bank_transaction_with_item(transaction.id, id);
+            }
+        }
         
         match serde_json::to_string(&budget) {
             Ok(b) => {
-                tracing::info!(budget = %b, "Created test budget");
+                tracing::info!(budget = %b, "Created test budget with realistic data");
             }
             Err(e) => {
                 tracing::error!(error = %e, "Could not serialize test budget");
             }
         }
-
-        //Savings
 
         match client_from_option(client).insert(&budget) {
             Ok(_) => Ok(budget.clone()),
@@ -362,7 +329,7 @@ pub mod db {
         default_budget: bool,
         client: Option<&Db>,
     ) -> anyhow::Result<Budget> {
-        let budget = Budget::new(name, default_budget, user_id);
+        let budget = Budget::new(name.to_string(), user_id, default_budget);
         match client_from_option(client).insert(&budget) {
             Ok(_) => Ok(budget.clone()),
             Err(e) => {
@@ -416,9 +383,9 @@ pub async fn get_default_budget() -> Result<Budget, ServerFnError> {
 }
 
 #[server]
-pub async fn save_budget(budget: Budget) -> Result<(), ServerFnError> {
-    match db::save_budget(budget) {
-        Ok(_) => Ok(()),
+pub async fn get_default_budget_overview() -> Result<BudgetSummary, ServerFnError> {
+    match db::get_default_budget_for_user(db::get_default_user(None).unwrap().id, None) {
+        Ok(budget) => Ok(budget.generate_summary()),
         Err(e) => {
             tracing::error!(error = %e, "Could not get default budget");
             Err(ServerFnError::ServerError(e.to_string()))
@@ -427,58 +394,11 @@ pub async fn save_budget(budget: Budget) -> Result<(), ServerFnError> {
 }
 
 #[server]
-pub async fn add_budget_item(
-    budget_id: Uuid,
-    name: String,
-    first_item: String,
-    amount: f32,
-) -> Result<(), ServerFnError> {
-    tracing::info!(
-        "add_budget_item: {}, {}, {}, {}",
-        budget_id,
-        name,
-        first_item,
-        amount
-    );
-    match db::add_budget_item(budget_id, name, &first_item, amount) {
+pub async fn save_budget(budget: Budget) -> Result<(), ServerFnError> {
+    match db::save_budget(budget) {
         Ok(_) => Ok(()),
         Err(e) => {
-            tracing::error!(error = %e, "Could not save new budget item");
-            Err(ServerFnError::ServerError(e.to_string()))
-        }
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct BudgetItemView {
-    pub id: Uuid,
-    pub name: String,
-    pub item_type: String,
-    pub aggregate_amount: f32,
-    pub is_balanced: bool,
-    pub money_needs_job: bool,
-    pub too_much_job: bool,
-    pub expected_at: NaiveDate,
-    pub incoming_budget_transactions: Vec<BudgetTransaction>,
-    pub outgoing_budget_transactions: Vec<BudgetTransaction>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct BudgetOverview {
-    pub id: Uuid,
-    pub name: String,
-    pub default_budget: bool,
-    pub incomes: Vec<BudgetItemView>,
-    pub expenses: Vec<BudgetItemView>,
-    pub savings: Vec<BudgetItemView>,
-}
-
-#[server]
-pub async fn get_budget_overview(id: Uuid) -> Result<BudgetOverview, ServerFnError> {
-    match db::get_budget_overview(id, None) {
-        Ok(overview) => Ok(overview),
-        Err(e) => {
-            tracing::error!(error = %e, "Could not get budget overview");
+            tracing::error!(error = %e, "Could not get default budget");
             Err(ServerFnError::ServerError(e.to_string()))
         }
     }
