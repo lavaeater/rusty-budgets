@@ -12,16 +12,16 @@
   ],
   "Budget": [
     {
-      "id": "bb1edf35-4782-4342-84b6-1acfad651626",
+      "id": "6edc4daf-4369-4867-9a4a-bed152fa49de",
       "name": "Test Budget",
       "user_id": "4a54d276-0d47-43d7-a344-144dd6f284d9",
       "budget_groups": {
         "Household": {
-          "id": "e3c35408-6842-46b3-b5f0-9c7e147745d4",
+          "id": "ba73e404-3ec2-4686-b1e8-eb9d4ae6c8e5",
           "name": "Household",
           "items": [
             {
-              "id": "8d3836ae-53c3-46ee-8221-ba9b54c96622",
+              "id": "e838626c-0f2c-41e4-a6a8-d63d2dc37e45",
               "name": "Rent",
               "item_type": "Expense",
               "budgeted_amount": 15000.0,
@@ -29,7 +29,7 @@
               "notes": null
             },
             {
-              "id": "e30d4c8d-2a29-4a60-a80c-998a6a77e9a0",
+              "id": "577691e4-1711-4f94-914c-5d60f5b065c4",
               "name": "Utilities",
               "item_type": "Expense",
               "budgeted_amount": 2500.0,
@@ -37,7 +37,7 @@
               "notes": null
             },
             {
-              "id": "c27267b9-f17b-4b9d-ac38-d598419b552c",
+              "id": "bf5981b4-1951-473a-b11b-b1c8a620b8c2",
               "name": "Groceries",
               "item_type": "Expense",
               "budgeted_amount": 4000.0,
@@ -45,7 +45,7 @@
               "notes": null
             },
             {
-              "id": "bbb8f9fa-aaab-4a45-9ed3-434295bbe4f2",
+              "id": "7edc3e5b-4675-41a1-8040-816a0187023d",
               "name": "Internet",
               "item_type": "Expense",
               "budgeted_amount": 500.0,
@@ -55,11 +55,11 @@
           ]
         },
         "Pleasure": {
-          "id": "c20b4a90-a80d-435f-9926-3e16078423f1",
+          "id": "4a8dddd3-6aae-4497-8e19-4205d8f449ce",
           "name": "Pleasure",
           "items": [
             {
-              "id": "1053930e-6c11-4842-838a-5d111ed1162a",
+              "id": "24a766fc-77b7-48bf-a84d-877e00cfb50b",
               "name": "Restaurants",
               "item_type": "Expense",
               "budgeted_amount": 3000.0,
@@ -67,7 +67,7 @@
               "notes": null
             },
             {
-              "id": "dde13449-d021-4c72-94f5-a6408d44272c",
+              "id": "1c880e87-96d5-46a9-96ec-5374614b2f2d",
               "name": "Entertainment",
               "item_type": "Expense",
               "budgeted_amount": 2000.0,
@@ -75,7 +75,7 @@
               "notes": null
             },
             {
-              "id": "b35ca8c5-9f4a-427a-aade-6d5e1bc11be2",
+              "id": "84215d18-578f-47be-8a6a-13fb2977f242",
               "name": "Hobbies",
               "item_type": "Expense",
               "budgeted_amount": 1500.0,
@@ -84,26 +84,12 @@
             }
           ]
         },
-        "Income": {
-          "id": "586a8fee-b0af-426f-9243-c9d3060ef198",
-          "name": "Income",
-          "items": [
-            {
-              "id": "2608c522-ed1c-44f3-a722-ef537f0825b8",
-              "name": "Monthly Salary",
-              "item_type": "Income",
-              "budgeted_amount": 45000.0,
-              "actual_spent": 45000.0,
-              "notes": null
-            }
-          ]
-        },
         "Savings": {
-          "id": "d99daef3-d8c9-4845-b650-0316ba24712b",
+          "id": "10cc4274-4fc4-4427-b76f-4f20d60de0d3",
           "name": "Savings",
           "items": [
             {
-              "id": "cc7a47f3-289b-46f4-b076-c9924d01153e",
+              "id": "a26193d5-cec4-4557-8c4b-41937a943392",
               "name": "Emergency Fund",
               "item_type": "Savings",
               "budgeted_amount": 5000.0,
@@ -111,7 +97,7 @@
               "notes": null
             },
             {
-              "id": "0b290bbe-fa15-45f3-91b3-d33fd14a3b44",
+              "id": "67055244-7daf-46e1-9a3d-2c0948f8ed6c",
               "name": "Investments",
               "item_type": "Savings",
               "budgeted_amount": 8000.0,
@@ -119,173 +105,187 @@
               "notes": null
             }
           ]
+        },
+        "Income": {
+          "id": "d36b02c0-a80f-4df4-ab29-f162b64c9366",
+          "name": "Income",
+          "items": [
+            {
+              "id": "cad2d536-537b-4b20-b5c1-94acba5ef8b0",
+              "name": "Monthly Salary",
+              "item_type": "Income",
+              "budgeted_amount": 45000.0,
+              "actual_spent": 45000.0,
+              "notes": null
+            }
+          ]
         }
       },
       "bank_transactions": [
         {
-          "id": "acd454dd-de73-417b-b91c-b87022765dde",
+          "id": "7935681a-b36d-4f73-8696-8754cbedd7bd",
           "amount": 45000.0,
           "description": "Monthly Salary - Company ABC",
           "date": "2024-08-01",
-          "budget_item_id": "2608c522-ed1c-44f3-a722-ef537f0825b8"
+          "budget_item_id": "cad2d536-537b-4b20-b5c1-94acba5ef8b0"
         },
         {
-          "id": "7d2fd1d3-8dde-422f-aaf0-332f65633ba1",
+          "id": "ecae16b2-fe41-4251-9d27-6d7923d19c19",
           "amount": -15000.0,
           "description": "Rent Payment - Landlord",
           "date": "2024-08-01",
-          "budget_item_id": "8d3836ae-53c3-46ee-8221-ba9b54c96622"
+          "budget_item_id": "e838626c-0f2c-41e4-a6a8-d63d2dc37e45"
         },
         {
-          "id": "c65313e8-4d67-423c-8c42-35b380018138",
+          "id": "b29ae9fe-fd60-4af2-b9c1-32270988d223",
           "amount": -1200.0,
           "description": "Electricity Bill",
           "date": "2024-08-03",
-          "budget_item_id": "e30d4c8d-2a29-4a60-a80c-998a6a77e9a0"
+          "budget_item_id": "577691e4-1711-4f94-914c-5d60f5b065c4"
         },
         {
-          "id": "ea15a1b0-4c32-47b6-9d63-37784c84502e",
+          "id": "86d39b82-a8b5-4c31-8d47-6025a48a9ebc",
           "amount": -800.0,
           "description": "Water Bill",
           "date": "2024-08-05",
-          "budget_item_id": "e30d4c8d-2a29-4a60-a80c-998a6a77e9a0"
+          "budget_item_id": "577691e4-1711-4f94-914c-5d60f5b065c4"
         },
         {
-          "id": "0658dadf-8748-4c93-932f-87924af61e08",
+          "id": "056d281c-57d9-4c33-8aa2-a23cf51c0661",
           "amount": -500.0,
           "description": "Gas Bill",
           "date": "2024-08-07",
-          "budget_item_id": "e30d4c8d-2a29-4a60-a80c-998a6a77e9a0"
+          "budget_item_id": "577691e4-1711-4f94-914c-5d60f5b065c4"
         },
         {
-          "id": "a0fd2d5c-bf6a-4631-8b0e-66df04c644bd",
+          "id": "86104738-b52c-4ef5-941c-ee41a47160ec",
           "amount": -500.0,
           "description": "Internet Bill - ISP",
           "date": "2024-08-10",
-          "budget_item_id": "bbb8f9fa-aaab-4a45-9ed3-434295bbe4f2"
+          "budget_item_id": "7edc3e5b-4675-41a1-8040-816a0187023d"
         },
         {
-          "id": "f1955b08-24d9-4a6d-ad0f-e40cd381851f",
+          "id": "06d7e5b6-e2f4-4e29-ace1-9c6a988763b8",
           "amount": -1500.0,
           "description": "ICA Supermarket",
           "date": "2024-08-02",
-          "budget_item_id": "c27267b9-f17b-4b9d-ac38-d598419b552c"
+          "budget_item_id": "bf5981b4-1951-473a-b11b-b1c8a620b8c2"
         },
         {
-          "id": "3c9d0fd9-0b64-4702-9b09-812c599f84c9",
+          "id": "308eb844-c779-460a-8880-c19d0df224ec",
           "amount": -800.0,
           "description": "Coop Grocery Store",
           "date": "2024-08-08",
-          "budget_item_id": "c27267b9-f17b-4b9d-ac38-d598419b552c"
+          "budget_item_id": "bf5981b4-1951-473a-b11b-b1c8a620b8c2"
         },
         {
-          "id": "2ab20310-8763-490f-a2c9-51851394574c",
+          "id": "687766ac-fda9-4adf-b47c-18a63b7b1de3",
           "amount": -1200.0,
           "description": "Willys Supermarket",
           "date": "2024-08-15",
-          "budget_item_id": "c27267b9-f17b-4b9d-ac38-d598419b552c"
+          "budget_item_id": "bf5981b4-1951-473a-b11b-b1c8a620b8c2"
         },
         {
-          "id": "318f2faf-426f-4a42-bbac-c3f7a3952e25",
+          "id": "c7dd1cc1-a693-46b5-9ea6-b427bc29a2a1",
           "amount": -500.0,
           "description": "Local Market",
           "date": "2024-08-12",
-          "budget_item_id": "c27267b9-f17b-4b9d-ac38-d598419b552c"
+          "budget_item_id": "bf5981b4-1951-473a-b11b-b1c8a620b8c2"
         },
         {
-          "id": "0b65bf3e-db46-4e1c-8e04-8082f49acfb3",
+          "id": "49f0f5ca-0f44-4629-a986-2cafc61c49ac",
           "amount": -850.0,
           "description": "Restaurant Frantzén",
           "date": "2024-08-04",
-          "budget_item_id": "1053930e-6c11-4842-838a-5d111ed1162a"
+          "budget_item_id": "24a766fc-77b7-48bf-a84d-877e00cfb50b"
         },
         {
-          "id": "48f9e6c8-9942-4968-baba-3ebba6264699",
+          "id": "1220257b-cffc-4b6c-a5f5-29a39f985e01",
           "amount": -450.0,
           "description": "Café Saturnus",
           "date": "2024-08-06",
-          "budget_item_id": "1053930e-6c11-4842-838a-5d111ed1162a"
+          "budget_item_id": "24a766fc-77b7-48bf-a84d-877e00cfb50b"
         },
         {
-          "id": "ab665634-3ff2-454b-8aeb-117fb2fd20e2",
+          "id": "e8ddc890-014a-409c-8d3a-562d24a86c2b",
           "amount": -650.0,
           "description": "Restaurant Oaxen",
           "date": "2024-08-11",
-          "budget_item_id": "1053930e-6c11-4842-838a-5d111ed1162a"
+          "budget_item_id": "24a766fc-77b7-48bf-a84d-877e00cfb50b"
         },
         {
-          "id": "9ba95c68-1774-4d0d-a686-921530faee62",
+          "id": "6295d4dd-2838-4489-a328-2ea7725cc2db",
           "amount": -320.0,
           "description": "Pizza Place",
           "date": "2024-08-13",
-          "budget_item_id": "1053930e-6c11-4842-838a-5d111ed1162a"
+          "budget_item_id": "24a766fc-77b7-48bf-a84d-877e00cfb50b"
         },
         {
-          "id": "c0745e43-a9dc-4815-a7a1-5c59b9ab85f4",
+          "id": "d8ab30af-db6c-4e36-9a5b-e583ae1ff673",
           "amount": -730.0,
           "description": "Fine Dining",
           "date": "2024-08-14",
-          "budget_item_id": "1053930e-6c11-4842-838a-5d111ed1162a"
+          "budget_item_id": "24a766fc-77b7-48bf-a84d-877e00cfb50b"
         },
         {
-          "id": "f9538ec6-21eb-41d3-ab7a-f645bd47e50a",
+          "id": "888fd2c0-052f-4e96-85d8-fae46825c446",
           "amount": -300.0,
           "description": "Cinema Tickets",
           "date": "2024-08-09",
-          "budget_item_id": "dde13449-d021-4c72-94f5-a6408d44272c"
+          "budget_item_id": "1c880e87-96d5-46a9-96ec-5374614b2f2d"
         },
         {
-          "id": "40b8557e-9d64-4d32-90e6-8db3909d2f36",
+          "id": "4de7e0a0-6192-47f2-af37-368b34a9fa44",
           "amount": -150.0,
           "description": "Spotify Premium",
           "date": "2024-08-01",
-          "budget_item_id": "dde13449-d021-4c72-94f5-a6408d44272c"
+          "budget_item_id": "1c880e87-96d5-46a9-96ec-5374614b2f2d"
         },
         {
-          "id": "358a1d31-817a-4200-b602-d495c143f2b3",
+          "id": "28a138dd-525d-4099-a591-0af6c7a0e87a",
           "amount": -1200.0,
           "description": "Concert Tickets",
           "date": "2024-08-16",
-          "budget_item_id": "dde13449-d021-4c72-94f5-a6408d44272c"
+          "budget_item_id": "1c880e87-96d5-46a9-96ec-5374614b2f2d"
         },
         {
-          "id": "5190a5b1-1337-4f92-a7af-ab6e9529bb48",
+          "id": "b0e6a3ad-a2ef-4835-82d2-50fbc161b8d9",
           "amount": -350.0,
           "description": "Netflix & Streaming",
           "date": "2024-08-01",
-          "budget_item_id": "dde13449-d021-4c72-94f5-a6408d44272c"
+          "budget_item_id": "1c880e87-96d5-46a9-96ec-5374614b2f2d"
         },
         {
-          "id": "dbab26b6-bdaf-4768-95c5-80cc173d90d2",
+          "id": "5c65c9c9-4f0e-4dc8-9713-28455c2f8d5d",
           "amount": -800.0,
           "description": "Photography Equipment",
           "date": "2024-08-07",
-          "budget_item_id": "b35ca8c5-9f4a-427a-aade-6d5e1bc11be2"
+          "budget_item_id": "84215d18-578f-47be-8a6a-13fb2977f242"
         },
         {
-          "id": "1ba8d291-38a8-4ab5-959d-c1e63b289f0b",
+          "id": "a4d8e4d5-777d-4efd-ba65-dae354815569",
           "amount": -700.0,
           "description": "Sports Equipment",
           "date": "2024-08-10",
-          "budget_item_id": "b35ca8c5-9f4a-427a-aade-6d5e1bc11be2"
+          "budget_item_id": "84215d18-578f-47be-8a6a-13fb2977f242"
         },
         {
-          "id": "7ff39874-ce3f-4e15-a994-3075871fbe82",
+          "id": "352c5b2b-e890-48a7-a5dd-4733068f57cf",
           "amount": -5000.0,
           "description": "Transfer to Emergency Fund",
           "date": "2024-08-02",
-          "budget_item_id": "cc7a47f3-289b-46f4-b076-c9924d01153e"
+          "budget_item_id": "a26193d5-cec4-4557-8c4b-41937a943392"
         },
         {
-          "id": "41870c87-c591-4d49-b925-b4bc10cfa938",
+          "id": "20e287fd-e287-4676-935d-5541f093e687",
           "amount": -8000.0,
           "description": "Investment Account Transfer",
           "date": "2024-08-03",
-          "budget_item_id": "0b290bbe-fa15-45f3-91b3-d33fd14a3b44"
+          "budget_item_id": "67055244-7daf-46e1-9a3d-2c0948f8ed6c"
         }
       ],
-      "created_at": "2025-08-19T10:47:54.114617636",
-      "updated_at": "2025-08-19T10:47:54.114906899",
+      "created_at": "2025-08-19T12:01:54.970409960",
+      "updated_at": "2025-08-19T12:01:54.970605893",
       "default_budget": true
     }
   ],
