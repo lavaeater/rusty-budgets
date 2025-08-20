@@ -10,23 +10,22 @@
   width: 400px;
   text-align: left;
   font-size: x-large;
-  color: white;
+  color: var(--primary-color-5);
   display: flex;
   flex-direction: column;
 }
 
 #links a {
-  color: white;
+  color: var(--primary-color-5);
   text-decoration: none;
   margin-top: 20px;
-  margin: 10px 0px;
   border: white 1px solid;
   border-radius: 5px;
   padding: 10px;
 }
 
 #links a:hover {
-  background-color: #1f1f1f;
+  background-color: var(--primary-color-5);
   cursor: pointer;
 }
 
@@ -39,7 +38,7 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
-  color: white;
+  color: var(--primary-info-color);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -57,7 +56,7 @@
   font-size: 2.5rem;
   font-weight: 700;
   margin: 0;
-  color: #ffffff;
+  color: var(--secondary-color);
 }
 
 .balance-status {
@@ -71,13 +70,13 @@
 }
 
 .balance-status.balanced {
-  background-color: #10b981;
-  color: white;
+  background-color: var(--primary-color-5);
+  color: var(--primary-color-5);
 }
 
 .balance-status.unbalanced {
-  background-color: #ef4444;
-  color: white;
+  background-color: var(--primary-color-5);
+  color: var(--primary-color-5);
 }
 
 .status-icon {
@@ -127,7 +126,7 @@
 
 .card-header {
   font-size: 0.9rem;
-  color: #9ca3af;
+  color: var(--primary-color-5);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 0.5rem;
@@ -137,7 +136,7 @@
 .card-amount {
   font-size: 2rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--primary-color-5);
 }
 
 /* Progress Bar Section */
@@ -153,11 +152,11 @@
   font-size: 1.1rem;
   font-weight: 600;
   margin-bottom: 1rem;
-  color: #e5e7eb;
+  color: var(--primary-color-5);
 }
 
 .progress-bar-container {
-  background-color: #374151;
+  background-color: var(--primary-color-5);
   border-radius: 8px;
   height: 12px;
   overflow: hidden;
@@ -173,7 +172,7 @@
 
 .progress-text {
   font-size: 0.9rem;
-  color: #9ca3af;
+  color: var(--primary-color-5);
   text-align: center;
 }
 
@@ -190,7 +189,7 @@
   font-size: 1.3rem;
   font-weight: 600;
   margin: 0 0 1rem 0;
-  color: #ef4444;
+  color: var(--primary-color-5);
 }
 
 .issues-list {
@@ -209,18 +208,18 @@
 }
 
 .issue-item.overspent {
-  background-color: #1f1f1f;
-  border-left-color: #ef4444;
+  background-color: var(--primary-color-5);
+  border-left-color: var(--primary-color-5);
 }
 
 .issue-item.unbalanced {
-  background-color: #1f1f1f;
-  border-left-color: #f59e0b;
+  background-color: var(--primary-color-5);
+  border-left-color: var(--primary-color-5);
 }
 
 .issue-item.unconnected {
-  background-color: #1f1f1f;
-  border-left-color: #6b7280;
+  background-color: var(--primary-color-5);
+  border-left-color: var(--primary-color-5);
 }
 
 .issue-icon {
@@ -235,12 +234,12 @@
 .issue-description {
   font-weight: 500;
   margin-bottom: 0.25rem;
-  color: #e5e7eb;
+  color: var(--primary-color-5);
 }
 
 .issue-amount {
   font-size: 0.9rem;
-  color: #9ca3af;
+  color: var(--primary-color-5);
   font-weight: 600;
 }
 
@@ -263,7 +262,7 @@
 
 .no-issues-text {
   font-size: 1.1rem;
-  color: #10b981;
+  color: var(--primary-color-5);
   font-weight: 500;
 }
 
@@ -287,25 +286,25 @@
 
 .stat-label {
   font-weight: 500;
-  color: #9ca3af;
+  color: var(--primary-color-5);
 }
 
 .stat-value {
   font-weight: 700;
   font-size: 1.1rem;
-  color: #e5e7eb;
+  color: var(--primary-color-5);
 }
 
 .stat-value.positive {
-  color: #10b981;
+  color: var(--primary-color-5);
 }
 
 .stat-value.good {
-  color: #10b981;
+  color: var(--primary-color-5);
 }
 
 .stat-value.warning {
-  color: #ef4444;
+  color: var(--primary-color-5);
 }
 
 /* Responsive Design */
