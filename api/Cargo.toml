@@ -12,6 +12,7 @@ serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 anyhow = { workspace = true }
 joydb = { features = ["ron"], workspace = true }
+once_cell = { version = "1.21.3", features = ["parking_lot"] }
 
 [features]
 web = []

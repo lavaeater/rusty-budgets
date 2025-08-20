@@ -27,9 +27,9 @@ pub mod db {
     use crate::models::*;
     use crate::{Db, DEFAULT_USER_EMAIL};
     use chrono::NaiveDate;
-    use dioxus::fullstack::once_cell::sync::Lazy;
     use dioxus::logger::tracing;
     use uuid::Uuid;
+    use once_cell::sync::Lazy;
 
     pub static CLIENT: Lazy<Db> = Lazy::new(|| {
         tracing::info!("Init DB Client");
