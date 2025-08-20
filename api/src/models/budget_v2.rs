@@ -43,6 +43,7 @@ pub struct BudgetItem {
     pub actual_spent: f32,
     /// Optional notes or description
     pub notes: Option<String>,
+    pub tags: Vec<String>,
 }
 
 impl PartialEq for BudgetItem {
@@ -62,7 +63,7 @@ impl PartialEq for BudgetItem {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq)]
 pub enum BudgetItemType {
     Income,
     Expense,
@@ -110,6 +111,16 @@ impl PartialEq for BankTransaction {
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct BudgetItemSummary {
+    pub id: Uuid,
+    pub name: String,
+    pub item_type: BudgetItemType,
+    pub budgeted_amount: f32,
+    pub left_to_spend: f32,
+    pub tags: Vec<String>,
+}
+
 /// Summary of budget status and issues requiring attention
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct BudgetSummary {
@@ -121,6 +132,7 @@ pub struct BudgetSummary {
     pub is_balanced: bool,
     pub unallocated_income: f32,
     pub issues: Vec<BudgetIssue>,
+    pub item_summaries: Vec<BudgetItemSummary>,
     pub default_budget: bool,
 }
 
@@ -272,6 +284,7 @@ impl Budget {
                 budgeted_amount,
                 actual_spent: 0.0,
                 notes: None,
+                tags: Vec::new(),
             };
 
             let item_id = item.id;
@@ -353,6 +366,22 @@ impl Budget {
         /// Generate a comprehensive budget summary
         pub fn generate_summary(&self) -> BudgetSummary {
             let mut issues = Vec::new();
+            let mut item_summaries = self
+                .budget_groups
+                .values()
+                .flat_map(|group| {
+                    group.items.iter().map(|item| BudgetItemSummary {
+                        id: item.id,
+                        name: item.name.clone(),
+                        item_type: item.item_type,
+                        budgeted_amount: item.budgeted_amount,
+                        left_to_spend: item.budgeted_amount - item.actual_spent,
+                        tags: item.tags.clone(),
+                    })
+                })
+                .collect::<Vec<BudgetItemSummary>>();
+            
+            item_summaries.sort_by(|a, b| {a.left_to_spend.partial_cmp(&b.left_to_spend).unwrap()});
 
             // Check for overspent items
             for group in self.budget_groups.values() {
@@ -407,6 +436,7 @@ impl Budget {
                 unallocated_income: self.unallocated_income(),
                 issues,
                 default_budget: self.default_budget,
+                item_summaries,
             }
         }
 
