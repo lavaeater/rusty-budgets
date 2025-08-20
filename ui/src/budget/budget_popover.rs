@@ -4,7 +4,7 @@ use dioxus_primitives::popover::*;
 const BUDGET_CSS: Asset = asset!("/assets/styling/budget.css");
 
 #[component]
-pub fn BudgetPopover() -> Element {
+pub fn BudgetPopover(max_amount: f32) -> Element {
     let mut open = use_signal(|| false);
     let mut confirmed = use_signal(|| false);
 

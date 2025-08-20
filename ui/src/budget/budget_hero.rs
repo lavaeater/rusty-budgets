@@ -143,7 +143,7 @@ pub fn BudgetHero() -> Element {
                                                 div { class: "issue-icon", {match &issue.issue_type { BudgetIssueType::Overspent(_) => "🔥", BudgetIssueType::Unbalanced => "⚠", BudgetIssueType::TransactionNotConnected(_) => "🔗", }} }
                                                 div { class: "issue-content",
                                                     div { class: "issue-description", {issue.description.as_str()} }
-                                                    div { class: "issue-description", BudgetPopover { } }
+                                                    div { class: "issue-description", BudgetPopover { max_amount: issue.amount } }
                                                     div { class: "issue-amount", {format_args!("Amount: ${:.2}", issue.amount)} }
                                                 button {
                                                         class: "button",
