@@ -97,6 +97,32 @@ pub fn BudgetHero() -> Element {
                         div { class: "progress-text", {format_args!("{:.0}% of income is budgeted", progress)} }
                     }
 
+                    // Best items section
+                    {
+                        if budget.item_summaries.is_empty() {
+                            rsx! {
+                                div { class: "no-issues-section",
+                                    div { class: "no-issues-icon", "🎉" }
+                                    div { class: "no-issues-text", "No items" }
+                                }
+                            }
+                        } else {
+                            rsx! {
+                                div { class: "issues-section",
+                                    h3 { class: "issues-title", "Items with money left to spend" }
+                                    div { class: "issues-list",
+                                        for item in budget.item_summaries.iter().take(5) {
+                                            div { class: "issue-content",
+                                                div { class: "issue-description", {item.name.clone()} }
+                                                div { class: "issue-amount", {format_args!("Left: ${:.2}", item.left_to_spend)} }
+                                                div { class: "issue-amount", {format_args!("Budgeted: ${:.2}", item.budgeted_amount)} }                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     // Issues section
                     {
                         if budget.issues.is_empty() {

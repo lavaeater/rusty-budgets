@@ -370,18 +370,20 @@ impl Budget {
                 .budget_groups
                 .values()
                 .flat_map(|group| {
-                    group.items.iter().map(|item| BudgetItemSummary {
+                    group.items.iter()
+                        .filter(|item| item.item_type == BudgetItemType::Expense)
+                        .map(|item| BudgetItemSummary {
                         id: item.id,
                         name: item.name.clone(),
                         item_type: item.item_type,
                         budgeted_amount: item.budgeted_amount,
-                        left_to_spend: item.budgeted_amount - item.actual_spent,
+                        left_to_spend: item.budgeted_amount + item.actual_spent,
                         tags: item.tags.clone(),
                     })
                 })
                 .collect::<Vec<BudgetItemSummary>>();
             
-            item_summaries.sort_by(|a, b| {a.left_to_spend.partial_cmp(&b.left_to_spend).unwrap()});
+            item_summaries.sort_by(|a, b| {b.left_to_spend.partial_cmp(&a.left_to_spend).unwrap()});
 
             // Check for overspent items
             for group in self.budget_groups.values() {

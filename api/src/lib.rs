@@ -177,7 +177,7 @@ pub mod db {
             "Household", 
             "Groceries", 
             BudgetItemType::Expense, 
-            4000.0
+            5000.0
         ).unwrap();
         
         let internet_id = budget.create_budget_item(
