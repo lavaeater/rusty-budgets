@@ -138,11 +138,16 @@ pub fn BudgetHero() -> Element {
                                     h3 { class: "issues-title", "Issues to review" }
                                     div { class: "issues-list",
                                         for issue in budget.issues.iter() {
-                                            div { class: {format_args!("issue-item {}", match &issue.issue_type { BudgetIssueType::Overspent(_) => "overspent", BudgetIssueType::Unbalanced => "unbalanced", BudgetIssueType::TransactionNotConnected(_) => "unconnected", })},
+                                            div { key: "{issue.issue_type}", class: {format_args!("issue-item {}", match &issue.issue_type { BudgetIssueType::Overspent(_) => "overspent", BudgetIssueType::Unbalanced => "unbalanced", BudgetIssueType::TransactionNotConnected(_) => "unconnected", })},
                                                 div { class: "issue-icon", {match &issue.issue_type { BudgetIssueType::Overspent(_) => "🔥", BudgetIssueType::Unbalanced => "⚠", BudgetIssueType::TransactionNotConnected(_) => "🔗", }} }
                                                 div { class: "issue-content",
                                                     div { class: "issue-description", {issue.description.as_str()} }
                                                     div { class: "issue-amount", {format_args!("Amount: ${:.2}", issue.amount)} }
+
+                                                button {
+                                                        class: "button",
+                                                        "Budget"
+                                                    }
                                                 }
                                             }
                                         }

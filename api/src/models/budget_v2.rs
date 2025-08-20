@@ -154,6 +154,18 @@ pub enum BudgetIssueType {
     TransactionNotConnected(BankTransaction),
 }
 
+impl Display for BudgetIssueType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            BudgetIssueType::Overspent(item) => write!(f, "Overspent: {}", item.name),
+            BudgetIssueType::Unbalanced => write!(f, "Unbalanced budget"),
+            BudgetIssueType::TransactionNotConnected(transaction) => {
+                write!(f, "Transaction not connected: {}", transaction.description)
+            }
+        }
+    }
+}
+
 impl Display for Budget {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
