@@ -1,6 +1,7 @@
 use api::models::*;
 use dioxus::prelude::*;
 use uuid::Uuid;
+use crate::budget_popover::BudgetPopover;
 
 const BUDGET_CSS: Asset = asset!("/assets/styling/budget.css");
 
@@ -142,8 +143,8 @@ pub fn BudgetHero() -> Element {
                                                 div { class: "issue-icon", {match &issue.issue_type { BudgetIssueType::Overspent(_) => "🔥", BudgetIssueType::Unbalanced => "⚠", BudgetIssueType::TransactionNotConnected(_) => "🔗", }} }
                                                 div { class: "issue-content",
                                                     div { class: "issue-description", {issue.description.as_str()} }
+                                                    div { class: "issue-description", BudgetPopover { } }
                                                     div { class: "issue-amount", {format_args!("Amount: ${:.2}", issue.amount)} }
-
                                                 button {
                                                         class: "button",
                                                         "Budget"
