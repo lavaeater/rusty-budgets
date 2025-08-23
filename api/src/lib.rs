@@ -1,5 +1,6 @@
 //! This crate contains all shared fullstack server functions.
 pub mod models;
+mod cqrs;
 
 use crate::models::*;
 use dioxus::prelude::*;
