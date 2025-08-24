@@ -1,18 +1,10 @@
-// Minimal, generic CQRS + Event Sourcing framework in one file.
-// No external crates. `rustc` stable compatible.
-// ---------------------------------------------------------------
-// This file contains:
-// 1) A tiny generic framework (traits + in-memory runtime)
-// 2) A small demo domain (bank account) showing commands/events
-// 3) A `main` that exercises the framework
+// ===========================
+// Framework (Generic Core)
+// ===========================
 
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::hash::Hash;
-
-// ===========================
-// Framework (Generic Core)
-// ===========================
 
 /// Aggregate: domain state that evolves by applying events.
 pub trait Aggregate: Sized + Debug {
