@@ -5,6 +5,7 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::hash::Hash;
+use joydb::Model;
 
 /// Aggregate: domain state that evolves by applying events.
 pub trait Aggregate: Sized + Debug {

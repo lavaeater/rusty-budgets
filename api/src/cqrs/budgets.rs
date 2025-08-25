@@ -1,4 +1,4 @@
-use crate::cqrs::budgets::BudgetEvent::Created;
+use crate::cqrs::budgets::BudgetEvent::{Created, GroupAddedToBudget};
 use crate::cqrs::framework::*;
 use chrono::{NaiveDate, NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -8,7 +8,7 @@ use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum BudgetEvent {
-    Created(Created),
+    Created(BudgetCreated),
     GroupAddedToBudget(GroupAdded),
     // ItemAdded(ItemAdded),
     // TransactionAdded(TransactionAdded),
@@ -18,7 +18,7 @@ pub enum BudgetEvent {
 
 // ---- Events ----
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BudgetCreated {
     pub id: Uuid,
     pub name: String,
@@ -29,7 +29,7 @@ pub struct BudgetCreated {
 }
 
 impl Event<Budget> for BudgetCreated {
-    fn aggregate_id(&self) -> Budget::Id {
+    fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
         self.id
     }
 
@@ -61,12 +61,30 @@ impl BudgetCreated {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GroupAdded {
     pub budget_id: Uuid,
     pub group_id: Uuid,
     pub name: String,
 }
+
+impl Event<Budget> for GroupAdded {
+    fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
+        self.budget_id
+    }
+
+    fn apply(&self, state: &mut Budget) {
+        state.budget_groups.insert(
+            self.name.clone(),
+            BudgetGroup {
+                id: self.group_id,
+                name: self.name.clone(),
+                items: Vec::default(),
+            },
+        );
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct ItemAdded {
     pub budget_id: Uuid,
@@ -93,10 +111,10 @@ pub struct FundsReallocated {
 }
 
 impl Event<Budget> for BudgetEvent {
-    fn aggregate_id(&self) -> Budget::Id {
+    fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
         match self {
-            BudgetEvent::Created(e) => e.id,
-            BudgetEvent::GroupAddedToBudget(e) => e.budget_id,
+            Created(e) => e.id,
+            GroupAddedToBudget(e) => e.budget_id,
             // BudgetEvent::ItemAdded(e) => e.budget_id,
             // BudgetEvent::TransactionAdded(e) => e.budget_id,
             // BudgetEvent::TransactionConnected(e) => e.budget_id,
@@ -238,12 +256,12 @@ impl Debug for CreateBudget {
 }
 
 impl Command<Budget, BudgetEvent> for CreateBudget {
-    fn aggregate_id(&self) -> Budget::Id {
+    fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
         self.id
     }
 
-    fn handle(self, _state: &Budget) -> Option<BudgetEvent> {
-        Some(Created(BudgetCreated {
+    fn handle(self, _state: Option<&Budget>) -> Result<BudgetEvent, CommandError> {
+        Ok(Created(BudgetCreated {
             id: self.id,
             name: self.name,
             user_id: self.user_id,
@@ -268,13 +286,13 @@ impl Debug for AddGroup {
     }
 }
 
-impl Command<Budget, GroupAdded> for AddGroup {
-    fn aggregate_id(&self) -> Budget::Id {
+impl Command<Budget, BudgetEvent> for AddGroup {
+    fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
         self.budget_id
     }
 
-    fn handle(self, _state: &Budget) -> Option<BudgetEvent> {
-        Some(BudgetEvent::GroupAddedToBudget(GroupAdded {
+    fn handle(self, _state: Option<&Budget>) -> Result<BudgetEvent, CommandError> {
+        Ok(GroupAddedToBudget(GroupAdded {
             budget_id: self.budget_id,
             group_id: Uuid::new_v4(),
             name: self.name,
