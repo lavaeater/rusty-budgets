@@ -14,10 +14,13 @@ pub trait Aggregate: Sized + Debug {
 
     /// Create a blank/new instance for a given id.
     fn new(id: Self::Id) -> Self;
+    fn get_next_event_id(&self) -> u64;
 }
 
 /// Event: a fact that happened, applied to an Aggregate to evolve it.
 pub trait Event<A: Aggregate>: Clone + Debug {
+    fn id(&self) -> u64;
+    fn timestamp(&self) -> u128;
     /// Which aggregate instance does this event belong to?
     fn aggregate_id(&self) -> A::Id;
 
@@ -118,6 +121,10 @@ impl Aggregate for Account {
     fn new(id: Self::Id) -> Self {
         Self { id, owner: String::new(), balance: 0 }
     }
+
+    fn get_next_event_id(&self) -> u64 {    
+        todo!()
+    }
 }
 
 // ---- Events ----
@@ -132,6 +139,14 @@ pub struct MoneyDeposited { pub id: u64, pub amount_cents: i64 }
 pub struct MoneyWithdrawn { pub id: u64, pub amount_cents: i64 }
 
 impl Event<Account> for AccountCreated {
+    fn id(&self) -> u64 {
+        todo!()
+    }
+
+    fn timestamp(&self) -> u128 {
+        todo!()
+    }
+
     fn aggregate_id(&self) -> <Account as Aggregate>::Id { self.id }
     fn apply(&self, state: &mut Account) {
         state.id = self.id;
@@ -141,11 +156,27 @@ impl Event<Account> for AccountCreated {
 }
 
 impl Event<Account> for MoneyDeposited {
+    fn id(&self) -> u64 {
+        todo!()
+    }
+
+    fn timestamp(&self) -> u128 {
+        todo!()
+    }
+
     fn aggregate_id(&self) -> <Account as Aggregate>::Id { self.id }
     fn apply(&self, state: &mut Account) { state.balance += self.amount_cents; }
 }
 
 impl Event<Account> for MoneyWithdrawn {
+    fn id(&self) -> u64 {
+        todo!()
+    }
+
+    fn timestamp(&self) -> u128 {
+        todo!()
+    }
+
     fn aggregate_id(&self) -> <Account as Aggregate>::Id { self.id }
     fn apply(&self, state: &mut Account) { state.balance -= self.amount_cents; }
 }
@@ -243,6 +274,14 @@ enum AccountEvent {
 }
 
 impl Event<Account> for AccountEvent {
+    fn id(&self) -> u64 {
+        todo!()
+    }
+
+    fn timestamp(&self) -> u128 {
+        todo!()
+    }
+
     fn aggregate_id(&self) -> <Account as Aggregate>::Id {
         match self {
             AccountEvent::Created(e) => e.id,
