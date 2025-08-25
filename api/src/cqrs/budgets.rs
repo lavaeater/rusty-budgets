@@ -1,9 +1,10 @@
 use crate::cqrs::budgets::BudgetEvent::{Created, GroupAddedToBudget};
 use crate::cqrs::framework::*;
-use chrono::{NaiveDate, NaiveDateTime, Utc};
+use chrono::{NaiveDate, NaiveDateTime};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
+use std::time::{SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -20,43 +21,47 @@ pub enum BudgetEvent {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BudgetCreated {
-    pub id: Uuid,
+    pub budget_id: Uuid,
     pub name: String,
     pub user_id: Uuid,
     pub default: bool,
     pub created_at: NaiveDateTime,
-    updated_at: NaiveDateTime,
 }
 
-impl Event<Budget> for BudgetCreated {
+impl DomainEvent<Budget> for BudgetCreated {
     fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
-        self.id
+        self.budget_id
     }
 
     fn apply(&self, state: &mut Budget) {
-        state.id = self.id;
+        state.id = self.budget_id;
         state.name = self.name.clone();
         state.user_id = self.user_id;
         state.default_budget = self.default;
         state.created_at = self.created_at;
-        state.updated_at = self.updated_at;
+        state.updated_at = NaiveDateTime::default();
     }
 }
+fn timestamp() -> u128 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_nanos()
+}
+
 impl BudgetCreated {
     pub fn new(
         name: String,
         user_id: Uuid,
         default: bool,
         created_at: NaiveDateTime,
-        updated_at: NaiveDateTime,
     ) -> Self {
         Self {
-            id: Uuid::new_v4(),
+            budget_id: Uuid::new_v4(),
             name,
             user_id,
             default,
             created_at,
-            updated_at,
         }
     }
 }
@@ -68,7 +73,7 @@ pub struct GroupAdded {
     pub name: String,
 }
 
-impl Event<Budget> for GroupAdded {
+impl DomainEvent<Budget> for GroupAdded {
     fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
         self.budget_id
     }
@@ -82,6 +87,7 @@ impl Event<Budget> for GroupAdded {
                 items: Vec::default(),
             },
         );
+        state.updated_at = NaiveDateTime::default();
     }
 }
 
@@ -91,17 +97,20 @@ pub struct ItemAdded {
     pub group_id: Uuid,
     pub item: BudgetItem,
 }
+
 #[derive(Debug, Clone)]
 pub struct TransactionAdded {
     budget_id: Uuid,
     tx: BankTransaction,
 }
+
 #[derive(Debug, Clone)]
 pub struct TransactionConnected {
     budget_id: Uuid,
     tx_id: Uuid,
     item_id: Uuid,
 }
+
 #[derive(Debug, Clone)]
 pub struct FundsReallocated {
     budget_id: Uuid,
@@ -110,10 +119,10 @@ pub struct FundsReallocated {
     amount: f32,
 }
 
-impl Event<Budget> for BudgetEvent {
+impl DomainEvent<Budget> for BudgetEvent {
     fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
         match self {
-            Created(e) => e.id,
+            Created(e) => e.budget_id,
             GroupAddedToBudget(e) => e.budget_id,
             // BudgetEvent::ItemAdded(e) => e.budget_id,
             // BudgetEvent::TransactionAdded(e) => e.budget_id,
@@ -262,12 +271,11 @@ impl Command<Budget, BudgetEvent> for CreateBudget {
 
     fn handle(self, _state: Option<&Budget>) -> Result<BudgetEvent, CommandError> {
         Ok(Created(BudgetCreated {
-            id: self.id,
+            budget_id: self.id,
             name: self.name,
             user_id: self.user_id,
             default: self.default,
             created_at: Default::default(),
-            updated_at: Default::default(),
         }))
     }
 }
