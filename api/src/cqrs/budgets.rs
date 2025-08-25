@@ -1,25 +1,32 @@
+use crate::cqrs::budgets::BudgetEvent::Created;
+use crate::cqrs::framework::*;
 use chrono::{NaiveDate, NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
 use uuid::Uuid;
-use crate::cqrs::budgets::BudgetEvent::BudgetCreated;
-use crate::cqrs::framework::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum BudgetEvent {
-    BudgetCreated(BudgetCreated),
+    Created(Created),
     GroupAddedToBudget(GroupAdded),
-    ItemAdded(ItemAdded),
-    TransactionAdded(TransactionAdded),
-    TransactionConnected(TransactionConnected),
-    FundsReallocated(FundsReallocated),
+    // ItemAdded(ItemAdded),
+    // TransactionAdded(TransactionAdded),
+    // TransactionConnected(TransactionConnected),
+    // FundsReallocated(FundsReallocated),
 }
 
 // ---- Events ----
 
 #[derive(Debug, Clone)]
-pub struct BudgetCreated { pub id: Uuid, pub name: String, pub user_id: Uuid, pub default: bool, pub created_at: NaiveDateTime, updated_at: NaiveDateTime }
+pub struct BudgetCreated {
+    pub id: Uuid,
+    pub name: String,
+    pub user_id: Uuid,
+    pub default: bool,
+    pub created_at: NaiveDateTime,
+    updated_at: NaiveDateTime,
+}
 
 impl Event<Budget> for BudgetCreated {
     fn aggregate_id(&self) -> Budget::Id {
@@ -35,43 +42,79 @@ impl Event<Budget> for BudgetCreated {
         state.updated_at = self.updated_at;
     }
 }
+impl BudgetCreated {
+    pub fn new(
+        name: String,
+        user_id: Uuid,
+        default: bool,
+        created_at: NaiveDateTime,
+        updated_at: NaiveDateTime,
+    ) -> Self {
+        Self {
+            id: Uuid::new_v4(),
+            name,
+            user_id,
+            default,
+            created_at,
+            updated_at,
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
-pub struct GroupAdded { pub budget_id: Uuid, pub group_id: Uuid, pub name: String }
+pub struct GroupAdded {
+    pub budget_id: Uuid,
+    pub group_id: Uuid,
+    pub name: String,
+}
 #[derive(Debug, Clone)]
-pub struct ItemAdded { pub budget_id: Uuid, pub group_id: Uuid, pub item: BudgetItem }
+pub struct ItemAdded {
+    pub budget_id: Uuid,
+    pub group_id: Uuid,
+    pub item: BudgetItem,
+}
 #[derive(Debug, Clone)]
-pub struct TransactionAdded { budget_id: Uuid, tx: BankTransaction }
+pub struct TransactionAdded {
+    budget_id: Uuid,
+    tx: BankTransaction,
+}
 #[derive(Debug, Clone)]
-pub struct TransactionConnected { budget_id: Uuid, tx_id: Uuid, item_id: Uuid }
+pub struct TransactionConnected {
+    budget_id: Uuid,
+    tx_id: Uuid,
+    item_id: Uuid,
+}
 #[derive(Debug, Clone)]
-pub struct FundsReallocated { budget_id: Uuid, from_item: Uuid, to_item: Uuid, amount: f32 }
+pub struct FundsReallocated {
+    budget_id: Uuid,
+    from_item: Uuid,
+    to_item: Uuid,
+    amount: f32,
+}
 
 impl Event<Budget> for BudgetEvent {
     fn aggregate_id(&self) -> Budget::Id {
         match self {
-            BudgetEvent::BudgetCreated(e) => e.id,
+            BudgetEvent::Created(e) => e.id,
             BudgetEvent::GroupAddedToBudget(e) => e.budget_id,
-            BudgetEvent::ItemAdded(e) => e.budget_id,
-            BudgetEvent::TransactionAdded(e) => e.budget_id,
-            BudgetEvent::TransactionConnected(e) => e.budget_id,
-            BudgetEvent::FundsReallocated(e) => e.budget_id,
+            // BudgetEvent::ItemAdded(e) => e.budget_id,
+            // BudgetEvent::TransactionAdded(e) => e.budget_id,
+            // BudgetEvent::TransactionConnected(e) => e.budget_id,
+            // BudgetEvent::FundsReallocated(e) => e.budget_id,
         }
     }
 
     fn apply(&self, state: &mut Budget) {
         match self {
-            BudgetEvent::BudgetCreated(e) => e.apply(state),
+            BudgetEvent::Created(e) => e.apply(state),
             BudgetEvent::GroupAddedToBudget(e) => e.apply(state),
-            BudgetEvent::ItemAdded(e) => e.apply(state),
-            BudgetEvent::TransactionAdded(e) => e.apply(state),
-            BudgetEvent::TransactionConnected(e) => e.apply(state),
-            BudgetEvent::FundsReallocated(e) => e.apply(state),
+            // BudgetEvent::ItemAdded(e) => e.apply(state),
+            // BudgetEvent::TransactionAdded(e) => e.apply(state),
+            // BudgetEvent::TransactionConnected(e) => e.apply(state),
+            // BudgetEvent::FundsReallocated(e) => e.apply(state),
         }
     }
 }
-
-
-
 
 // --- Budget Domain ---
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -148,7 +191,6 @@ impl BankTransaction {
 
 // --- Aggregate implementation ---
 impl Aggregate for Budget {
-
     type Id = Uuid;
 
     fn new(id: Self::Id) -> Self {
@@ -161,12 +203,28 @@ impl Aggregate for Budget {
             bank_transactions: Vec::new(),
             created_at: NaiveDateTime::default(),
             updated_at: NaiveDateTime::default(),
-        }   
+        }
     }
 }
 
 // --- Commands ---
-pub struct CreateBudget { pub id: Uuid, pub name: String, pub user_id: Uuid, pub default: bool }
+pub struct CreateBudget {
+    pub id: Uuid,
+    pub name: String,
+    pub user_id: Uuid,
+    pub default: bool,
+}
+
+impl CreateBudget {
+    pub fn new(id: Uuid, name: String, user_id: Uuid, default: bool) -> Self {
+        Self {
+            id,
+            name,
+            user_id,
+            default,
+        }
+    }
+}
 
 impl Debug for CreateBudget {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -179,86 +237,122 @@ impl Debug for CreateBudget {
     }
 }
 
-impl Command<Budget, BudgetCreated> for CreateBudget {
+impl Command<Budget, BudgetEvent> for CreateBudget {
     fn aggregate_id(&self) -> Budget::Id {
-          self.id  
+        self.id
     }
 
     fn handle(self, _state: &Budget) -> Option<BudgetEvent> {
-        Some(BudgetCreated(BudgetCreated { id: Uuid::new_v4(), name: self.name, user_id: self.user_id, default: self.default, created_at: Default::default(), updated_at: Default::default()   })
+        Some(Created(BudgetCreated {
+            id: self.id,
+            name: self.name,
+            user_id: self.user_id,
+            default: self.default,
+            created_at: Default::default(),
+            updated_at: Default::default(),
+        }))
     }
 }
 
-pub struct AddGroup { pub budget_id: Uuid, pub name: String }
-impl Command<Budget> for AddGroup {
+pub struct AddGroup {
+    pub budget_id: Uuid,
+    pub name: String,
+}
+
+impl Debug for AddGroup {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("AddGroup")
+            .field("budget_id", &self.budget_id)
+            .field("name", &self.name)
+            .finish()
+    }
+}
+
+impl Command<Budget, GroupAdded> for AddGroup {
+    fn aggregate_id(&self) -> Budget::Id {
+        self.budget_id
+    }
+
     fn handle(self, _state: &Budget) -> Option<BudgetEvent> {
-        Some(BudgetEvent::GroupAdded { budget_id: self.budget_id, group_id: Uuid::new_v4(), name: self.name })
+        Some(BudgetEvent::GroupAddedToBudget(GroupAdded {
+            budget_id: self.budget_id,
+            group_id: Uuid::new_v4(),
+            name: self.name,
+        }))
     }
 }
 
-pub struct AddItem { pub group_id: Uuid, pub item: BudgetItem }
-impl Command<Budget> for AddItem {
-    fn handle(self, _state: &Budget) -> Option<BudgetEvent> {
-        Some(BudgetEvent::ItemAdded { group_id: self.group_id, item: self.item })
-    }
-}
+// pub struct AddItem {
+//     pub group_id: Uuid,
+//     pub item: BudgetItem,
+// }
+// impl Command<Budget> for AddItem {
+//     fn handle(self, _state: &Budget) -> Option<BudgetEvent> {
+//         Some(BudgetEvent::ItemAdded {
+//             group_id: self.group_id,
+//             item: self.item,
+//         })
+//     }
+// }
+// 
+// pub struct AddTransaction {
+//     pub budget_id: Uuid,
+//     pub tx: BankTransaction,
+// }
+// impl Command<Budget> for AddTransaction {
+//     fn handle(self, _state: &Budget) -> Option<BudgetEvent> {
+//         Some(BudgetEvent::TransactionAdded {
+//             budget_id: self.budget_id,
+//             tx: self.tx,
+//         })
+//     }
+// }
+// 
+// pub struct ConnectTransaction {
+//     pub budget_id: Uuid,
+//     pub tx_id: Uuid,
+//     pub item_id: Uuid,
+// }
+// impl Command<Budget> for ConnectTransaction {
+//     fn handle(self, _state: &Budget) -> Option<BudgetEvent> {
+//         Some(BudgetEvent::TransactionConnected {
+//             budget_id: self.budget_id,
+//             tx_id: self.tx_id,
+//             item_id: self.item_id,
+//         })
+//     }
+// }
+// 
+// pub struct ReallocateFunds {
+//     pub from_item: Uuid,
+//     pub to_item: Uuid,
+//     pub amount: f32,
+// }
+// impl Command<Budget> for ReallocateFunds {
+//     fn handle(self, _state: &Budget) -> Option<BudgetEvent> {
+//         Some(BudgetEvent::FundsReallocated {
+//             from_item: self.from_item,
+//             to_item: self.to_item,
+//             amount: self.amount,
+//         })
+//     }
+// }
 
-pub struct AddTransaction { pub budget_id: Uuid, pub tx: BankTransaction }
-impl Command<Budget> for AddTransaction {
-    fn handle(self, _state: &Budget) -> Option<BudgetEvent> {
-        Some(BudgetEvent::TransactionAdded { budget_id: self.budget_id, tx: self.tx })
-    }
-}
-
-pub struct ConnectTransaction { pub budget_id: Uuid, pub tx_id: Uuid, pub item_id: Uuid }
-impl Command<Budget> for ConnectTransaction {
-    fn handle(self, _state: &Budget) -> Option<BudgetEvent> {
-        Some(BudgetEvent::TransactionConnected { budget_id: self.budget_id, tx_id: self.tx_id, item_id: self.item_id })
-    }
-}
-
-pub struct ReallocateFunds { pub from_item: Uuid, pub to_item: Uuid, pub amount: f32 }
-impl Command<Budget> for ReallocateFunds {
-    fn handle(self, _state: &Budget) -> Option<BudgetEvent> {
-        Some(BudgetEvent::FundsReallocated { from_item: self.from_item, to_item: self.to_item, amount: self.amount })
-    }
-}
-
-// --- Example runtime usage ---
-pub fn demo() {
-    let mut budget = Budget::default();
-
-    // 1. Create budget
-    let ev = CreateBudget { name: "Family Budget".into(), user_id: Uuid::new_v4(), default: true }
-        .handle(&budget)
-        .unwrap();
-    budget.apply(&ev);
-
-    // 2. Add group
-    let ev = AddGroup { budget_id: budget.id, name: "Household".into() }.handle(&budget).unwrap();
-    budget.apply(&ev);
-
-    // 3. Add item
-    let group_id = budget.budget_groups["Household"].id;
-    let ev = AddItem { group_id, item: BudgetItem::new("Groceries", BudgetItemType::Expense, 500.0) }
-        .handle(&budget)
-        .unwrap();
-    budget.apply(&ev);
-
-    println!("Budget after setup: {:#?}", budget);
-}
-
-fn compact_demo() {
+#[cfg(test)]
+#[test]
+pub fn testy() {
     let mut rt: Runtime<Budget, BudgetEvent> = Runtime::new();
+    
+    let budget_id = Uuid::new_v4();
 
     // happy path
-    rt.execute(crate::cqrs::framework::Create(CreateAccount { id: 100, owner: "Bob".into() })).unwrap();
-    rt.execute(crate::cqrs::framework::Deposit(DepositMoney { id: 100, amount_cents: 50_00 })).unwrap();
-    rt.execute(crate::cqrs::framework::Withdraw(WithdrawMoney { id: 100, amount_cents: 20_00 })).unwrap();
+    rt.execute(CreateBudget::new(budget_id, "Family Budget".into(), Uuid::new_v4(), true)).unwrap();
+    // rt.execute(crate::cqrs::framework::Deposit(DepositMoney { id: 100, amount_cents: 50_00 })).unwrap();
+    // rt.execute(crate::cqrs::framework::Withdraw(WithdrawMoney { id: 100, amount_cents: 20_00 })).unwrap();
 
-    let acc = rt.materialize(&100).unwrap();
-    println!("Account {:?}: owner={}, balance_cents={}", acc.id, acc.owner, acc.balance);
+    let budget_agg = rt.materialize(&budget_id).unwrap();
+    println!("Budget {:?}: name={}, default={}", budget_agg.id, budget_agg.name, budget_agg.default_budget);
 
     // audit log
-    println!("Events: {:?}", rt.events(&100).unwrap());
+    println!("Events: {:?}", rt.events(&budget_id).unwrap());
 }
