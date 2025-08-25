@@ -1,10 +1,12 @@
 use crate::cqrs::budgets::BudgetEvent::{Created, GroupAddedToBudget};
 use crate::cqrs::framework::*;
-use chrono::{NaiveDate, NaiveDateTime};
+use chrono::{NaiveDate, NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
 use std::time::{SystemTime, UNIX_EPOCH};
+use joydb::{Joydb, Model};
+use joydb::adapters::JsonAdapter;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -17,7 +19,31 @@ pub enum BudgetEvent {
     // FundsReallocated(FundsReallocated),
 }
 
-// ---- Events ----
+type StoredBudgetEvent = StoredEvent<Budget, BudgetEvent>;
+
+impl Model for StoredBudgetEvent {
+    type Id = Uuid;
+
+    fn id(&self) -> &Self::Id {
+        &self.id
+    }
+
+    fn model_name() -> &'static str {
+        "budget_event"
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Model)]
+pub struct AggregateModel {
+    pub id: Uuid,
+}
+
+joydb::state! {
+    AppState,
+    models: [StoredBudgetEvent, AggregateModel],
+}
+
+type Db = Joydb<AppState, JsonAdapter>;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BudgetCreated {
@@ -39,14 +65,8 @@ impl DomainEvent<Budget> for BudgetCreated {
         state.user_id = self.user_id;
         state.default_budget = self.default;
         state.created_at = self.created_at;
-        state.updated_at = NaiveDateTime::default();
+        state.updated_at = Utc::now().naive_utc();
     }
-}
-fn timestamp() -> u128 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_nanos()
 }
 
 impl BudgetCreated {
@@ -367,7 +387,23 @@ impl Command<Budget, BudgetEvent> for AddGroup {
 #[cfg(test)]
 #[test]
 pub fn testy() {
-    let mut rt: Runtime<Budget, BudgetEvent> = Runtime::new();
+    let db =  Db::open("data.json").unwrap();
+    let db_clone = db.clone();
+    let mut rt: Runtime<Budget, BudgetEvent> = Runtime::with_storage_function(Box::new(move |aggregate_id: &Uuid, event| { 
+        let am = AggregateModel {
+            id: *aggregate_id,
+        };
+        db_clone.upsert(&am).unwrap();
+        db_clone.insert(&event).unwrap();
+    }));
+    
+    if let Ok(mut aggregates) = db.get_all::<AggregateModel>() {
+        for agg in aggregates {
+            if let Ok(mut events) = db.get_all_by(|e: &StoredBudgetEvent| e.aggregate_id == agg.id) {
+                rt.hydrate(agg.id, events);
+            }
+        }
+    }
     
     let budget_id = Uuid::new_v4();
 

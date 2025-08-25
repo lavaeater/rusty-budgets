@@ -6,10 +6,11 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::hash::Hash;
 use joydb::Model;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 /// Aggregate: domain state that evolves by applying events.
-pub trait Aggregate: Sized + Debug {
+pub trait Aggregate: Sized + Debug + Clone {
     /// Identifier type for this aggregate.
     type Id: Eq + Hash + Clone + Debug;
 
@@ -17,10 +18,10 @@ pub trait Aggregate: Sized + Debug {
     fn new(id: Self::Id) -> Self;
 }
 
-#[derive(Debug, Clone)]
-pub struct StoredEvent<A: Aggregate, E: DomainEvent<A>> {
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StoredEvent<A, E> where A: Aggregate, E: DomainEvent<A> {
+    pub id: Uuid,
     pub aggregate_id: A::Id,
-    pub event_id: Uuid,
     pub ts: u128,
     pub data: E,
 }
@@ -31,8 +32,8 @@ impl<A: Aggregate, E: DomainEvent<A>> StoredEvent<A, E> {
         let event_id = Uuid::new_v4();
         let ts = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH).unwrap()
-            .as_millis();
-        Self { event_id, aggregate_id, ts, data }
+            .as_nanos();
+        Self { id: event_id, aggregate_id, ts, data }
     }
 }
 
@@ -62,13 +63,13 @@ pub enum CommandError {
 }
 
 /// Very small in-memory event store + runtime.
-#[derive(Debug, Default)]
 pub struct Runtime<A, E>
 where
     A: Aggregate,
     E: DomainEvent<A>,
 {
     // Append-only log per aggregate id.
+    on_event: Option<Box<dyn FnMut(&A::Id, StoredEvent<A, E>)>>,
     streams: HashMap<A::Id, Vec<StoredEvent<A, E>>>,
 }
 
@@ -78,7 +79,11 @@ where
     E: DomainEvent<A>,
 {
     pub fn new() -> Self {
-        Self { streams: HashMap::new() }
+        Self { streams: HashMap::new(), on_event: None }
+    }
+    
+    pub fn with_storage_function(on_event: Box<dyn FnMut(&A::Id, StoredEvent<A, E>)>) -> Self {
+        Self { streams: HashMap::new(), on_event: Some(on_event) }
     }
 
     /// Load & rebuild current state from events (if any).
@@ -91,12 +96,22 @@ where
             state
         })
     }
+    
+    pub fn hydrate(&mut self, id: A::Id, events: Vec<StoredEvent<A, E>>) {
+        self.streams.insert(id, events);
+    }
+    pub fn to_storage(&self) -> HashMap<A::Id, Vec<StoredEvent<A, E>>> {
+        self.streams.clone()
+    }
 
     /// Append one event to the store.
     fn append(&mut self, ev: E) {
-        let id = ev.aggregate_id();
+        let aggregate_id = ev.aggregate_id();
         let stored_event = StoredEvent::new(ev);
-        self.streams.entry(id).or_default().push(stored_event);
+        if let Some(ref mut on_event) = self.on_event {
+            on_event(&aggregate_id, stored_event.clone());
+        }
+        self.streams.entry(aggregate_id).or_default().push(stored_event);
     }
 
     /// Execute a command: read, decide, append event, return event.
