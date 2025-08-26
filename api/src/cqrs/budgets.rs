@@ -1,11 +1,11 @@
+use std::cmp::Reverse;
 use crate::cqrs::budgets::BudgetEvent::{Created, GroupAddedToBudget};
 use crate::cqrs::framework::*;
 use chrono::{NaiveDate, NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
-use std::time::{SystemTime, UNIX_EPOCH};
-use joydb::{Joydb, Model};
+use joydb::{Joydb, JoydbError, Model};
 use joydb::adapters::JsonAdapter;
 use uuid::Uuid;
 
@@ -174,6 +174,8 @@ pub struct Budget {
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
     pub default_budget: bool,
+    pub last_event: u128,
+    pub version: u64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -250,7 +252,22 @@ impl Aggregate for Budget {
             bank_transactions: Vec::new(),
             created_at: NaiveDateTime::default(),
             updated_at: NaiveDateTime::default(),
+            last_event: 0,
+            version: 0,
         }
+    }
+
+    fn update_timestamp(&mut self, timestamp: u128) {
+        if self.last_event < timestamp {
+            self.last_event = timestamp;
+            self.version += 1;
+        } else {
+            panic!("Event timestamp is older than last event timestamp");
+        }
+    }
+
+    fn version(&self) -> u64 {
+        self.version
     }
 }
 
@@ -328,6 +345,98 @@ impl Command<Budget, BudgetEvent> for AddGroup {
     }
 }
 
+pub struct InMemoryRuntime<A, E>
+where
+    A: Aggregate,
+    E: DomainEvent<A>,
+{
+    streams: HashMap<A::Id, Vec<StoredEvent<A, E>>>,
+    on_event: Option<Box<dyn FnMut(&A::Id, StoredEvent<A, E>)>>,
+}
+
+impl<A, E> InMemoryRuntime<A, E>
+where
+    A: Aggregate,
+    E: DomainEvent<A>,
+{
+    pub fn new() -> Self {
+        Self { streams: HashMap::new(), on_event: None }
+    }
+
+    pub fn with_storage_function(on_event: Box<dyn FnMut(&A::Id, StoredEvent<A, E>)>) -> Self {
+        Self { streams: HashMap::new(), on_event: Some(on_event) }
+    }
+}
+
+impl<A, E> Runtime<A, E> for InMemoryRuntime<A, E>
+where
+    A: Aggregate,
+    E: DomainEvent<A>,
+{
+    fn load(&self, id: &A::Id) -> Option<A> {
+        self.streams.get(id).map(|events| {
+            let mut state = A::new(id.clone());
+            for ev in events {
+                ev.data.apply(&mut state);
+            }
+            state
+        })
+    }
+
+    fn hydrate(&mut self, id: A::Id, events: Vec<StoredEvent<A, E>>) {
+        self.streams.insert(id, events);
+    }
+
+    fn append(&mut self, ev: E) {
+        let aggregate_id = ev.aggregate_id();
+        let stored_event = StoredEvent::new(ev);
+        if let Some(ref mut on_event) = self.on_event {
+            on_event(&aggregate_id, stored_event.clone());
+        }
+        self.streams.entry(aggregate_id).or_default().push(stored_event);
+    }
+
+    fn events(&self, id: &A::Id) -> Option<Vec<StoredEvent<A, E>>> {
+        self.streams.get(id).map(|v| v.clone())
+    }
+}
+
+pub struct JoyDbBudgetRuntime;
+
+impl JoyDbBudgetRuntime {
+    fn fetch_events(&self, id: Uuid) -> anyhow::Result<Vec<StoredBudgetEvent>> {
+        let db = Db::open("data.json")?;
+        let mut events: Vec<StoredBudgetEvent> =  db.get_all_by(|e: &StoredBudgetEvent| e.aggregate_id == id)?;
+        events.sort_by_key(|e| Reverse(e.timestamp));
+        Ok(events)
+    }
+}
+
+impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
+    fn load(&self, id: &Uuid) -> Option<Budget> {
+        let mut state = Budget::new(id.clone());
+        for ev in events {
+            ev.data.apply(&mut state);
+        }
+        Some(state)
+    }
+
+    fn hydrate(&mut self, id: BudgetId, events: Vec<StoredBudgetEvent>) {
+        self.conn.insert_events(id, events);
+    }
+
+    fn append(&mut self, ev: BudgetEvent) {
+        let stored = StoredEvent::new(ev);
+        self.conn.insert_event(stored);
+    }
+
+    fn events(&self, id: &BudgetId) -> Option<Vec<StoredBudgetEvent>> {
+        Some(self.conn.fetch_events(id))
+    }
+}
+
+
+
 // pub struct AddItem {
 //     pub group_id: Uuid,
 //     pub item: BudgetItem,
@@ -389,7 +498,7 @@ impl Command<Budget, BudgetEvent> for AddGroup {
 pub fn testy() {
     let db =  Db::open("data.json").unwrap();
     let db_clone = db.clone();
-    let mut rt: Runtime<Budget, BudgetEvent> = Runtime::with_storage_function(Box::new(move |aggregate_id: &Uuid, event| { 
+    let mut rt: Borgtime<Budget, BudgetEvent> = Borgtime::with_storage_function(Box::new(move |aggregate_id: &Uuid, event| { 
         let am = AggregateModel {
             id: *aggregate_id,
         };

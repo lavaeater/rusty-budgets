@@ -16,13 +16,16 @@ pub trait Aggregate: Sized + Debug + Clone {
 
     /// Create a blank/new instance for a given id.
     fn new(id: Self::Id) -> Self;
+    
+    fn update_timestamp(&mut self, timestamp: u128);
+    fn version(&self) -> u64;
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StoredEvent<A, E> where A: Aggregate, E: DomainEvent<A> {
     pub id: Uuid,
     pub aggregate_id: A::Id,
-    pub ts: u128,
+    pub timestamp: u128,
     pub data: E,
 }
 
@@ -33,7 +36,12 @@ impl<A: Aggregate, E: DomainEvent<A>> StoredEvent<A, E> {
         let ts = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH).unwrap()
             .as_nanos();
-        Self { id: event_id, aggregate_id, ts, data }
+        Self { id: event_id, aggregate_id, timestamp: ts, data }
+    }
+    
+    pub fn apply(&self, state:  &mut A) {
+        self.data.apply(state);
+        state.update_timestamp(self.timestamp);
     }
 }
 
@@ -62,8 +70,44 @@ pub enum CommandError {
     NotFound(&'static str),
 }
 
+pub trait Runtime<A, E>
+where
+    A: Aggregate,
+    E: DomainEvent<A>,
+{
+    /// Load and rebuild current state from stored events.
+    fn load(&self, id: &A::Id) -> Option<A>;
+
+    /// Hydrate runtime with known event stream.
+    fn hydrate(&mut self, id: A::Id, events: Vec<StoredEvent<A, E>>);
+
+    /// Append one new event to the stream.
+    fn append(&mut self, ev: E);
+
+    /// Execute a command: decide → append → return event.
+    fn execute<C>(&mut self, cmd: C) -> Result<E, CommandError>
+    where
+        C: Command<A, E>,
+    {
+        let id = cmd.aggregate_id();
+        let current = self.load(&id);
+        let event = cmd.handle(current.as_ref())?;
+        self.append(event.clone());
+        Ok(event)
+    }
+
+    /// Materialize latest state after commands.
+    fn materialize(&self, id: &A::Id) -> Option<A> {
+        self.load(id)
+    }
+
+    /// Inspect raw events (for audit/testing).
+    fn events(&self, id: &A::Id) -> Option<Vec<StoredEvent<A, E>>>;
+}
+
+
 /// Very small in-memory event store + runtime.
-pub struct Runtime<A, E>
+pub struct Borgtime<A, E>
 where
     A: Aggregate,
     E: DomainEvent<A>,
@@ -73,7 +117,7 @@ where
     streams: HashMap<A::Id, Vec<StoredEvent<A, E>>>,
 }
 
-impl<A, E> Runtime<A, E>
+impl<A, E> Borgtime<A, E>
 where
     A: Aggregate,
     E: DomainEvent<A>,
