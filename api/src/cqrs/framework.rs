@@ -61,12 +61,9 @@ pub trait DomainEvent<A: Aggregate>: Clone + Debug + Sized {
 }
 
 /// Command: an intention to change state. Produces (at most) one Event.
-pub trait Command<A: Aggregate, E: DomainEvent<A>>: Debug {
-    /// The target aggregate id for this command (routing key).
-    fn aggregate_id(&self) -> A::Id;
-
+pub trait Decision<A: Aggregate, E: DomainEvent<A>>: Debug {
     /// Business logic: take current state (if any) and decide an Event or error.
-    fn handle(self, state: Option<&A>) -> anyhow::Result<E>;
+    fn decide(self, state: Option<&A>) -> anyhow::Result<E>;
 }
 
 #[derive(Debug)]
@@ -93,15 +90,15 @@ where
     fn append(&mut self, ev: E);
 
     /// Execute a command: decide → append → return event.
-    fn execute<C>(&mut self, cmd: C) -> anyhow::Result<E>
+    fn execute<C>(&mut self, id: A::Id, decision: C) -> anyhow::Result<E>
     where
-        C: Command<A, E>,
+        C: Decision<A, E>,
     {
-        let id = cmd.aggregate_id();
         let current = self.load(&id)?;
-        let event = cmd.handle(current.as_ref())?;
-        self.append(event.clone());
-        Ok(event)
+
+        let ev = decision.decide(current.as_ref())?;
+        self.append(ev.clone());
+        Ok(ev)
     }
     
     /// Materialize latest state after commands.

@@ -1,13 +1,13 @@
-use std::cmp::Ordering;
 use crate::cqrs::budgets::BudgetEvent::{Created, GroupAddedToBudget};
 use crate::cqrs::framework::*;
 use chrono::{DateTime, Utc};
 use joydb::adapters::JsonAdapter;
 use joydb::{Joydb, JoydbError, Model};
 use serde::{Deserialize, Serialize};
+use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::fmt;
-use std::fmt::{Debug, Formatter};
+use std::fmt::{Debug, Display, Formatter};
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 use uuid::Uuid;
 
@@ -19,9 +19,9 @@ pub enum Currency {
     // extend as needed
 }
 
-#[derive(Debug, Clone, Copy, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Eq, Serialize, Deserialize)]
 pub struct Money {
-    amount: i64,       // stored in minor units (cents/öre)
+    amount: i64, // stored in minor units (cents/öre)
     currency: Currency,
 }
 
@@ -74,11 +74,15 @@ impl Sub for Money {
 // Pretty-printing
 impl fmt::Display for Money {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}.{:02} {:?}", self.amount / 100, self.amount % 100, self.currency)
+        write!(
+            f,
+            "{}.{:02} {:?}",
+            self.amount / 100,
+            self.amount % 100,
+            self.currency
+        )
     }
 }
-
-
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum BudgetEvent {
@@ -88,6 +92,27 @@ pub enum BudgetEvent {
     TransactionAdded(TransactionAdded),
     TransactionConnected(TransactionConnected),
     FundsReallocated(FundsReallocated),
+}
+
+impl Display for BudgetEvent {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            BudgetEvent::Created(event) => write!(f, "Budget created: {}", event.budget_id),
+            BudgetEvent::GroupAddedToBudget(event) => {
+                write!(f, "Group added to budget: {}", event.group_id)
+            }
+            BudgetEvent::ItemAdded(event) => write!(f, "Item added: {}", event.item.id),
+            BudgetEvent::TransactionAdded(event) => {
+                write!(f, "Transaction added: {}", event.tx)
+            }
+            BudgetEvent::TransactionConnected(event) => {
+                write!(f, "Transaction connected: {}", event.tx_id)
+            }
+            BudgetEvent::FundsReallocated(event) => {
+                write!(f, "Funds reallocated: {}", event.from_item)
+            }
+        }
+    }
 }
 
 type StoredBudgetEvent = StoredEvent<Budget, BudgetEvent>;
@@ -225,9 +250,7 @@ impl DomainEvent<Budget> for TransactionConnected {
     }
 
     fn apply(&self, state: &mut Budget) {
-        if let Some(tx) = state
-            .bank_transactions.get_mut(&self.tx_id)
-        {
+        if let Some(tx) = state.bank_transactions.get_mut(&self.tx_id) {
             tx.budget_item_id = Some(self.item_id);
         }
     }
@@ -259,12 +282,10 @@ impl DomainEvent<Budget> for FundsReallocated {
     }
 
     fn apply(&self, state: &mut Budget) {
-        if let Some(mut from_item) = state.get_item_mut(&self.from_item)
-        {
+        if let Some(mut from_item) = state.get_item_mut(&self.from_item) {
             from_item.budgeted_amount -= self.amount;
         }
-        if let Some(mut to_item) = state.get_item_mut(&self.to_item)
-        {
+        if let Some(mut to_item) = state.get_item_mut(&self.to_item) {
             to_item.budgeted_amount += self.amount;
         }
     }
@@ -311,16 +332,14 @@ pub struct Budget {
 
 impl Budget {
     fn get_item_mut(&mut self, item_id: &Uuid) -> Option<&mut BudgetItem> {
-        self
-            .budget_groups
+        self.budget_groups
             .iter_mut()
             .flat_map(move |(_, group)| group.items.iter_mut())
             .find(|item| item.id == *item_id)
     }
-    
+
     fn get_item(&self, item_id: &Uuid) -> Option<&BudgetItem> {
-        self
-            .budget_groups
+        self.budget_groups
             .iter()
             .flat_map(move |(_, group)| group.items.iter())
             .find(|item| item.id == *item_id)
@@ -361,12 +380,14 @@ pub struct BankTransaction {
     pub budget_item_id: Option<Uuid>,
 }
 
+impl Display for BankTransaction {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}, {}, {}", self.description, self.amount, self.date)
+    }
+}
+
 impl BudgetItem {
-    pub fn new(
-        name: &str,
-        item_type: BudgetItemType,
-        budgeted_amount: Money,
-    ) -> Self {
+    pub fn new(name: &str, item_type: BudgetItemType, budgeted_amount: Money) -> Self {
         Self {
             id: Uuid::new_v4(),
             name: name.to_string(),
@@ -380,7 +401,7 @@ impl BudgetItem {
 }
 
 impl BankTransaction {
-    pub fn new(amount: Money, description: &str, date:DateTime<Utc>) -> Self {
+    pub fn new(amount: Money, description: &str, date: DateTime<Utc>) -> Self {
         Self {
             id: Uuid::new_v4(),
             amount,
@@ -437,9 +458,9 @@ pub struct CreateBudget {
 }
 
 impl CreateBudget {
-    pub fn new(name: String, user_id: Uuid, default: bool) -> Self {
+    pub fn new(id: Uuid, name: String, user_id: Uuid, default: bool) -> Self {
         Self {
-            id: Uuid::new_v4(),
+            id,
             name,
             user_id,
             default,
@@ -458,12 +479,8 @@ impl Debug for CreateBudget {
     }
 }
 
-impl Command<Budget, BudgetEvent> for CreateBudget {
-    fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
-        self.id
-    }
-
-    fn handle(self, _state: Option<&Budget>) -> anyhow::Result<BudgetEvent> {
+impl Decision<Budget, BudgetEvent> for CreateBudget {
+    fn decide(self, _state: Option<&Budget>) -> anyhow::Result<BudgetEvent> {
         Ok(Created(BudgetCreated {
             budget_id: self.id,
             name: self.name,
@@ -474,46 +491,43 @@ impl Command<Budget, BudgetEvent> for CreateBudget {
 }
 
 pub struct AddGroup {
-    pub budget_id: Uuid,
     pub name: String,
 }
 
 impl AddGroup {
-    pub fn new(budget_id: Uuid, name: String) -> Self {
-        Self { budget_id, name }
+    pub fn new(name: String) -> Self {
+        Self { name }
     }
 }
 
 impl Debug for AddGroup {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("AddGroup")
-            .field("budget_id", &self.budget_id)
             .field("name", &self.name)
             .finish()
     }
 }
 
-impl Command<Budget, BudgetEvent> for AddGroup {
-    fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
-        self.budget_id
-    }
-
-    fn handle(self, state: Option<&Budget>) -> anyhow::Result<BudgetEvent> {
+impl Decision<Budget, BudgetEvent> for AddGroup {
+    fn decide(self, state: Option<&Budget>) -> anyhow::Result<BudgetEvent> {
         match state {
             Some(state) => {
-                if state.budget_groups.values().find(|g| g.name == self.name).is_some() {
+                if state
+                    .budget_groups
+                    .values()
+                    .find(|g| g.name == self.name)
+                    .is_some()
+                {
                     Err(anyhow::anyhow!("Duplicate group name"))
                 } else {
                     Ok(GroupAddedToBudget(GroupAdded {
-                        budget_id: self.budget_id,
+                        budget_id: state.id,
                         group_id: Uuid::new_v4(),
                         name: self.name,
                     }))
                 }
             }
-            None => {
-                Err(anyhow::anyhow!("Budget not found"))
-            }
+            None => Err(anyhow::anyhow!("Budget not found")),
         }
     }
 }
@@ -596,7 +610,6 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AddItem {
-    pub budget_id: Uuid,
     pub group_id: Uuid,
     pub name: String,
     pub item_type: BudgetItemType,
@@ -608,7 +621,6 @@ pub struct AddItem {
 
 impl AddItem {
     pub fn new(
-        budget_id: Uuid,
         group_id: Uuid,
         name: String,
         item_type: BudgetItemType,
@@ -618,7 +630,6 @@ impl AddItem {
         tags: Option<Vec<String>>,
     ) -> Self {
         Self {
-            budget_id,
             group_id,
             name,
             item_type,
@@ -630,76 +641,68 @@ impl AddItem {
     }
 }
 
-impl Command<Budget, BudgetEvent> for AddItem {
-    fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
-        self.budget_id
-    }
-
-    fn handle(self, _state: Option<&Budget>) -> anyhow::Result<BudgetEvent> {
-        Ok(BudgetEvent::ItemAdded(ItemAdded {
-            budget_id: self.budget_id,
-            group_id: self.group_id,
-            item: BudgetItem {
-                id: Uuid::new_v4(),
-                name: self.name,
-                item_type: self.item_type,
-                budgeted_amount: self.budgeted_amount,
-                actual_spent: self.actual_spent,
-                notes: self.notes,
-                tags: self.tags.unwrap_or_default(),
-            }
-        }))
+impl Decision<Budget, BudgetEvent> for AddItem {
+    fn decide(self, state: Option<&Budget>) -> anyhow::Result<BudgetEvent> {
+        match state {
+            None => Err(anyhow::anyhow!("Budget not found")),
+            Some(state) => Ok(BudgetEvent::ItemAdded(ItemAdded {
+                budget_id: state.id,
+                group_id: self.group_id,
+                item: BudgetItem {
+                    id: Uuid::new_v4(),
+                    name: self.name,
+                    item_type: self.item_type,
+                    budgeted_amount: self.budgeted_amount,
+                    actual_spent: self.actual_spent,
+                    notes: self.notes,
+                    tags: self.tags.unwrap_or_default(),
+                },
+            })),
+        }
     }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AddTransaction {
-    pub budget_id: Uuid,
     pub amount: Money,
     pub description: String,
     pub date: DateTime<Utc>,
 }
 
-impl Command<Budget, BudgetEvent> for AddTransaction {
-    fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
-        self.budget_id
-    }
-
-    fn handle(self, _state: Option<&Budget>) -> anyhow::Result<BudgetEvent> {
-        Ok(BudgetEvent::TransactionAdded(TransactionAdded {
-            budget_id: self.budget_id,
-            tx: BankTransaction {
-                id: Uuid::new_v4(),
-                amount: self.amount,
-                description: self.description,
-                date: self.date,
-                budget_item_id: None,
-            },
-        }))
+impl Decision<Budget, BudgetEvent> for AddTransaction {
+    fn decide(self, state: Option<&Budget>) -> anyhow::Result<BudgetEvent> {
+        match state {
+            None => Err(anyhow::anyhow!("Budget not found")),
+            Some(state) => Ok(BudgetEvent::TransactionAdded(TransactionAdded {
+                budget_id: state.id,
+                tx: BankTransaction {
+                    id: Uuid::new_v4(),
+                    amount: self.amount,
+                    description: self.description,
+                    date: self.date,
+                    budget_item_id: None,
+                },
+            })),
+        }
     }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConnectTransaction {
-    pub budget_id: Uuid,
     pub tx_id: Uuid,
     pub item_id: Uuid,
 }
 
-impl Command<Budget, BudgetEvent> for ConnectTransaction {
-    fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
-        self.budget_id
-    }
-
-    fn handle(self, state: Option<&Budget>) -> anyhow::Result<BudgetEvent> {
+impl Decision<Budget, BudgetEvent> for ConnectTransaction {
+    fn decide(self, state: Option<&Budget>) -> anyhow::Result<BudgetEvent> {
         match state {
-            None => {
-                Err(anyhow::anyhow!("Budget not found"))
-            }
+            None => Err(anyhow::anyhow!("Budget not found")),
             Some(state) => {
-                if state.bank_transactions.contains_key(&self.tx_id) && state.get_item(&self.item_id).is_some() {
+                if state.bank_transactions.contains_key(&self.tx_id)
+                    && state.get_item(&self.item_id).is_some()
+                {
                     Ok(BudgetEvent::TransactionConnected(TransactionConnected {
-                        budget_id: self.budget_id,
+                        budget_id: state.id,
                         tx_id: self.tx_id,
                         item_id: self.item_id,
                     }))
@@ -713,81 +716,87 @@ impl Command<Budget, BudgetEvent> for ConnectTransaction {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReallocateFunds {
-    pub budget_id: Uuid,
     pub from_item: Uuid,
     pub to_item: Uuid,
     pub amount: Money,
 }
-    
-impl Command<Budget, BudgetEvent> for ReallocateFunds {
-    fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
-        self.budget_id
-    }
 
-    fn handle(self, state: Option<&Budget>) -> anyhow::Result<BudgetEvent> {
+impl Decision<Budget, BudgetEvent> for ReallocateFunds {
+    fn decide(self, state: Option<&Budget>) -> anyhow::Result<BudgetEvent> {
         match state {
-            None => {
-                Err(anyhow::anyhow!("Budget not found")) 
-            }
-            Some(state) => {
-                match state.get_item(&self.from_item) {
-                    None => {
-                        Err(anyhow::anyhow!("From item not found")) 
-                    }
-                    Some(from_item) => {
-                        match state.get_item(&self.to_item) {
-                            None => {
-                                Err(anyhow::anyhow!("To item not found"))
-                            }
-                            Some(_) => {
-                                if from_item.budgeted_amount < self.amount {
-                                     Err(anyhow::anyhow!("From item has not enough funds"))
-                                } else {
-                                    Ok(BudgetEvent::FundsReallocated(FundsReallocated {
-                                        budget_id: self.budget_id,
-                                        from_item: self.from_item,
-                                        to_item: self.to_item,
-                                        amount: self.amount,
-                                    }))
-                                }
-                            }
+            None => Err(anyhow::anyhow!("Budget not found")),
+            Some(state) => match state.get_item(&self.from_item) {
+                None => Err(anyhow::anyhow!("From item not found")),
+                Some(from_item) => match state.get_item(&self.to_item) {
+                    None => Err(anyhow::anyhow!("To item not found")),
+                    Some(_) => {
+                        if from_item.budgeted_amount < self.amount {
+                            Err(anyhow::anyhow!("From item has not enough funds"))
+                        } else {
+                            Ok(BudgetEvent::FundsReallocated(FundsReallocated {
+                                budget_id: state.id,
+                                from_item: self.from_item,
+                                to_item: self.to_item,
+                                amount: self.amount,
+                            }))
                         }
                     }
-                }
-            }
+                },
+            },
         }
     }
 }
 
 #[cfg(test)]
 #[test]
-pub fn testy() {
+pub fn testy() -> anyhow::Result<()> {
     let mut rt = JoyDbBudgetRuntime::new();
     let budget_id = Uuid::new_v4();
 
     // happy path
-    rt.execute(CreateBudget::new(
+    rt.execute(
         budget_id,
-        "Family Budget".into(),
-        Uuid::new_v4(),
-        true,
-    ))
-        .unwrap();
-    rt.execute(AddGroup::new(budget_id, "Salaries".into()))
-        .unwrap();
-    let budget = rt.materialize(&budget_id).unwrap();
-    rt.snapshot(&budget).unwrap();
-    rt.execute(AddGroup::new(budget_id, "New group".into()))
-        .unwrap();
+        CreateBudget::new(budget_id, "Family Budget".into(), Uuid::new_v4(), true),
+    )?;
+    rt.execute(budget_id, AddGroup::new("Salaries".into()))?;
+    let budget = rt.materialize(&budget_id)?;
+    rt.snapshot(&budget)?;
+    match rt.execute(budget_id, AddGroup::new("New group".into())) {
+        Ok(event) => match event {
+            GroupAddedToBudget(event) => {
+                println!("Group added: {}", event.group_id);
+                rt.execute(
+                    budget_id,
+                    AddItem::new(
+                        event.group_id,
+                        "New item".into(),
+                        BudgetItemType::Income,
+                        Money::new(100, Currency::SEK),
+                        Money::new(0, Currency::SEK),
+                        None,
+                        None,
+                    ),
+                )?;
+            }
+            _ => {
+                println!("This is weird as hell");
+            }
+        },
+        _ => {
+            println!("Group not added");
+        }
+    }
+
     // rt.execute(crate::cqrs::framework::Deposit(DepositMoney { id: 100, amount_cents: 50_00 })).unwrap();
     // rt.execute(crate::cqrs::framework::Withdraw(WithdrawMoney { id: 100, amount_cents: 20_00 })).unwrap();
 
-    let budget_agg = rt.materialize(&budget_id).unwrap();
+    let budget_agg = rt.materialize(&budget_id)?;
     println!(
         "Budget {:?}: name={}, default={}",
         budget_agg.id, budget_agg.name, budget_agg.default_budget
     );
 
     // audit log
-    println!("Events: {:?}", rt.events(&budget_id).unwrap());
+    println!("Events: {:?}", rt.events(&budget_id)?);
+    Ok(())
 }

@@ -2,6 +2,7 @@ use joydb::Model;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::Display;
+use chrono::Utc;
 use uuid::Uuid;
 
 /// A simplified, more intuitive budget model
@@ -185,8 +186,8 @@ impl Budget {
             user_id,
             budget_groups: HashMap::new(),
             bank_transactions: Vec::new(),
-            created_at: chrono::Utc::now().naive_utc(),
-            updated_at: chrono::Utc::now().naive_utc(),
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
             default_budget,
         }
     }
@@ -472,7 +473,7 @@ impl Budget {
 
         /// Update the timestamp
         fn touch(&mut self) {
-            self.updated_at = chrono::Utc::now().naive_utc();
+            self.updated_at = Utc::now();
         }
     }
 
