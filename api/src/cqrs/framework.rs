@@ -46,7 +46,7 @@ impl<A: Aggregate, E: DomainEvent<A>> StoredEvent<A, E> {
 }
 
 /// Event: a fact that happened, applied to an Aggregate to evolve it.
-pub trait DomainEvent<A: Aggregate>: Clone + Debug {
+pub trait DomainEvent<A: Aggregate>: Clone + Debug + Sized {
     /// Which aggregate instance does this event belong to?
     fn aggregate_id(&self) -> A::Id;
 
