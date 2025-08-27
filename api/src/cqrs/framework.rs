@@ -94,9 +94,6 @@ where
     
     fn snapshot(&self, agg: &A) -> anyhow::Result<()>;
 
-    /// Hydrate runtime with known event stream.
-    fn hydrate(&mut self, id: A::Id, events: Vec<StoredEvent<A, E>>);
-
     /// Append one new event to the stream.
     fn append(&mut self, ev: E);
 

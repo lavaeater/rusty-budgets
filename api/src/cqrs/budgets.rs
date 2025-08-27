@@ -616,11 +616,7 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
         self.db.upsert(agg)?;
         Ok(())
     }
-
-    fn hydrate(&mut self, _id: Uuid, _events: Vec<StoredBudgetEvent>) {
-        todo!()
-    }
-
+    
     fn append(&mut self, ev: BudgetEvent) {
         let stored_event = StoredEvent::new(ev);
         self.db.insert(&stored_event).unwrap();
