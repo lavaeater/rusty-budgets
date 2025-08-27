@@ -13,10 +13,10 @@ use uuid::Uuid;
 pub enum BudgetEvent {
     Created(BudgetCreated),
     GroupAddedToBudget(GroupAdded),
-    // ItemAdded(ItemAdded),
-    // TransactionAdded(TransactionAdded),
-    // TransactionConnected(TransactionConnected),
-    // FundsReallocated(FundsReallocated),
+    ItemAdded(ItemAdded),
+    TransactionAdded(TransactionAdded),
+    TransactionConnected(TransactionConnected),
+    FundsReallocated(FundsReallocated),
 }
 
 type StoredBudgetEvent = StoredEvent<Budget, BudgetEvent>;
@@ -106,27 +106,74 @@ impl DomainEvent<Budget> for GroupAdded {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ItemAdded {
     pub budget_id: Uuid,
     pub group_id: Uuid,
     pub item: BudgetItem,
 }
 
-#[derive(Debug, Clone)]
+impl DomainEvent<Budget> for ItemAdded {
+    fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
+        self.budget_id
+    }
+
+    fn apply(&self, state: &mut Budget) {
+        if let Some(group) = state.budget_groups.get_mut(&self.item.group) {
+            group.items.push(self.item.clone());
+        }
+        state.updated_at = NaiveDateTime::default();
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TransactionAdded {
     budget_id: Uuid,
     tx: BankTransaction,
 }
 
-#[derive(Debug, Clone)]
+impl DomainEvent<Budget> for TransactionAdded {
+    fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
+        self.budget_id
+    }
+
+    fn apply(&self, state: &mut Budget) {
+        state.transactions.push(self.tx.clone());
+        state.updated_at = NaiveDateTime::default();
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TransactionConnected {
     budget_id: Uuid,
     tx_id: Uuid,
     item_id: Uuid,
 }
 
-#[derive(Debug, Clone)]
+impl TransactionConnected {
+    pub fn new(budget_id: Uuid, tx_id: Uuid, item_id: Uuid) -> Self {
+        Self {
+            budget_id,
+            tx_id,
+            item_id,
+        }
+    }
+}
+
+impl DomainEvent<Budget> for TransactionConnected {
+    fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
+        self.budget_id
+    }
+
+    fn apply(&self, state: &mut Budget) {
+        if let Some(tx) = state.transactions.iter_mut().find(|tx| tx.id == self.tx_id) {
+            tx.items.push(self.item_id);
+        }
+        state.updated_at = NaiveDateTime::default();
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FundsReallocated {
     budget_id: Uuid,
     from_item: Uuid,
@@ -134,15 +181,28 @@ pub struct FundsReallocated {
     amount: f32,
 }
 
+impl DomainEvent<Budget> for FundsReallocated {
+    fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
+        self.budget_id
+    }
+
+    fn apply(&self, state: &mut Budget) {
+        if let Some(tx) = state.bu.iter_mut().find(|tx| tx.id == self.from_item) {
+            tx.amount -= self.amount;
+        }
+        state.updated_at = NaiveDateTime::default();    
+    }
+}
+
 impl DomainEvent<Budget> for BudgetEvent {
     fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
         match self {
             Created(e) => e.budget_id,
             GroupAddedToBudget(e) => e.budget_id,
-            // BudgetEvent::ItemAdded(e) => e.budget_id,
-            // BudgetEvent::TransactionAdded(e) => e.budget_id,
-            // BudgetEvent::TransactionConnected(e) => e.budget_id,
-            // BudgetEvent::FundsReallocated(e) => e.budget_id,
+            BudgetEvent::ItemAdded(e) => e.budget_id,
+            BudgetEvent::TransactionAdded(e) => e.budget_id,
+            BudgetEvent::TransactionConnected(e) => e.budget_id,
+            BudgetEvent::FundsReallocated(e) => e.budget_id,
         }
     }
 
@@ -150,10 +210,10 @@ impl DomainEvent<Budget> for BudgetEvent {
         match self {
             BudgetEvent::Created(e) => e.apply(state),
             BudgetEvent::GroupAddedToBudget(e) => e.apply(state),
-            // BudgetEvent::ItemAdded(e) => e.apply(state),
-            // BudgetEvent::TransactionAdded(e) => e.apply(state),
-            // BudgetEvent::TransactionConnected(e) => e.apply(state),
-            // BudgetEvent::FundsReallocated(e) => e.apply(state),
+            BudgetEvent::ItemAdded(e) => e.apply(state),
+            BudgetEvent::TransactionAdded(e) => e.apply(state),
+            BudgetEvent::TransactionConnected(e) => e.apply(state),
+            BudgetEvent::FundsReallocated(e) => e.apply(state),
         }
     }
 }
@@ -164,7 +224,7 @@ pub struct Budget {
     pub id: Uuid,
     pub name: String,
     pub user_id: Uuid,
-    pub budget_groups: HashMap<String, BudgetGroup>,
+    pub budget_groups: HashMap<Uuid, BudgetGroup>,
     pub bank_transactions: Vec<BankTransaction>,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
@@ -421,61 +481,65 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
 }
 
 
-// pub struct AddItem {
-//     pub group_id: Uuid,
-//     pub item: BudgetItem,
-// }
-// impl Command<Budget> for AddItem {
-//     fn handle(self, _state: &Budget) -> Option<BudgetEvent> {
-//         Some(BudgetEvent::ItemAdded {
-//             group_id: self.group_id,
-//             item: self.item,
-//         })
-//     }
-// }
-// 
-// pub struct AddTransaction {
-//     pub budget_id: Uuid,
-//     pub tx: BankTransaction,
-// }
-// impl Command<Budget> for AddTransaction {
-//     fn handle(self, _state: &Budget) -> Option<BudgetEvent> {
-//         Some(BudgetEvent::TransactionAdded {
-//             budget_id: self.budget_id,
-//             tx: self.tx,
-//         })
-//     }
-// }
-// 
-// pub struct ConnectTransaction {
-//     pub budget_id: Uuid,
-//     pub tx_id: Uuid,
-//     pub item_id: Uuid,
-// }
-// impl Command<Budget> for ConnectTransaction {
-//     fn handle(self, _state: &Budget) -> Option<BudgetEvent> {
-//         Some(BudgetEvent::TransactionConnected {
-//             budget_id: self.budget_id,
-//             tx_id: self.tx_id,
-//             item_id: self.item_id,
-//         })
-//     }
-// }
-// 
-// pub struct ReallocateFunds {
-//     pub from_item: Uuid,
-//     pub to_item: Uuid,
-//     pub amount: f32,
-// }
-// impl Command<Budget> for ReallocateFunds {
-//     fn handle(self, _state: &Budget) -> Option<BudgetEvent> {
-//         Some(BudgetEvent::FundsReallocated {
-//             from_item: self.from_item,
-//             to_item: self.to_item,
-//             amount: self.amount,
-//         })
-//     }
-// }
+pub struct AddItem {
+    pub group_id: Uuid,
+    pub item: BudgetItem,
+}
+impl Command<Budget> for AddItem {
+    fn handle(self, _state: &Budget) -> Option<BudgetEvent> {
+        Some(BudgetEvent::ItemAdded {
+            group_id: self.group_id,
+            item: self.item,
+        })
+    }
+}
+
+pub struct AddTransaction {
+    pub budget_id: Uuid,
+    pub tx: BankTransaction,
+}
+impl Command<Budget> for AddTransaction {
+    fn handle(self, _state: &Budget) -> Option<BudgetEvent> {
+        Some(BudgetEvent::TransactionAdded {
+            budget_id: self.budget_id,
+            tx: self.tx,
+        })
+    }
+}
+
+pub struct ConnectTransaction {
+    pub budget_id: Uuid,
+    pub tx_id: Uuid,
+    pub item_id: Uuid,
+}
+impl Command<Budget> for ConnectTransaction {
+    fn handle(self, _state: &Budget) -> Option<BudgetEvent> {
+        Some(BudgetEvent::TransactionConnected {
+            budget_id: self.budget_id,
+            tx_id: self.tx_id,
+            item_id: self.item_id,
+        })
+    }
+}
+
+pub struct ReallocateFunds {
+    pub from_item: Uuid,
+    pub to_item: Uuid,
+    pub amount: f32,
+}
+impl Command<Budget> for ReallocateFunds {
+    fn aggregate_id(&self) -> Budget::Id {
+        todo!()
+    }
+
+    fn handle(self, _state: &Budget) -> Option<BudgetEvent> {
+        Some(BudgetEvent::FundsReallocated {
+            from_item: self.from_item,
+            to_item: self.to_item,
+            amount: self.amount,
+        })
+    }
+}
 
 #[cfg(test)]
 #[test]
