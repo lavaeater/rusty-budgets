@@ -2,7 +2,7 @@ use crate::cqrs::budgets::BudgetEvent::{Created, GroupAddedToBudget};
 use crate::cqrs::framework::*;
 use chrono::{DateTime, Utc};
 use joydb::adapters::JsonAdapter;
-use joydb::{Joydb, JoydbError, Model};
+use joydb::{Joydb, Model};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -19,9 +19,19 @@ pub enum Currency {
     // extend as needed
 }
 
+impl Display for Currency {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Currency::EUR => f.write_str("€"),
+            Currency::USD => f.write_str("$"),
+            Currency::SEK => f.write_str("kr"),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, Eq, Serialize, Deserialize)]
 pub struct Money {
-    amount: i64, // stored in minor units (cents/öre)
+    cents: i64, // stored in minor units (cents/öre)
     currency: Currency,
 }
 
@@ -30,27 +40,27 @@ impl PartialOrd for Money {
         if self.currency != other.currency {
             None
         } else {
-            Some(self.amount.cmp(&other.amount))
+            Some(self.cents.cmp(&other.cents))
         }
     }
 }
 
 impl PartialEq for Money {
     fn eq(&self, other: &Self) -> bool {
-        self.amount == other.amount && self.currency == other.currency
+        self.cents == other.cents && self.currency == other.currency
     }
 }
 
 impl Money {
-    pub fn new(amount: i64, currency: Currency) -> Self {
-        Self { amount, currency }
+    pub fn new(cents: i64, currency: Currency) -> Self {
+        Self { cents, currency }
     }
 
-    pub fn amount(&self) -> i64 {
-        self.amount
+    pub fn _amount_in_cents(&self) -> i64 {
+        self.cents
     }
 
-    pub fn currency(&self) -> Currency {
+    pub fn _currency(&self) -> Currency {
         self.currency
     }
 }
@@ -59,7 +69,7 @@ impl Add for Money {
     type Output = Money;
     fn add(self, rhs: Money) -> Self::Output {
         assert_eq!(self.currency, rhs.currency, "Currency mismatch");
-        Money::new(self.amount + rhs.amount, self.currency)
+        Money::new(self.cents + rhs.cents, self.currency)
     }
 }
 
@@ -67,20 +77,33 @@ impl Sub for Money {
     type Output = Money;
     fn sub(self, rhs: Money) -> Self::Output {
         assert_eq!(self.currency, rhs.currency, "Currency mismatch");
-        Money::new(self.amount - rhs.amount, self.currency)
+        Money::new(self.cents - rhs.cents, self.currency)
     }
 }
 
 // Pretty-printing
-impl fmt::Display for Money {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}.{:02} {:?}",
-            self.amount / 100,
-            self.amount % 100,
-            self.currency
-        )
+impl Display for Money {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self.currency {
+            Currency::SEK => {
+                write!(
+                    f,
+                    "{}.{:02} {}",
+                    self.cents / 100,
+                    self.cents % 100,
+                    self.currency
+                )
+            }
+            _ => {
+                write!(
+                    f,
+                    " {}{}.{:02}",
+                    self.currency,
+                    self.cents / 100,
+                    self.cents % 100,
+                )
+            }
+        }
     }
 }
 
@@ -158,9 +181,9 @@ impl DomainEvent<Budget> for BudgetCreated {
 }
 
 impl BudgetCreated {
-    pub fn new(name: String, user_id: Uuid, default: bool) -> Self {
+    pub fn new(budget_id: Uuid, name: String, user_id: Uuid, default: bool) -> Self {
         Self {
-            budget_id: Uuid::new_v4(),
+            budget_id,
             name,
             user_id,
             default,
@@ -266,13 +289,13 @@ pub struct FundsReallocated {
 
 impl SubAssign for Money {
     fn sub_assign(&mut self, rhs: Self) {
-        self.amount -= rhs.amount;
+        self.cents -= rhs.cents;
     }
 }
 
 impl AddAssign for Money {
     fn add_assign(&mut self, rhs: Self) {
-        self.amount += rhs.amount;
+        self.cents += rhs.cents;
     }
 }
 
@@ -282,10 +305,10 @@ impl DomainEvent<Budget> for FundsReallocated {
     }
 
     fn apply(&self, state: &mut Budget) {
-        if let Some(mut from_item) = state.get_item_mut(&self.from_item) {
+        if let Some(from_item) = state.get_item_mut(&self.from_item) {
             from_item.budgeted_amount -= self.amount;
         }
-        if let Some(mut to_item) = state.get_item_mut(&self.to_item) {
+        if let Some(to_item) = state.get_item_mut(&self.to_item) {
             to_item.budgeted_amount += self.amount;
         }
     }
@@ -387,15 +410,15 @@ impl Display for BankTransaction {
 }
 
 impl BudgetItem {
-    pub fn new(name: &str, item_type: BudgetItemType, budgeted_amount: Money) -> Self {
+    pub fn new(name: &str, item_type: BudgetItemType, budgeted_amount: Money, notes: Option<String>, tags: Option<Vec<String>>) -> Self {
         Self {
             id: Uuid::new_v4(),
             name: name.to_string(),
             item_type,
             budgeted_amount,
             actual_spent: Money::new(0, budgeted_amount.currency),
-            notes: None,
-            tags: Vec::new(),
+            notes,
+            tags: tags.unwrap_or_default(),
         }
     }
 }
@@ -416,7 +439,7 @@ impl BankTransaction {
 impl Aggregate for Budget {
     type Id = Uuid;
 
-    fn new(id: Self::Id) -> Self {
+    fn _new(id: Self::Id) -> Self {
         Self {
             id,
             name: String::new(),
@@ -444,7 +467,7 @@ impl Aggregate for Budget {
         }
     }
 
-    fn version(&self) -> u64 {
+    fn _version(&self) -> u64 {
         self.version
     }
 }
@@ -480,13 +503,13 @@ impl Debug for CreateBudget {
 }
 
 impl Decision<Budget, BudgetEvent> for CreateBudget {
-    fn decide(self, _state: Option<&Budget>) -> anyhow::Result<BudgetEvent> {
-        Ok(Created(BudgetCreated {
-            budget_id: self.id,
-            name: self.name,
-            user_id: self.user_id,
-            default: self.default,
-        }))
+    fn decide(self, _state: Option<&Budget>) -> Result<BudgetEvent, CommandError> {
+        Ok(Created(BudgetCreated::new(
+            self.id,
+            self.name,
+            self.user_id,
+            self.default,
+        )))
     }
 }
 
@@ -509,7 +532,7 @@ impl Debug for AddGroup {
 }
 
 impl Decision<Budget, BudgetEvent> for AddGroup {
-    fn decide(self, state: Option<&Budget>) -> anyhow::Result<BudgetEvent> {
+    fn decide(self, state: Option<&Budget>) -> Result<BudgetEvent, CommandError> {
         match state {
             Some(state) => {
                 if state
@@ -518,7 +541,7 @@ impl Decision<Budget, BudgetEvent> for AddGroup {
                     .find(|g| g.name == self.name)
                     .is_some()
                 {
-                    Err(anyhow::anyhow!("Duplicate group name"))
+                    Err(CommandError::Conflict("Group already exists"))
                 } else {
                     Ok(GroupAddedToBudget(GroupAdded {
                         budget_id: state.id,
@@ -527,7 +550,7 @@ impl Decision<Budget, BudgetEvent> for AddGroup {
                     }))
                 }
             }
-            None => Err(anyhow::anyhow!("Budget not found")),
+            None => Err(CommandError::NotFound("Budget not found")),
         }
     }
 }
@@ -594,7 +617,7 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
         Ok(())
     }
 
-    fn hydrate(&mut self, id: Uuid, events: Vec<StoredBudgetEvent>) {
+    fn hydrate(&mut self, _id: Uuid, _events: Vec<StoredBudgetEvent>) {
         todo!()
     }
 
@@ -614,7 +637,6 @@ pub struct AddItem {
     pub name: String,
     pub item_type: BudgetItemType,
     pub budgeted_amount: Money,
-    pub actual_spent: Money,
     pub notes: Option<String>,
     pub tags: Option<Vec<String>>,
 }
@@ -625,7 +647,6 @@ impl AddItem {
         name: String,
         item_type: BudgetItemType,
         budgeted_amount: Money,
-        actual_spent: Money,
         notes: Option<String>,
         tags: Option<Vec<String>>,
     ) -> Self {
@@ -634,7 +655,6 @@ impl AddItem {
             name,
             item_type,
             budgeted_amount,
-            actual_spent,
             notes,
             tags,
         }
@@ -642,21 +662,18 @@ impl AddItem {
 }
 
 impl Decision<Budget, BudgetEvent> for AddItem {
-    fn decide(self, state: Option<&Budget>) -> anyhow::Result<BudgetEvent> {
+    fn decide(self, state: Option<&Budget>) -> Result<BudgetEvent, CommandError> {
         match state {
-            None => Err(anyhow::anyhow!("Budget not found")),
+            None => Err(CommandError::NotFound("Budget not found")),
             Some(state) => Ok(BudgetEvent::ItemAdded(ItemAdded {
                 budget_id: state.id,
                 group_id: self.group_id,
-                item: BudgetItem {
-                    id: Uuid::new_v4(),
-                    name: self.name,
-                    item_type: self.item_type,
-                    budgeted_amount: self.budgeted_amount,
-                    actual_spent: self.actual_spent,
-                    notes: self.notes,
-                    tags: self.tags.unwrap_or_default(),
-                },
+                item: BudgetItem::new(
+                    &self.name,
+                    self.item_type,
+                    self.budgeted_amount,
+                    self.notes,
+                     self.tags),
             })),
         }
     }
@@ -670,9 +687,9 @@ pub struct AddTransaction {
 }
 
 impl Decision<Budget, BudgetEvent> for AddTransaction {
-    fn decide(self, state: Option<&Budget>) -> anyhow::Result<BudgetEvent> {
+    fn decide(self, state: Option<&Budget>) -> Result<BudgetEvent, CommandError> {
         match state {
-            None => Err(anyhow::anyhow!("Budget not found")),
+            None => Err(CommandError::NotFound("Budget not found")),
             Some(state) => Ok(BudgetEvent::TransactionAdded(TransactionAdded {
                 budget_id: state.id,
                 tx: BankTransaction {
@@ -694,20 +711,18 @@ pub struct ConnectTransaction {
 }
 
 impl Decision<Budget, BudgetEvent> for ConnectTransaction {
-    fn decide(self, state: Option<&Budget>) -> anyhow::Result<BudgetEvent> {
+    fn decide(self, state: Option<&Budget>) -> Result<BudgetEvent, CommandError> {
         match state {
-            None => Err(anyhow::anyhow!("Budget not found")),
+            None => Err(CommandError::NotFound("Budget not found")),
             Some(state) => {
                 if state.bank_transactions.contains_key(&self.tx_id)
                     && state.get_item(&self.item_id).is_some()
                 {
-                    Ok(BudgetEvent::TransactionConnected(TransactionConnected {
-                        budget_id: state.id,
-                        tx_id: self.tx_id,
-                        item_id: self.item_id,
-                    }))
+                    Ok(BudgetEvent::TransactionConnected(
+                        TransactionConnected::new(state.id, self.tx_id, self.item_id),
+                    ))
                 } else {
-                    Err(anyhow::anyhow!("Transaction or item not found"))
+                    Err(CommandError::NotFound("Transaction or item not found"))
                 }
             }
         }
@@ -722,16 +737,16 @@ pub struct ReallocateFunds {
 }
 
 impl Decision<Budget, BudgetEvent> for ReallocateFunds {
-    fn decide(self, state: Option<&Budget>) -> anyhow::Result<BudgetEvent> {
+    fn decide(self, state: Option<&Budget>) -> Result<BudgetEvent, CommandError> {
         match state {
-            None => Err(anyhow::anyhow!("Budget not found")),
+            None => Err(CommandError::NotFound("Budget not found")),
             Some(state) => match state.get_item(&self.from_item) {
-                None => Err(anyhow::anyhow!("From item not found")),
+                None => Err(CommandError::NotFound("From item not found")),
                 Some(from_item) => match state.get_item(&self.to_item) {
-                    None => Err(anyhow::anyhow!("To item not found")),
+                    None => Err(CommandError::NotFound("To item not found")),
                     Some(_) => {
                         if from_item.budgeted_amount < self.amount {
-                            Err(anyhow::anyhow!("From item has not enough funds"))
+                            Err(CommandError::Validation("From item has not enough funds"))
                         } else {
                             Ok(BudgetEvent::FundsReallocated(FundsReallocated {
                                 budget_id: state.id,
@@ -772,7 +787,6 @@ pub fn testy() -> anyhow::Result<()> {
                         "New item".into(),
                         BudgetItemType::Income,
                         Money::new(100, Currency::SEK),
-                        Money::new(0, Currency::SEK),
                         None,
                         None,
                     ),

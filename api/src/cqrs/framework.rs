@@ -2,11 +2,10 @@
 // Framework (Generic Core)
 // ===========================
 
-use std::collections::HashMap;
-use std::fmt::Debug;
+use std::error::Error;
+use std::fmt::{Debug, Display, Formatter};
 use std::hash::Hash;
 use chrono::{DateTime, Utc};
-use joydb::Model;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -16,10 +15,10 @@ pub trait Aggregate: Sized + Debug + Clone {
     type Id: Eq + Hash + Clone + Debug;
 
     /// Create a blank/new instance for a given id.
-    fn new(id: Self::Id) -> Self;
+    fn _new(id: Self::Id) -> Self;
     
     fn update_timestamp(&mut self, timestamp: i64, updated_at: DateTime<Utc>);
-    fn version(&self) -> u64;
+    fn _version(&self) -> u64;
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -63,7 +62,7 @@ pub trait DomainEvent<A: Aggregate>: Clone + Debug + Sized {
 /// Command: an intention to change state. Produces (at most) one Event.
 pub trait Decision<A: Aggregate, E: DomainEvent<A>>: Debug {
     /// Business logic: take current state (if any) and decide an Event or error.
-    fn decide(self, state: Option<&A>) -> anyhow::Result<E>;
+    fn decide(self, state: Option<&A>) -> Result<E, CommandError>;
 }
 
 #[derive(Debug)]
@@ -72,6 +71,18 @@ pub enum CommandError {
     Conflict(&'static str),
     NotFound(&'static str),
 }
+
+impl Display for CommandError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            CommandError::Validation(msg) => write!(f, "Validation error: {}", msg),
+            CommandError::Conflict(msg) => write!(f, "Conflict error: {}", msg),
+            CommandError::NotFound(msg) => write!(f, "Not found error: {}", msg),
+        }
+    }
+}
+
+impl Error for CommandError {}
 
 pub trait Runtime<A, E>
 where
