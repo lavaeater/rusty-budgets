@@ -5,6 +5,7 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::hash::Hash;
+use chrono::{DateTime, Utc};
 use joydb::Model;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -17,7 +18,7 @@ pub trait Aggregate: Sized + Debug + Clone {
     /// Create a blank/new instance for a given id.
     fn new(id: Self::Id) -> Self;
     
-    fn update_timestamp(&mut self, timestamp: u128);
+    fn update_timestamp(&mut self, timestamp: i64, updated_at: DateTime<Utc>);
     fn version(&self) -> u64;
 }
 
@@ -25,7 +26,8 @@ pub trait Aggregate: Sized + Debug + Clone {
 pub struct StoredEvent<A, E> where A: Aggregate, E: DomainEvent<A> {
     pub id: Uuid,
     pub aggregate_id: A::Id,
-    pub timestamp: u128,
+    pub timestamp: i64,
+    pub created_at: DateTime<Utc>,
     pub data: E,
 }
 
@@ -33,15 +35,19 @@ impl<A: Aggregate, E: DomainEvent<A>> StoredEvent<A, E> {
     pub fn new(data: E) -> Self {
         let aggregate_id = data.aggregate_id();
         let event_id = Uuid::new_v4();
-        let ts = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH).unwrap()
-            .as_nanos();
-        Self { id: event_id, aggregate_id, timestamp: ts, data }
+        let n = Utc::now();
+        let timestamp = n
+            .timestamp_nanos_opt()
+            .unwrap();
+        
+        let created_at = n;
+        
+        Self { id: event_id, aggregate_id, timestamp, created_at, data }
     }
     
     pub fn apply(&self, state:  &mut A) {
         self.data.apply(state);
-        state.update_timestamp(self.timestamp);
+        state.update_timestamp(self.timestamp, self.created_at);
     }
 }
 

@@ -16,8 +16,8 @@ pub struct Budget {
 
     pub bank_transactions: Vec<BankTransaction>,
 
-    pub created_at: chrono::NaiveDateTime,
-    pub updated_at: chrono::NaiveDateTime,
+    pub created_at: chrono::DateTime<Utc>,
+    pub updated_at: chrono::DateTime<Utc>,
     pub default_budget: bool,
 }
 
