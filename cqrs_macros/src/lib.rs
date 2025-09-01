@@ -1,53 +1,68 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, DeriveInput, Attribute};
+use syn::{
+    parse_macro_input, DeriveInput, Data, Fields, Ident,
+    parse::{Parse, ParseStream},
+    punctuated::Punctuated, Token, Path,
+};
+
+
+/// Holds the parsed arguments from `#[event(...)]`
+struct EventArgs {
+    pub aggregate: Path,
+}
+
+impl EventArgs {
+    pub fn from_attrs(attrs: &[syn::Attribute]) -> syn::Result<Self> {
+        let mut aggregate: Option<Path> = None;
+
+        for attr in attrs {
+            if attr.path().is_ident("event") {
+                attr.parse_nested_meta(|meta| {
+                    if meta.path.is_ident("aggregate") {
+                        let value: Path = meta.value()?.parse()?;
+                        aggregate = Some(value);
+                        Ok(())
+                    } else {
+                        Err(meta.error("unsupported attribute inside #[event(..)]"))
+                    }
+                })?;
+            }
+        }
+
+        Ok(EventArgs {
+            aggregate: aggregate.ok_or_else(|| {
+                syn::Error::new(proc_macro2::Span::call_site(), "missing `aggregate = ...`")
+            })?,
+        })
+    }
+}
 
 #[proc_macro_derive(Event, attributes(event))]
 pub fn derive_event(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-    let name = &input.ident;
+    let input = parse_macro_input!(input as syn::DeriveInput);
+    let name = input.ident;
 
-    // try to find the #[event(id)] field
-    let mut id_field = None;
-    if let syn::Data::Struct(ref data) = input.data {
-        for field in &data.fields {
-            for attr in &field.attrs {
-                if attr.path().is_ident("event") {
-                    if let Ok(syn::Meta::List(meta_list)) = attr.parse_args() {
-                        if meta_list.tokens.to_string().contains("id") {
-                            id_field = field.ident.clone();
-                        }
-                    }
-                }
-            }
-        }
-    }
+    let args = EventArgs::from_attrs(&input.attrs)
+        .expect("Failed to parse #[event(...)] attributes");
 
-    // if missing -> emit compile_error!
-    let id_field = match id_field {
-        Some(f) => f,
-        None => {
-            return quote! {
-                compile_error!("You must annotate one field with #[event(id)] to derive Event");
-            }
-                .into();
-        }
-    };
+    let aggregate = args.aggregate;
 
     let expanded = quote! {
-        impl DomainEvent<Budget> for #name {
-            fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
-                self.#id_field
+        impl DomainEvent<#aggregate> for #name {
+            fn aggregate_id(&self) -> <#aggregate as Aggregate>::Id {
+                todo!("Return the aggregate id for {}", stringify!(#name));
             }
 
-            fn apply(&self, state: &mut Budget) {
-                todo!("implement apply for {}", stringify!(#name));
+            fn apply(&self, state: &mut #aggregate) {
+                todo!("Apply {} to the aggregate", stringify!(#name));
             }
         }
     };
 
-    TokenStream::from(expanded)
+    expanded.into()
 }
+
 
 
 #[proc_macro_derive(EventEnum)]
@@ -87,50 +102,65 @@ pub fn derive_event_enum(input: TokenStream) -> TokenStream {
     TokenStream::from(expanded)
 }
 
-#[proc_macro_derive(Command, attributes(command))]
-pub fn derive_command(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-    let name = &input.ident;
+/// Holds the parsed arguments from `#[command(...)]`
+struct CommandArgs {
+    pub aggregate: Path,
+    pub event: Path,
+}
 
-    // parse aggregate + event types from #[command(aggregate = "X", event = "Y")]
-    let mut agg_ty = None;
-    let mut evt_ty = None;
+impl CommandArgs {
+    pub fn from_attrs(attrs: &[syn::Attribute]) -> syn::Result<Self> {
+        let mut aggregate: Option<Path> = None;
+        let mut event: Option<Path> = None;
 
-    for attr in input.attrs {
-        if attr.path().is_ident("command") {
-            if let Ok(syn::Meta::List(meta_list)) = attr.parse_args() {
-                for nested in meta_list.iter() {
-                    if let syn::NestedMeta::Meta(syn::Meta::NameValue(nv)) = nested {
-                        if nv.path.is_ident("aggregate") {
-                            if let syn::Expr::Lit(syn::ExprLit { lit: syn::Lit::Str(s), .. }) = &nv.value {
-                                agg_ty = Some(syn::Ident::new(&s.value(), s.span()));
-                            }
-                        }
-                        if nv.path.is_ident("event") {
-                            if let syn::Expr::Lit(syn::ExprLit { lit: syn::Lit::Str(s), .. }) = &nv.value {
-                                evt_ty = Some(syn::Ident::new(&s.value(), s.span()));
-                            }
-                        }
+        for attr in attrs {
+            if attr.path().is_ident("command") {
+                attr.parse_nested_meta(|meta| {
+                    if meta.path.is_ident("aggregate") {
+                        let value: Path = meta.value()?.parse()?;
+                        aggregate = Some(value);
+                        Ok(())
+                    } else if meta.path.is_ident("event") {
+                        let value: Path = meta.value()?.parse()?;
+                        event = Some(value);
+                        Ok(())
+                    } else {
+                        Err(meta.error("unsupported attribute inside #[command(..)]"))
                     }
-                }
+                })?;
             }
         }
-    }
 
-    let agg_ty = agg_ty.expect("Command must specify aggregate type");
-    let evt_ty = evt_ty.expect("Command must specify event type");
+        Ok(CommandArgs {
+            aggregate: aggregate.ok_or_else(|| {
+                syn::Error::new(proc_macro2::Span::call_site(), "missing `aggregate = ...`")
+            })?,
+            event: event.ok_or_else(|| {
+                syn::Error::new(proc_macro2::Span::call_site(), "missing `event = ...`")
+            })?,
+        })
+    }
+}
+
+#[proc_macro_derive(Command, attributes(command))]
+pub fn derive_command(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as syn::DeriveInput);
+    let name = input.ident;
+
+    let args = CommandArgs::from_attrs(&input.attrs)
+        .expect("Failed to parse #[command(...)] attributes");
+
+    let aggregate = args.aggregate;
+    let event = args.event;
 
     let expanded = quote! {
-        impl Decision<#agg_ty, #evt_ty> for #name {
-            fn decide(self, state: Option<&#agg_ty>) -> Result<#evt_ty, CommandError> {
-                let state = state.ok_or(CommandError::NotFound(
-                    concat!(stringify!(#agg_ty), " not found")
-                ))?;
-                todo!("implement decide for {}", stringify!(#name));
+        impl Decision<#aggregate, #event> for #name {
+            fn decide(self, state: Option<&#aggregate>) -> Result<#event, CommandError> {
+                todo!("Implement decision logic for {}", stringify!(#name));
             }
         }
     };
 
-    TokenStream::from(expanded)
+    expanded.into()
 }
 
