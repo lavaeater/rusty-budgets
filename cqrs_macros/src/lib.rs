@@ -1,4 +1,3 @@
-// cqrs_macros/src/lib.rs
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, DeriveInput, Meta, Lit};
@@ -13,7 +12,7 @@ pub fn derive_domain_event(input: TokenStream) -> TokenStream {
     let mut command_fn_name = None;
     let mut command_error_name = None;
 
-    // Iterate over attributes
+    // Parse #[domain_event(aggregate = "...", command_fn = "...")]
     for attr in input.attrs.iter().filter(|a| a.path().is_ident("domain_event")) {
         if let Meta::List(meta_list) = &attr.meta {
             let args: syn::Result<syn::punctuated::Punctuated<syn::Meta, syn::Token![,]>> =
@@ -34,13 +33,13 @@ pub fn derive_domain_event(input: TokenStream) -> TokenStream {
                             {
                                 command_fn_name = Some(s.value());
                             }
-                        } else if name_value.path.is_ident("command_error") {
-                            if let syn::Expr::Lit(syn::ExprLit { lit: Lit::Str(s), .. }) =
-                                &name_value.value
-                            {
-                                command_error_name = Some(s.value());
-                            }
+                                                } else if name_value.path.is_ident("command_error") {
+                        if let syn::Expr::Lit(syn::ExprLit { lit: Lit::Str(s), .. }) =
+                            &name_value.value
+                        {
+                            command_error_name = Some(s.value());
                         }
+                    }
                     }
                 }
             }
@@ -58,28 +57,27 @@ pub fn derive_domain_event(input: TokenStream) -> TokenStream {
     let command_fn_ident: syn::Ident = syn::parse_str(&command_fn_name).unwrap();
     let command_error_ident: syn::Ident = syn::parse_str(&command_error_name).unwrap();
 
-    // Generate working stubs
+    // Generate scaffolding: constructor + Into impl
     let expanded = quote! {
-        impl DomainEvent<#aggregate_ident> for #name {
-            fn aggregate_id(&self) -> <#aggregate_ident as Aggregate>::Id {
-                todo!("implement aggregate_id for {}", stringify!(#name));
+        impl #name {
+            /// Create a new instance from arguments (fill in real fields)
+            pub fn new(args: impl Into<Self>) -> Self {
+                todo!("Construct {} from args", stringify!(#name))
             }
+        }
 
-            fn apply(&self, state: &mut #aggregate_ident) {
-                todo!("implement apply for {}", stringify!(#name));
+        impl From<#name> for #aggregate_ident {
+            fn from(_event: #name) -> Self {
+                todo!("Convert {} into {} state if needed", stringify!(#name), stringify!(#aggregate_ident))
             }
         }
 
         impl #aggregate_ident {
+            /// Command function stub (returns the event)
             pub fn #command_fn_ident(&mut self, args: impl Into<#name>) -> Result<#name, #command_error_ident> {
-                let event: #name = args.into();
-
-                // Here you can perform business-rule validation:
-                // if some_condition {
-                //     return Err(CommandError::ValidationFailed("reason".into()));
-                // }
-
-                Ok(event)
+                let event = args.into();
+                // Here you could add validation or leave it as todo
+                todo!("Implement command {} for {}", stringify!(#command_fn_ident), stringify!(#aggregate_ident))
             }
         }
     };

@@ -15,13 +15,15 @@ pub struct BudgetCreated {
     pub default: bool,
 }
 
-impl BudgetCreated {
-    pub fn new(budget_id: Uuid, name: String, user_id: Uuid, default: bool) -> Self {
-        Self {
-            budget_id,
-            name,
-            user_id,
-            default,
-        }
+impl  for BudgetCreated {}
+
+impl DomainEvent<Budget> for BudgetCreated {
+    fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
+        self.budget_id
+    }
+
+    fn apply(&self, state: &mut Budget) {
+        todo!()
     }
 }
+
