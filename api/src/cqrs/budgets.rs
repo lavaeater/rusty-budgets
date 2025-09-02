@@ -164,23 +164,13 @@ joydb::state! {
 
 type Db = Joydb<AppState, JsonAdapter>;
 
-#[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]
-#[domain_event(aggregate = "Budget", command_fn = "add_group")]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GroupAdded {
     pub budget_id: Uuid,
     pub group_id: Uuid,
     pub name: String,
 }
 
-impl Budget {
-    pub fn add_group(&mut self, args: impl Into<GroupAdded>) -> GroupAdded {
-        todo!(
-            "implement {} for {}",
-            stringify!(add_group),
-            stringify!(Budget)
-        );
-    }
-}
 impl DomainEvent<Budget> for GroupAdded {
     fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
         self.budget_id
