@@ -43,6 +43,14 @@ impl CommandArgs {
 }
 
 
+/// Automatically implement `Decision` for a command struct.
+///
+/// This macro is useful when you want to create a command that, given the current state of the
+/// aggregate, produces an event to be stored.
+///
+/// # Example
+///
+///
 #[proc_macro_derive(Command, attributes(command))]
 pub fn derive_command(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as syn::DeriveInput);
@@ -96,6 +104,15 @@ impl EventArgs {
     }
 }
 
+/// Automatically implement `DomainEvent` for an enum.
+///
+/// This macro is useful when you have multiple events that can happen to the same aggregate.
+/// Instead of having to write `impl DomainEvent<Budget> for Event1`, `impl DomainEvent<Budget> for Event2`,
+/// you can just put `#[derive(DomainEvents)]` on your enum and all variants will implement `DomainEvent`.
+///
+/// # Example
+///
+///
 #[proc_macro_derive(Event, attributes(event))]
 pub fn derive_event(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as syn::DeriveInput);
@@ -121,6 +138,16 @@ pub fn derive_event(input: TokenStream) -> TokenStream {
     expanded.into()
 }
 
+
+    /// Automatically implement `DomainEvent` for an enum.
+    ///
+    /// This macro is useful when you have multiple events that can happen to the same aggregate.
+    /// Instead of having to write `impl DomainEvent<Budget> for Event1`, `impl DomainEvent<Budget> for Event2`,
+    /// you can just put `#[derive(DomainEvents)]` on your enum and all variants will implement `DomainEvent`.
+    ///
+    /// # Example
+    ///
+    ///
 #[proc_macro_derive(DomainEvents)]
 pub fn derive_domain_events(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
