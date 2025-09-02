@@ -1,17 +1,17 @@
+use crate::cqrs::domain_events::BudgetCreated;
 use crate::cqrs::framework::*;
+use crate::pub_events_enum;
 use chrono::{DateTime, Utc};
+use cqrs_macros::DomainEvent;
 use joydb::adapters::JsonAdapter;
 use joydb::{Joydb, Model};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Serialize, Serializer};
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::fmt;
 use std::fmt::{Debug, Display, Formatter};
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 use uuid::Uuid;
-use cqrs_macros::DomainEvent;
-use crate::cqrs::domain_events::BudgetCreated;
-use crate::pub_events_enum;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Currency {
@@ -164,8 +164,7 @@ joydb::state! {
 
 type Db = Joydb<AppState, JsonAdapter>;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[derive(DomainEvent)]
+#[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]
 #[domain_event(aggregate = "Budget", command_fn = "add_group")]
 pub struct GroupAdded {
     pub budget_id: Uuid,
@@ -173,22 +172,31 @@ pub struct GroupAdded {
     pub name: String,
 }
 
-// impl DomainEvent<Budget> for GroupAdded {
-//     fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
-//         self.budget_id
-//     }
-// 
-//     fn apply(&self, state: &mut Budget) {
-//         state.budget_groups.insert(
-//             self.group_id,
-//             BudgetGroup {
-//                 id: self.group_id,
-//                 name: self.name.clone(),
-//                 items: Vec::default(),
-//             },
-//         );
-//     }
-// }
+impl Budget {
+    pub fn add_group(&mut self, args: impl Into<GroupAdded>) -> GroupAdded {
+        todo!(
+            "implement {} for {}",
+            stringify!(add_group),
+            stringify!(Budget)
+        );
+    }
+}
+impl DomainEvent<Budget> for GroupAdded {
+    fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
+        self.budget_id
+    }
+
+    fn apply(&self, state: &mut Budget) {
+        state.budget_groups.insert(
+            self.group_id,
+            BudgetGroup {
+                id: self.group_id,
+                name: self.name.clone(),
+                items: Vec::default(),
+            },
+        );
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ItemAdded {
@@ -385,7 +393,13 @@ impl Display for BankTransaction {
 }
 
 impl BudgetItem {
-    pub fn new(name: &str, item_type: BudgetItemType, budgeted_amount: Money, notes: Option<String>, tags: Option<Vec<String>>) -> Self {
+    pub fn new(
+        name: &str,
+        item_type: BudgetItemType,
+        budgeted_amount: Money,
+        notes: Option<String>,
+        tags: Option<Vec<String>>,
+    ) -> Self {
         Self {
             id: Uuid::new_v4(),
             name: name.to_string(),
@@ -591,7 +605,7 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
         self.db.upsert(agg)?;
         Ok(())
     }
-    
+
     fn append(&mut self, ev: BudgetEvent) {
         let stored_event = StoredEvent::new(ev);
         self.db.insert(&stored_event).unwrap();
@@ -644,7 +658,8 @@ impl Decision<Budget, BudgetEvent> for AddItem {
                     self.item_type,
                     self.budgeted_amount,
                     self.notes,
-                     self.tags),
+                    self.tags,
+                ),
             })),
         }
     }
