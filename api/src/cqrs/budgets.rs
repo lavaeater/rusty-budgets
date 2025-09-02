@@ -10,6 +10,7 @@ use std::fmt;
 use std::fmt::{Debug, Display, Formatter};
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 use uuid::Uuid;
+use cqrs_macros::{DomainEvents, Event};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Currency {
@@ -107,7 +108,7 @@ impl Display for Money {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, DomainEvents)]
 pub enum BudgetEvent {
     Created(BudgetCreated),
     GroupAddedToBudget(GroupAdded),
@@ -160,24 +161,13 @@ joydb::state! {
 type Db = Joydb<AppState, JsonAdapter>;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Event)]
+#[event(aggregate = Budget)]
 pub struct BudgetCreated {
     pub budget_id: Uuid,
     pub name: String,
     pub user_id: Uuid,
     pub default: bool,
-}
-
-impl DomainEvent<Budget> for BudgetCreated {
-    fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
-        self.budget_id
-    }
-
-    fn apply(&self, state: &mut Budget) {
-        state.id = self.budget_id;
-        state.name = self.name.clone();
-        state.user_id = self.user_id;
-        state.default_budget = self.default;
-    }
 }
 
 impl BudgetCreated {
@@ -314,29 +304,42 @@ impl DomainEvent<Budget> for FundsReallocated {
     }
 }
 
-impl DomainEvent<Budget> for BudgetEvent {
-    fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
-        match self {
-            Created(e) => e.budget_id,
-            GroupAddedToBudget(e) => e.budget_id,
-            BudgetEvent::ItemAdded(e) => e.budget_id,
-            BudgetEvent::TransactionAdded(e) => e.budget_id,
-            BudgetEvent::TransactionConnected(e) => e.budget_id,
-            BudgetEvent::FundsReallocated(e) => e.budget_id,
-        }
-    }
-
-    fn apply(&self, state: &mut Budget) {
-        match self {
-            BudgetEvent::Created(e) => e.apply(state),
-            BudgetEvent::GroupAddedToBudget(e) => e.apply(state),
-            BudgetEvent::ItemAdded(e) => e.apply(state),
-            BudgetEvent::TransactionAdded(e) => e.apply(state),
-            BudgetEvent::TransactionConnected(e) => e.apply(state),
-            BudgetEvent::FundsReallocated(e) => e.apply(state),
-        }
-    }
-}
+// impl DomainEvent<Budget> for BudgetCreated {
+//     fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
+//         self.budget_id
+//     }
+// 
+//     fn apply(&self, state: &mut Budget) {
+//         state.id = self.budget_id;
+//         state.name = self.name.clone();
+//         state.user_id = self.user_id;
+//         state.default_budget = self.default;
+//     }
+// }
+// 
+// impl DomainEvent<Budget> for BudgetEvent {
+//     fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
+//         match self {
+//             Created(e) => e.budget_id,
+//             GroupAddedToBudget(e) => e.budget_id,
+//             BudgetEvent::ItemAdded(e) => e.budget_id,
+//             BudgetEvent::TransactionAdded(e) => e.budget_id,
+//             BudgetEvent::TransactionConnected(e) => e.budget_id,
+//             BudgetEvent::FundsReallocated(e) => e.budget_id,
+//         }
+//     }
+// 
+//     fn apply(&self, state: &mut Budget) {
+//         match self {
+//             BudgetEvent::Created(e) => e.apply(state),
+//             BudgetEvent::GroupAddedToBudget(e) => e.apply(state),
+//             BudgetEvent::ItemAdded(e) => e.apply(state),
+//             BudgetEvent::TransactionAdded(e) => e.apply(state),
+//             BudgetEvent::TransactionConnected(e) => e.apply(state),
+//             BudgetEvent::FundsReallocated(e) => e.apply(state),
+//         }
+//     }
+// }
 
 // --- Budget Domain ---
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Model)]

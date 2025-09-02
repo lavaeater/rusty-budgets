@@ -22,6 +22,7 @@ joydb = { version = "0.1.0", features = ["json"] }
 # workspace
 ui = { path = "ui" }
 api = { path = "api" }
+cqrs_macros = { path = "cqrs_macros" }
 
 [profile]
 

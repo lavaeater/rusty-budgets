@@ -111,7 +111,14 @@ impl EventArgs {
 /// you can just put `#[derive(DomainEvents)]` on your enum and all variants will implement `DomainEvent`.
 ///
 /// # Example
-///
+///#[derive(Event)]
+/// #[event(aggregate = Budget)]
+/// pub struct BudgetCreated {
+///     pub budget_id: Uuid,
+///     pub name: String,
+///     pub user_id: Uuid,
+///     pub default: bool,
+/// }
 ///
 #[proc_macro_derive(Event, attributes(event))]
 pub fn derive_event(input: TokenStream) -> TokenStream {
