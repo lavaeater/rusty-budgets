@@ -1,8 +1,9 @@
 use serde::{Deserialize, Serialize};
 use cqrs_macros::DomainEvent;
 use uuid::Uuid;
-use crate::cqrs::budgets::Budget;
-use crate::cqrs::framework::{Aggregate, CommandError};
+use crate::cqrs::budget::Budget;
+use crate::cqrs::budgets::BudgetEvent;
+use crate::cqrs::framework::{Aggregate, CommandError, Decision};
 use crate::cqrs::framework::DomainEvent;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -15,7 +16,14 @@ pub struct BudgetCreated {
     pub default: bool,
 }
 
-impl  for BudgetCreated {}
+impl Decision<Budget, BudgetEvent> for BudgetCreated {
+    fn decide(self, state: Option<&Budget>) -> Result<BudgetEvent, CommandError> {
+        match state {
+            None => Ok(BudgetEvent::BudgetCreated(self)),
+            Some(_) => Err(CommandError::Validation("Budget already exists")),
+        }
+    }
+}
 
 impl DomainEvent<Budget> for BudgetCreated {
     fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
@@ -23,7 +31,8 @@ impl DomainEvent<Budget> for BudgetCreated {
     }
 
     fn apply(&self, state: &mut Budget) {
-        todo!()
+        state.name = self.name.clone();
+        state.default_budget = self.default;
     }
 }
 
