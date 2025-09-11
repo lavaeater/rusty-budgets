@@ -31,7 +31,7 @@ pub fn BudgetGroups(groups: Vec<BudgetGroup>) -> Element {
                         budget_groups.set(budget);
                     }
                 },
-                "Create Budget"
+                "Skapa grupp"
             }
         }
         Accordion {
@@ -39,7 +39,7 @@ pub fn BudgetGroups(groups: Vec<BudgetGroup>) -> Element {
             width: "15rem",
             allow_multiple_open: false,
             horizontal: false,
-            for i in 0..4 {
+            for (i , group) in budget_groups().iter().enumerate() {
                 AccordionItem {
                     class: "accordion-item",
                     index: i,
@@ -50,7 +50,7 @@ pub fn BudgetGroups(groups: Vec<BudgetGroup>) -> Element {
                         tracing::info!("trigger");
                     },
                     AccordionTrigger { class: "accordion-trigger",
-                        "the quick brown fox"
+                        {group.name.clone()}
                         svg {
                             class: "accordion-expand-icon",
                             view_box: "0 0 24 24",
@@ -62,9 +62,7 @@ pub fn BudgetGroups(groups: Vec<BudgetGroup>) -> Element {
                         class: "accordion-content",
                         style: "--collapsible-content-width: 140px",
                         div { padding_bottom: "1rem",
-                            p { padding: "0",
-                                "lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum"
-                            }
+                            p { padding: "0", {group.name.clone()} }
                         }
                     }
                 }
