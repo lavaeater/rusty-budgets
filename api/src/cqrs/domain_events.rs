@@ -16,7 +16,7 @@ pub struct BudgetCreated {
 }
 
 impl Budget {
-    pub fn apply_create_budget(&mut self, event: &BudgetCreated) {
+    fn apply_create_budget(&mut self, event: &BudgetCreated) {
         self.id = event.budget_id;
         self.name = event.name.clone();
         self.user_id = event.user_id;
@@ -42,23 +42,23 @@ impl Budget {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(DomainEvent)]
 #[domain_event(aggregate = "Budget")]
-pub struct BudgetGroupAdded {
+pub struct GroupAdded {
     pub budget_id: Uuid,
     pub group_id: Uuid,
     pub name: String,
 }
 
 impl Budget {
-    pub fn apply_add_budget_group(&mut self, event: &BudgetGroupAdded) {
+    fn apply_add_group(&mut self, event: &GroupAdded) {
         self.budget_groups.insert(event.budget_id, BudgetGroup::new(&event.name));
     }
     
-    fn add_budget_group_impl(&self, group_id: Uuid, name: String) -> Result<BudgetGroupAdded, CommandError> {
+    fn add_group_impl(&self, group_id: Uuid, name: String) -> Result<GroupAdded, CommandError> {
         if self.budget_groups.contains_key(&group_id) || 
             self.budget_groups.values().any(|g| g.name == name) {
             Err(CommandError::Validation("Budget group already exists"))
         } else {
-            Ok(BudgetGroupAdded {
+            Ok(GroupAdded {
                 budget_id: self.id,
                 group_id,
                 name

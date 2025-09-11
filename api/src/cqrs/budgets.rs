@@ -1,5 +1,5 @@
 use crate::cqrs::budget::Budget;
-use crate::cqrs::domain_events::BudgetCreated;
+use crate::cqrs::domain_events::{BudgetCreated, GroupAdded};
 use crate::cqrs::framework::Aggregate;
 use crate::cqrs::framework::{DomainEvent, Runtime, StoredEvent};
 use crate::pub_events_enum;
@@ -7,13 +7,14 @@ use joydb::adapters::JsonAdapter;
 use joydb::{Joydb, Model};
 use serde::{Deserialize, Serialize};
 use std::fmt::{Debug};
+use std::str::FromStr;
 use uuid::Uuid;
 
 pub_events_enum! {
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub enum BudgetEvent {
         BudgetCreated,
-        // GroupAdded,
+        GroupAdded,
         // ItemAdded,
         // TransactionAdded,
         // TransactionConnected,
@@ -558,16 +559,21 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
 #[test]
 pub fn testy() -> anyhow::Result<()> {
     let mut rt = JoyDbBudgetRuntime::new();
-    let budget_id = Uuid::new_v4();
+    let budget_id = Uuid::from_str("760365f3-fa77-49a8-aa77-4717748e52ae")?;
     let user_id = Uuid::new_v4();
     // Look how clean this is now! No match, no .into(), no boilerplate!
-    rt.cmd(budget_id, |budget| budget.create_budget("Test Budget".to_string(), user_id, true))?;
+    // rt.cmd(budget_id, |budget| budget.create_budget("Test Budget".to_string(), user_id, true))?;
+    // rt.cmd(budget_id, |budget| budget.add_group(Uuid::new_v4(), "Inkomster".to_string()))?;
 
     let budget_agg = rt.materialize(&budget_id)?;
     println!(
         "Budget {:?}: name={}, default={}",
         budget_agg.id, budget_agg.name, budget_agg.default_budget
     );
+    
+    for group in budget_agg.budget_groups.values() {
+        println!("Group: {}", group.name);
+    }
 
     // audit log
     println!("Events: {:?}", rt.events(&budget_id)?);
