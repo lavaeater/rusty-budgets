@@ -7,3 +7,5 @@
 **/*.rs.bk
 ./data.json
 data.json
+.idea/copilot.data.migration.agent.xml
+.idea/copilot.data.migration.edit.xml

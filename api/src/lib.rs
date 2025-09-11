@@ -1,5 +1,6 @@
 //! This crate contains all shared fullstack server functions.
 pub mod models;
+mod cqrs;
 
 use crate::models::*;
 use dioxus::prelude::*;
@@ -128,14 +129,12 @@ pub mod db {
         match client_from_option(client)
             .get_all_by(|b: &Budget| b.user_id == user_id && b.default_budget)
         {
-            Ok(budgets) => {
+            Ok(mut budgets) => {
                 if budgets.is_empty() {
                     tracing::info!("No default budget exists, time to create one");
                     create_test_budget(user_id, client)
                 } else {
-                    let _ = client_from_option(client)
-                        .delete_all_by(|b: &Budget| b.user_id == user_id && b.default_budget);
-                    create_test_budget(user_id, client)
+                    Ok(budgets.remove(0))
                 }
             }
             Err(e) => {
@@ -177,7 +176,7 @@ pub mod db {
             "Household", 
             "Groceries", 
             BudgetItemType::Expense, 
-            4000.0
+            5000.0
         ).unwrap();
         
         let internet_id = budget.create_budget_item(

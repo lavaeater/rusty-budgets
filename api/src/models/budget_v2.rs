@@ -2,6 +2,7 @@ use joydb::Model;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::Display;
+use chrono::Utc;
 use uuid::Uuid;
 
 /// A simplified, more intuitive budget model
@@ -16,8 +17,8 @@ pub struct Budget {
 
     pub bank_transactions: Vec<BankTransaction>,
 
-    pub created_at: chrono::NaiveDateTime,
-    pub updated_at: chrono::NaiveDateTime,
+    pub created_at: chrono::DateTime<Utc>,
+    pub updated_at: chrono::DateTime<Utc>,
     pub default_budget: bool,
 }
 
@@ -154,6 +155,18 @@ pub enum BudgetIssueType {
     TransactionNotConnected(BankTransaction),
 }
 
+impl Display for BudgetIssueType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            BudgetIssueType::Overspent(item) => write!(f, "Overspent: {}", item.name),
+            BudgetIssueType::Unbalanced => write!(f, "Unbalanced budget"),
+            BudgetIssueType::TransactionNotConnected(transaction) => {
+                write!(f, "Transaction not connected: {}", transaction.description)
+            }
+        }
+    }
+}
+
 impl Display for Budget {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
@@ -173,8 +186,8 @@ impl Budget {
             user_id,
             budget_groups: HashMap::new(),
             bank_transactions: Vec::new(),
-            created_at: chrono::Utc::now().naive_utc(),
-            updated_at: chrono::Utc::now().naive_utc(),
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
             default_budget,
         }
     }
@@ -370,18 +383,20 @@ impl Budget {
                 .budget_groups
                 .values()
                 .flat_map(|group| {
-                    group.items.iter().map(|item| BudgetItemSummary {
+                    group.items.iter()
+                        .filter(|item| item.item_type == BudgetItemType::Expense)
+                        .map(|item| BudgetItemSummary {
                         id: item.id,
                         name: item.name.clone(),
                         item_type: item.item_type,
                         budgeted_amount: item.budgeted_amount,
-                        left_to_spend: item.budgeted_amount - item.actual_spent,
+                        left_to_spend: item.budgeted_amount + item.actual_spent,
                         tags: item.tags.clone(),
                     })
                 })
                 .collect::<Vec<BudgetItemSummary>>();
             
-            item_summaries.sort_by(|a, b| {a.left_to_spend.partial_cmp(&b.left_to_spend).unwrap()});
+            item_summaries.sort_by(|a, b| {b.left_to_spend.partial_cmp(&a.left_to_spend).unwrap()});
 
             // Check for overspent items
             for group in self.budget_groups.values() {
@@ -458,7 +473,7 @@ impl Budget {
 
         /// Update the timestamp
         fn touch(&mut self) {
-            self.updated_at = chrono::Utc::now().naive_utc();
+            self.updated_at = Utc::now();
         }
     }
 
