@@ -1,6 +1,6 @@
 //! This crate contains all shared fullstack server functions.
 pub mod models;
-mod cqrs;
+pub mod cqrs;
 mod runtime;
 
 #[cfg(feature = "server")]

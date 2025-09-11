@@ -6,9 +6,6 @@ pub use hero::Hero;
 mod navbar;
 pub use navbar::Navbar;
 
-mod users;
 pub mod budget;
 
-
-pub use users::Users;
 pub use budget::*;
