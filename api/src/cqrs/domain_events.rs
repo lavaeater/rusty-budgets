@@ -1,4 +1,4 @@
-use crate::cqrs::budget::Budget;
+use crate::cqrs::budget::{Budget, BudgetGroup};
 use crate::cqrs::framework::DomainEvent;
 use crate::cqrs::framework::{Aggregate, CommandError};
 use cqrs_macros::DomainEvent;
@@ -37,4 +37,32 @@ impl Budget {
     }
     
     
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(DomainEvent)]
+#[domain_event(aggregate = "Budget")]
+pub struct BudgetGroupAdded {
+    pub budget_id: Uuid,
+    pub group_id: Uuid,
+    pub name: String,
+}
+
+impl Budget {
+    pub fn apply_add_budget_group(&mut self, event: &BudgetGroupAdded) {
+        self.budget_groups.insert(event.budget_id, BudgetGroup::new(&event.name));
+    }
+    
+    fn add_budget_group_impl(&self, group_id: Uuid, name: String) -> Result<BudgetGroupAdded, CommandError> {
+        if self.budget_groups.contains_key(&group_id) || 
+            self.budget_groups.values().any(|g| g.name == name) {
+            Err(CommandError::Validation("Budget group already exists"))
+        } else {
+            Ok(BudgetGroupAdded {
+                budget_id: self.id,
+                group_id,
+                name
+            })
+        }
+    }
 }

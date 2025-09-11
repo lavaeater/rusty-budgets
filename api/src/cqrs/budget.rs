@@ -39,13 +39,23 @@ impl Budget {
     }
 }
 
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BudgetGroup {
     pub id: Uuid,
     pub name: String,
     pub items: Vec<BudgetItem>,
 }
+
+impl BudgetGroup {
+    pub fn new(name: &str) -> Self {
+        Self {
+            id: Uuid::new_v4(),
+            name: name.to_string(),
+            items: Vec::new(),
+        }
+    }
+}
+
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BudgetItem {
