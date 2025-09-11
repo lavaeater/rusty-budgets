@@ -3,6 +3,7 @@ use api::cqrs::budget::Budget;
 use api::models::*;
 use dioxus::prelude::*;
 use uuid::Uuid;
+use crate::budget::budget_groups::BudgetGroups;
 
 const BUDGET_CSS: Asset = asset!("/assets/styling/budget.css");
 
@@ -30,6 +31,7 @@ pub fn BudgetHeroOne() -> Element {
                     div { class: "budget-header",
                         h1 { class: "budget-title", {budget.name} }
                     }
+                    BudgetGroups { groups: budget.budget_groups.values().cloned().collect() }
                 }
             }
         }

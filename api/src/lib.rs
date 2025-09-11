@@ -3,7 +3,7 @@ pub mod cqrs;
 pub mod models;
 mod runtime;
 
-use crate::cqrs::budget::Budget;
+use crate::cqrs::budget::{Budget, BudgetGroup};
 use crate::models::*;
 #[cfg(feature = "server")]
 use dioxus::logger::tracing;
@@ -214,10 +214,10 @@ pub async fn create_budget(
 pub async fn add_group(
     budget_id: Uuid,
     name: String,
-) -> Result<Budget, ServerFnError> {
+) -> Result<Vec<BudgetGroup>, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
     match db::add_group(&budget_id, &user.id, &name) {
-        Ok(b) => Ok(b),
+        Ok(b) => Ok(b.budget_groups.values().cloned().collect()),
         Err(e) => {
             tracing::error!(error = %e, "Could not get default budget");
             Err(ServerFnError::ServerError(e.to_string()))

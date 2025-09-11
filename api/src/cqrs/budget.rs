@@ -39,7 +39,7 @@ impl Budget {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct BudgetGroup {
     pub id: Uuid,
     pub name: String,
@@ -57,7 +57,7 @@ impl BudgetGroup {
 }
 
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct BudgetItem {
     pub id: Uuid,
     pub name: String,
