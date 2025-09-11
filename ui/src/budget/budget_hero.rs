@@ -11,6 +11,7 @@ pub static CURRENT_BUDGET_ID: GlobalSignal<Uuid> = Signal::global(|| Uuid::defau
 pub fn BudgetHeroOne() -> Element {
     let budget_resource = use_server_future(api::get_default_budget)?;
     let mut budget_signal = use_signal(|| None::<Budget>);
+    let mut budget_name = use_signal(|| "".to_string());
 
     use_effect(move || {
         if let Some(Ok(Some(budget))) = budget_resource.read().as_ref() {
@@ -48,8 +49,18 @@ pub fn BudgetHeroOne() -> Element {
                 Some(&Ok(None)) => rsx! {
                     div { id: "budget_hero",
                         h4 { "NO DEFAULT BUDGET MATE" }
-                        input { r#type: "text", placeholder: "Budget Name" }
-                        button { class: "button", "data-style": "primary", "Create Budget" }
+                        input { r#type: "text", placeholder: "Budget Name",
+                        oninput: move |e| {budget_name.set(e.value())}
+                        }
+                        button {
+                            class: "button",
+                            "data-style": "primary",
+                            onclick: move |_| async move {
+                                if let Ok(budget) = api::create_budget(budget_name.to_string(), None).await { budget_signal.set(Some(budget)) }
+                            },
+                            "Create Budget"
+                        
+                        }
                     }
                 },
                 Some(&Ok(Some(_))) => rsx! {
