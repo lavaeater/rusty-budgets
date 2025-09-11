@@ -174,7 +174,7 @@ pub fn derive_domain_event(input: TokenStream) -> TokenStream {
         }
 
         impl #aggregate_ident {
-            pub fn #command_fn_ident(&mut self, #(#command_params),*) -> Result<#name, CommandError> {
+            pub fn #command_fn_ident(&self, #(#command_params),*) -> Result<#name, CommandError> {
                 // Call the implementation function that the developer must provide
                 self.#command_fn_impl_ident(#(#field_assignments),*)
             }

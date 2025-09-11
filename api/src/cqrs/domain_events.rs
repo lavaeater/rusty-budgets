@@ -1,9 +1,9 @@
+use crate::cqrs::budget::Budget;
+use crate::cqrs::framework::DomainEvent;
+use crate::cqrs::framework::{Aggregate, CommandError};
+use cqrs_macros::DomainEvent;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use cqrs_macros::DomainEvent;
-use crate::cqrs::budget::Budget;
-use crate::cqrs::framework::{Aggregate, CommandError, Command};
-use crate::cqrs::framework::DomainEvent;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(DomainEvent)]

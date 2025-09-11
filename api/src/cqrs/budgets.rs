@@ -1,14 +1,13 @@
 use crate::cqrs::budget::Budget;
 use crate::cqrs::domain_events::BudgetCreated;
-use crate::cqrs::framework::{Aggregate, CommandError};
+use crate::cqrs::framework::Aggregate;
 use crate::cqrs::framework::{DomainEvent, Runtime, StoredEvent};
 use crate::pub_events_enum;
 use joydb::adapters::JsonAdapter;
 use joydb::{Joydb, Model};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::fmt::{Debug, Display};
+use serde::{Deserialize, Serialize};
+use std::fmt::{Debug};
 use uuid::Uuid;
-
 
 pub_events_enum! {
     #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -43,7 +42,7 @@ pub_events_enum! {
 //         }
 //     }
 // }
-// 
+//
 type StoredBudgetEvent = StoredEvent<Budget, BudgetEvent>;
 
 impl Model for StoredBudgetEvent {
@@ -57,26 +56,26 @@ impl Model for StoredBudgetEvent {
         "budget_event"
     }
 }
-// 
+//
 joydb::state! {
     AppState,
     models: [StoredBudgetEvent, Budget],
 }
 
 type Db = Joydb<AppState, JsonAdapter>;
-// 
+//
 // #[derive(Debug, Clone, Serialize, Deserialize)]
 // pub struct GroupAdded {
 //     pub budget_id: Uuid,
 //     pub group_id: Uuid,
 //     pub name: String,
 // }
-// 
+//
 // impl DomainEvent<Budget> for GroupAdded {
 //     fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
 //         self.budget_id
 //     }
-// 
+//
 //     fn apply(&self, state: &mut Budget) {
 //         state.budget_groups.insert(
 //             self.group_id,
@@ -88,49 +87,49 @@ type Db = Joydb<AppState, JsonAdapter>;
 //         );
 //     }
 // }
-// 
+//
 // #[derive(Debug, Clone, Serialize, Deserialize)]
 // pub struct ItemAdded {
 //     pub budget_id: Uuid,
 //     pub group_id: Uuid,
 //     pub item: BudgetItem,
 // }
-// 
+//
 // impl DomainEvent<Budget> for ItemAdded {
 //     fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
 //         self.budget_id
 //     }
-// 
+//
 //     fn apply(&self, state: &mut Budget) {
 //         if let Some(group) = state.budget_groups.get_mut(&self.group_id) {
 //             group.items.push(self.item.clone());
 //         }
 //     }
 // }
-// 
+//
 // #[derive(Debug, Clone, Serialize, Deserialize)]
 // pub struct TransactionAdded {
 //     budget_id: Uuid,
 //     tx: BankTransaction,
 // }
-// 
+//
 // impl DomainEvent<Budget> for TransactionAdded {
 //     fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
 //         self.budget_id
 //     }
-// 
+//
 //     fn apply(&self, state: &mut Budget) {
 //         state.bank_transactions.insert(self.tx.id, self.tx.clone());
 //     }
 // }
-// 
+//
 // #[derive(Debug, Clone, Serialize, Deserialize)]
 // pub struct TransactionConnected {
 //     budget_id: Uuid,
 //     tx_id: Uuid,
 //     item_id: Uuid,
 // }
-// 
+//
 // impl TransactionConnected {
 //     pub fn new(budget_id: Uuid, tx_id: Uuid, item_id: Uuid) -> Self {
 //         Self {
@@ -140,19 +139,19 @@ type Db = Joydb<AppState, JsonAdapter>;
 //         }
 //     }
 // }
-// 
+//
 // impl DomainEvent<Budget> for TransactionConnected {
 //     fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
 //         self.budget_id
 //     }
-// 
+//
 //     fn apply(&self, state: &mut Budget) {
 //         if let Some(tx) = state.bank_transactions.get_mut(&self.tx_id) {
 //             tx.budget_item_id = Some(self.item_id);
 //         }
 //     }
 // }
-// 
+//
 // #[derive(Debug, Clone, Serialize, Deserialize)]
 // pub struct FundsReallocated {
 //     budget_id: Uuid,
@@ -160,24 +159,24 @@ type Db = Joydb<AppState, JsonAdapter>;
 //     to_item: Uuid,
 //     amount: Money,
 // }
-// 
+//
 // impl SubAssign for Money {
 //     fn sub_assign(&mut self, rhs: Self) {
 //         self.cents -= rhs.cents;
 //     }
 // }
-// 
+//
 // impl AddAssign for Money {
 //     fn add_assign(&mut self, rhs: Self) {
 //         self.cents += rhs.cents;
 //     }
 // }
-// 
+//
 // impl DomainEvent<Budget> for FundsReallocated {
 //     fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
 //         self.budget_id
 //     }
-// 
+//
 //     fn apply(&self, state: &mut Budget) {
 //         if let Some(from_item) = state.get_item_mut(&self.from_item) {
 //             from_item.budgeted_amount -= self.amount;
@@ -187,7 +186,7 @@ type Db = Joydb<AppState, JsonAdapter>;
 //         }
 //     }
 // }
-// 
+//
 // impl DomainEvent<Budget> for BudgetEvent {
 //     fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
 //         match self {
@@ -199,7 +198,7 @@ type Db = Joydb<AppState, JsonAdapter>;
 //             BudgetEvent::FundsReallocated(e) => e.budget_id,
 //         }
 //     }
-// 
+//
 //     fn apply(&self, state: &mut Budget) {
 //         match self {
 //             BudgetEvent::BudgetCreated(e) => e.apply(state),
@@ -211,14 +210,14 @@ type Db = Joydb<AppState, JsonAdapter>;
 //         }
 //     }
 // }
-// 
+//
 // #[derive(Debug, Clone, Serialize, Deserialize)]
 // pub struct BudgetGroup {
 //     pub id: Uuid,
 //     pub name: String,
 //     pub items: Vec<BudgetItem>,
 // }
-// 
+//
 // #[derive(Debug, Clone, Serialize, Deserialize)]
 // pub struct BudgetItem {
 //     pub id: Uuid,
@@ -229,14 +228,14 @@ type Db = Joydb<AppState, JsonAdapter>;
 //     pub notes: Option<String>,
 //     pub tags: Vec<String>,
 // }
-// 
+//
 // #[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq)]
 // pub enum BudgetItemType {
 //     Income,
 //     Expense,
 //     Savings,
 // }
-// 
+//
 // #[derive(Debug, Clone, Serialize, Deserialize)]
 // pub struct BankTransaction {
 //     pub id: Uuid,
@@ -245,13 +244,13 @@ type Db = Joydb<AppState, JsonAdapter>;
 //     pub date: DateTime<Utc>,
 //     pub budget_item_id: Option<Uuid>,
 // }
-// 
+//
 // impl Display for BankTransaction {
 //     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
 //         write!(f, "{}, {}, {}", self.description, self.amount, self.date)
 //     }
 // }
-// 
+//
 // impl BudgetItem {
 //     pub fn new(
 //         name: &str,
@@ -271,7 +270,7 @@ type Db = Joydb<AppState, JsonAdapter>;
 //         }
 //     }
 // }
-// 
+//
 // impl BankTransaction {
 //     pub fn new(amount: Money, description: &str, date: DateTime<Utc>) -> Self {
 //         Self {
@@ -283,17 +282,17 @@ type Db = Joydb<AppState, JsonAdapter>;
 //         }
 //     }
 // }
-// 
+//
 // pub struct AddGroup {
 //     pub name: String,
 // }
-// 
+//
 // impl AddGroup {
 //     pub fn new(name: String) -> Self {
 //         Self { name }
 //     }
 // }
-// 
+//
 // impl Debug for AddGroup {
 //     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
 //         f.debug_struct("AddGroup")
@@ -301,7 +300,7 @@ type Db = Joydb<AppState, JsonAdapter>;
 //             .finish()
 //     }
 // }
-// 
+//
 // impl Decision<Budget, BudgetEvent> for AddGroup {
 //     fn decide(self, state: Option<&Budget>) -> Result<BudgetEvent, CommandError> {
 //         match state {
@@ -358,6 +357,7 @@ impl JoyDbBudgetRuntime {
     }
 }
 
+
 impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
     fn load(&self, id: &Uuid) -> Result<Option<Budget>, anyhow::Error> {
         let budget = self.get_budget(id)?;
@@ -397,7 +397,7 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
         self.fetch_events(id, 0)
     }
 }
-// 
+//
 // #[derive(Debug, Clone, Serialize, Deserialize)]
 // pub struct AddItem {
 //     pub group_id: Uuid,
@@ -407,7 +407,7 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
 //     pub notes: Option<String>,
 //     pub tags: Option<Vec<String>>,
 // }
-// 
+//
 // impl AddItem {
 //     pub fn new(
 //         group_id: Uuid,
@@ -427,7 +427,7 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
 //         }
 //     }
 // }
-// 
+//
 // impl Decision<Budget, BudgetEvent> for AddItem {
 //     fn decide(self, state: Option<&Budget>) -> Result<BudgetEvent, CommandError> {
 //         match state {
@@ -446,14 +446,14 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
 //         }
 //     }
 // }
-// 
+//
 // #[derive(Debug, Clone, Serialize, Deserialize)]
 // pub struct AddTransaction {
 //     pub amount: Money,
 //     pub description: String,
 //     pub date: DateTime<Utc>,
 // }
-// 
+//
 // impl Decision<Budget, BudgetEvent> for AddTransaction {
 //     fn decide(self, state: Option<&Budget>) -> Result<BudgetEvent, CommandError> {
 //         match state {
@@ -471,13 +471,13 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
 //         }
 //     }
 // }
-// 
+//
 // #[derive(Debug, Clone, Serialize, Deserialize)]
 // pub struct ConnectTransaction {
 //     pub tx_id: Uuid,
 //     pub item_id: Uuid,
 // }
-// 
+//
 // impl Decision<Budget, BudgetEvent> for ConnectTransaction {
 //     fn decide(self, state: Option<&Budget>) -> Result<BudgetEvent, CommandError> {
 //         match state {
@@ -496,14 +496,14 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
 //         }
 //     }
 // }
-// 
+//
 // #[derive(Debug, Clone, Serialize, Deserialize)]
 // pub struct ReallocateFunds {
 //     pub from_item: Uuid,
 //     pub to_item: Uuid,
 //     pub amount: Money,
 // }
-// 
+//
 // impl Decision<Budget, BudgetEvent> for ReallocateFunds {
 //     fn decide(self, state: Option<&Budget>) -> Result<BudgetEvent, CommandError> {
 //         match state {
@@ -529,32 +529,34 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
 //         }
 //     }
 // }
-// 
+//
 // pub struct CreateBudgetArgs {
 //     pub id: Uuid,
 //     pub name: String,
 //     pub user_id: Uuid,
 //     pub default_budget: bool,
 // }
-// 
-// 
+//
+//
 
-// 
+//
 #[cfg(test)]
 #[test]
 pub fn testy() -> anyhow::Result<()> {
     let mut rt = JoyDbBudgetRuntime::new();
     let budget_id = Uuid::new_v4();
     let user_id = Uuid::new_v4();
-    
-    rt.execute(budget_id, move |budget: &Budget| { 
-        budget.create_budget_impl("Test Budget".to_string(), user_id, true)
-    }
-    )?;
-    
+
+    rt.execute(budget_id, move |budget: &Budget| {
+        match budget.create_budget("Test Budget".to_string(), user_id, true) {
+            Ok(event) => {Ok(event.into())}
+            Err(err) => {Err(err)}
+        }
+    })?;
+
     // let budget = Budget::new().create_budget(budget_id, "Test Budget".to_string(),
     //                                          user_id, true);
-    // 
+    //
     // // happy path
     // rt.execute(
     //     budget_id,

@@ -59,12 +59,6 @@ pub trait DomainEvent<A: Aggregate>: Clone + Debug + Sized {
     fn apply(&self, state: &mut A);
 }
 
-/// Command: an intention to change state. Produces (at most) one Event.
-pub trait Command<A: Aggregate, E: DomainEvent<A>>: Debug {
-    /// Business logic: take current state (if any) and decide an Event or error.
-    fn decide(self, state: Option<&A>) -> Result<E, CommandError>;
-}
-
 #[derive(Debug)]
 pub enum CommandError {
     Validation(&'static str),
