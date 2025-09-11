@@ -17,6 +17,25 @@ pub struct BudgetCreated {
 
 impl Budget {
     pub fn apply_create_budget(&mut self, event: &BudgetCreated) {
+        self.id = event.budget_id;
+        self.name = event.name.clone();
+        self.user_id = event.user_id;
+        self.default_budget = event.default_budget;
         
     }
+    
+    pub fn create_budget_impl(&self, name: String, user_id: Uuid, default: bool) -> Result<BudgetCreated, CommandError> {
+        if self.version == 0 && self.last_event == 0 {
+            Ok(BudgetCreated {
+                budget_id: self.id,
+                name,
+                user_id,
+                default_budget: default,
+            })
+        } else {
+            Err(CommandError::Validation("Budget already exists"))
+        }
+    }
+    
+    
 }

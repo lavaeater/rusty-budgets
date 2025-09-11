@@ -104,6 +104,10 @@ pub fn derive_domain_event(input: TokenStream) -> TokenStream {
     // Build apply function name
     let apply_fn_name = format!("apply_{}", command_fn_ident);
     let apply_fn_ident = syn::Ident::new(&apply_fn_name, Span::call_site());
+    
+    // Build implementation function name
+    let command_fn_impl_name = format!("{}_impl", command_fn_ident);
+    let command_fn_impl_ident = syn::Ident::new(&command_fn_impl_name, Span::call_site());
 
     // --- Infer the aggregate_id field ---
     let mut id_field_ident = None;
@@ -138,6 +142,25 @@ pub fn derive_domain_event(input: TokenStream) -> TokenStream {
     let id_field_ident = id_field_ident
         .unwrap_or_else(|| panic!("Could not infer aggregate id field for `{}`. Use #[domain_event(id = \"...\")]", name));
 
+    // --- Extract struct fields (excluding aggregate_id) for command function parameters ---
+    let mut command_params = Vec::new();
+    let mut field_assignments = Vec::new();
+    
+    if let Data::Struct(ds) = &input.data {
+        if let Fields::Named(fields_named) = &ds.fields {
+            for field in &fields_named.named {
+                if let Some(field_name) = &field.ident {
+                    // Skip the aggregate_id field
+                    if field_name != &id_field_ident {
+                        let field_type = &field.ty;
+                        command_params.push(quote! { #field_name: #field_type });
+                        field_assignments.push(quote! { #field_name });
+                    }
+                }
+            }
+        }
+    }
+
     // --- Generate code ---
     let expanded = quote! {
         impl DomainEvent<#aggregate_ident> for #name {
@@ -149,18 +172,18 @@ pub fn derive_domain_event(input: TokenStream) -> TokenStream {
                 state.#apply_fn_ident(self)
             }
         }
-        
-        
 
-        // impl #aggregate_ident {
-        //     pub fn #command_fn_ident(&mut self, args: impl Into<#name>) -> Result<#name, CommandError> {
-        //         todo!("implement {} for {}", stringify!(#command_fn_ident), stringify!(#aggregate_ident));
-        //     }
-        // 
-        //     pub fn #apply_fn_ident(&mut self, event: &#name) {
-        //         todo!("implement {} for {}", stringify!(#apply_fn_ident), stringify!(#aggregate_ident));
-        //     }
-        // }
+        impl #aggregate_ident {
+            pub fn #command_fn_ident(&mut self, #(#command_params),*) -> Result<#name, CommandError> {
+                // Call the implementation function that the developer must provide
+                self.#command_fn_impl_ident(#(#field_assignments),*)
+            }
+
+            // pub fn #apply_fn_ident(&mut self, event: &#name) {
+            //     // This must be implemented by you
+            //     todo!("implement {} for {}", stringify!(#apply_fn_ident), stringify!(#aggregate_ident));
+            // }
+        }
     };
 
     TokenStream::from(expanded)
