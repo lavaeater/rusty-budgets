@@ -1,9 +1,11 @@
 use std::collections::HashMap;
+use std::fmt;
+use std::fmt::{Display, Formatter};
 use uuid::Uuid;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use joydb::Model;
-use crate::cqrs::budgets::{BankTransaction, BudgetGroup, BudgetItem};
+use crate::cqrs::money::Money;
 use crate::cqrs::framework::Aggregate;
 
 // --- Budget Domain ---
@@ -21,13 +23,13 @@ pub struct Budget {
     pub version: u64,
 }
 
-impl Budget {
-    pub(crate) fn new(id: Uuid, name: impl Into<String>, created_by: Uuid, default_budget: bool) -> Self {
+impl Budget {    
+    pub fn new() -> Self {
         Self {
-            id,
-            name: name.into(),
-            user_id: created_by,
-            default_budget,
+            id: Uuid::new_v4(),
+            name: String::new(),
+            user_id: Uuid::new_v4(),
+            default_budget: false,
             budget_groups: HashMap::new(),
             bank_transactions: HashMap::new(),
             created_at: Utc::now(),
@@ -51,6 +53,79 @@ impl Budget {
             .iter()
             .flat_map(move |(_, group)| group.items.iter())
             .find(|item| item.id == *item_id)
+    }
+}
+
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BudgetGroup {
+    pub id: Uuid,
+    pub name: String,
+    pub items: Vec<BudgetItem>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BudgetItem {
+    pub id: Uuid,
+    pub name: String,
+    pub item_type: BudgetItemType,
+    pub budgeted_amount: Money,
+    pub actual_spent: Money,
+    pub notes: Option<String>,
+    pub tags: Vec<String>,
+}
+
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq)]
+pub enum BudgetItemType {
+    Income,
+    Expense,
+    Savings,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BankTransaction {
+    pub id: Uuid,
+    pub amount: Money,
+    pub description: String,
+    pub date: DateTime<Utc>,
+    pub budget_item_id: Option<Uuid>,
+}
+
+impl Display for BankTransaction {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}, {}, {}", self.description, self.amount, self.date)
+    }
+}
+
+impl BudgetItem {
+    pub fn new(
+        name: &str,
+        item_type: BudgetItemType,
+        budgeted_amount: Money,
+        notes: Option<String>,
+        tags: Option<Vec<String>>,
+    ) -> Self {
+        Self {
+            id: Uuid::new_v4(),
+            name: name.to_string(),
+            item_type,
+            budgeted_amount,
+            actual_spent: Money::new(0, budgeted_amount.currency()),
+            notes,
+            tags: tags.unwrap_or_default(),
+        }
+    }
+}
+
+impl BankTransaction {
+    pub fn new(amount: Money, description: &str, date: DateTime<Utc>) -> Self {
+        Self {
+            id: Uuid::new_v4(),
+            amount,
+            description: description.to_string(),
+            date,
+            budget_item_id: None,
+        }
     }
 }
 
