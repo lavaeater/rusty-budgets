@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::str::FromStr;
 #[cfg(feature = "server")]
 use joydb::Joydb;
@@ -7,6 +8,7 @@ use dioxus::logger::tracing;
 use joydb::adapters::JsonAdapter;
 
 use joydb::{Model};
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use crate::cqrs::budget::Budget;
 use crate::cqrs::budgets::BudgetEvent;
@@ -34,15 +36,21 @@ use crate::models::User;
 // }
 //
 
+#[derive(Debug, Clone, Serialize, Deserialize, Model)]
+pub struct UserBudgets {
+    pub id: Uuid,
+    pub budgets: Vec<(Uuid, bool)>,}
+
 #[cfg(feature = "server")]
 joydb::state! {
     AppState,
-    models: [StoredBudgetEvent, Budget, User],
+    models: [StoredBudgetEvent, Budget, User, UserBudgets],
 }
 
 #[cfg(feature = "server")]
 type StoredBudgetEvent = StoredEvent<Budget, BudgetEvent>;
 
+#[cfg(feature = "server")]
 impl Model for StoredBudgetEvent {
     type Id = Uuid;
 
@@ -63,6 +71,7 @@ pub struct JoyDbBudgetRuntime {
     pub db: Db,
 }
 
+#[cfg(feature = "server")]
 impl JoyDbBudgetRuntime {
     pub fn new() -> Self {
         Self {
@@ -105,6 +114,7 @@ impl JoyDbBudgetRuntime {
     }
 }
 
+#[cfg(feature = "server")]
 impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
     fn load(&self, id: &Uuid) -> Result<Option<Budget>, anyhow::Error> {
         let budget = self.get_budget(id)?;
@@ -144,6 +154,8 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
         self.fetch_events(id, 0)
     }
 }
+
+#[cfg(feature = "server")]
 #[cfg(test)]
 #[test]
 pub fn testy() -> anyhow::Result<()> {

@@ -16,12 +16,14 @@ const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 pub mod db {
     use crate::models::*;
     use crate::{DEFAULT_USER_EMAIL};
-    use crate::runtime::{Db, JoyDbBudgetRuntime};
+    use crate::runtime::{Db, JoyDbBudgetRuntime, UserBudgets};
     use chrono::NaiveDate;
     use dioxus::logger::tracing;
+    use joydb::JoydbError;
     use uuid::Uuid;
     use once_cell::sync::Lazy;
     use crate::cqrs::budget::Budget;
+    use crate::cqrs::framework::Runtime;
 
     pub static CLIENT: Lazy<JoyDbBudgetRuntime> = Lazy::new(|| {
         tracing::info!("Init DB Client");
@@ -91,6 +93,65 @@ pub mod db {
             }
         }
     }
+    
+    pub fn get_default_budget(user_id: &Uuid) -> anyhow::Result<Option<Budget>> {
+        match with_client(None).get::<UserBudgets>(&user_id) {
+            Ok(b) => {
+                match b {
+                    None => {Ok(None)}
+                    Some(b) => {
+                        match b.budgets.iter().find(|(_, default)| *default) {
+                            Some((budget_id, _)) => {
+                                match with_runtime(None).load(&budget_id) {
+                                    Ok(budget) => {Ok(budget)}
+                                    Err(_) => {Err(anyhow::anyhow!("Could not load default budget"))}
+                                }
+                            }
+                            None => {Ok(None)}
+                        }
+                    }
+                }
+            }
+            Err(_) => {
+                Err(anyhow::anyhow!("Could not get default budget"))
+            }
+        }
+    }
+
+    pub fn add_budget_to_user(user_id: Uuid, budget_id: Uuid, default: bool) -> anyhow::Result<()> {
+        match with_client(None).get::<UserBudgets>(&user_id) {
+            Ok(list) => {
+                match list {
+                    None => {
+                        match with_client(None).insert(&UserBudgets {
+                            id: user_id,
+                            budgets: vec![(budget_id, default)],
+                        }) {
+                            Ok(_) => {Ok(())}
+                            Err(_) => {Err(anyhow::anyhow!("Could not add budget to user"))}
+                        }
+                    }
+                    Some(list) => {
+                        if !list.budgets.contains(&(budget_id, default)) {
+                            let mut budgets = list.budgets.clone();
+                            budgets.push((budget_id, default));
+                            let list = UserBudgets {
+                                id: user_id,
+                                budgets,
+                            };
+                            match with_client(None).upsert(&list) {
+                                Ok(_) => {Ok(())}
+                                Err(_) => {Err(anyhow::anyhow!("Could not add budget to user"))}
+                            }
+                        } else {
+                            Ok(())
+                        }
+                    }
+                }
+            }
+            Err(_) => { Err(anyhow::anyhow!("Could not add budget to user")) }
+        }
+    }
 
     pub fn create_budget(
         name: &str,
@@ -99,7 +160,15 @@ pub mod db {
         runtime: Option<&JoyDbBudgetRuntime>,
     ) -> anyhow::Result<Budget> {
         let budget_id = Uuid::new_v4();
-        with_runtime(runtime).cmd(budget_id, |budget| budget.create_budget(name.to_string(), user_id, default_budget))
+        match with_runtime(runtime).cmd(budget_id, |budget| budget.create_budget(name.to_string(), user_id, default_budget)) {
+            Ok(budget) => {
+                add_budget_to_user(user_id, budget_id, default_budget)?;
+                Ok(budget)
+            }
+            Err(_) => {
+                Err(anyhow::anyhow!("Could not create budget"))
+            }
+        }
     }
 
     pub fn create_user(
@@ -133,3 +202,27 @@ pub async fn create_budget(name: String, default_budget: Option<bool>) -> Result
         }
     }
 }
+
+#[server]
+pub async fn get_default_user() -> Result<User, ServerFnError> {
+    match db::get_default_user(None) {
+        Ok(b) => Ok(b),
+        Err(e) => {
+            tracing::error!(error = %e, "Could not get default User");
+            Err(ServerFnError::ServerError(e.to_string()))
+        }
+    }
+}
+
+#[server]
+pub async fn get_default_budget() -> Result<Option<Budget>, ServerFnError> {
+    let user = db::get_default_user(None).expect("Could not get default user");
+    match db::get_default_budget(&user.id) {
+        Ok(b) => Ok(b),
+        Err(e) => {
+            tracing::error!(error = %e, "Could not get default budget");
+            Err(ServerFnError::ServerError(e.to_string()))
+        }
+    }
+}
+
