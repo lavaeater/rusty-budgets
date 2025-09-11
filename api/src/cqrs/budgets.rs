@@ -1,6 +1,6 @@
 use crate::cqrs::domain_events::{BudgetCreated, GroupAdded};
 use crate::cqrs::framework::Aggregate;
-use crate::cqrs::framework::{DomainEvent, Runtime};
+use crate::cqrs::framework::{DomainEvent};
 use crate::pub_events_enum;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;

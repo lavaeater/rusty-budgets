@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+#[cfg(feature = "server")]
 use std::str::FromStr;
 #[cfg(feature = "server")]
 use joydb::Joydb;
@@ -10,31 +10,14 @@ use joydb::adapters::JsonAdapter;
 use joydb::{Model};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+#[cfg(feature = "server")]
 use crate::cqrs::budget::Budget;
+#[cfg(feature = "server")]
 use crate::cqrs::budgets::BudgetEvent;
+#[cfg(feature = "server")]
 use crate::cqrs::framework::{Runtime, StoredEvent};
+#[cfg(feature = "server")]
 use crate::models::User;
-// impl Display for BudgetEvent {
-//     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-//         match self {
-//             BudgetEvent::BudgetCreated(event) => write!(f, "Budget created: {}", event.budget_id),
-//             // BudgetEvent::GroupAdded(event) => {
-//             //     write!(f, "Group added to budget: {}", event.group_id)
-//             // }
-//             // BudgetEvent::ItemAdded(event) => write!(f, "Item added: {}", event.item.id),
-//             // BudgetEvent::TransactionAdded(event) => {
-//             //     write!(f, "Transaction added: {}", event.tx)
-//             // }
-//             // BudgetEvent::TransactionConnected(event) => {
-//             //     write!(f, "Transaction connected: {}", event.tx_id)
-//             // }
-//             // BudgetEvent::FundsReallocated(event) => {
-//             //     write!(f, "Funds reallocated: {}", event.from_item)
-//             // }
-//         }
-//     }
-// }
-//
 
 #[derive(Debug, Clone, Serialize, Deserialize, Model)]
 pub struct UserBudgets {
