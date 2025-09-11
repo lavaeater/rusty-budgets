@@ -21,7 +21,6 @@ impl Budget {
         self.name = event.name.clone();
         self.user_id = event.user_id;
         self.default_budget = event.default_budget;
-        
     }
     
     fn create_budget_impl(&self, name: String, user_id: Uuid, default: bool) -> Result<BudgetCreated, CommandError> {

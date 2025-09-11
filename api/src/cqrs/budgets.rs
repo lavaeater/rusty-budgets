@@ -335,6 +335,20 @@ impl JoyDbBudgetRuntime {
             db: Db::open("data.json").unwrap(),
         }
     }
+
+    /// Ergonomic command execution - eliminates all the boilerplate!
+    /// Usage: rt.cmd(id, |budget| budget.create_budget(name, user_id, default))
+    pub fn cmd<F, E>(&mut self, id: Uuid, command: F) -> anyhow::Result<BudgetEvent>
+    where
+        F: FnOnce(&Budget) -> Result<E, crate::cqrs::framework::CommandError>,
+        E: Into<BudgetEvent>,
+    {
+        self.execute(id, |aggregate| {
+            command(aggregate).map(|event| event.into())
+        })
+    }
+    
+    
     fn fetch_events(
         &self,
         id: &Uuid,
@@ -546,52 +560,8 @@ pub fn testy() -> anyhow::Result<()> {
     let mut rt = JoyDbBudgetRuntime::new();
     let budget_id = Uuid::new_v4();
     let user_id = Uuid::new_v4();
-
-    rt.execute(budget_id, move |budget: &Budget| {
-        match budget.create_budget("Test Budget".to_string(), user_id, true) {
-            Ok(event) => {Ok(event.into())}
-            Err(err) => {Err(err)}
-        }
-    })?;
-
-    // let budget = Budget::new().create_budget(budget_id, "Test Budget".to_string(),
-    //                                          user_id, true);
-    //
-    // // happy path
-    // rt.execute(
-    //     budget_id,
-    //     CreateBudget::new(budget_id, "Family Budget".into(), Uuid::new_v4(), true),
-    // )?;
-    // rt.execute(budget_id, AddGroup::new("Salaries".into()))?;
-    // let budget = rt.materialize(&budget_id)?;
-    // rt.snapshot(&budget)?;
-    // match rt.execute(budget_id, AddGroup::new("New group".into())) {
-    //     Ok(event) => match event {
-    //         BudgetEvent::GroupAdded(event) => {
-    //             println!("Group added: {}", event.group_id);
-    //             rt.execute(
-    //                 budget_id,
-    //                 AddItem::new(
-    //                     event.group_id,
-    //                     "New item".into(),
-    //                     BudgetItemType::Income,
-    //                     Money::new(100, Currency::SEK),
-    //                     None,
-    //                     None,
-    //                 ),
-    //             )?;
-    //         }
-    //         _ => {
-    //             println!("This is weird as hell");
-    //         }
-    //     },
-    //     _ => {
-    //         println!("Group not added");
-    //     }
-    // }
-
-    // rt.execute(crate::cqrs::framework::Deposit(DepositMoney { id: 100, amount_cents: 50_00 })).unwrap();
-    // rt.execute(crate::cqrs::framework::Withdraw(WithdrawMoney { id: 100, amount_cents: 20_00 })).unwrap();
+    // Look how clean this is now! No match, no .into(), no boilerplate!
+    rt.cmd(budget_id, |budget| budget.create_budget("Test Budget".to_string(), user_id, true))?;
 
     let budget_agg = rt.materialize(&budget_id)?;
     println!(
