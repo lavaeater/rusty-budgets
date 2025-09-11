@@ -14,12 +14,8 @@ pub fn BudgetPopover(max_amount: f32) -> Element {
             open: open(),
             on_open_change: move |v| open.set(v),
             class: "popover",
-            PopoverTrigger {
-                class: "popover-trigger",
-                "Show Popover"
-            }
-            PopoverContent { class: "popover-content",
-                gap: "0.25rem",
+            PopoverTrigger { class: "popover-trigger", "Show Popover" }
+            PopoverContent { class: "popover-content", gap: "0.25rem",
                 h3 {
                     padding_top: "0.25rem",
                     padding_bottom: "0.25rem",

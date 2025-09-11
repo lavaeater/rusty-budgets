@@ -8,10 +8,9 @@ pub fn Hero() -> Element {
     rsx! {
         document::Link { rel: "stylesheet", href: HERO_CSS }
 
-        div {
-            id: "hero",
+        div { id: "hero",
             img { src: HEADER_SVG, id: "header" }
-            div { id: "links"}
+            div { id: "links" }
         }
     }
 }

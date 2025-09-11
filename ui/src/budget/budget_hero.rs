@@ -23,12 +23,12 @@ pub fn BudgetHeroOne() -> Element {
     match budget_signal() {
         Some(budget) => {
             rsx! {
-            document::Link { rel: "stylesheet", href: BUDGET_CSS }
-            div { class: "budget-hero-container",
-                // Header
-                div { class: "budget-header",
-                    h1 { class: "budget-title", {budget.name} }
-                }
+                document::Link { rel: "stylesheet", href: BUDGET_CSS }
+                div { class: "budget-hero-container",
+                    // Header
+                    div { class: "budget-header",
+                        h1 { class: "budget-title", {budget.name} }
+                    }
                 }
             }
         }
@@ -36,26 +36,22 @@ pub fn BudgetHeroOne() -> Element {
             // Check if we have an error or are still loading
             match budget_resource.read_unchecked().as_ref() {
                 Some(Err(e)) => rsx! {
-                    div {
-                        id: "budget_hero",
+                    div { id: "budget_hero",
                         h4 { "Error loading budget: {e}" }
                     }
                 },
                 None => rsx! {
-                    div {
-                        id: "budget_hero",
+                    div { id: "budget_hero",
                         h4 { "Loading..." }
                     }
                 },
                 Some(&Ok(None)) => rsx! {
-                    div {
-                        id: "budget_hero",
+                    div { id: "budget_hero",
                         h4 { "NO DEFAULT BUDGET MATE" }
                     }
                 },
                 Some(&Ok(Some(_))) => rsx! {
-                    div {
-                        id: "budget_hero",
+                    div { id: "budget_hero",
                         h4 { "Loading..." }
                     }
                 },
