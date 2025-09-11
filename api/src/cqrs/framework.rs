@@ -60,7 +60,7 @@ pub trait DomainEvent<A: Aggregate>: Clone + Debug + Sized {
 }
 
 /// Command: an intention to change state. Produces (at most) one Event.
-pub trait Decision<A: Aggregate, E: DomainEvent<A>>: Debug {
+pub trait Command<A: Aggregate, E: DomainEvent<A>>: Debug {
     /// Business logic: take current state (if any) and decide an Event or error.
     fn decide(self, state: Option<&A>) -> Result<E, CommandError>;
 }
@@ -98,13 +98,14 @@ where
     fn append(&mut self, ev: E);
 
     /// Execute a command: decide → append → return event.
-    fn execute<C>(&mut self, id: A::Id, decision: C) -> anyhow::Result<E>
+    fn execute<F>(&mut self, id: A::Id, command: F) -> anyhow::Result<E>
     where
-        C: Decision<A, E>,
+        F: FnOnce(&A) -> Result<E, CommandError>,
     {
-        let current = self.load(&id)?;
+        let mut current = self.load(&id)?.unwrap_or_else(|| A::_new(id));
 
-        let ev = decision.decide(current.as_ref())?;
+        let ev = command(&current)?;
+        ev.apply(&mut current);
         self.append(ev.clone());
         Ok(ev)
     }

@@ -24,14 +24,13 @@ macro_rules! pub_events_enum {
             }
         )*
 
-        // Auto-generated apply dispatcher
-        impl $name {
-            
-            pub fn aggregate_id<A: Aggregate>(&self) -> A::Id 
-            where
-            $(
-                $variant: DomainEvent<A>,
-            )* {
+        // Auto-generated DomainEvent trait implementation
+        impl<A: Aggregate> DomainEvent<A> for $name 
+        where
+        $(
+            $variant: DomainEvent<A>,
+        )* {
+            fn aggregate_id(&self) -> A::Id {
                 match self {
                     $(
                         $name::$variant(e) => e.aggregate_id(),
@@ -39,11 +38,7 @@ macro_rules! pub_events_enum {
                 }
             }
             
-            pub fn apply<A: Aggregate>(&self, state: &mut A) 
-            where
-            $(
-                $variant: DomainEvent<A>,
-            )* {
+            fn apply(&self, state: &mut A) {
                 match self {
                     $(
                         $name::$variant(e) => e.apply(state),

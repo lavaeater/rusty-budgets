@@ -23,23 +23,6 @@ pub struct Budget {
     pub version: u64,
 }
 
-impl Budget {    
-    pub fn new() -> Self {
-        Self {
-            id: Uuid::new_v4(),
-            name: String::new(),
-            user_id: Uuid::new_v4(),
-            default_budget: false,
-            budget_groups: HashMap::new(),
-            bank_transactions: HashMap::new(),
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
-            last_event: 0,
-            version: 0,
-        }
-    }
-}
-
 impl Budget {
     pub fn get_item_mut(&mut self, item_id: &Uuid) -> Option<&mut BudgetItem> {
         self.budget_groups

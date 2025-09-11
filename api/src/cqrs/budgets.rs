@@ -1,59 +1,69 @@
+use crate::cqrs::budget::Budget;
+use crate::cqrs::domain_events::BudgetCreated;
+use crate::cqrs::framework::{Aggregate, CommandError};
+use crate::cqrs::framework::{DomainEvent, Runtime, StoredEvent};
+use crate::pub_events_enum;
+use joydb::adapters::JsonAdapter;
+use joydb::{Joydb, Model};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt::{Debug, Display};
-// 
-// pub_events_enum! {
-//     #[derive(Debug, Clone, Serialize, Deserialize)]
-//     pub enum BudgetEvent {
-//         BudgetCreated,
-//         GroupAdded,
-//         ItemAdded,
-//         TransactionAdded,
-//         TransactionConnected,
-//         FundsReallocated
-//         // ... add other events here
-//     }
-// }
-// 
+use uuid::Uuid;
+
+
+pub_events_enum! {
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    pub enum BudgetEvent {
+        BudgetCreated,
+        // GroupAdded,
+        // ItemAdded,
+        // TransactionAdded,
+        // TransactionConnected,
+        // FundsReallocated
+        // ... add other events here
+    }
+}
+
 // impl Display for BudgetEvent {
 //     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
 //         match self {
 //             BudgetEvent::BudgetCreated(event) => write!(f, "Budget created: {}", event.budget_id),
-//             BudgetEvent::GroupAdded(event) => {
-//                 write!(f, "Group added to budget: {}", event.group_id)
-//             }
-//             BudgetEvent::ItemAdded(event) => write!(f, "Item added: {}", event.item.id),
-//             BudgetEvent::TransactionAdded(event) => {
-//                 write!(f, "Transaction added: {}", event.tx)
-//             }
-//             BudgetEvent::TransactionConnected(event) => {
-//                 write!(f, "Transaction connected: {}", event.tx_id)
-//             }
-//             BudgetEvent::FundsReallocated(event) => {
-//                 write!(f, "Funds reallocated: {}", event.from_item)
-//             }
+//             // BudgetEvent::GroupAdded(event) => {
+//             //     write!(f, "Group added to budget: {}", event.group_id)
+//             // }
+//             // BudgetEvent::ItemAdded(event) => write!(f, "Item added: {}", event.item.id),
+//             // BudgetEvent::TransactionAdded(event) => {
+//             //     write!(f, "Transaction added: {}", event.tx)
+//             // }
+//             // BudgetEvent::TransactionConnected(event) => {
+//             //     write!(f, "Transaction connected: {}", event.tx_id)
+//             // }
+//             // BudgetEvent::FundsReallocated(event) => {
+//             //     write!(f, "Funds reallocated: {}", event.from_item)
+//             // }
 //         }
 //     }
 // }
 // 
-// type StoredBudgetEvent = StoredEvent<Budget, BudgetEvent>;
+type StoredBudgetEvent = StoredEvent<Budget, BudgetEvent>;
+
+impl Model for StoredBudgetEvent {
+    type Id = Uuid;
+
+    fn id(&self) -> &Self::Id {
+        &self.id
+    }
+
+    fn model_name() -> &'static str {
+        "budget_event"
+    }
+}
 // 
-// impl Model for StoredBudgetEvent {
-//     type Id = Uuid;
-// 
-//     fn id(&self) -> &Self::Id {
-//         &self.id
-//     }
-// 
-//     fn model_name() -> &'static str {
-//         "budget_event"
-//     }
-// }
-// 
-// joydb::state! {
-//     AppState,
-//     models: [StoredBudgetEvent, Budget],
-// }
-// 
-// type Db = Joydb<AppState, JsonAdapter>;
+joydb::state! {
+    AppState,
+    models: [StoredBudgetEvent, Budget],
+}
+
+type Db = Joydb<AppState, JsonAdapter>;
 // 
 // #[derive(Debug, Clone, Serialize, Deserialize)]
 // pub struct GroupAdded {
@@ -315,78 +325,78 @@ use std::fmt::{Debug, Display};
 //         }
 //     }
 // }
-// 
-// pub struct JoyDbBudgetRuntime {
-//     pub db: Db,
-// }
-// 
-// impl JoyDbBudgetRuntime {
-//     fn new() -> Self {
-//         Self {
-//             db: Db::open("data.json").unwrap(),
-//         }
-//     }
-//     fn fetch_events(
-//         &self,
-//         id: &Uuid,
-//         last_timestamp: i64,
-//     ) -> anyhow::Result<Vec<StoredBudgetEvent>> {
-//         let mut events: Vec<StoredBudgetEvent> = self.db.get_all_by(|e: &StoredBudgetEvent| {
-//             e.aggregate_id == *id && e.timestamp > last_timestamp
-//         })?;
-//         events.sort_by_key(|e| e.timestamp);
-//         Ok(events)
-//     }
-// 
-//     fn get_budget(&self, id: &Uuid) -> anyhow::Result<Option<Budget>> {
-//         let budget = self.db.get::<Budget>(id)?;
-//         if let Some(budget) = budget {
-//             Ok(Some(budget))
-//         } else {
-//             Ok(None)
-//         }
-//     }
-// }
-// 
-// impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
-//     fn load(&self, id: &Uuid) -> Result<Option<Budget>, anyhow::Error> {
-//         let budget = self.get_budget(id)?;
-//         match budget {
-//             Some(mut budget) => {
-//                 let events = self.fetch_events(id, budget.last_event)?;
-//                 for ev in events {
-//                     ev.apply(&mut budget);
-//                 }
-//                 Ok(Some(budget))
-//             }
-//             None => {
-//                 let mut budget = Budget {
-//                     id: *id,
-//                     ..Default::default()
-//                 };
-//                 let events = self.fetch_events(id, budget.last_event)?;
-//                 for ev in events {
-//                     ev.apply(&mut budget);
-//                 }
-//                 Ok(Some(budget))
-//             }
-//         }
-//     }
-// 
-//     fn snapshot(&self, agg: &Budget) -> anyhow::Result<()> {
-//         self.db.upsert(agg)?;
-//         Ok(())
-//     }
-// 
-//     fn append(&mut self, ev: BudgetEvent) {
-//         let stored_event = StoredEvent::new(ev);
-//         self.db.insert(&stored_event).unwrap();
-//     }
-// 
-//     fn events(&self, id: &Uuid) -> anyhow::Result<Vec<StoredBudgetEvent>> {
-//         self.fetch_events(id, 0)
-//     }
-// }
+
+pub struct JoyDbBudgetRuntime {
+    pub db: Db,
+}
+
+impl JoyDbBudgetRuntime {
+    fn new() -> Self {
+        Self {
+            db: Db::open("data.json").unwrap(),
+        }
+    }
+    fn fetch_events(
+        &self,
+        id: &Uuid,
+        last_timestamp: i64,
+    ) -> anyhow::Result<Vec<StoredBudgetEvent>> {
+        let mut events: Vec<StoredBudgetEvent> = self.db.get_all_by(|e: &StoredBudgetEvent| {
+            e.aggregate_id == *id && e.timestamp > last_timestamp
+        })?;
+        events.sort_by_key(|e| e.timestamp);
+        Ok(events)
+    }
+
+    fn get_budget(&self, id: &Uuid) -> anyhow::Result<Option<Budget>> {
+        let budget = self.db.get::<Budget>(id)?;
+        if let Some(budget) = budget {
+            Ok(Some(budget))
+        } else {
+            Ok(None)
+        }
+    }
+}
+
+impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
+    fn load(&self, id: &Uuid) -> Result<Option<Budget>, anyhow::Error> {
+        let budget = self.get_budget(id)?;
+        match budget {
+            Some(mut budget) => {
+                let events = self.fetch_events(id, budget.last_event)?;
+                for ev in events {
+                    ev.apply(&mut budget);
+                }
+                Ok(Some(budget))
+            }
+            None => {
+                let mut budget = Budget {
+                    id: *id,
+                    ..Default::default()
+                };
+                let events = self.fetch_events(id, budget.last_event)?;
+                for ev in events {
+                    ev.apply(&mut budget);
+                }
+                Ok(Some(budget))
+            }
+        }
+    }
+
+    fn snapshot(&self, agg: &Budget) -> anyhow::Result<()> {
+        self.db.upsert(agg)?;
+        Ok(())
+    }
+
+    fn append(&mut self, ev: BudgetEvent) {
+        let stored_event = StoredEvent::new(ev);
+        self.db.insert(&stored_event).unwrap();
+    }
+
+    fn events(&self, id: &Uuid) -> anyhow::Result<Vec<StoredBudgetEvent>> {
+        self.fetch_events(id, 0)
+    }
+}
 // 
 // #[derive(Debug, Clone, Serialize, Deserialize)]
 // pub struct AddItem {
@@ -530,59 +540,64 @@ use std::fmt::{Debug, Display};
 // 
 
 // 
-// #[cfg(test)]
-// #[test]
-// pub fn testy() -> anyhow::Result<()> {
-//     let mut rt = JoyDbBudgetRuntime::new();
-//     let budget_id = Uuid::new_v4();
-//     let user_id = Uuid::new_v4();
-//     
-//     // let budget = Budget::new().create_budget(budget_id, "Test Budget".to_string(),
-//     //                                          user_id, true);
-//     // 
-//     // // happy path
-//     // rt.execute(
-//     //     budget_id,
-//     //     CreateBudget::new(budget_id, "Family Budget".into(), Uuid::new_v4(), true),
-//     // )?;
-//     rt.execute(budget_id, AddGroup::new("Salaries".into()))?;
-//     let budget = rt.materialize(&budget_id)?;
-//     rt.snapshot(&budget)?;
-//     match rt.execute(budget_id, AddGroup::new("New group".into())) {
-//         Ok(event) => match event {
-//             BudgetEvent::GroupAdded(event) => {
-//                 println!("Group added: {}", event.group_id);
-//                 rt.execute(
-//                     budget_id,
-//                     AddItem::new(
-//                         event.group_id,
-//                         "New item".into(),
-//                         BudgetItemType::Income,
-//                         Money::new(100, Currency::SEK),
-//                         None,
-//                         None,
-//                     ),
-//                 )?;
-//             }
-//             _ => {
-//                 println!("This is weird as hell");
-//             }
-//         },
-//         _ => {
-//             println!("Group not added");
-//         }
-//     }
-// 
-//     // rt.execute(crate::cqrs::framework::Deposit(DepositMoney { id: 100, amount_cents: 50_00 })).unwrap();
-//     // rt.execute(crate::cqrs::framework::Withdraw(WithdrawMoney { id: 100, amount_cents: 20_00 })).unwrap();
-// 
-//     let budget_agg = rt.materialize(&budget_id)?;
-//     println!(
-//         "Budget {:?}: name={}, default={}",
-//         budget_agg.id, budget_agg.name, budget_agg.default_budget
-//     );
-// 
-//     // audit log
-//     println!("Events: {:?}", rt.events(&budget_id)?);
-//     Ok(())
-// }
+#[cfg(test)]
+#[test]
+pub fn testy() -> anyhow::Result<()> {
+    let mut rt = JoyDbBudgetRuntime::new();
+    let budget_id = Uuid::new_v4();
+    let user_id = Uuid::new_v4();
+    
+    rt.execute(budget_id, move |budget: &Budget| { 
+        budget.create_budget_impl("Test Budget".to_string(), user_id, true)
+    }
+    )?;
+    
+    // let budget = Budget::new().create_budget(budget_id, "Test Budget".to_string(),
+    //                                          user_id, true);
+    // 
+    // // happy path
+    // rt.execute(
+    //     budget_id,
+    //     CreateBudget::new(budget_id, "Family Budget".into(), Uuid::new_v4(), true),
+    // )?;
+    // rt.execute(budget_id, AddGroup::new("Salaries".into()))?;
+    // let budget = rt.materialize(&budget_id)?;
+    // rt.snapshot(&budget)?;
+    // match rt.execute(budget_id, AddGroup::new("New group".into())) {
+    //     Ok(event) => match event {
+    //         BudgetEvent::GroupAdded(event) => {
+    //             println!("Group added: {}", event.group_id);
+    //             rt.execute(
+    //                 budget_id,
+    //                 AddItem::new(
+    //                     event.group_id,
+    //                     "New item".into(),
+    //                     BudgetItemType::Income,
+    //                     Money::new(100, Currency::SEK),
+    //                     None,
+    //                     None,
+    //                 ),
+    //             )?;
+    //         }
+    //         _ => {
+    //             println!("This is weird as hell");
+    //         }
+    //     },
+    //     _ => {
+    //         println!("Group not added");
+    //     }
+    // }
+
+    // rt.execute(crate::cqrs::framework::Deposit(DepositMoney { id: 100, amount_cents: 50_00 })).unwrap();
+    // rt.execute(crate::cqrs::framework::Withdraw(WithdrawMoney { id: 100, amount_cents: 20_00 })).unwrap();
+
+    let budget_agg = rt.materialize(&budget_id)?;
+    println!(
+        "Budget {:?}: name={}, default={}",
+        budget_agg.id, budget_agg.name, budget_agg.default_budget
+    );
+
+    // audit log
+    println!("Events: {:?}", rt.events(&budget_id)?);
+    Ok(())
+}

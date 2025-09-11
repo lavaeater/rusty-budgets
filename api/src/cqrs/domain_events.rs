@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use cqrs_macros::DomainEvent;
 use crate::cqrs::budget::Budget;
-use crate::cqrs::framework::{Aggregate, CommandError, Decision};
+use crate::cqrs::framework::{Aggregate, CommandError, Command};
 use crate::cqrs::framework::DomainEvent;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -24,7 +24,7 @@ impl Budget {
         
     }
     
-    pub fn create_budget_impl(&self, name: String, user_id: Uuid, default: bool) -> Result<BudgetCreated, CommandError> {
+    fn create_budget_impl(&self, name: String, user_id: Uuid, default: bool) -> Result<BudgetCreated, CommandError> {
         if self.version == 0 && self.last_event == 0 {
             Ok(BudgetCreated {
                 budget_id: self.id,
