@@ -49,17 +49,20 @@ pub fn BudgetHeroOne() -> Element {
                 Some(&Ok(None)) => rsx! {
                     div { id: "budget_hero",
                         h4 { "NO DEFAULT BUDGET MATE" }
-                        input { r#type: "text", placeholder: "Budget Name",
-                        oninput: move |e| {budget_name.set(e.value())}
+                        input {
+                            r#type: "text",
+                            placeholder: "Budget Name",
+                            oninput: move |e| { budget_name.set(e.value()) },
                         }
                         button {
                             class: "button",
                             "data-style": "primary",
                             onclick: move |_| async move {
-                                if let Ok(budget) = api::create_budget(budget_name.to_string(), None).await { budget_signal.set(Some(budget)) }
+                                if let Ok(budget) = api::create_budget(budget_name.to_string(), None).await {
+                                    budget_signal.set(Some(budget))
+                                }
                             },
                             "Create Budget"
-                        
                         }
                     }
                 },
