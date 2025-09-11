@@ -89,10 +89,10 @@ where
     fn snapshot(&self, agg: &A) -> anyhow::Result<()>;
 
     /// Append one new event to the stream.
-    fn append(&mut self, ev: E);
+    fn append(&self, ev: E);
 
     /// Execute a command: decide → append → return event.
-    fn execute<F>(&mut self, id: A::Id, command: F) -> anyhow::Result<E>
+    fn execute<F>(&self, id: A::Id, command: F) -> anyhow::Result<A>
     where
         F: FnOnce(&A) -> Result<E, CommandError>,
     {
@@ -101,7 +101,7 @@ where
         let ev = command(&current)?;
         ev.apply(&mut current);
         self.append(ev.clone());
-        Ok(ev)
+        Ok(current)
     }
     
     /// Materialize latest state after commands.
