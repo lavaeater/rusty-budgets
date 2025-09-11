@@ -48,6 +48,8 @@ pub fn BudgetHeroOne() -> Element {
                 Some(&Ok(None)) => rsx! {
                     div { id: "budget_hero",
                         h4 { "NO DEFAULT BUDGET MATE" }
+                        input { r#type: "text", placeholder: "Budget Name" }
+                        button { class: "button", "data-style": "primary", "Create Budget" }
                     }
                 },
                 Some(&Ok(Some(_))) => rsx! {
