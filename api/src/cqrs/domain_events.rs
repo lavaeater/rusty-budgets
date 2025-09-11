@@ -50,7 +50,7 @@ pub struct GroupAdded {
 
 impl Budget {
     fn apply_add_group(&mut self, event: &GroupAdded) {
-        self.budget_groups.insert(event.budget_id, BudgetGroup::new(&event.name));
+        self.budget_groups.insert(event.group_id, BudgetGroup::new(event.group_id, &event.name));
     }
     
     fn add_group_impl(&self, group_id: Uuid, name: String) -> Result<GroupAdded, CommandError> {

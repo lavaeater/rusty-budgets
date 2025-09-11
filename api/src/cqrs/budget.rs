@@ -9,7 +9,7 @@ use crate::cqrs::money::Money;
 use crate::cqrs::framework::Aggregate;
 
 // --- Budget Domain ---
-#[derive(Debug, Clone, Serialize, Deserialize, Default, Model)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, Model, PartialEq)]
 pub struct Budget {
     pub id: Uuid,
     pub name: String,
@@ -47,9 +47,9 @@ pub struct BudgetGroup {
 }
 
 impl BudgetGroup {
-    pub fn new(name: &str) -> Self {
+    pub fn new(id: Uuid, name: &str) -> Self {
         Self {
-            id: Uuid::new_v4(),
+            id,
             name: name.to_string(),
             items: Vec::new(),
         }
@@ -75,7 +75,7 @@ pub enum BudgetItemType {
     Savings,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct BankTransaction {
     pub id: Uuid,
     pub amount: Money,
