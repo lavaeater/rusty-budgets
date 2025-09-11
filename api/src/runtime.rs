@@ -72,13 +72,13 @@ impl JoyDbBudgetRuntime {
 
     /// Ergonomic command execution - eliminates all the boilerplate!
     /// Usage: rt.cmd(id, |budget| budget.create_budget(name, user_id, default))
-    pub fn cmd<F, E>(&mut self, id: Uuid, command: F) -> anyhow::Result<BudgetEvent>
+    pub fn cmd<F, E>(&self, id: Uuid, command: F) -> anyhow::Result<Budget>
     where
         F: FnOnce(&Budget) -> Result<E, crate::cqrs::framework::CommandError>,
         E: Into<BudgetEvent>,
     {
         self.execute(id, |aggregate| {
-            command(aggregate).map(|event| event.into())
+            command(aggregate).map(|event| event.into()) 
         })
     }
     
@@ -135,7 +135,7 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
         Ok(())
     }
 
-    fn append(&mut self, ev: BudgetEvent) {
+    fn append(&self, ev: BudgetEvent) {
         let stored_event = StoredEvent::new(ev);
         self.db.insert(&stored_event).unwrap();
     }
