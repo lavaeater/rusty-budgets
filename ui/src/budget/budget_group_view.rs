@@ -112,14 +112,17 @@ pub fn ItemTypeSelect(mut selected_value: Signal<Option<Option<BudgetItemType>>>
             SelectTrigger { aria_label: "Väljare", width: "12rem", SelectValue {} }
             SelectList { aria_label: "Typväljare",
                 SelectOption::<BudgetItemType> { index: 0usize, value: BudgetItemType::Income,
+                    text_value: "Inkomst",
                     "Inkomst"
                     SelectItemIndicator { "✔️" }
                 }
                 SelectOption::<BudgetItemType> { index: 1usize, value: BudgetItemType::Expense,
+                    text_value: "Utgift",
                     "Utgift"
                     SelectItemIndicator { "✔️" }
                 }
                 SelectOption::<BudgetItemType> { index: 2usize, value: BudgetItemType::Savings,
+                    text_value: "Sparande",
                     "Sparande"
                     SelectItemIndicator { "✔️" }
                 }
