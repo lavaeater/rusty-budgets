@@ -1,8 +1,6 @@
 //! This crate contains all shared fullstack server functions.
 pub mod cqrs;
 pub mod models;
-#[cfg(test)]
-mod tests;
 
 use crate::cqrs::budget::{Budget, BudgetGroup, BudgetItem, BudgetItemType};
 use crate::models::*;
@@ -240,7 +238,7 @@ pub async fn add_item(budget_id: Uuid, group_id: Uuid, name: String, item_type: 
     match db::add_item(&budget_id, &group_id, &user.id, &name, &item_type, &budgeted_amount) {
         Ok(b) => {
             let g = b.budget_groups.get(&group_id).expect("Could not get group");
-            Ok(g.items.values().cloned().collect())
+            Ok(g.items.clone())
         },
         Err(e) => {
             tracing::error!(error = %e, "Could not get default budget");

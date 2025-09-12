@@ -1,13 +1,13 @@
-use crate::cqrs::runtime::{JoyDbBudgetRuntime, StoredBudgetEvent, UserBudgets};
 use uuid::Uuid;
-use crate::cqrs::budget::{Budget, BudgetItemType};
-use crate::cqrs::framework::Runtime;
-use crate::cqrs::money::{Currency, Money};
+use api::cqrs::budget::{Budget, BudgetItemType};
+use api::cqrs::framework::Runtime;
+use api::cqrs::money::{Currency, Money};
+use api::cqrs::runtime::{JoyDbBudgetRuntime, StoredBudgetEvent, UserBudgets};
 
 #[cfg(test)]
 #[test]
 pub fn testy() -> anyhow::Result<()> {
-    let mut rt = JoyDbBudgetRuntime::new("data_test.json");
+    let rt = JoyDbBudgetRuntime::new("data_test.json");
     let budget_id = Uuid::new_v4();
     let user_id = Uuid::new_v4();
 
