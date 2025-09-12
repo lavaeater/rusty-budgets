@@ -131,7 +131,7 @@ impl Budget {
 
     fn add_transaction_impl(&self, transaction_id: Uuid, amount:Money, description: String, date: DateTime<Utc>) -> Result<TransactionAdded, CommandError> {
         let bt = BankTransaction::new(transaction_id, amount, &description, date);
-        if self.bank_transactions.is_empty() || !self.bank_transactions.contains(&bt) {
+        if !self.bank_transactions.contains(&bt) {
             Ok(TransactionAdded {
                 budget_id: self.id,
                 transaction_id,
@@ -139,8 +139,7 @@ impl Budget {
                 description,
                 date,
             })
-        }
-        else {
+        } else {
             Err(CommandError::Validation("Transaction already exists."))
         }
     }

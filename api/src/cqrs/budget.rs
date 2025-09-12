@@ -90,7 +90,7 @@ impl Display for BudgetItemType {
     }   
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Eq,)]
 pub struct BankTransaction {
     pub id: Uuid,
     pub amount: Money,
@@ -98,6 +98,17 @@ pub struct BankTransaction {
     pub date: DateTime<Utc>,
     pub budget_item_id: Option<Uuid>,
 }
+
+impl PartialEq for BankTransaction {
+    fn eq(&self, other: &Self) -> bool {
+        self.amount == other.amount && self.description == other.description && self.date == other.date 
+    }
+
+    // fn ne(&self, other: &Self) -> bool {
+    //     self.amount != other.amount || self.description != other.description || self.date != other.date
+    // }
+}
+
 
 impl Hash for BankTransaction {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {

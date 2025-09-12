@@ -1,11 +1,13 @@
-use api::cqrs::budget::BudgetItemType;
+use std::collections::HashSet;
+use std::hash::{DefaultHasher, Hash, Hasher};
+use api::cqrs::budget::{BankTransaction, BudgetItemType};
 use api::cqrs::framework::Runtime;
 use api::cqrs::money::{Currency, Money};
 use api::cqrs::runtime::JoyDbBudgetRuntime;
+use chrono::Utc;
 use uuid::Uuid;
 
 #[cfg(test)]
-
 #[test]
 pub fn create_budget() -> anyhow::Result<()> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
@@ -64,10 +66,9 @@ pub fn add_budget_group_that_exists() -> anyhow::Result<()> {
         res.unwrap().to_string(),
         "Validation error: Budget group already exists"
     );
-    
+
     Ok(())
 }
-
 
 #[test]
 pub fn add_budget_item() -> anyhow::Result<()> {
@@ -110,5 +111,65 @@ pub fn add_budget_item() -> anyhow::Result<()> {
 
     // audit log
     println!("Events: {:?}", rt.events(&budget_id)?);
+    Ok(())
+}
+
+#[test]
+pub fn test_trans_hash() {
+    
+    let now= Utc::now();
+    let t_a = BankTransaction::new(Uuid::new_v4(), Money::new_dollars(100, Currency::SEK), "Test Transaction", now);
+    let mut hasher_a = DefaultHasher::new();
+    let t_b = BankTransaction::new(Uuid::new_v4(), Money::new_dollars(100, Currency::SEK), "Test Transaction", now);
+    let mut hasher_b = DefaultHasher::new();
+    t_a.hash(&mut hasher_a);
+    t_b.hash(&mut hasher_b);
+    let hash_a = hasher_a.finish();
+    let hash_b = hasher_b.finish();
+    assert_eq!(hash_a, hash_b); 
+    let mut hash_set = HashSet::new();
+    hash_set.insert(t_a);
+    assert!(!hash_set.insert(t_b));
+}
+#[test]
+pub fn add_bank_transaction() -> anyhow::Result<()> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let budget_id = Uuid::new_v4();
+    let user_id = Uuid::new_v4();
+
+    let res = rt.cmd(&user_id, &budget_id, |budget| {
+        budget.create_budget("Test Budget".to_string(), user_id, true)
+    })?;
+
+    let now = Utc::now();
+
+    let res = rt.cmd(&user_id, &budget_id, |budget| {
+        budget.add_transaction(
+            Uuid::new_v4(),
+            Money::new_dollars(100, Currency::SEK),
+            "Test Transaction".to_string(),
+            now,
+        )
+    });
+
+    assert!(res.is_ok());
+    let res = res?;
+    assert_eq!(res.bank_transactions.len(), 1);
+
+    let res = rt.cmd(&user_id, &budget_id, |budget| {
+        budget.add_transaction(
+            Uuid::new_v4(),
+            Money::new_dollars(100, Currency::SEK),
+            "Test Transaction".to_string(),
+            now,
+        )
+    }).err();
+    
+    assert!(res.is_some());
+    assert_eq!(
+        res.unwrap().to_string(),
+        "Validation error: Transaction already exists."
+    );
+
     Ok(())
 }
