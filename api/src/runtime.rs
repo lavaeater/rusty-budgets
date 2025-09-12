@@ -12,10 +12,12 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 #[cfg(feature = "server")]
 use crate::cqrs::budget::Budget;
+use crate::cqrs::budget::BudgetItemType;
 #[cfg(feature = "server")]
 use crate::cqrs::budgets::BudgetEvent;
 #[cfg(feature = "server")]
 use crate::cqrs::framework::{Runtime, StoredEvent};
+use crate::cqrs::money::{Currency, Money};
 #[cfg(feature = "server")]
 use crate::models::User;
 
@@ -64,12 +66,12 @@ impl JoyDbBudgetRuntime {
 
     /// Ergonomic command execution - eliminates all the boilerplate!
     /// Usage: rt.cmd(id, |budget| budget.create_budget(name, user_id, default))
-    pub fn cmd<F, E>(&self, id: Uuid, command: F) -> anyhow::Result<Budget>
+    pub fn cmd<F, E>(&self, user_id: &Uuid, id: &Uuid, command: F) -> anyhow::Result<Budget>
     where
         F: FnOnce(&Budget) -> Result<E, crate::cqrs::framework::CommandError>,
         E: Into<BudgetEvent>,
     {
-        self.execute(id, |aggregate| {
+        self.execute(user_id, id, |aggregate| {
             command(aggregate).map(|event| event.into()) 
         })
     }
@@ -128,8 +130,8 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
         Ok(())
     }
 
-    fn append(&self, ev: BudgetEvent) {
-        let stored_event = StoredEvent::new(ev);
+    fn append(&self, user_id: &Uuid, ev: BudgetEvent) {
+        let stored_event = StoredEvent::new(ev, *user_id);
         self.db.insert(&stored_event).unwrap();
     }
 
@@ -146,20 +148,27 @@ pub fn testy() -> anyhow::Result<()> {
     let budget_id = Uuid::new_v4();
     let user_id = Uuid::new_v4();
 
-    let e = rt.cmd(budget_id, |budget| budget.create_budget("Test Budget".to_string(), user_id, true))?;
+    let e = rt.cmd(&user_id, &budget_id, |budget| budget.create_budget("Test Budget".to_string(), user_id, true))?;
     assert_eq!(e.name, "Test Budget");
     assert!(e.default_budget);
     assert_eq!(e.budget_groups.values().len(), 0);
-    let res = rt.cmd(budget_id, |budget| budget.add_group(Uuid::new_v4(), "Inkomster".to_string()));
+    let res = rt.cmd(&user_id, &budget_id, |budget| budget.add_group(Uuid::new_v4(), "Inkomster".to_string()));
     assert!(res.is_ok());
     let res = res?;
     assert_eq!(res.budget_groups.values().len(), 1);
-    let e = rt.cmd(budget_id, |budget| budget.add_group(Uuid::new_v4(), "Inkomster".to_string())).err();
+    let e = rt.cmd(&user_id, &budget_id, |budget| budget.add_group(Uuid::new_v4(), "Inkomster".to_string())).err();
     assert!(e.is_some());
     assert_eq!(e.unwrap().to_string(), "Validation error: Budget group already exists");
     
-    let e = rt.cmd(budget_id, |budget| budget.add_group(Uuid::new_v4(), "Utgifter".to_string()))?;
+    let group_id = Uuid::new_v4();
+    let e = rt.cmd(&user_id, &budget_id, |budget| budget.add_group(group_id, "Utgifter".to_string()))?;
     assert_eq!(e.budget_groups.values().len(), 2);
+    
+    let e = rt.cmd(&user_id, &budget_id, |budget| budget.add_item(group_id, "Utgifter".to_string(), BudgetItemType::Expense, Money::new(100, Currency::SEK)))?;
+    let group = e.budget_groups.get(&group_id);
+    assert!(group.is_some());
+    let group = group.unwrap();
+    assert_eq!(group.items.len(), 1);
 
     let budget_agg = rt.materialize(&budget_id)?;
     println!(

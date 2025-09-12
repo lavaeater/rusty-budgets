@@ -28,10 +28,11 @@ pub struct StoredEvent<A, E> where A: Aggregate, E: DomainEvent<A> {
     pub timestamp: i64,
     pub created_at: DateTime<Utc>,
     pub data: E,
+    pub user_id: Uuid,
 }
 
 impl<A: Aggregate, E: DomainEvent<A>> StoredEvent<A, E> {
-    pub fn new(data: E) -> Self {
+    pub fn new(data: E, user_id: Uuid) -> Self {
         let aggregate_id = data.aggregate_id();
         let event_id = Uuid::new_v4();
         let n = Utc::now();
@@ -41,7 +42,7 @@ impl<A: Aggregate, E: DomainEvent<A>> StoredEvent<A, E> {
         
         let created_at = n;
         
-        Self { id: event_id, aggregate_id, timestamp, created_at, data }
+        Self { id: event_id, aggregate_id, timestamp, created_at, data, user_id }
     }
     
     pub fn apply(&self, state:  &mut A) {
@@ -89,18 +90,18 @@ where
     fn snapshot(&self, agg: &A) -> anyhow::Result<()>;
 
     /// Append one new event to the stream.
-    fn append(&self, ev: E);
+    fn append(&self, user_id: &Uuid, ev: E);
 
     /// Execute a command: decide → append → return event.
-    fn execute<F>(&self, id: A::Id, command: F) -> anyhow::Result<A>
+    fn execute<F>(&self, user_id: &Uuid, id: &A::Id, command: F) -> anyhow::Result<A>
     where
         F: FnOnce(&A) -> Result<E, CommandError>,
     {
-        let mut current = self.load(&id)?.unwrap_or_else(|| A::_new(id));
+        let mut current = self.load(id)?.unwrap_or_else(|| A::_new(id.clone()));
 
         let ev = command(&current)?;
         ev.apply(&mut current);
-        self.append(ev.clone());
+        self.append(user_id, ev.clone());
         Ok(current)
     }
     

@@ -15,8 +15,9 @@ const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 
 #[cfg(feature = "server")]
 pub mod db {
-    use crate::cqrs::budget::Budget;
+    use crate::cqrs::budget::{Budget, BudgetItemType};
     use crate::cqrs::framework::Runtime;
+    use crate::cqrs::money::Money;
     use crate::models::*;
     use crate::runtime::{Db, JoyDbBudgetRuntime, UserBudgets};
     use crate::DEFAULT_USER_EMAIL;
@@ -154,7 +155,7 @@ pub mod db {
         default_budget: bool,
     ) -> anyhow::Result<Budget> {
         let budget_id = Uuid::new_v4();
-        match with_runtime(None).cmd(budget_id, |budget| {
+        match with_runtime(None).cmd(user_id, &budget_id, |budget| {
             budget.create_budget(name.to_string(), *user_id, default_budget)
         }) {
             Ok(budget) => {
@@ -165,13 +166,22 @@ pub mod db {
         }
     }
 
-    pub fn add_group(
+    pub fn add_group(budget_id: &Uuid, user_id: &Uuid, name: &str) -> anyhow::Result<Budget> {
+        with_runtime(None).cmd(user_id, budget_id, |budget| {
+            budget.add_group(Uuid::new_v4(), name.to_string())
+        })
+    }
+
+    pub fn add_item(
         budget_id: &Uuid,
+        group_id: &Uuid,
         user_id: &Uuid,
         name: &str,
+        item_type: &BudgetItemType,
+        budgeted_amount: &Money,
     ) -> anyhow::Result<Budget> {
-        with_runtime(None).cmd(*budget_id, |budget| {
-            budget.add_group(Uuid::new_v4(), name.to_string())
+        with_runtime(None).cmd(user_id, budget_id, |budget| {
+            budget.add_item(*group_id, name.to_string(), item_type.clone(), budgeted_amount.clone())
         })
     }
 
@@ -211,10 +221,7 @@ pub async fn create_budget(
 }
 
 #[server]
-pub async fn add_group(
-    budget_id: Uuid,
-    name: String,
-) -> Result<Vec<BudgetGroup>, ServerFnError> {
+pub async fn add_group(budget_id: Uuid, name: String) -> Result<Vec<BudgetGroup>, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
     match db::add_group(&budget_id, &user.id, &name) {
         Ok(b) => Ok(b.budget_groups.values().cloned().collect()),
