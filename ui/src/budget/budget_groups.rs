@@ -14,24 +14,36 @@ pub fn BudgetGroups(groups: Vec<BudgetGroup>) -> Element {
     let budget_id = *CURRENT_BUDGET_ID.read();
     let mut group_name = use_signal(|| "".to_string());
     let mut budget_groups = use_signal(|| groups);
+    let mut show_new_group = use_signal(|| false);
     rsx! {
-        h4 { "Budget Items" }
-        div { id: "new_group",
-            label { "Skapa ny grupp" }
-            input {
-                r#type: "text",
-                placeholder: "Gruppnamn",
-                oninput: move |e| { group_name.set(e.value()) },
+        if show_new_group() {
+            div { id: "new_group",
+                label { "Skapa ny grupp" }
+                input {
+                    r#type: "text",
+                    placeholder: "Gruppnamn",
+                    oninput: move |e| { group_name.set(e.value()) },
+                }
+                button {
+                    class: "button",
+                    "data-style": "primary",
+                    onclick: move |_| async move {
+                        if let Ok(budget) = api::add_group(budget_id, group_name.to_string()).await {
+                            budget_groups.set(budget);
+                        }
+                        show_new_group.set(false);
+                    },
+                    "Skapa grupp"
+                }
             }
+        } else {
             button {
                 class: "button",
-                "data-style": "primary",
-                onclick: move |_| async move {
-                    if let Ok(budget) = api::add_group(budget_id, group_name.to_string()).await {
-                        budget_groups.set(budget);
-                    }
-                },
-                "Skapa grupp"
+                    "data-style": "primary",
+                    onclick: move |_|  {
+                        show_new_group.set(true);
+                    },
+                    "Lägg till ny grupp"
             }
         }
         Accordion {
