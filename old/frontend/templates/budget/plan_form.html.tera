@@ -1,6 +1,0 @@
-<form method="post" action="{{ form_action }}" hx-post="{{ form_action }}" hx-target="#modal" hx-swap="innerHTML">
-    <label for="year">Year</label>
-    <input type="number" name="year" id="year" value="{{ plan.year | default(value="") }}" required>
-    <br>
-    <button type="submit">Save</button>
-</form>

@@ -1,6 +1,4 @@
-use crate::budget_popover::BudgetPopover;
 use api::cqrs::budget::Budget;
-use api::models::*;
 use dioxus::prelude::*;
 use uuid::Uuid;
 use crate::budget::budget_groups::BudgetGroups;
@@ -45,15 +43,15 @@ pub fn BudgetHeroOne() -> Element {
                 },
                 None => rsx! {
                     div { id: "budget_hero",
-                        h4 { "Loading..." }
+                        h4 { "Laddar..." }
                     }
                 },
                 Some(&Ok(None)) => rsx! {
                     div { id: "budget_hero",
-                        h4 { "NO DEFAULT BUDGET MATE" }
+                        h4 { "Ingen budget hittad" }
                         input {
                             r#type: "text",
-                            placeholder: "Budget Name",
+                            placeholder: "Budgetnamn",
                             oninput: move |e| { budget_name.set(e.value()) },
                         }
                         button {
@@ -64,13 +62,13 @@ pub fn BudgetHeroOne() -> Element {
                                     budget_signal.set(Some(budget))
                                 }
                             },
-                            "Create Budget"
+                            "Skapa budget"
                         }
                     }
                 },
                 Some(&Ok(Some(_))) => rsx! {
                     div { id: "budget_hero",
-                        h4 { "Loading..." }
+                        h4 { "Laddar..." }
                     }
                 },
             }

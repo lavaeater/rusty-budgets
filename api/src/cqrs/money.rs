@@ -1,7 +1,7 @@
 use std::cmp::Ordering;
 use std::fmt;
 use std::fmt::{Display, Formatter};
-use std::ops::{Add, Sub};
+use std::ops::{Add, Mul, Sub};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -45,7 +45,10 @@ impl PartialEq for Money {
 }
 
 impl Money {
-    pub fn new(cents: i64, currency: Currency) -> Self {
+    pub fn new_dollars(dollars: i64, currency: Currency) -> Self {
+        Self { cents: dollars * 100, currency }
+    }
+    pub fn new_cents(cents: i64, currency: Currency) -> Self {
         Self { cents, currency }
     }
 
@@ -53,7 +56,7 @@ impl Money {
         self.cents
     }
     
-    pub fn amount(&self) -> i64 { 
+    pub fn amount_in_dollars(&self) -> i64 { 
         self.cents / 100
     }
     
@@ -67,7 +70,15 @@ impl Add for Money {
     type Output = Money;
     fn add(self, rhs: Money) -> Self::Output {
         assert_eq!(self.currency, rhs.currency, "Currency mismatch");
-        Money::new(self.cents + rhs.cents, self.currency)
+        Money::new_dollars(self.cents + rhs.cents, self.currency)
+    }
+}
+
+impl Mul for Money {
+    type Output = Money;
+    fn mul(self, rhs: Self) -> Self::Output {
+        assert_eq!(self.currency, rhs.currency, "Currency mismatch");
+        Money::new_dollars(self.cents * rhs.cents, self.currency)        
     }
 }
 
@@ -75,7 +86,7 @@ impl Sub for Money {
     type Output = Money;
     fn sub(self, rhs: Money) -> Self::Output {
         assert_eq!(self.currency, rhs.currency, "Currency mismatch");
-        Money::new(self.cents - rhs.cents, self.currency)
+        Money::new_dollars(self.cents - rhs.cents, self.currency)
     }
 }
 
@@ -86,7 +97,7 @@ impl Display for Money {
             Currency::SEK => {
                 write!(
                     f,
-                    "{}.{:02} {}",
+                    "{}:{:02} {}",
                     self.cents / 100,
                     self.cents % 100,
                     self.currency

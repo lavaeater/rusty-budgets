@@ -1,24 +1,25 @@
 //! This crate contains all shared fullstack server functions.
 pub mod cqrs;
 pub mod models;
-mod runtime;
 
-use crate::cqrs::budget::{Budget, BudgetGroup};
+use crate::cqrs::budget::{Budget, BudgetGroup, BudgetItem, BudgetItemType};
 use crate::models::*;
-#[cfg(feature = "server")]
-use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use uuid::Uuid;
+use crate::cqrs::money::Money;
+#[cfg(feature = "server")]
+use dioxus::logger::tracing;
 
 #[cfg(feature = "server")]
 const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 
 #[cfg(feature = "server")]
 pub mod db {
-    use crate::cqrs::budget::Budget;
+    use crate::cqrs::budget::{Budget, BudgetItemType};
     use crate::cqrs::framework::Runtime;
+    use crate::cqrs::money::Money;
     use crate::models::*;
-    use crate::runtime::{Db, JoyDbBudgetRuntime, UserBudgets};
+    use crate::cqrs::runtime::{Db, JoyDbBudgetRuntime, UserBudgets};
     use crate::DEFAULT_USER_EMAIL;
     use chrono::NaiveDate;
     use dioxus::logger::tracing;
@@ -28,7 +29,7 @@ pub mod db {
 
     pub static CLIENT: Lazy<JoyDbBudgetRuntime> = Lazy::new(|| {
         tracing::info!("Init DB Client");
-        let client = JoyDbBudgetRuntime::new();
+        let client = JoyDbBudgetRuntime::new("data.json");
         // Run migrations
         tracing::info!("Insert Default Data");
         match get_default_user(Some(&client.db)) {
@@ -154,7 +155,7 @@ pub mod db {
         default_budget: bool,
     ) -> anyhow::Result<Budget> {
         let budget_id = Uuid::new_v4();
-        match with_runtime(None).cmd(budget_id, |budget| {
+        match with_runtime(None).cmd(user_id, &budget_id, |budget| {
             budget.create_budget(name.to_string(), *user_id, default_budget)
         }) {
             Ok(budget) => {
@@ -165,13 +166,22 @@ pub mod db {
         }
     }
 
-    pub fn add_group(
+    pub fn add_group(budget_id: &Uuid, user_id: &Uuid, name: &str) -> anyhow::Result<Budget> {
+        with_runtime(None).cmd(user_id, budget_id, |budget| {
+            budget.add_group(Uuid::new_v4(), name.to_string())
+        })
+    }
+
+    pub fn add_item(
         budget_id: &Uuid,
+        group_id: &Uuid,
         user_id: &Uuid,
         name: &str,
+        item_type: &BudgetItemType,
+        budgeted_amount: &Money,
     ) -> anyhow::Result<Budget> {
-        with_runtime(None).cmd(*budget_id, |budget| {
-            budget.add_group(Uuid::new_v4(), name.to_string())
+        with_runtime(None).cmd(user_id, budget_id, |budget| {
+            budget.add_item(*group_id, name.to_string(), *item_type, *budgeted_amount)
         })
     }
 
@@ -211,13 +221,25 @@ pub async fn create_budget(
 }
 
 #[server]
-pub async fn add_group(
-    budget_id: Uuid,
-    name: String,
-) -> Result<Vec<BudgetGroup>, ServerFnError> {
+pub async fn add_group(budget_id: Uuid, name: String) -> Result<Vec<BudgetGroup>, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
     match db::add_group(&budget_id, &user.id, &name) {
         Ok(b) => Ok(b.budget_groups.values().cloned().collect()),
+        Err(e) => {
+            tracing::error!(error = %e, "Could not get default budget");
+            Err(ServerFnError::ServerError(e.to_string()))
+        }
+    }
+}
+
+#[server]
+pub async fn add_item(budget_id: Uuid, group_id: Uuid, name: String, item_type: BudgetItemType, budgeted_amount: Money) -> Result<Vec<BudgetItem>, ServerFnError> {
+    let user = db::get_default_user(None).expect("Could not get default user");
+    match db::add_item(&budget_id, &group_id, &user.id, &name, &item_type, &budgeted_amount) {
+        Ok(b) => {
+            let g = b.budget_groups.get(&group_id).expect("Could not get group");
+            Ok(g.items.clone())
+        },
         Err(e) => {
             tracing::error!(error = %e, "Could not get default budget");
             Err(ServerFnError::ServerError(e.to_string()))
