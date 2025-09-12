@@ -81,7 +81,7 @@ pub struct ItemAdded {
 
 impl Budget {
     fn apply_add_item(&mut self, event: &ItemAdded) {
-        _ = self.budget_groups.get_mut(&event.group_id).and_then(|f| {
+        _ = self.budget_groups.get_mut(&event.group_id).map(|f| {
             f.items.push(BudgetItem::new(&event.name, event.item_type, event.budgeted_amount, None, None));
             Some(f)
         });
