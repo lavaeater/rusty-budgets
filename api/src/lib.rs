@@ -9,6 +9,8 @@ use crate::models::*;
 use dioxus::prelude::*;
 use uuid::Uuid;
 use crate::cqrs::money::Money;
+#[cfg(feature = "server")]
+use dioxus::logger::tracing;
 
 #[cfg(feature = "server")]
 const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";

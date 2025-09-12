@@ -10,11 +10,12 @@ use crate::budget_item_view::BudgetItemView;
 #[component]
 pub fn BudgetGroupView(group: BudgetGroup, index: usize) -> Element {
     let budget_id = *CURRENT_BUDGET_ID.read();
-    let mut show_new_item = use_signal(|| false);
+    let mut budget_items = use_signal(|| group.items.clone());
+    let mut show_new_item = use_signal(|| budget_items().is_empty());
     let mut new_item_name = use_signal(|| "".to_string());
     let mut new_item_amount = use_signal(|| Money::new(0, Currency::SEK));
     let new_item_type = use_signal(|| Some(None));
-    let mut budget_items = use_signal(|| group.items);
+
     
     rsx! {
         AccordionItem {
@@ -62,8 +63,6 @@ pub fn BudgetGroupView(group: BudgetGroup, index: usize) -> Element {
                                 onclick: move |_| async move {
                                     let item_type = new_item_type().unwrap().unwrap();
                                     if let Ok(items) = api::add_item(
-                                            // if let Some(item_type) = new_item_type() {
-                                            // }
                                             budget_id,
                                             group.id,
                                             new_item_name(),
@@ -126,43 +125,5 @@ pub fn ItemTypeSelect(mut selected_value: Signal<Option<Option<BudgetItemType>>>
                 }
             }
         }
-        // Select::<BudgetItemType> {
-        //     placeholder: "Välj typ",
-        //     // The currently selected value(s) in the dropdown.
-        //     // Callback function triggered when the selected value changes.
-        //     on_value_change: move |value: Option<BudgetItemType>| {
-        //         selected_value.set(Some(value));
-        //         if let Some(val) = value {
-        //             tracing::info!("Selected value: {:?}", val);
-        //         }
-        //     },
-        //     // The select trigger is the button that opens the dropdown.
-        //     SelectTrigger {
-        //         // The (optional) select value displays the currently selected text value.
-        //         SelectValue {}
-        //     }
-        //     // All groups must be wrapped in the select list.
-        //     SelectList {
-        //         // Each select option represents an individual option in the dropdown. The type must match the type of the select.
-        //         SelectOption::<BudgetItemType> {
-        //             index: 0usize,
-        //             // The value of the item, which will be passed to the on_value_change callback when selected.
-        //             value: BudgetItemType::Income,
-        //             text_value: "Inkomst",
-        //         }
-        //         SelectOption::<BudgetItemType> {
-        //             index: 1usize,
-        //             // The value of the item, which will be passed to the on_value_change callback when selected.
-        //             value: BudgetItemType::Expense,
-        //             text_value: "Utgift",
-        //         }
-        //         SelectOption::<BudgetItemType> {
-        //             index: 2usize,
-        //             // The value of the item, which will be passed to the on_value_change callback when selected.
-        //             value: BudgetItemType::Savings,
-        //             text_value: "Sparande",
-        //         }
-        //     }
-        // }
     }
 }
