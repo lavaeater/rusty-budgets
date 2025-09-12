@@ -1,4 +1,6 @@
-use crate::cqrs::budget::{Budget, BudgetGroup, BudgetItem, BudgetItemType};
+use std::hash::Hash;
+use chrono::{DateTime, Utc};
+use crate::cqrs::budget::{BankTransaction, Budget, BudgetGroup, BudgetItem, BudgetItemType};
 use crate::cqrs::framework::DomainEvent;
 use crate::cqrs::framework::{Aggregate, CommandError};
 use cqrs_macros::DomainEvent;
@@ -102,3 +104,48 @@ impl Budget {
         }
     }
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(DomainEvent)]
+#[domain_event(aggregate = "Budget")]
+pub struct TransactionAdded {
+    pub budget_id: Uuid,
+    pub transaction_id: Uuid,
+    pub amount: Money,
+    pub description: String,
+    pub date: DateTime<Utc>,
+}
+
+impl Hash for TransactionAdded {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.amount.hash(state);
+        self.description.hash(state);
+        self.date.hash(state);
+    }
+}
+
+impl Budget {
+    fn apply_add_transaction(&mut self, event: &TransactionAdded) {
+         self.bank_transactions.insert(BankTransaction::new(event.transaction_id, event.amount, &event.description, event.date));
+    }
+
+    fn add_transaction_impl(&self, transaction_id: Uuid, amount:Money, description: String, date: DateTime<Utc>) -> Result<TransactionAdded, CommandError> {
+        let bt = BankTransaction::new(transaction_id, amount, &description, date);
+        if self.bank_transactions.is_empty() || !self.bank_transactions.contains(&bt) {
+            Ok(TransactionAdded {
+                budget_id: self.id,
+                transaction_id,
+                amount,
+                description,
+                date,
+            })
+        }
+        else {
+            Err(CommandError::Validation("Transaction already exists."))
+        }
+    }
+}
+
+// TransactionAdded,
+// TransactionConnected,
+// FundsReallocated

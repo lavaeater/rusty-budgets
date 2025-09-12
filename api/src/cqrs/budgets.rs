@@ -1,6 +1,6 @@
-use crate::cqrs::domain_events::{BudgetCreated, GroupAdded, ItemAdded};
+use crate::cqrs::domain_events::{BudgetCreated, GroupAdded, ItemAdded,TransactionAdded};
 use crate::cqrs::framework::Aggregate;
-use crate::cqrs::framework::{DomainEvent};
+use crate::cqrs::framework::DomainEvent;
 use crate::pub_events_enum;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
@@ -11,7 +11,7 @@ pub_events_enum! {
         BudgetCreated,
         GroupAdded,
         ItemAdded,
-        // TransactionAdded,
+        TransactionAdded,
         // TransactionConnected,
         // FundsReallocated
         // ... add other events here

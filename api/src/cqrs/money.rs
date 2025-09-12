@@ -1,6 +1,7 @@
 use std::cmp::Ordering;
 use std::fmt;
 use std::fmt::{Display, Formatter};
+use std::hash::Hash;
 use std::ops::{Add, Mul, Sub};
 use serde::{Deserialize, Serialize};
 
@@ -41,6 +42,13 @@ impl PartialOrd for Money {
 impl PartialEq for Money {
     fn eq(&self, other: &Self) -> bool {
         self.cents == other.cents && self.currency == other.currency
+    }
+}
+
+impl Hash for Money {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.cents.hash(state);
+        self.currency.hash(state);
     }
 }
 

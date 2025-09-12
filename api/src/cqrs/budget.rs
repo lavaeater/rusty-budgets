@@ -1,21 +1,24 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+use std::error::Error;
 use std::fmt;
 use std::fmt::{Display, Formatter};
+use std::hash::Hash;
 use uuid::Uuid;
 use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 use joydb::Model;
+use crate::cqrs::domain_events::TransactionAdded;
 use crate::cqrs::money::Money;
 use crate::cqrs::framework::Aggregate;
 
 // --- Budget Domain ---
-#[derive(Debug, Clone, Serialize, Deserialize, Default, Model, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, Model)]
 pub struct Budget {
     pub id: Uuid,
     pub name: String,
     pub user_id: Uuid,
     pub budget_groups: HashMap<Uuid, BudgetGroup>,
-    pub bank_transactions: HashMap<Uuid, BankTransaction>,
+    pub bank_transactions: HashSet<BankTransaction>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub default_budget: bool,
@@ -87,13 +90,21 @@ impl Display for BudgetItemType {
     }   
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct BankTransaction {
     pub id: Uuid,
     pub amount: Money,
     pub description: String,
     pub date: DateTime<Utc>,
     pub budget_item_id: Option<Uuid>,
+}
+
+impl Hash for BankTransaction {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.amount.hash(state);
+        self.description.hash(state);
+        self.date.hash(state);
+    }
 }
 
 impl Display for BankTransaction {
@@ -123,9 +134,9 @@ impl BudgetItem {
 }
 
 impl BankTransaction {
-    pub fn new(amount: Money, description: &str, date: DateTime<Utc>) -> Self {
+    pub fn new(id: Uuid,amount: Money, description: &str, date: DateTime<Utc>) -> Self {
         Self {
-            id: Uuid::new_v4(),
+            id,
             amount,
             description: description.to_string(),
             date,
@@ -145,7 +156,7 @@ impl Aggregate for Budget {
             user_id: Uuid::new_v4(),
             default_budget: false,
             budget_groups: HashMap::new(),
-            bank_transactions: HashMap::new(),
+            bank_transactions: HashSet::new(),
             created_at: Utc::now(),
             updated_at: Utc::now(),
             last_event: 0,
