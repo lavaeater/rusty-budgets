@@ -1,24 +1,13 @@
-#[cfg(feature = "server")]
-use std::str::FromStr;
-#[cfg(feature = "server")]
+use std::path::Path;
 use joydb::Joydb;
-#[cfg(feature = "server")]
-use dioxus::logger::tracing;
-#[cfg(feature = "server")]
 use joydb::adapters::JsonAdapter;
 
 use joydb::{Model};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-#[cfg(feature = "server")]
 use crate::cqrs::budget::Budget;
-use crate::cqrs::budget::BudgetItemType;
-#[cfg(feature = "server")]
 use crate::cqrs::budgets::BudgetEvent;
-#[cfg(feature = "server")]
 use crate::cqrs::framework::{Runtime, StoredEvent};
-use crate::cqrs::money::{Currency, Money};
-#[cfg(feature = "server")]
 use crate::models::User;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Model)]
@@ -26,16 +15,13 @@ pub struct UserBudgets {
     pub id: Uuid,
     pub budgets: Vec<(Uuid, bool)>,}
 
-#[cfg(feature = "server")]
 joydb::state! {
     AppState,
     models: [StoredBudgetEvent, Budget, User, UserBudgets],
 }
 
-#[cfg(feature = "server")]
-type StoredBudgetEvent = StoredEvent<Budget, BudgetEvent>;
+pub type StoredBudgetEvent = StoredEvent<Budget, BudgetEvent>;
 
-#[cfg(feature = "server")]
 impl Model for StoredBudgetEvent {
     type Id = Uuid;
 
@@ -48,19 +34,16 @@ impl Model for StoredBudgetEvent {
     }
 }
 
-#[cfg(feature = "server")]
 pub type Db = Joydb<AppState, JsonAdapter>;
 
-#[cfg(feature = "server")]
 pub struct JoyDbBudgetRuntime {
     pub db: Db,
 }
 
-#[cfg(feature = "server")]
 impl JoyDbBudgetRuntime {
-    pub fn new() -> Self {
+    pub fn new<P: AsRef<Path>>(path: P) -> Self {
         Self {
-            db: Db::open("data.json").unwrap(),
+            db: Db::open(path).unwrap(),
         }
     }
 
@@ -99,7 +82,6 @@ impl JoyDbBudgetRuntime {
     }
 }
 
-#[cfg(feature = "server")]
 impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
     fn load(&self, id: &Uuid) -> Result<Option<Budget>, anyhow::Error> {
         let budget = self.get_budget(id)?;
@@ -138,52 +120,4 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
     fn events(&self, id: &Uuid) -> anyhow::Result<Vec<StoredBudgetEvent>> {
         self.fetch_events(id, 0)
     }
-}
-
-#[cfg(feature = "server")]
-#[cfg(test)]
-#[test]
-pub fn testy() -> anyhow::Result<()> {
-    let mut rt = JoyDbBudgetRuntime::new();
-    let budget_id = Uuid::new_v4();
-    let user_id = Uuid::new_v4();
-
-    let e = rt.cmd(&user_id, &budget_id, |budget| budget.create_budget("Test Budget".to_string(), user_id, true))?;
-    assert_eq!(e.name, "Test Budget");
-    assert!(e.default_budget);
-    assert_eq!(e.budget_groups.values().len(), 0);
-    let res = rt.cmd(&user_id, &budget_id, |budget| budget.add_group(Uuid::new_v4(), "Inkomster".to_string()));
-    assert!(res.is_ok());
-    let res = res?;
-    assert_eq!(res.budget_groups.values().len(), 1);
-    let e = rt.cmd(&user_id, &budget_id, |budget| budget.add_group(Uuid::new_v4(), "Inkomster".to_string())).err();
-    assert!(e.is_some());
-    assert_eq!(e.unwrap().to_string(), "Validation error: Budget group already exists");
-    
-    let group_id = Uuid::new_v4();
-    let e = rt.cmd(&user_id, &budget_id, |budget| budget.add_group(group_id, "Utgifter".to_string()))?;
-    assert_eq!(e.budget_groups.values().len(), 2);
-    
-    let e = rt.cmd(&user_id, &budget_id, |budget| budget.add_item(group_id, "Utgifter".to_string(), BudgetItemType::Expense, Money::new(100, Currency::SEK)))?;
-    let group = e.budget_groups.get(&group_id);
-    assert!(group.is_some());
-    let group = group.unwrap();
-    assert_eq!(group.items.len(), 1);
-
-    let budget_agg = rt.materialize(&budget_id)?;
-    println!(
-        "Budget {:?}: name={}, default={}",
-        budget_agg.id, budget_agg.name, budget_agg.default_budget
-    );
-
-    for group in budget_agg.budget_groups.values() {
-        println!("Group: {}", group.name);
-    }
-
-    // audit log
-    println!("Events: {:?}", rt.events(&budget_id)?);
-    let _ = rt.db.delete_all_by(|b: &Budget| b.id == budget_id);
-    let _ = rt.db.delete_all_by(|b: &StoredBudgetEvent| b.aggregate_id == budget_id);
-    let _ = rt.db.delete_all_by(|b: &UserBudgets| b.id == user_id);
-    Ok(())
 }

@@ -1,14 +1,8 @@
-use dioxus::logger::tracing;
-use crate::budget_popover::BudgetPopover;
-use api::cqrs::budget::{Budget, BudgetGroup};
-use api::models::*;
+use api::cqrs::budget::BudgetGroup;
 use dioxus::prelude::*;
-use dioxus_primitives::accordion::{Accordion, AccordionContent, AccordionItem, AccordionTrigger};
-use uuid::Uuid;
+use dioxus_primitives::accordion::Accordion;
 use crate::budget::budget_group_view::BudgetGroupView;
 use crate::budget_hero::CURRENT_BUDGET_ID;
-
-const BUDGET_CSS: Asset = asset!("/assets/styling/budget.css");
 
 #[component]
 pub fn BudgetGroups(groups: Vec<BudgetGroup>) -> Element {

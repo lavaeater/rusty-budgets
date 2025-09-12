@@ -5,14 +5,12 @@ use dioxus_primitives::select::*;
 use api::cqrs::budget::{BudgetGroup, BudgetItemType};
 use api::cqrs::money::{Currency, Money};
 
-const BUDGET_CSS: Asset = asset!("/assets/styling/budget.css");
-
 #[component]
 pub fn BudgetGroupView(group: BudgetGroup, index: usize) -> Element {
     let mut show_new_item = use_signal(|| false);
     let mut new_item_name = use_signal(|| "".to_string());
     let mut new_item_amount = use_signal(|| Money::new(0, Currency::SEK));
-    let mut new_item_type = use_signal(|| Some(None));
+    let new_item_type = use_signal(|| Some(None));
     
     rsx! {
         AccordionItem {

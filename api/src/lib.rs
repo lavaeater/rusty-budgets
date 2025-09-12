@@ -1,7 +1,8 @@
 //! This crate contains all shared fullstack server functions.
 pub mod cqrs;
 pub mod models;
-mod runtime;
+#[cfg(test)]
+mod tests;
 
 use crate::cqrs::budget::{Budget, BudgetGroup};
 use crate::models::*;
@@ -19,7 +20,7 @@ pub mod db {
     use crate::cqrs::framework::Runtime;
     use crate::cqrs::money::Money;
     use crate::models::*;
-    use crate::runtime::{Db, JoyDbBudgetRuntime, UserBudgets};
+    use crate::cqrs::runtime::{Db, JoyDbBudgetRuntime, UserBudgets};
     use crate::DEFAULT_USER_EMAIL;
     use chrono::NaiveDate;
     use dioxus::logger::tracing;
@@ -29,7 +30,7 @@ pub mod db {
 
     pub static CLIENT: Lazy<JoyDbBudgetRuntime> = Lazy::new(|| {
         tracing::info!("Init DB Client");
-        let client = JoyDbBudgetRuntime::new();
+        let client = JoyDbBudgetRuntime::new("data.json");
         // Run migrations
         tracing::info!("Insert Default Data");
         match get_default_user(Some(&client.db)) {
