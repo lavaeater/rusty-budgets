@@ -5,6 +5,7 @@ use api::models::*;
 use dioxus::prelude::*;
 use dioxus_primitives::accordion::{Accordion, AccordionContent, AccordionItem, AccordionTrigger};
 use uuid::Uuid;
+use crate::budget::budget_group_view::BudgetGroupView;
 use crate::budget_hero::CURRENT_BUDGET_ID;
 
 const BUDGET_CSS: Asset = asset!("/assets/styling/budget.css");
@@ -39,11 +40,11 @@ pub fn BudgetGroups(groups: Vec<BudgetGroup>) -> Element {
         } else {
             button {
                 class: "button",
-                    "data-style": "primary",
-                    onclick: move |_|  {
-                        show_new_group.set(true);
-                    },
-                    "Lägg till ny grupp"
+                "data-style": "primary",
+                onclick: move |_| {
+                    show_new_group.set(true);
+                },
+                "Lägg till ny grupp"
             }
         }
         Accordion {
@@ -51,33 +52,8 @@ pub fn BudgetGroups(groups: Vec<BudgetGroup>) -> Element {
             width: "15rem",
             allow_multiple_open: false,
             horizontal: false,
-            for (i , group) in budget_groups().iter().enumerate() {
-                AccordionItem {
-                    class: "accordion-item",
-                    index: i,
-                    on_change: move |open| {
-                        tracing::info!("{open};");
-                    },
-                    on_trigger_click: move || {
-                        tracing::info!("trigger");
-                    },
-                    AccordionTrigger { class: "accordion-trigger",
-                        {group.name.clone()}
-                        svg {
-                            class: "accordion-expand-icon",
-                            view_box: "0 0 24 24",
-                            xmlns: "http://www.w3.org/2000/svg",
-                            polyline { points: "6 9 12 15 18 9" }
-                        }
-                    }
-                    AccordionContent {
-                        class: "accordion-content",
-                        style: "--collapsible-content-width: 140px",
-                        div { padding_bottom: "1rem",
-                            p { padding: "0", {group.name.clone()} }
-                        }
-                    }
-                }
+            for (index , group) in budget_groups().iter().enumerate() {
+                BudgetGroupView { group: group.clone(), index }
             }
         }
     }
