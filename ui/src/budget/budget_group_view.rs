@@ -75,26 +75,16 @@ pub fn BudgetGroupView(group: BudgetGroup, index: usize) -> Element {
 pub fn ItemTypeSelect(mut selected_value: Signal<Option<Option<BudgetItemType>>>) -> Element {
 
     rsx! {
-        Select::<String> {
-            placeholder: "Select a fruit...",
-            SelectTrigger {
-                aria_label: "Select Trigger",
-                width: "12rem",
-                SelectValue {}
-            }
-            SelectList {
-                aria_label: "Select Demo",
+        Select::<String> { placeholder: "Select a fruit...",
+            SelectTrigger { aria_label: "Select Trigger", width: "12rem", SelectValue {} }
+            SelectList { aria_label: "Select Demo",
                 SelectGroup {
                     SelectGroupLabel { "Fruits" }
-                    SelectOption::<String> {
-                        index: 0usize,
-                        value: "apple",
+                    SelectOption::<String> { index: 0usize, value: "apple",
                         "Apple"
                         SelectItemIndicator { "✔️" }
                     }
-                    SelectOption::<String> {
-                        index: 1usize,
-                        value: "banana",
+                    SelectOption::<String> { index: 1usize, value: "banana",
                         "Banana"
                         SelectItemIndicator { "✔️" }
                     }
