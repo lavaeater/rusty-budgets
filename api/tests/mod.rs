@@ -1,44 +1,89 @@
-use uuid::Uuid;
-use api::cqrs::budget::{Budget, BudgetItemType};
+use api::cqrs::budget::BudgetItemType;
 use api::cqrs::framework::Runtime;
 use api::cqrs::money::{Currency, Money};
-use api::cqrs::runtime::{JoyDbBudgetRuntime, StoredBudgetEvent, UserBudgets};
+use api::cqrs::runtime::JoyDbBudgetRuntime;
+use uuid::Uuid;
 
 #[cfg(test)]
+
 #[test]
-pub fn testy() -> anyhow::Result<()> {
-    let rt = JoyDbBudgetRuntime::new("data_test.json");
+pub fn create_budget() -> anyhow::Result<()> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
     let budget_id = Uuid::new_v4();
     let user_id = Uuid::new_v4();
 
-    let e = rt.cmd(&user_id, &budget_id, |budget| {
+    let res = rt.cmd(&user_id, &budget_id, |budget| {
         budget.create_budget("Test Budget".to_string(), user_id, true)
     })?;
-    assert_eq!(e.name, "Test Budget");
-    assert!(e.default_budget);
-    assert_eq!(e.budget_groups.values().len(), 0);
+    assert_eq!(res.name, "Test Budget");
+    assert!(res.default_budget);
+    assert_eq!(res.budget_groups.values().len(), 0);
+    Ok(())
+}
+
+#[test]
+pub fn add_budget_group() -> anyhow::Result<()> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let budget_id = Uuid::new_v4();
+    let user_id = Uuid::new_v4();
+
+    let res = rt.cmd(&user_id, &budget_id, |budget| {
+        budget.create_budget("Test Budget".to_string(), user_id, true)
+    })?;
     let res = rt.cmd(&user_id, &budget_id, |budget| {
         budget.add_group(Uuid::new_v4(), "Inkomster".to_string())
     });
     assert!(res.is_ok());
     let res = res?;
     assert_eq!(res.budget_groups.values().len(), 1);
-    let e = rt
+    Ok(())
+}
+
+#[test]
+pub fn add_budget_group_that_exists() -> anyhow::Result<()> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let budget_id = Uuid::new_v4();
+    let user_id = Uuid::new_v4();
+
+    let res = rt.cmd(&user_id, &budget_id, |budget| {
+        budget.create_budget("Test Budget".to_string(), user_id, true)
+    })?;
+    let res = rt.cmd(&user_id, &budget_id, |budget| {
+        budget.add_group(Uuid::new_v4(), "Inkomster".to_string())
+    });
+    assert!(res.is_ok());
+    let res = res?;
+    assert_eq!(res.budget_groups.values().len(), 1);
+    let res = rt
         .cmd(&user_id, &budget_id, |budget| {
             budget.add_group(Uuid::new_v4(), "Inkomster".to_string())
         })
         .err();
-    assert!(e.is_some());
+    assert!(res.is_some());
     assert_eq!(
-        e.unwrap().to_string(),
+        res.unwrap().to_string(),
         "Validation error: Budget group already exists"
     );
+    
+    Ok(())
+}
+
+
+#[test]
+pub fn add_budget_item() -> anyhow::Result<()> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let budget_id = Uuid::new_v4();
+    let user_id = Uuid::new_v4();
+
+    let res = rt.cmd(&user_id, &budget_id, |budget| {
+        budget.create_budget("Test Budget".to_string(), user_id, true)
+    })?;
 
     let group_id = Uuid::new_v4();
-    let e = rt.cmd(&user_id, &budget_id, |budget| {
+    let res = rt.cmd(&user_id, &budget_id, |budget| {
         budget.add_group(group_id, "Utgifter".to_string())
     })?;
-    assert_eq!(e.budget_groups.values().len(), 2);
+    assert_eq!(res.budget_groups.values().len(), 1);
 
     let e = rt.cmd(&user_id, &budget_id, |budget| {
         budget.add_item(
@@ -65,10 +110,5 @@ pub fn testy() -> anyhow::Result<()> {
 
     // audit log
     println!("Events: {:?}", rt.events(&budget_id)?);
-    let _ = rt.db.delete_all_by(|b: &Budget| b.id == budget_id);
-    let _ = rt
-        .db
-        .delete_all_by(|b: &StoredBudgetEvent| b.aggregate_id == budget_id);
-    let _ = rt.db.delete_all_by(|b: &UserBudgets| b.id == user_id);
     Ok(())
 }

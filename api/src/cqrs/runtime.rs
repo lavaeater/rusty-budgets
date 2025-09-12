@@ -46,6 +46,12 @@ impl JoyDbBudgetRuntime {
             db: Db::open(path).unwrap(),
         }
     }
+    
+    pub fn new_in_memory() -> Self {
+        Self {
+            db: Db::new_in_memory().unwrap(),
+        }
+    }
 
     /// Ergonomic command execution - eliminates all the boilerplate!
     /// Usage: rt.cmd(id, |budget| budget.create_budget(name, user_id, default))
