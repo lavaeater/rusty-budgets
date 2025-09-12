@@ -90,7 +90,7 @@ pub fn add_budget_item() -> anyhow::Result<()> {
             group_id,
             "Utgifter".to_string(),
             BudgetItemType::Expense,
-            Money::new(100, Currency::SEK),
+            Money::new_dollars(100, Currency::SEK),
         )
     })?;
     let group = e.budget_groups.get(&group_id);

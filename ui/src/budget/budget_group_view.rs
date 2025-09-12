@@ -13,7 +13,7 @@ pub fn BudgetGroupView(group: BudgetGroup, index: usize) -> Element {
     let mut budget_items = use_signal(|| group.items.clone());
     let mut show_new_item = use_signal(|| budget_items().is_empty());
     let mut new_item_name = use_signal(|| "".to_string());
-    let mut new_item_amount = use_signal(|| Money::new(0, Currency::SEK));
+    let mut new_item_amount = use_signal(|| Money::new_dollars(0, Currency::SEK));
     let new_item_type = use_signal(|| Some(None));
 
     
@@ -53,7 +53,7 @@ pub fn BudgetGroupView(group: BudgetGroup, index: usize) -> Element {
                                 r#type: "number",
                                 placeholder: "Budgetpostbelopp",
                                 oninput: move |e| {
-                                    new_item_amount.set(Money::new(e.value().parse().unwrap(), Currency::SEK))
+                                    new_item_amount.set(Money::new_dollars(e.value().parse().unwrap(), Currency::SEK))
                                 },
                             }
                             ItemTypeSelect { selected_value: new_item_type }

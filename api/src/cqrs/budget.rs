@@ -115,7 +115,7 @@ impl BudgetItem {
             name: name.to_string(),
             item_type,
             budgeted_amount,
-            actual_spent: Money::new(0, budgeted_amount.currency()),
+            actual_spent: Money::new_dollars(0, budgeted_amount.currency()),
             notes,
             tags: tags.unwrap_or_default(),
         }
