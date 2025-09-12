@@ -68,11 +68,23 @@ pub struct BudgetItem {
     pub tags: Vec<String>,
 }
 
+
+
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq)]
 pub enum BudgetItemType {
     Income,
     Expense,
     Savings,
+}
+
+impl Display for BudgetItemType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", match self {
+            BudgetItemType::Income => "Inkomst",
+            BudgetItemType::Expense => "Utgift",
+            BudgetItemType::Savings => "Sparande",
+        })
+    }   
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]

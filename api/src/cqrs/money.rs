@@ -1,7 +1,7 @@
 use std::cmp::Ordering;
 use std::fmt;
 use std::fmt::{Display, Formatter};
-use std::ops::{Add, Sub};
+use std::ops::{Add, Mul, Sub};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -45,8 +45,8 @@ impl PartialEq for Money {
 }
 
 impl Money {
-    pub fn new(cents: i64, currency: Currency) -> Self {
-        Self { cents, currency }
+    pub fn new(dollars: i64, currency: Currency) -> Self {
+        Self { cents: dollars * 100, currency }
     }
 
     pub fn amount_in_cents(&self) -> i64 {
@@ -68,6 +68,14 @@ impl Add for Money {
     fn add(self, rhs: Money) -> Self::Output {
         assert_eq!(self.currency, rhs.currency, "Currency mismatch");
         Money::new(self.cents + rhs.cents, self.currency)
+    }
+}
+
+impl Mul for Money {
+    type Output = Money;
+    fn mul(self, rhs: Self) -> Self::Output {
+        assert_eq!(self.currency, rhs.currency, "Currency mismatch");
+        Money::new(self.cents * rhs.cents, self.currency)        
     }
 }
 
