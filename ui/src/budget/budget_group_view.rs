@@ -4,13 +4,17 @@ use dioxus_primitives::accordion::{AccordionContent, AccordionItem, AccordionTri
 use dioxus_primitives::select::*;
 use api::cqrs::budget::{BudgetGroup, BudgetItemType};
 use api::cqrs::money::{Currency, Money};
+use crate::budget_hero::CURRENT_BUDGET_ID;
+use crate::budget_item_view::BudgetItemView;
 
 #[component]
 pub fn BudgetGroupView(group: BudgetGroup, index: usize) -> Element {
+    let budget_id = *CURRENT_BUDGET_ID.read();
     let mut show_new_item = use_signal(|| false);
     let mut new_item_name = use_signal(|| "".to_string());
     let mut new_item_amount = use_signal(|| Money::new(0, Currency::SEK));
     let new_item_type = use_signal(|| Some(None));
+    let mut budget_items = use_signal(|| group.items);
     
     rsx! {
         AccordionItem {
@@ -52,6 +56,28 @@ pub fn BudgetGroupView(group: BudgetGroup, index: usize) -> Element {
                                 },
                             }
                             ItemTypeSelect { selected_value: new_item_type }
+                            button {
+                                class: "button",
+                                "data-style": "primary",
+                                onclick: move |_| async move {
+                                    let item_type = new_item_type().unwrap().unwrap();
+                                    if let Ok(items) = api::add_item(
+                                            // if let Some(item_type) = new_item_type() {
+                                            // }
+                                            budget_id,
+                                            group.id,
+                                            new_item_name(),
+                                            item_type,
+                                            new_item_amount(),
+                                        )
+                                        .await
+                                    {
+                                        budget_items.set(items);
+                                    }
+                                    show_new_item.set(false);
+                                },
+                                "Lägg till"
+                            }
                         }
                     } else {
                         button {
@@ -64,6 +90,9 @@ pub fn BudgetGroupView(group: BudgetGroup, index: usize) -> Element {
                         }
                     }
                 }
+                for (index , item) in budget_items().iter().enumerate() {
+                    BudgetItemView { item: item.clone(), index }
+                }
             }
         }
     }
@@ -73,19 +102,27 @@ pub fn BudgetGroupView(group: BudgetGroup, index: usize) -> Element {
 pub fn ItemTypeSelect(mut selected_value: Signal<Option<Option<BudgetItemType>>>) -> Element {
 
     rsx! {
-        Select::<String> { placeholder: "Select a fruit...",
-            SelectTrigger { aria_label: "Select Trigger", width: "12rem", SelectValue {} }
-            SelectList { aria_label: "Select Demo",
-                SelectGroup {
-                    SelectGroupLabel { "Fruits" }
-                    SelectOption::<String> { index: 0usize, value: "apple",
-                        "Apple"
-                        SelectItemIndicator { "✔️" }
-                    }
-                    SelectOption::<String> { index: 1usize, value: "banana",
-                        "Banana"
-                        SelectItemIndicator { "✔️" }
-                    }
+        Select::<BudgetItemType> {
+            placeholder: "Välj typ",
+            on_value_change: move |value: Option<BudgetItemType>| {
+                selected_value.set(Some(value));
+                if let Some(val) = value {
+                    tracing::info!("Selected value: {:?}", val);
+                }
+            },
+            SelectTrigger { aria_label: "Väljare", width: "12rem", SelectValue {} }
+            SelectList { aria_label: "Typväljare",
+                SelectOption::<BudgetItemType> { index: 0usize, value: BudgetItemType::Income,
+                    "Inkomst"
+                    SelectItemIndicator { "✔️" }
+                }
+                SelectOption::<BudgetItemType> { index: 1usize, value: BudgetItemType::Expense,
+                    "Utgift"
+                    SelectItemIndicator { "✔️" }
+                }
+                SelectOption::<BudgetItemType> { index: 2usize, value: BudgetItemType::Savings,
+                    "Sparande"
+                    SelectItemIndicator { "✔️" }
                 }
             }
         }

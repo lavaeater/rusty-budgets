@@ -4,12 +4,11 @@ pub mod models;
 #[cfg(test)]
 mod tests;
 
-use crate::cqrs::budget::{Budget, BudgetGroup};
+use crate::cqrs::budget::{Budget, BudgetGroup, BudgetItem, BudgetItemType};
 use crate::models::*;
-#[cfg(feature = "server")]
-use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use uuid::Uuid;
+use crate::cqrs::money::Money;
 
 #[cfg(feature = "server")]
 const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
@@ -182,7 +181,7 @@ pub mod db {
         budgeted_amount: &Money,
     ) -> anyhow::Result<Budget> {
         with_runtime(None).cmd(user_id, budget_id, |budget| {
-            budget.add_item(*group_id, name.to_string(), item_type.clone(), budgeted_amount.clone())
+            budget.add_item(*group_id, name.to_string(), *item_type, *budgeted_amount)
         })
     }
 
@@ -226,6 +225,21 @@ pub async fn add_group(budget_id: Uuid, name: String) -> Result<Vec<BudgetGroup>
     let user = db::get_default_user(None).expect("Could not get default user");
     match db::add_group(&budget_id, &user.id, &name) {
         Ok(b) => Ok(b.budget_groups.values().cloned().collect()),
+        Err(e) => {
+            tracing::error!(error = %e, "Could not get default budget");
+            Err(ServerFnError::ServerError(e.to_string()))
+        }
+    }
+}
+
+#[server]
+pub async fn add_item(budget_id: Uuid, group_id: Uuid, name: String, item_type: BudgetItemType, budgeted_amount: Money) -> Result<Vec<BudgetItem>, ServerFnError> {
+    let user = db::get_default_user(None).expect("Could not get default user");
+    match db::add_item(&budget_id, &group_id, &user.id, &name, &item_type, &budgeted_amount) {
+        Ok(b) => {
+            let g = b.budget_groups.get(&group_id).expect("Could not get group");
+            Ok(g.items.values().cloned().collect())
+        },
         Err(e) => {
             tracing::error!(error = %e, "Could not get default budget");
             Err(ServerFnError::ServerError(e.to_string()))
