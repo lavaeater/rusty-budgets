@@ -1,82 +1,82 @@
-/* This file contains the global styles for the styled dioxus components. You only
- * need to import this file once in your project root.
- */
-@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+/*!* This file contains the global styles for the styled dioxus components. You only*/
+/* * need to import this file once in your project root.*/
+/* *!*/
+/*@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");*/
 
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin: 20px;    padding: 0;
-    background-color: var(--primary-color);
-    color: var(--secondary-color-4);
-    font-optical-sizing: auto;
-    font-style: normal;
-    font-weight: 400;
-}
+/*body {*/
+/*    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;*/
+/*    margin: 20px;    padding: 0;*/
+/*    background-color: var(--primary-color);*/
+/*    color: var(--secondary-color-4);*/
+/*    font-optical-sizing: auto;*/
+/*    font-style: normal;*/
+/*    font-weight: 400;*/
+/*}*/
 
-@media (prefers-color-scheme: dark) {
-    :root {
-        --dark: ;
-        --light: initial;
-    }
-}
+/*@media (prefers-color-scheme: dark) {*/
+/*    :root {*/
+/*        --dark: ;*/
+/*        --light: initial;*/
+/*    }*/
+/*}*/
 
-@media (prefers-color-scheme: light) {
-    :root {
-        --dark: initial;
-        --light: ;
-    }
-}
+/*@media (prefers-color-scheme: light) {*/
+/*    :root {*/
+/*        --dark: initial;*/
+/*        --light: ;*/
+/*    }*/
+/*}*/
 
-:root {
-    /* Primary colors */
-    --primary-color: var(--dark, #000) var(--light, #f7f3e9);
-    --primary-color-1: var(--dark, #0e0e0e) var(--light, #f5f1e7);
-    --primary-color-2: var(--dark, #0a0a0a) var(--light, #f3efdd);
-    --primary-color-3: var(--dark, #141313) var(--light, #f0ebd8);
-    --primary-color-4: var(--dark, #1a1a1a) var(--light, #ede7d3);
-    --primary-color-5: var(--dark, #262626) var(--light, #e8e0cc);
-    --primary-color-6: var(--dark, #232323) var(--light, #e0d6c2);
-    --primary-color-7: var(--dark, #3e3e3e) var(--light, #c9b896);
+/*:root {*/
+/*    !* Primary colors *!*/
+/*    --primary-color: var(--dark, #000) var(--light, #f7f3e9);*/
+/*    --primary-color-1: var(--dark, #0e0e0e) var(--light, #f5f1e7);*/
+/*    --primary-color-2: var(--dark, #0a0a0a) var(--light, #f3efdd);*/
+/*    --primary-color-3: var(--dark, #141313) var(--light, #f0ebd8);*/
+/*    --primary-color-4: var(--dark, #1a1a1a) var(--light, #ede7d3);*/
+/*    --primary-color-5: var(--dark, #262626) var(--light, #e8e0cc);*/
+/*    --primary-color-6: var(--dark, #232323) var(--light, #e0d6c2);*/
+/*    --primary-color-7: var(--dark, #3e3e3e) var(--light, #c9b896);*/
 
-    /* Secondary colors */
-    --secondary-color: var(--dark, #fff) var(--light, #3d2914);
-    --secondary-color-1: var(--dark, #fafafa) var(--light, #3d2914);
-    --secondary-color-2: var(--dark, #e6e6e6) var(--light, #4a3319);
-    --secondary-color-3: var(--dark, #dcdcdc) var(--light, #5c3e1f);
-    --secondary-color-4: var(--dark, #d4d4d4) var(--light, #6b4423);
-    --secondary-color-5: var(--dark, #a1a1a1) var(--light, #8b6332);
-    --secondary-color-6: var(--dark, #5d5d5d) var(--light, #b8956d);
+/*    !* Secondary colors *!*/
+/*    --secondary-color: var(--dark, #fff) var(--light, #3d2914);*/
+/*    --secondary-color-1: var(--dark, #fafafa) var(--light, #3d2914);*/
+/*    --secondary-color-2: var(--dark, #e6e6e6) var(--light, #4a3319);*/
+/*    --secondary-color-3: var(--dark, #dcdcdc) var(--light, #5c3e1f);*/
+/*    --secondary-color-4: var(--dark, #d4d4d4) var(--light, #6b4423);*/
+/*    --secondary-color-5: var(--dark, #a1a1a1) var(--light, #8b6332);*/
+/*    --secondary-color-6: var(--dark, #5d5d5d) var(--light, #b8956d);*/
 
-    /* Highlight colors */
-    --focused-border-color: var(--dark, #2b7fff) var(--light, #2b7fff);
-    --primary-success-color: var(--dark, #02271c) var(--light, #ecfdf5);
-    --secondary-success-color: var(--dark, #b6fae3) var(--light, #10b981);
-    --primary-warning-color: var(--dark, #342203) var(--light, #fffbeb);
-    --secondary-warning-color: var(--dark, #feeac7) var(--light, #f59e0b);
-    --primary-error-color: var(--dark, #a22e2e) var(--light, #dc2626);
-    --secondary-error-color: var(--dark, #9b1c1c) var(--light, #ef4444);
-    --contrast-error-color: var(--dark, var(--secondary-color-3))
-    var(--light, var(--primary-color));
-    --primary-info-color: var(--dark, var(--primary-color-5))
-    var(--light, var(--primary-color));
-    --secondary-info-color: var(--dark, var(--primary-color-7))
-    var(--light, var(--secondary-color-3));
-}
+/*    !* Highlight colors *!*/
+/*    --focused-border-color: var(--dark, #2b7fff) var(--light, #2b7fff);*/
+/*    --primary-success-color: var(--dark, #02271c) var(--light, #ecfdf5);*/
+/*    --secondary-success-color: var(--dark, #b6fae3) var(--light, #10b981);*/
+/*    --primary-warning-color: var(--dark, #342203) var(--light, #fffbeb);*/
+/*    --secondary-warning-color: var(--dark, #feeac7) var(--light, #f59e0b);*/
+/*    --primary-error-color: var(--dark, #a22e2e) var(--light, #dc2626);*/
+/*    --secondary-error-color: var(--dark, #9b1c1c) var(--light, #ef4444);*/
+/*    --contrast-error-color: var(--dark, var(--secondary-color-3))*/
+/*    var(--light, var(--primary-color));*/
+/*    --primary-info-color: var(--dark, var(--primary-color-5))*/
+/*    var(--light, var(--primary-color));*/
+/*    --secondary-info-color: var(--dark, var(--primary-color-7))*/
+/*    var(--light, var(--secondary-color-3));*/
+/*}*/
 
-/* Modern browsers with `scrollbar-*` support */
-@supports (scrollbar-width: auto) {
-    :not(:hover) {
-        scrollbar-color: rgb(0 0 0 / 0%) rgb(0 0 0 / 0%);
-    }
+/*!* Modern browsers with `scrollbar-*` support *!*/
+/*@supports (scrollbar-width: auto) {*/
+/*    :not(:hover) {*/
+/*        scrollbar-color: rgb(0 0 0 / 0%) rgb(0 0 0 / 0%);*/
+/*    }*/
 
-    :hover {
-        scrollbar-color: var(--secondary-color-2) rgba(0, 0, 0, 0);
-    }
-}
+/*    :hover {*/
+/*        scrollbar-color: var(--secondary-color-2) rgba(0, 0, 0, 0);*/
+/*    }*/
+/*}*/
 
-/* Legacy browsers with `::-webkit-scrollbar-*` support */
-@supports selector(::-webkit-scrollbar) {
-    :root::-webkit-scrollbar-track {
-        background: transparent;
-    }
-}
+/*!* Legacy browsers with `::-webkit-scrollbar-*` support *!*/
+/*@supports selector(::-webkit-scrollbar) {*/
+/*    :root::-webkit-scrollbar-track {*/
+/*        background: transparent;*/
+/*    }*/
+/*}*/

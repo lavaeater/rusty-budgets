@@ -1,8 +1,7 @@
 use dioxus::logger::tracing::Level;
 use dioxus::prelude::*;
 
-use ui::Navbar;
-use views::{Blog, Home};
+use views::Home;
 
 mod views;
 
@@ -12,8 +11,6 @@ enum Route {
     #[layout(MobileNavbar)]
     #[route("/")]
     Home {},
-    #[route("/blog/:id")]
-    Blog { id: i32 },
 }
 
 const MAIN_CSS: Asset = asset!("/assets/main.css");
@@ -45,11 +42,6 @@ fn App() -> Element {
 #[component]
 fn MobileNavbar() -> Element {
     rsx! {
-        Navbar {
-            Link { to: Route::Home {}, "Home" }
-            Link { to: Route::Blog { id: 1 }, "Blog" }
-        }
-
         Outlet::<Route> {}
     }
 }

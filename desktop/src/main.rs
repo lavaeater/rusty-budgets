@@ -1,6 +1,5 @@
 use dioxus::logger::tracing::Level;
 use dioxus::prelude::*;
-use ui::Navbar;
 mod views;
 use views::*;
 const MAIN_CSS: Asset = asset!("/assets/main.css");
@@ -11,8 +10,6 @@ enum Route {
     #[layout(DesktopNavbar)]
     #[route("/")]
     Home {},
-    #[route("/blog/:id")]
-    Blog { id: i32 },
 }
 
 fn main() {
@@ -40,10 +37,10 @@ fn App() -> Element {
 #[component]
 fn DesktopNavbar() -> Element {
     rsx! {
-        Navbar {
-            Link { to: Route::Home {}, "Home" }
-            Link { to: Route::Blog { id: 1 }, "Blog" }
-        }
+        // Navbar {
+        //     Link { to: Route::Home {}, "Home" }
+        //     Link { to: Route::Blog { id: 1 }, "Blog" }
+        // }
 
         Outlet::<Route> {}
     }
