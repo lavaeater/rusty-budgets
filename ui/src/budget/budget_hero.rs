@@ -1,9 +1,9 @@
+use dioxus_primitives::label::Label;
 use api::cqrs::budget::Budget;
 use dioxus::prelude::*;
 use uuid::Uuid;
 use crate::budget::budget_groups::BudgetGroups;
-
-const BUDGET_CSS: Asset = asset!("/assets/styling/budget.css");
+use crate::Input;
 
 pub static CURRENT_BUDGET_ID: GlobalSignal<Uuid> = Signal::global(|| Uuid::default());
 #[component]
@@ -23,7 +23,6 @@ pub fn BudgetHeroOne() -> Element {
     match budget_signal() {
         Some(budget) => {
             rsx! {
-                document::Link { rel: "stylesheet", href: BUDGET_CSS }
                 div { class: "budget-hero-container",
                     // Header
                     div { class: "budget-header",
@@ -37,40 +36,46 @@ pub fn BudgetHeroOne() -> Element {
             // Check if we have an error or are still loading
             match budget_resource.read_unchecked().as_ref() {
                 Some(Err(e)) => rsx! {
-                    document::Link { rel: "stylesheet", href: BUDGET_CSS }
                     div { id: "budget_hero",
                         h4 { "Error loading budget: {e}" }
                     }
                 },
                 None => rsx! {
-                    document::Link { rel: "stylesheet", href: BUDGET_CSS }
                     div { id: "budget_hero",
                         h4 { "Laddar..." }
                     }
                 },
                 Some(&Ok(None)) => rsx! {
-                    document::Link { rel: "stylesheet", href: BUDGET_CSS }
-                    div { id: "budget_hero",
+                    div {
+                        display: "flex",
+                        flex_direction: "column",
+                        gap: ".5rem",
                         h4 { "Ingen budget hittad" }
-                        input {
-                            r#type: "text",
-                            placeholder: "Budgetnamn",
-                            oninput: move |e| { budget_name.set(e.value()) },
+                        Label { html_for: "name", "Skapa budget" }
+                        div {
+                            display: "flex",
+                            flex_direction: "column",
+                            width: "40%",
+                            Input {
+                                id: "name",
+                                placeholder: "Budgetnamn",
+                                oninput: move |e: FormEvent| { budget_name.set(e.value()) },
+                            }
                         }
-                        button {
-                            class: "button",
-                            "data-style": "primary",
-                            onclick: move |_| async move {
-                                if let Ok(budget) = api::create_budget(budget_name.to_string(), None).await {
-                                    budget_signal.set(Some(budget))
-                                }
-                            },
-                            "Skapa budget"
-                        }
+                    }
+                    br {}
+                    button {
+                        class: "button",
+                        "data-style": "primary",
+                        onclick: move |_| async move {
+                            if let Ok(budget) = api::create_budget(budget_name.to_string(), None).await {
+                                budget_signal.set(Some(budget))
+                            }
+                        },
+                        "Skapa budget"
                     }
                 },
                 Some(&Ok(Some(_))) => rsx! {
-                    document::Link { rel: "stylesheet", href: BUDGET_CSS }
                     div { id: "budget_hero",
                         h4 { "Laddar..." }
                     }
