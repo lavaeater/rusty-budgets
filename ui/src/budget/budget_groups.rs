@@ -11,7 +11,7 @@ pub fn BudgetGroups(budget_id: Uuid, groups: Vec<BudgetGroup>) -> Element {
     let mut show_new_group = use_signal(|| false);
     rsx! {
         if show_new_group() {
-            div { id: "new_group",
+            div { id: "new_group", height: "100%",
                 label { "Skapa ny grupp" }
                 input {
                     r#type: "text",
@@ -42,7 +42,11 @@ pub fn BudgetGroups(budget_id: Uuid, groups: Vec<BudgetGroup>) -> Element {
                 "Lägg till ny grupp"
             }
         }
-        Accordion { width: "40%", allow_multiple_open: false, horizontal: false,
+        Accordion {
+            width: "40%",
+            height: "100%",
+            allow_multiple_open: false,
+            horizontal: false,
             for (index , group) in budget_groups().iter().enumerate() {
                 BudgetGroupView { budget_id, group: group.clone(), index }
             }

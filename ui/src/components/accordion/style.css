@@ -27,7 +27,7 @@
 
 .accordion-content {
   display: grid;
-  height: 0;
+  height: 100%;
 }
 
 .accordion-content[data-open="false"] {
@@ -59,7 +59,7 @@
 }
 
 .accordion-item {
-  overflow: hidden;
+  overflow: visible;
   box-sizing: border-box;
   border-bottom: 1px solid var(--primary-color-6);
   margin-top: 1px;

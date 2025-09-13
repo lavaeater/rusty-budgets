@@ -17,6 +17,7 @@ pub fn BudgetGroupView(budget_id: Uuid, group: BudgetGroup, index: usize) -> Ele
     rsx! {
         AccordionItem {
             index,
+            height: "100",
             on_change: move |open| {
                 tracing::info!("{open};");
             },
