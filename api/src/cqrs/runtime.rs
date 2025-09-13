@@ -1,4 +1,5 @@
 use std::path::Path;
+use dioxus::logger::tracing;
 use joydb::Joydb;
 use joydb::adapters::JsonAdapter;
 
@@ -118,9 +119,11 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
         Ok(())
     }
 
-    fn append(&self, user_id: &Uuid, ev: BudgetEvent) {
+    fn append(&self, user_id: &Uuid, ev: BudgetEvent) -> anyhow::Result<()> {
         let stored_event = StoredEvent::new(ev, *user_id);
-        self.db.insert(&stored_event).unwrap();
+        tracing::info!("We have event: {stored_event:?}");
+        self.db.insert(&stored_event)?;
+        Ok(())
     }
 
     fn events(&self, id: &Uuid) -> anyhow::Result<Vec<StoredBudgetEvent>> {

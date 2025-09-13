@@ -20,6 +20,13 @@ pub fn create_budget() -> anyhow::Result<()> {
     assert_eq!(res.name, "Test Budget");
     assert!(res.default_budget);
     assert_eq!(res.budget_groups.values().len(), 0);
+    
+    let res = rt.materialize(&budget_id)?;
+    assert_eq!(res.name, "Test Budget");
+    assert!(res.default_budget);
+    assert_eq!(res.budget_groups.values().len(), 0);
+    assert_eq!(res.version, 1);
+    
     Ok(())
 }
 
@@ -38,6 +45,12 @@ pub fn add_budget_group() -> anyhow::Result<()> {
     assert!(res.is_ok());
     let res = res?;
     assert_eq!(res.budget_groups.values().len(), 1);
+
+    let res = rt.materialize(&budget_id)?;
+    assert_eq!(res.name, "Test Budget");
+    assert!(res.default_budget);
+    assert_eq!(res.budget_groups.values().len(), 1);
+    assert_eq!(res.version, 2);
     Ok(())
 }
 
