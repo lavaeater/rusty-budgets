@@ -4,7 +4,7 @@ use dioxus::logger::tracing;
 #[component]
 pub fn BudgetItemView(item: BudgetItem, index: usize) -> Element {
     tracing::info!("item_name: {}", item.name);
-    tracing::info!("item_type: {}", item.item_type);
+    tracing::info!("item_type: {}", item.item_type.to_string());
     tracing::info!("item_amount: {}", item.budgeted_amount.to_string());
     
     let item_amount = use_signal(|| item.budgeted_amount.to_string());
