@@ -59,7 +59,10 @@ pub fn BudgetHeroOne() -> Element {
                             Input {
                                 id: "name",
                                 placeholder: "Budgetnamn",
-                                oninput: move |e: FormEvent| { budget_name.set(e.value()) },
+                                oninput: move |e: FormEvent| { 
+                                    
+                                    budget_name.set(e.value())
+                                },
                             }
                         }
                     }
