@@ -1,6 +1,6 @@
 use api::cqrs::budget::BudgetGroup;
 use dioxus::prelude::*;
-use dioxus_primitives::accordion::Accordion;
+use crate::components::Accordion;
 use crate::budget::budget_group_view::BudgetGroupView;
 use crate::budget_hero::CURRENT_BUDGET_ID;
 
@@ -42,8 +42,7 @@ pub fn BudgetGroups(groups: Vec<BudgetGroup>) -> Element {
             }
         }
         Accordion {
-            class: "accordion",
-            width: "15rem",
+            width: "40%",
             allow_multiple_open: false,
             horizontal: false,
             for (index , group) in budget_groups().iter().enumerate() {

@@ -1,12 +1,11 @@
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
-use dioxus_primitives::accordion::{AccordionContent, AccordionItem, AccordionTrigger};
 use dioxus_primitives::select::*;
 use api::cqrs::budget::{BudgetGroup, BudgetItemType};
 use api::cqrs::money::{Currency, Money};
 use crate::budget_hero::CURRENT_BUDGET_ID;
 use crate::budget_item_view::BudgetItemView;
-
+use crate::components::*;
 #[component]
 pub fn BudgetGroupView(group: BudgetGroup, index: usize) -> Element {
     let budget_id = *CURRENT_BUDGET_ID.read();
@@ -19,7 +18,6 @@ pub fn BudgetGroupView(group: BudgetGroup, index: usize) -> Element {
     
     rsx! {
         AccordionItem {
-            class: "accordion-item",
             index,
             on_change: move |open| {
                 tracing::info!("{open};");
@@ -27,18 +25,10 @@ pub fn BudgetGroupView(group: BudgetGroup, index: usize) -> Element {
             on_trigger_click: move || {
                 tracing::info!("trigger");
             },
-            AccordionTrigger { class: "accordion-trigger",
+            AccordionTrigger { 
                 {group.name.clone()}
-                svg {
-                    class: "accordion-expand-icon",
-                    view_box: "0 0 24 24",
-                    xmlns: "http://www.w3.org/2000/svg",
-                    polyline { points: "6 9 12 15 18 9" }
-                }
             }
             AccordionContent {
-                class: "accordion-content",
-                style: "--collapsible-content-width: 140px",
                 div { padding_bottom: "1rem",
                     p { padding: "0", {group.name.clone()} }
                     if show_new_item() {
