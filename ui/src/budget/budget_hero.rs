@@ -37,16 +37,19 @@ pub fn BudgetHeroOne() -> Element {
             // Check if we have an error or are still loading
             match budget_resource.read_unchecked().as_ref() {
                 Some(Err(e)) => rsx! {
+                    document::Link { rel: "stylesheet", href: BUDGET_CSS }
                     div { id: "budget_hero",
                         h4 { "Error loading budget: {e}" }
                     }
                 },
                 None => rsx! {
+                    document::Link { rel: "stylesheet", href: BUDGET_CSS }
                     div { id: "budget_hero",
                         h4 { "Laddar..." }
                     }
                 },
                 Some(&Ok(None)) => rsx! {
+                    document::Link { rel: "stylesheet", href: BUDGET_CSS }
                     div { id: "budget_hero",
                         h4 { "Ingen budget hittad" }
                         input {
@@ -67,6 +70,7 @@ pub fn BudgetHeroOne() -> Element {
                     }
                 },
                 Some(&Ok(Some(_))) => rsx! {
+                    document::Link { rel: "stylesheet", href: BUDGET_CSS }
                     div { id: "budget_hero",
                         h4 { "Laddar..." }
                     }

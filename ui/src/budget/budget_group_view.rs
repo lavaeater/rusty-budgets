@@ -53,7 +53,8 @@ pub fn BudgetGroupView(group: BudgetGroup, index: usize) -> Element {
                                 r#type: "number",
                                 placeholder: "Budgetpostbelopp",
                                 oninput: move |e| {
-                                    new_item_amount.set(Money::new_dollars(e.value().parse().unwrap(), Currency::SEK))
+                                    new_item_amount
+                                        .set(Money::new_dollars(e.value().parse().unwrap(), Currency::SEK))
                                 },
                             }
                             ItemTypeSelect { selected_value: new_item_type }
@@ -111,17 +112,23 @@ pub fn ItemTypeSelect(mut selected_value: Signal<Option<Option<BudgetItemType>>>
             },
             SelectTrigger { aria_label: "Väljare", width: "12rem", SelectValue {} }
             SelectList { aria_label: "Typväljare",
-                SelectOption::<BudgetItemType> { index: 0usize, value: BudgetItemType::Income,
+                SelectOption::<BudgetItemType> {
+                    index: 0usize,
+                    value: BudgetItemType::Income,
                     text_value: "Inkomst",
                     "Inkomst"
                     SelectItemIndicator { "✔️" }
                 }
-                SelectOption::<BudgetItemType> { index: 1usize, value: BudgetItemType::Expense,
+                SelectOption::<BudgetItemType> {
+                    index: 1usize,
+                    value: BudgetItemType::Expense,
                     text_value: "Utgift",
                     "Utgift"
                     SelectItemIndicator { "✔️" }
                 }
-                SelectOption::<BudgetItemType> { index: 2usize, value: BudgetItemType::Savings,
+                SelectOption::<BudgetItemType> {
+                    index: 2usize,
+                    value: BudgetItemType::Savings,
                     text_value: "Sparande",
                     "Sparande"
                     SelectItemIndicator { "✔️" }
