@@ -1,3 +1,4 @@
+use dioxus::logger::tracing;
 use dioxus_primitives::label::Label;
 use api::cqrs::budget::Budget;
 use dioxus::prelude::*;
@@ -14,6 +15,7 @@ pub fn BudgetHeroOne() -> Element {
 
     use_effect(move || {
         if let Some(Ok(Some(budget))) = budget_resource.read().as_ref() {
+            tracing::info!("We have budget: {budget:?}");
             *CURRENT_BUDGET_ID.write() = budget.id;
             budget_signal.set(Some(budget.clone()));
         }
@@ -22,13 +24,17 @@ pub fn BudgetHeroOne() -> Element {
     // Handle the resource state
     match budget_signal() {
         Some(budget) => {
+            tracing::info!("The budget signal was updated: {budget:?}");
             rsx! {
                 div { class: "budget-hero-container",
                     // Header
                     div { class: "budget-header",
                         h1 { class: "budget-title", {budget.name} }
                     }
-                    BudgetGroups { groups: budget.budget_groups.values().cloned().collect() }
+                    BudgetGroups {
+                        budget_id: budget.id,
+                        groups: budget.budget_groups.values().cloned().collect(),
+                    }
                 }
             }
         }
@@ -59,10 +65,7 @@ pub fn BudgetHeroOne() -> Element {
                             Input {
                                 id: "name",
                                 placeholder: "Budgetnamn",
-                                oninput: move |e: FormEvent| { 
-                                    
-                                    budget_name.set(e.value())
-                                },
+                                oninput: move |e: FormEvent| { budget_name.set(e.value()) },
                             }
                         }
                     }
@@ -72,6 +75,7 @@ pub fn BudgetHeroOne() -> Element {
                         "data-style": "primary",
                         onclick: move |_| async move {
                             if let Ok(budget) = api::create_budget(budget_name.to_string(), None).await {
+                                tracing::info!("UI received a budget: {budget:?}");
                                 budget_signal.set(Some(budget))
                             }
                         },

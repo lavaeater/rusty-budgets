@@ -1,21 +1,19 @@
+use crate::budget_item_view::BudgetItemView;
+use crate::components::*;
+use api::cqrs::budget::{BudgetGroup, BudgetItemType};
+use api::cqrs::money::{Currency, Money};
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use dioxus_primitives::select::*;
-use api::cqrs::budget::{BudgetGroup, BudgetItemType};
-use api::cqrs::money::{Currency, Money};
-use crate::budget_hero::CURRENT_BUDGET_ID;
-use crate::budget_item_view::BudgetItemView;
-use crate::components::*;
+use uuid::Uuid;
 #[component]
-pub fn BudgetGroupView(group: BudgetGroup, index: usize) -> Element {
-    let budget_id = *CURRENT_BUDGET_ID.read();
+pub fn BudgetGroupView(budget_id: Uuid, group: BudgetGroup, index: usize) -> Element {
     let mut budget_items = use_signal(|| group.items.clone());
     let mut show_new_item = use_signal(|| budget_items().is_empty());
     let mut new_item_name = use_signal(|| "".to_string());
     let mut new_item_amount = use_signal(|| Money::new_dollars(0, Currency::SEK));
     let new_item_type = use_signal(|| Some(None));
 
-    
     rsx! {
         AccordionItem {
             index,
@@ -25,9 +23,7 @@ pub fn BudgetGroupView(group: BudgetGroup, index: usize) -> Element {
             on_trigger_click: move || {
                 tracing::info!("trigger");
             },
-            AccordionTrigger { 
-                {group.name.clone()}
-            }
+            AccordionTrigger { {group.name.clone()} }
             AccordionContent {
                 div { padding_bottom: "1rem",
                     p { padding: "0", {group.name.clone()} }
@@ -90,7 +86,6 @@ pub fn BudgetGroupView(group: BudgetGroup, index: usize) -> Element {
 
 #[component]
 pub fn ItemTypeSelect(mut selected_value: Signal<Option<Option<BudgetItemType>>>) -> Element {
-
     rsx! {
         Select::<BudgetItemType> {
             placeholder: "Välj typ",

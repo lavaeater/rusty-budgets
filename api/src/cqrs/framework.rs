@@ -98,12 +98,16 @@ where
     where
         F: FnOnce(&A) -> Result<E, CommandError>,
     {
+        tracing::info!("execute: {user_id:?}, {id:?}");    
         let mut current = self.load(id)?.unwrap_or_else(|| A::_new(id.clone()));
+        tracing::info!("We have current: {current:?}");
 
         let ev = command(&current)?;
         tracing::info!("We have event: {ev:?}");
 
         ev.apply(&mut current);
+        tracing::info!("We have current: {current:?}");
+        
         self.append(user_id, ev.clone())?;
         Ok(current)
     }

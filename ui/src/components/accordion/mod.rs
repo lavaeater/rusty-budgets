@@ -127,7 +127,8 @@ pub struct AccordionTriggerProps {
 #[component]
 pub fn AccordionTrigger(props: AccordionTriggerProps) -> Element {
     rsx! {
-        accordion::AccordionTrigger { class: "accordion-trigger",
+        accordion::AccordionTrigger {
+            class: "accordion-trigger",
             id: props.id,
             attributes: props.attributes,
             {props.children}
@@ -156,7 +157,8 @@ pub struct AccordionContentProps {
 #[component]
 pub fn AccordionContent(props: AccordionContentProps) -> Element {
     rsx! {
-        accordion::AccordionContent { class: "accordion-content",
+        accordion::AccordionContent {
+            class: "accordion-content",
             style: "--collapsible-content-width: 140px",
             id: props.id,
             attributes: props.attributes,
