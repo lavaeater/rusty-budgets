@@ -3,12 +3,11 @@ use dioxus_primitives::label::Label;
 use api::cqrs::budget::Budget;
 use dioxus::prelude::*;
 use uuid::Uuid;
-use crate::budget::budget_groups::BudgetGroups;
 use crate::Input;
 
 pub static CURRENT_BUDGET_ID: GlobalSignal<Uuid> = Signal::global(|| Uuid::default());
 #[component]
-pub fn BudgetHeroOne() -> Element {
+pub fn BudgetHero() -> Element {
     let budget_resource = use_server_future(api::get_default_budget)?;
     let mut budget_signal = use_signal(|| None::<Budget>);
     let mut budget_name = use_signal(|| "".to_string());
