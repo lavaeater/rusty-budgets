@@ -4,9 +4,7 @@ use api::cqrs::money::{Currency, Money};
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use dioxus_primitives::select::*;
-use dioxus_primitives::collapsible::*;
-
-const COLLAPSIBLE_CSS: Asset = asset!("/assets/styling/collapsible.css");
+use crate::budget_components::collapsible::*;
 
 use uuid::Uuid;
 #[component]
@@ -18,7 +16,6 @@ pub fn BudgetGroupView(budget_id: Uuid, group: BudgetGroup, index: usize) -> Ele
     let new_item_type = use_signal(|| Some(None));
 
     rsx! {
-        document::Link { rel: "stylesheet", href: COLLAPSIBLE_CSS }
         Collapsible {
             CollapsibleTrigger { {group.name.clone()} }
             CollapsibleContent {

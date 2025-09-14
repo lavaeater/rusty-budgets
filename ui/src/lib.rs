@@ -4,7 +4,7 @@ mod hero;
 pub use hero::Hero;
 
 pub mod budget;
-mod components;
+mod budget_components;
 
 pub use budget::*;
-pub use components::*;
+pub use budget_components::*;

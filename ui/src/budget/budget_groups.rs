@@ -2,7 +2,7 @@ use uuid::Uuid;
 use api::cqrs::budget::BudgetGroup;
 use dioxus::prelude::*;
 use dioxus_primitives::collapsible::Collapsible;
-use crate::components::Accordion;
+use crate::budget_components::Accordion;
 use crate::budget::budget_group_view::BudgetGroupView;
 
 #[component]

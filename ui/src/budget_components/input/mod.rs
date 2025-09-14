@@ -26,7 +26,7 @@ pub fn Input(
     rsx! {
         document::Link {
             rel: "stylesheet",
-            href: asset!("/src/components/input/style.css"),
+            href: asset!("/src/budget_components/input/style.css"),
         }
         input {
             class: combined_class,
