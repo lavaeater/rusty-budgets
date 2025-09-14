@@ -1,10 +1,13 @@
 use crate::budget_item_view::BudgetItemView;
-use crate::components::*;
 use api::cqrs::budget::{BudgetGroup, BudgetItemType};
 use api::cqrs::money::{Currency, Money};
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use dioxus_primitives::select::*;
+use dioxus_primitives::collapsible::*;
+
+const COLLAPSIBLE_CSS: Asset = asset!("/assets/styling/collapsible.css");
+
 use uuid::Uuid;
 #[component]
 pub fn BudgetGroupView(budget_id: Uuid, group: BudgetGroup, index: usize) -> Element {
@@ -15,17 +18,10 @@ pub fn BudgetGroupView(budget_id: Uuid, group: BudgetGroup, index: usize) -> Ele
     let new_item_type = use_signal(|| Some(None));
 
     rsx! {
-        AccordionItem {
-            index,
-            height: "100",
-            on_change: move |open| {
-                tracing::info!("{open};");
-            },
-            on_trigger_click: move || {
-                tracing::info!("trigger");
-            },
-            AccordionTrigger { {group.name.clone()} }
-            AccordionContent {
+        document::Link { rel: "stylesheet", href: COLLAPSIBLE_CSS }
+        Collapsible {
+            CollapsibleTrigger { {group.name.clone()} }
+            CollapsibleContent {
                 div { padding_bottom: "1rem",
                     p { padding: "0", {group.name.clone()} }
                     if show_new_item() {

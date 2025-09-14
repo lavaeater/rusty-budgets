@@ -1,0 +1,17 @@
+#budget-hero-container {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#budget-header {
+    max-width: 1200px;
+}
+
+#budget-title {
+    font-size: x-large;
+    color: white;
+    text-align: center;
+}

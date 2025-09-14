@@ -13,8 +13,10 @@ pub fn BudgetItemView(item: BudgetItem, index: usize) -> Element {
     
     rsx! {
         div {
-            h1 { "KUUUK" }
+            h1 { {item.name} }
             h2 { {item.item_type.to_string()} }
+            h2 { {item.budgeted_amount.to_string()} }
+            h2 { {item.actual_spent.to_string()} }
         }
     }
 }

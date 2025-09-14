@@ -6,6 +6,8 @@ use dioxus::prelude::*;
 use uuid::Uuid;
 use crate::Input;
 
+
+const HERO_CSS: Asset = asset!("/assets/styling/budget-hero.css");
 pub static CURRENT_BUDGET_ID: GlobalSignal<Uuid> = Signal::global(|| Uuid::default());
 #[component]
 pub fn BudgetHero() -> Element {
@@ -26,6 +28,7 @@ pub fn BudgetHero() -> Element {
         Some(budget) => {
             tracing::info!("The budget signal was updated: {budget:?}");
             rsx! {
+                document::Link { rel: "stylesheet", href: HERO_CSS }
                 div { class: "budget-hero-container",
                     // Header
                     div { class: "budget-header",
@@ -42,6 +45,7 @@ pub fn BudgetHero() -> Element {
             // Check if we have an error or are still loading
             match budget_resource.read_unchecked().as_ref() {
                 Some(Err(e)) => rsx! {
+                    document::Link { rel: "stylesheet", href: HERO_CSS }
                     div { id: "budget_hero",
                         h4 { "Error loading budget: {e}" }
                     }
@@ -52,6 +56,8 @@ pub fn BudgetHero() -> Element {
                     }
                 },
                 Some(&Ok(None)) => rsx! {
+                    document::Link { rel: "stylesheet", href: HERO_CSS }
+
                     div {
                         display: "flex",
                         flex_direction: "column",

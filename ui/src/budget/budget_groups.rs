@@ -1,6 +1,7 @@
 use uuid::Uuid;
 use api::cqrs::budget::BudgetGroup;
 use dioxus::prelude::*;
+use dioxus_primitives::collapsible::Collapsible;
 use crate::components::Accordion;
 use crate::budget::budget_group_view::BudgetGroupView;
 
@@ -42,11 +43,7 @@ pub fn BudgetGroups(budget_id: Uuid, groups: Vec<BudgetGroup>) -> Element {
                 "Lägg till ny grupp"
             }
         }
-        Accordion {
-            width: "40%",
-            height: "100%",
-            allow_multiple_open: false,
-            horizontal: false,
+        div { display: "flex", flex_direction: "row", gap: "1rem",
             for (index , group) in budget_groups().iter().enumerate() {
                 BudgetGroupView { budget_id, group: group.clone(), index }
             }
