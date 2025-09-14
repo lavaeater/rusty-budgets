@@ -1,9 +1,9 @@
 use dioxus::prelude::*;
-use ui::BudgetHeroOne;
+use ui::BudgetHero;
 
 #[component]
 pub fn Home() -> Element {
     rsx! {
-        BudgetHeroOne {}
+        BudgetHero {}
     }
 }
