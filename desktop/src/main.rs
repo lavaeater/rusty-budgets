@@ -10,6 +10,8 @@ enum Route {
     #[layout(DesktopNavbar)]
     #[route("/")]
     Home {},
+    #[route("/:..segments")]
+    PageNotFound { segments: Vec<String> },
 }
 
 fn main() {
@@ -43,5 +45,12 @@ fn DesktopNavbar() -> Element {
         // }
 
         Outlet::<Route> {}
+    }
+}
+
+#[component]
+fn PageNotFound(segments: Vec<String>) -> Element {
+    rsx! {
+        h1 { "404" }
     }
 }
