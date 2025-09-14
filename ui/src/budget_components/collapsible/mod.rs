@@ -85,8 +85,7 @@ pub struct CollapsibleTriggerProps {
 #[component]
 pub fn CollapsibleTrigger(props: CollapsibleTriggerProps) -> Element {
     rsx! {
-        collapsible::CollapsibleTrigger { class: "collapsible-trigger",
-            attributes: props.attributes,
+        collapsible::CollapsibleTrigger { class: "collapsible-trigger", attributes: props.attributes,
             {props.children}
             svg {
                 class: "collapsible-expand-icon",
@@ -104,7 +103,8 @@ pub fn CollapsibleTrigger(props: CollapsibleTriggerProps) -> Element {
 #[component]
 pub fn CollapsibleContent(props: CollapsibleContentProps) -> Element {
     rsx! {
-        collapsible::CollapsibleContent { class: "collapsible-content",
+        collapsible::CollapsibleContent {
+            class: "collapsible-content",
             id: props.id,
             attributes: props.attributes,
             {props.children}

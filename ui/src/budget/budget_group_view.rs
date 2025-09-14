@@ -17,7 +17,9 @@ pub fn BudgetGroupView(budget_id: Uuid, group: BudgetGroup, index: usize) -> Ele
 
     rsx! {
         Collapsible {
-            CollapsibleTrigger { {group.name.clone()} }
+            CollapsibleTrigger {
+                b { {group.name.clone()} }
+            }
             CollapsibleContent {
                 div { padding_bottom: "1rem",
                     p { padding: "0", {group.name.clone()} }
