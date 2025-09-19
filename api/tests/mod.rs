@@ -6,6 +6,7 @@ use api::cqrs::money::{Currency, Money};
 use api::cqrs::runtime::JoyDbBudgetRuntime;
 use chrono::Utc;
 use uuid::Uuid;
+use api::import::import_from_skandia_excel;
 
 #[cfg(test)]
 #[test]
@@ -131,9 +132,10 @@ pub fn add_budget_item() -> anyhow::Result<()> {
 pub fn test_trans_hash() {
     
     let now= Utc::now();
-    let t_a = BankTransaction::new(Uuid::new_v4(), Money::new_dollars(100, Currency::SEK), "Test Transaction", now);
+    let bank_account_number = "1234567890".to_string();
+    let t_a = BankTransaction::new(Uuid::new_v4(), &bank_account_number, Money::new_dollars(100, Currency::SEK), "Test Transaction", now);
     let mut hasher_a = DefaultHasher::new();
-    let t_b = BankTransaction::new(Uuid::new_v4(), Money::new_dollars(100, Currency::SEK), "Test Transaction", now);
+    let t_b = BankTransaction::new(Uuid::new_v4(), &bank_account_number, Money::new_dollars(100, Currency::SEK), "Test Transaction", now);
     let mut hasher_b = DefaultHasher::new();
     t_a.hash(&mut hasher_a);
     t_b.hash(&mut hasher_b);
@@ -149,6 +151,7 @@ pub fn add_bank_transaction() -> anyhow::Result<()> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
     let budget_id = Uuid::new_v4();
     let user_id = Uuid::new_v4();
+    let bank_account_number = "1234567890".to_string();
 
     let res = rt.cmd(&user_id, &budget_id, |budget| {
         budget.create_budget("Test Budget".to_string(), user_id, true)
@@ -159,6 +162,7 @@ pub fn add_bank_transaction() -> anyhow::Result<()> {
     let res = rt.cmd(&user_id, &budget_id, |budget| {
         budget.add_transaction(
             Uuid::new_v4(),
+            bank_account_number.clone(),
             Money::new_dollars(100, Currency::SEK),
             "Test Transaction".to_string(),
             now,
@@ -172,6 +176,7 @@ pub fn add_bank_transaction() -> anyhow::Result<()> {
     let res = rt.cmd(&user_id, &budget_id, |budget| {
         budget.add_transaction(
             Uuid::new_v4(),
+            bank_account_number.clone(),
             Money::new_dollars(100, Currency::SEK),
             "Test Transaction".to_string(),
             now,
@@ -185,4 +190,24 @@ pub fn add_bank_transaction() -> anyhow::Result<()> {
     );
 
     Ok(())
+}
+
+
+#[test]
+pub fn test_import_from_skandia_excel() -> anyhow::Result<()> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let budget_id = Uuid::new_v4();
+    let user_id = Uuid::new_v4();
+
+    let res = rt.cmd(&user_id, &budget_id, |budget| {
+        budget.create_budget("Test Budget".to_string(), user_id, true)
+    })?;
+
+    let now = Utc::now();
+
+    import_from_skandia_excel("/home/tommie/projects/bealo/rusty-budgets/test_data/91594824853_2025-08-25-2025-09-19.xlsx", &user_id, &budget_id, &rt)?;
+    import_from_skandia_excel("/home/tommie/projects/bealo/rusty-budgets/test_data/91594824853_2025-08-25-2025-09-19.xlsx", &user_id, &budget_id, &rt)
+
+
+
 }

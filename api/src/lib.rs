@@ -4,7 +4,7 @@ extern crate alloc;
 
 pub mod cqrs;
 pub mod models;
-mod import;
+pub mod import;
 
 use crate::cqrs::budget::{Budget, BudgetGroup, BudgetItem, BudgetItemType};
 use crate::models::*;

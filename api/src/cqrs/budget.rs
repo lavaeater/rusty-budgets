@@ -1,15 +1,15 @@
+use crate::cqrs::domain_events::TransactionAdded;
+use crate::cqrs::framework::Aggregate;
+use crate::cqrs::money::Money;
+use chrono::{DateTime, Utc};
+use joydb::Model;
+use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::fmt;
 use std::fmt::{Display, Formatter};
-use std::hash::Hash;
+use std::hash::{DefaultHasher, Hash, Hasher};
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
-use serde::{Deserialize, Deserializer, Serialize};
-use joydb::Model;
-use crate::cqrs::domain_events::TransactionAdded;
-use crate::cqrs::money::Money;
-use crate::cqrs::framework::Aggregate;
 
 // --- Budget Domain ---
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Model)]
@@ -59,7 +59,6 @@ impl BudgetGroup {
     }
 }
 
-
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct BudgetItem {
     pub id: Uuid,
@@ -71,8 +70,6 @@ pub struct BudgetItem {
     pub tags: Vec<String>,
 }
 
-
-
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq)]
 pub enum BudgetItemType {
     Income,
@@ -82,26 +79,42 @@ pub enum BudgetItemType {
 
 impl Display for BudgetItemType {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", match self {
-            BudgetItemType::Income => "Inkomst",
-            BudgetItemType::Expense => "Utgift",
-            BudgetItemType::Savings => "Sparande",
-        })
-    }   
+        write!(
+            f,
+            "{}",
+            match self {
+                BudgetItemType::Income => "Inkomst",
+                BudgetItemType::Expense => "Utgift",
+                BudgetItemType::Savings => "Sparande",
+            }
+        )
+    }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Eq,)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct BankAccount {
+    pub id: Uuid,
+    pub account_number: String,
+    pub description: String,
+    pub currency: String,
+    pub balance: Money,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Eq)]
 pub struct BankTransaction {
     pub id: Uuid,
+    pub account_number: String,
     pub amount: Money,
     pub description: String,
     pub date: DateTime<Utc>,
-    pub budget_item_id: Option<Uuid>,
+    pub budget_item_id: Option<Uuid>
 }
 
 impl PartialEq for BankTransaction {
     fn eq(&self, other: &Self) -> bool {
-        self.amount == other.amount && self.description == other.description && self.date == other.date 
+        self.amount == other.amount
+            && self.description == other.description
+            && self.date == other.date
     }
 
     // fn ne(&self, other: &Self) -> bool {
@@ -109,13 +122,22 @@ impl PartialEq for BankTransaction {
     // }
 }
 
-
 impl Hash for BankTransaction {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+    fn hash<H: Hasher>(&self, state: &mut H) {
         self.amount.hash(state);
+        self.account_number.hash(state);
         self.description.hash(state);
         self.date.hash(state);
     }
+}
+
+pub fn hash_for_bank_transaction(amount: Money, account_number: String, description: String, date: DateTime<Utc>) -> u64 {
+    let mut hasher = DefaultHasher::new();
+    amount.hash(&mut hasher);
+    account_number.hash(&mut hasher);
+    description.hash(&mut hasher);
+    date.hash(&mut hasher);
+    hasher.finish()
 }
 
 impl Display for BankTransaction {
@@ -145,13 +167,20 @@ impl BudgetItem {
 }
 
 impl BankTransaction {
-    pub fn new(id: Uuid,amount: Money, description: &str, date: DateTime<Utc>) -> Self {
+    pub fn new(
+        id: Uuid,
+        account_number: &str,
+        amount: Money,
+        description: &str,
+        date: DateTime<Utc>,
+    ) -> Self {
         Self {
             id,
+            account_number: account_number.to_string(),
             amount,
             description: description.to_string(),
             date,
-            budget_item_id: None,
+            budget_item_id: None
         }
     }
 }
