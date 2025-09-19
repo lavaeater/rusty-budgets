@@ -7,8 +7,9 @@ use uuid::Uuid;
 use crate::cqrs::money::{Currency, Money};
 use crate::cqrs::runtime::JoyDbBudgetRuntime;
 
-pub fn import_from_skandia_excel(path: &str, user_id: &Uuid, budget_id: &Uuid, runtime: &JoyDbBudgetRuntime) -> anyhow::Result<()> {
+pub fn import_from_skandia_excel(path: &str, user_id: &Uuid, budget_id: &Uuid, runtime: &JoyDbBudgetRuntime) -> anyhow::Result<u64> {
     let mut excel: Xlsx<_> = open_workbook(path)?;
+    let mut imported = 0u64;
     if let Ok(r) = excel.worksheet_range("Kontoutdrag") {
         let mut account_number: Option<String> = None;
         
@@ -18,6 +19,7 @@ pub fn import_from_skandia_excel(path: &str, user_id: &Uuid, budget_id: &Uuid, r
             } else if row_num > 4 {
                 println!("row={:?}", row);
                 let amount = Money::new_cents((row[2].as_f64().unwrap() * 100.0) as i64, Currency::SEK);
+                let balance = Money::new_cents((row[3].as_f64().unwrap() * 100.0) as i64, Currency::SEK);
                 let date_str = row[0].to_string();
                 let naive_date = NaiveDate::parse_from_str(&date_str, "%Y-%m-%d")?;
 
@@ -39,12 +41,14 @@ pub fn import_from_skandia_excel(path: &str, user_id: &Uuid, budget_id: &Uuid, r
                         Uuid::new_v4(),
                         acct_no.clone(),
                         amount,
+                        balance,
                         description,
                         date,
                     )
                 }) {
                     Ok(_) => {
-                        println!("Transaction added!")
+                        // println!("Transaction added!")
+                        imported += 1;
                     }
                     Err(_) => {
                         println!("Transaction already exists!")
@@ -54,7 +58,7 @@ pub fn import_from_skandia_excel(path: &str, user_id: &Uuid, budget_id: &Uuid, r
         }
     }
     
-    Ok(())
+    Ok(imported)
 }
 
 pub fn import_bank_transactions(bytes: Vec<u8>) -> anyhow::Result<()> {

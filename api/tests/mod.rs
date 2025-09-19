@@ -133,9 +133,9 @@ pub fn test_trans_hash() {
     
     let now= Utc::now();
     let bank_account_number = "1234567890".to_string();
-    let t_a = BankTransaction::new(Uuid::new_v4(), &bank_account_number, Money::new_dollars(100, Currency::SEK), "Test Transaction", now);
+    let t_a = BankTransaction::new(Uuid::new_v4(), &bank_account_number, Money::new_dollars(100, Currency::SEK), Money::new_dollars(100, Currency::SEK), "Test Transaction", now);
     let mut hasher_a = DefaultHasher::new();
-    let t_b = BankTransaction::new(Uuid::new_v4(), &bank_account_number, Money::new_dollars(100, Currency::SEK), "Test Transaction", now);
+    let t_b = BankTransaction::new(Uuid::new_v4(), &bank_account_number, Money::new_dollars(100, Currency::SEK), Money::new_dollars(100, Currency::SEK), "Test Transaction", now);
     let mut hasher_b = DefaultHasher::new();
     t_a.hash(&mut hasher_a);
     t_b.hash(&mut hasher_b);
@@ -164,6 +164,7 @@ pub fn add_bank_transaction() -> anyhow::Result<()> {
             Uuid::new_v4(),
             bank_account_number.clone(),
             Money::new_dollars(100, Currency::SEK),
+            Money::new_dollars(100, Currency::SEK),
             "Test Transaction".to_string(),
             now,
         )
@@ -177,6 +178,7 @@ pub fn add_bank_transaction() -> anyhow::Result<()> {
         budget.add_transaction(
             Uuid::new_v4(),
             bank_account_number.clone(),
+            Money::new_dollars(100, Currency::SEK),
             Money::new_dollars(100, Currency::SEK),
             "Test Transaction".to_string(),
             now,
@@ -205,8 +207,18 @@ pub fn test_import_from_skandia_excel() -> anyhow::Result<()> {
 
     let now = Utc::now();
 
-    import_from_skandia_excel("/home/tommie/projects/bealo/rusty-budgets/test_data/91594824853_2025-08-25-2025-09-19.xlsx", &user_id, &budget_id, &rt)?;
-    import_from_skandia_excel("/home/tommie/projects/bealo/rusty-budgets/test_data/91594824853_2025-08-25-2025-09-19.xlsx", &user_id, &budget_id, &rt)
+    let imported = import_from_skandia_excel("/home/tommie/projects/bealo/rusty-budgets/test_data/91594824853_2025-08-25-2025-09-19.xlsx", &user_id, &budget_id, &rt)?;
+    let not_imported =import_from_skandia_excel("/home/tommie/projects/bealo/rusty-budgets/test_data/91594824853_2025-08-25-2025-09-19.xlsx", &user_id, &budget_id, &rt)?;
+    
+    let res = rt.load(&budget_id)?.unwrap();
+    
+    assert_eq!(res.bank_transactions.len(), 77);
+    assert_eq!(imported, 77);
+    assert_eq!(not_imported, 0);
+    
+    Ok(())
+    
+    
 
 
 

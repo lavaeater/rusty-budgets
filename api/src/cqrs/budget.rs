@@ -107,7 +107,8 @@ pub struct BankTransaction {
     pub amount: Money,
     pub description: String,
     pub date: DateTime<Utc>,
-    pub budget_item_id: Option<Uuid>
+    pub budget_item_id: Option<Uuid>,
+    pub balance: Money,
 }
 
 impl PartialEq for BankTransaction {
@@ -125,19 +126,11 @@ impl PartialEq for BankTransaction {
 impl Hash for BankTransaction {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.amount.hash(state);
+        self.balance.hash(state);
         self.account_number.hash(state);
         self.description.hash(state);
         self.date.hash(state);
     }
-}
-
-pub fn hash_for_bank_transaction(amount: Money, account_number: String, description: String, date: DateTime<Utc>) -> u64 {
-    let mut hasher = DefaultHasher::new();
-    amount.hash(&mut hasher);
-    account_number.hash(&mut hasher);
-    description.hash(&mut hasher);
-    date.hash(&mut hasher);
-    hasher.finish()
 }
 
 impl Display for BankTransaction {
@@ -171,6 +164,7 @@ impl BankTransaction {
         id: Uuid,
         account_number: &str,
         amount: Money,
+        balance: Money,
         description: &str,
         date: DateTime<Utc>,
     ) -> Self {
@@ -178,6 +172,7 @@ impl BankTransaction {
             id,
             account_number: account_number.to_string(),
             amount,
+            balance,
             description: description.to_string(),
             date,
             budget_item_id: None

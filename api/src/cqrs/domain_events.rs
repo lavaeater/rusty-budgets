@@ -128,6 +128,7 @@ pub struct TransactionAdded {
     pub transaction_id: Uuid,
     pub account_number: String,
     pub amount: Money,
+    pub balance: Money,
     pub description: String,
     pub date: DateTime<Utc>,
 }
@@ -147,6 +148,7 @@ impl Budget {
             event.transaction_id,
             &event.account_number,
             event.amount,
+            event.balance,
             &event.description,
             event.date,
         ));
@@ -157,16 +159,18 @@ impl Budget {
         transaction_id: Uuid,
         account_number: String,
         amount: Money,
+        balance: Money,
         description: String,
         date: DateTime<Utc>,
     ) -> Result<TransactionAdded, CommandError> {
-        let bt = BankTransaction::new(transaction_id, &account_number, amount, &description, date);
+        let bt = BankTransaction::new(transaction_id, &account_number, amount, balance, &description, date);
         if !self.bank_transactions.contains(&bt) {
             Ok(TransactionAdded {
                 budget_id: self.id,
                 account_number,
                 transaction_id,
                 amount,
+                balance,
                 description,
                 date,
             })
