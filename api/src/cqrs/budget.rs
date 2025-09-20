@@ -5,7 +5,7 @@ use crate::cqrs::money::Money;
 use crate::pub_events_enum;
 use chrono::{DateTime, Utc};
 use joydb::Model;
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::fmt::{Display, Formatter};
@@ -27,7 +27,7 @@ pub_events_enum! {
 
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
-struct Store {
+pub struct Store {
     all: HashSet<u64>,       // uniqueness check
     by_id: HashMap<Uuid, BankTransaction> // fast lookup
 }
@@ -38,6 +38,10 @@ impl Store {
             all: HashSet::new(),
             by_id: HashMap::new(),
         }
+    }
+    
+    pub fn len(&self) -> usize {
+        self.all.len()
     }
 
     pub fn insert(&mut self, transaction: BankTransaction) -> bool {
@@ -203,11 +207,11 @@ impl Hash for BankTransaction {
 
 impl BankTransaction {
     pub fn get_hash(&self) -> u64 {
-        get_transaction_hash(self.amount, self.balance, self.account_number.clone(), self.description.clone(), self.date)
+        get_transaction_hash(&self.amount, &self.balance, &self.account_number, &self.description, &self.date)
     }
 }
 
-pub fn get_transaction_hash(amount: Money, balance: Money, account_number: String, description: String, date: DateTime<Utc>) -> u64 {
+pub fn get_transaction_hash(amount: &Money, balance: &Money, account_number: &str, description: &str, date: &DateTime<Utc>) -> u64 {
     let mut hasher = DefaultHasher::new();
     amount.hash(&mut hasher);
     balance.hash(&mut hasher);

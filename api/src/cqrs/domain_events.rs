@@ -1,11 +1,10 @@
-use crate::cqrs::budget::{BankTransaction, Budget, BudgetGroup, BudgetItem, BudgetItemType};
+use crate::cqrs::budget::{get_transaction_hash, BankTransaction, Budget, BudgetGroup, BudgetItem, BudgetItemType};
 use crate::cqrs::framework::DomainEvent;
 use crate::cqrs::framework::{Aggregate, CommandError};
 use crate::cqrs::money::Money;
 use chrono::{DateTime, Utc};
 use cqrs_macros::DomainEvent;
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
 use std::hash::Hash;
 use uuid::Uuid;
 
@@ -164,15 +163,10 @@ impl Budget {
         description: String,
         date: DateTime<Utc>,
     ) -> Result<TransactionAdded, CommandError> {
-        let bt = BankTransaction::new(
-            transaction_id,
-            &account_number,
-            amount,
-            balance,
-            &description,
-            date,
-        );
-        if !self.bank_transactions.contains(&bt) {
+        
+        let hash = get_transaction_hash(&amount, &balance, &account_number, &description, &date);
+        
+        if self.bank_transactions.can_insert(&hash) {
             Ok(TransactionAdded {
                 budget_id: self.id,
                 account_number,
@@ -196,15 +190,16 @@ pub struct TransactionConnected {
     tx_id: Uuid,
     item_id: Uuid,
 }
-impl Budget {
-    fn apply_do_transaction_connected(&mut self, event: TransactionConnected) {
+
+impl TransactionConnectedHandler for Budget {
+    fn apply_do_transaction_connected(&mut self, event: &TransactionConnected) {
         self.bank_transactions
             .get_mut(&event.tx_id)
             .unwrap()
             .budget_item_id = Some(event.item_id);
     }
 
-    pub fn do_transaction_connected_impl(
+    fn do_transaction_connected_impl(
         &self,
         tx_id: Uuid,
         item_id: Uuid,
