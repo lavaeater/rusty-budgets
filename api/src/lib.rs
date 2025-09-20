@@ -1,6 +1,10 @@
 //! This crate contains all shared fullstack server functions.
+
+extern crate alloc;
+
 pub mod cqrs;
 pub mod models;
+pub mod import;
 
 use crate::cqrs::budget::{Budget, BudgetGroup, BudgetItem, BudgetItemType};
 use crate::models::*;
@@ -167,6 +171,7 @@ pub mod db {
     }
 
     pub fn add_group(budget_id: &Uuid, user_id: &Uuid, name: &str) -> anyhow::Result<Budget> {
+        tracing::info!("add_group: {budget_id:?}, {user_id:?}, {name:?}");
         with_runtime(None).cmd(user_id, budget_id, |budget| {
             budget.add_group(Uuid::new_v4(), name.to_string())
         })
@@ -222,6 +227,7 @@ pub async fn create_budget(
 
 #[server]
 pub async fn add_group(budget_id: Uuid, name: String) -> Result<Vec<BudgetGroup>, ServerFnError> {
+    tracing::info!("Adding group {} to budget {}", name, budget_id);
     let user = db::get_default_user(None).expect("Could not get default user");
     match db::add_group(&budget_id, &user.id, &name) {
         Ok(b) => Ok(b.budget_groups.values().cloned().collect()),

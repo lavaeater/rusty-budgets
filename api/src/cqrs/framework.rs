@@ -6,6 +6,7 @@ use std::error::Error;
 use std::fmt::{Debug, Display, Formatter};
 use std::hash::Hash;
 use chrono::{DateTime, Utc};
+use dioxus::logger::tracing;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -90,18 +91,24 @@ where
     fn snapshot(&self, agg: &A) -> anyhow::Result<()>;
 
     /// Append one new event to the stream.
-    fn append(&self, user_id: &Uuid, ev: E);
+    fn append(&self, user_id: &Uuid, ev: E)-> anyhow::Result<()>;
 
     /// Execute a command: decide → append → return event.
     fn execute<F>(&self, user_id: &Uuid, id: &A::Id, command: F) -> anyhow::Result<A>
     where
         F: FnOnce(&A) -> Result<E, CommandError>,
     {
+        tracing::info!("execute: {user_id:?}, {id:?}");    
         let mut current = self.load(id)?.unwrap_or_else(|| A::_new(id.clone()));
+        tracing::info!("We have current: {current:?}");
 
         let ev = command(&current)?;
+        tracing::info!("We have event: {ev:?}");
+
         ev.apply(&mut current);
-        self.append(user_id, ev.clone());
+        tracing::info!("We have current: {current:?}");
+        
+        self.append(user_id, ev.clone())?;
         Ok(current)
     }
     

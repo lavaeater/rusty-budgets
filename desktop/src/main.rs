@@ -9,7 +9,9 @@ const MAIN_CSS: Asset = asset!("/assets/main.css");
 enum Route {
     #[layout(DesktopNavbar)]
     #[route("/")]
-    Home {},
+    Home {},    
+    #[route("/:..segments")]
+    PageNotFound { segments: Vec<String> },
 }
 
 fn main() {
@@ -38,10 +40,17 @@ fn App() -> Element {
 fn DesktopNavbar() -> Element {
     rsx! {
         // Navbar {
-        //     Link { to: Route::Home {}, "Home" }
+        //     Link { to: Route::Home {}, "Översikt" }
         //     Link { to: Route::Blog { id: 1 }, "Blog" }
         // }
 
         Outlet::<Route> {}
+    }
+}
+
+#[component]
+fn PageNotFound(segments: Vec<String>) -> Element {
+    rsx! {
+        h1 { "404" }
     }
 }

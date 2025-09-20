@@ -1,44 +1,26 @@
-use dioxus::logger::tracing;
-use dioxus::prelude::*;
-use dioxus_primitives::accordion::{AccordionContent, AccordionItem, AccordionTrigger};
-use dioxus_primitives::select::*;
+use crate::budget_item_view::BudgetItemView;
 use api::cqrs::budget::{BudgetGroup, BudgetItemType};
 use api::cqrs::money::{Currency, Money};
-use crate::budget_hero::CURRENT_BUDGET_ID;
-use crate::budget_item_view::BudgetItemView;
+use dioxus::logger::tracing;
+use dioxus::prelude::*;
+use dioxus_primitives::select::*;
+use crate::budget_components::collapsible::*;
 
+use uuid::Uuid;
 #[component]
-pub fn BudgetGroupView(group: BudgetGroup, index: usize) -> Element {
-    let budget_id = *CURRENT_BUDGET_ID.read();
+pub fn BudgetGroupView(budget_id: Uuid, group: BudgetGroup, index: usize) -> Element {
     let mut budget_items = use_signal(|| group.items.clone());
     let mut show_new_item = use_signal(|| budget_items().is_empty());
     let mut new_item_name = use_signal(|| "".to_string());
     let mut new_item_amount = use_signal(|| Money::new_dollars(0, Currency::SEK));
     let new_item_type = use_signal(|| Some(None));
 
-    
     rsx! {
-        AccordionItem {
-            class: "accordion-item",
-            index,
-            on_change: move |open| {
-                tracing::info!("{open};");
-            },
-            on_trigger_click: move || {
-                tracing::info!("trigger");
-            },
-            AccordionTrigger { class: "accordion-trigger",
-                {group.name.clone()}
-                svg {
-                    class: "accordion-expand-icon",
-                    view_box: "0 0 24 24",
-                    xmlns: "http://www.w3.org/2000/svg",
-                    polyline { points: "6 9 12 15 18 9" }
-                }
+        Collapsible {
+            CollapsibleTrigger {
+                b { {group.name.clone()} }
             }
-            AccordionContent {
-                class: "accordion-content",
-                style: "--collapsible-content-width: 140px",
+            CollapsibleContent {
                 div { padding_bottom: "1rem",
                     p { padding: "0", {group.name.clone()} }
                     if show_new_item() {
@@ -53,7 +35,8 @@ pub fn BudgetGroupView(group: BudgetGroup, index: usize) -> Element {
                                 r#type: "number",
                                 placeholder: "Budgetpostbelopp",
                                 oninput: move |e| {
-                                    new_item_amount.set(Money::new_dollars(e.value().parse().unwrap(), Currency::SEK))
+                                    new_item_amount
+                                        .set(Money::new_dollars(e.value().parse().unwrap(), Currency::SEK))
                                 },
                             }
                             ItemTypeSelect { selected_value: new_item_type }
@@ -99,7 +82,6 @@ pub fn BudgetGroupView(group: BudgetGroup, index: usize) -> Element {
 
 #[component]
 pub fn ItemTypeSelect(mut selected_value: Signal<Option<Option<BudgetItemType>>>) -> Element {
-
     rsx! {
         Select::<BudgetItemType> {
             placeholder: "Välj typ",
@@ -111,17 +93,23 @@ pub fn ItemTypeSelect(mut selected_value: Signal<Option<Option<BudgetItemType>>>
             },
             SelectTrigger { aria_label: "Väljare", width: "12rem", SelectValue {} }
             SelectList { aria_label: "Typväljare",
-                SelectOption::<BudgetItemType> { index: 0usize, value: BudgetItemType::Income,
+                SelectOption::<BudgetItemType> {
+                    index: 0usize,
+                    value: BudgetItemType::Income,
                     text_value: "Inkomst",
                     "Inkomst"
                     SelectItemIndicator { "✔️" }
                 }
-                SelectOption::<BudgetItemType> { index: 1usize, value: BudgetItemType::Expense,
+                SelectOption::<BudgetItemType> {
+                    index: 1usize,
+                    value: BudgetItemType::Expense,
                     text_value: "Utgift",
                     "Utgift"
                     SelectItemIndicator { "✔️" }
                 }
-                SelectOption::<BudgetItemType> { index: 2usize, value: BudgetItemType::Savings,
+                SelectOption::<BudgetItemType> {
+                    index: 2usize,
+                    value: BudgetItemType::Savings,
                     text_value: "Sparande",
                     "Sparande"
                     SelectItemIndicator { "✔️" }

@@ -1,7 +1,6 @@
 use dioxus::prelude::*;
 use dioxus_primitives::popover::*;
 
-const BUDGET_CSS: Asset = asset!("/assets/styling/budget.css");
 
 #[component]
 pub fn BudgetPopover(max_amount: f32) -> Element {
@@ -9,7 +8,6 @@ pub fn BudgetPopover(max_amount: f32) -> Element {
     let mut confirmed = use_signal(|| false);
 
     rsx! {
-        document::Link { rel: "stylesheet", href: BUDGET_CSS }
         PopoverRoot {
             open: open(),
             on_open_change: move |v| open.set(v),

@@ -1,18 +1,18 @@
+use uuid::Uuid;
 use api::cqrs::budget::BudgetGroup;
 use dioxus::prelude::*;
-use dioxus_primitives::accordion::Accordion;
+use dioxus_primitives::collapsible::Collapsible;
+use crate::budget_components::Accordion;
 use crate::budget::budget_group_view::BudgetGroupView;
-use crate::budget_hero::CURRENT_BUDGET_ID;
 
 #[component]
-pub fn BudgetGroups(groups: Vec<BudgetGroup>) -> Element {
-    let budget_id = *CURRENT_BUDGET_ID.read();
+pub fn BudgetGroups(budget_id: Uuid, groups: Vec<BudgetGroup>) -> Element {
     let mut group_name = use_signal(|| "".to_string());
     let mut budget_groups = use_signal(|| groups);
     let mut show_new_group = use_signal(|| false);
     rsx! {
         if show_new_group() {
-            div { id: "new_group",
+            div { id: "new_group", height: "100%",
                 label { "Skapa ny grupp" }
                 input {
                     r#type: "text",
@@ -23,8 +23,10 @@ pub fn BudgetGroups(groups: Vec<BudgetGroup>) -> Element {
                     class: "button",
                     "data-style": "primary",
                     onclick: move |_| async move {
-                        if let Ok(budget) = api::add_group(budget_id, group_name.to_string()).await {
-                            budget_groups.set(budget);
+                        if let Ok(returned_budgets) = api::add_group(budget_id, group_name.to_string())
+                            .await
+                        {
+                            budget_groups.set(returned_budgets);
                         }
                         show_new_group.set(false);
                     },
@@ -41,13 +43,9 @@ pub fn BudgetGroups(groups: Vec<BudgetGroup>) -> Element {
                 "Lägg till ny grupp"
             }
         }
-        Accordion {
-            class: "accordion",
-            width: "15rem",
-            allow_multiple_open: false,
-            horizontal: false,
+        div { display: "flex", flex_direction: "row", gap: "1rem",
             for (index , group) in budget_groups().iter().enumerate() {
-                BudgetGroupView { group: group.clone(), index }
+                BudgetGroupView { budget_id, group: group.clone(), index }
             }
         }
     }
