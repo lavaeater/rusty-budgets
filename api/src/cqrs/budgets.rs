@@ -5,18 +5,7 @@ use crate::pub_events_enum;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 
-pub_events_enum! {
-    #[derive(Debug, Clone, Serialize, Deserialize)]
-    pub enum BudgetEvent {
-        BudgetCreated,
-        GroupAdded,
-        ItemAdded,
-        TransactionAdded,
-        // TransactionConnected,
-        // FundsReallocated
-        // ... add other events here
-    }
-}
+
 
 //
 

@@ -6,8 +6,7 @@ use joydb::adapters::JsonAdapter;
 use joydb::{Model};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use crate::cqrs::budget::Budget;
-use crate::cqrs::budgets::BudgetEvent;
+use crate::cqrs::budget::{Budget, BudgetEvent};
 use crate::cqrs::framework::{Runtime, StoredEvent};
 use crate::models::User;
 

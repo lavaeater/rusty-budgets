@@ -1,15 +1,29 @@
-use crate::cqrs::domain_events::TransactionAdded;
+use crate::cqrs::framework::DomainEvent;
+use crate::cqrs::domain_events::{BudgetCreated, GroupAdded, ItemAdded, TransactionAdded};
 use crate::cqrs::framework::Aggregate;
 use crate::cqrs::money::Money;
+use crate::pub_events_enum;
 use chrono::{DateTime, Utc};
 use joydb::Model;
 use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::{HashMap, HashSet};
-use std::error::Error;
 use std::fmt;
 use std::fmt::{Display, Formatter};
-use std::hash::{DefaultHasher, Hash, Hasher};
+use std::hash::{Hash, Hasher};
 use uuid::Uuid;
+
+pub_events_enum! {
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    pub enum BudgetEvent {
+        BudgetCreated,
+        GroupAdded,
+        ItemAdded,
+        TransactionAdded,
+        // TransactionConnected,
+        // FundsReallocated
+        // ... add other events here
+    }
+}
 
 // --- Budget Domain ---
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Model)]
