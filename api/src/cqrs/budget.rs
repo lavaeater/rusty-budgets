@@ -25,6 +25,34 @@ pub_events_enum! {
     }
 }
 
+
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+struct Store {
+    all: HashSet<BankTransaction>,       // uniqueness check
+    by_id: HashMap<Uuid, BankTransaction> // fast lookup
+}
+
+impl Store {
+    fn new() -> Self {
+        Self {
+            all: HashSet::new(),
+            by_id: HashMap::new(),
+        }
+    }
+
+    fn insert(&mut self, transaction: BankTransaction) -> bool {
+        if self.all.insert(transaction.clone()) {
+            self.by_id.insert(transaction.id, transaction);
+            true
+        } else {
+            false
+        }
+    }
+
+    fn get_mut(&mut self, id: Uuid) -> Option<&mut BankTransaction> {
+        self.by_id.get_mut(&id)
+    }
+}
 // --- Budget Domain ---
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Model)]
 pub struct Budget {
@@ -32,7 +60,7 @@ pub struct Budget {
     pub name: String,
     pub user_id: Uuid,
     pub budget_groups: HashMap<Uuid, BudgetGroup>,
-    pub bank_transactions: HashSet<BankTransaction>,
+    pub bank_transactions: Store,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub default_budget: bool,
@@ -205,7 +233,7 @@ impl Aggregate for Budget {
             user_id: Uuid::new_v4(),
             default_budget: false,
             budget_groups: HashMap::new(),
-            bank_transactions: HashSet::new(),
+            bank_transactions: Store::new(),
             created_at: Utc::now(),
             updated_at: Utc::now(),
             last_event: 0,

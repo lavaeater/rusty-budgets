@@ -7,6 +7,7 @@ use cqrs_macros::DomainEvent;
 use serde::{Deserialize, Serialize};
 use std::hash::Hash;
 use uuid::Uuid;
+use std::collections::HashSet;
 
 #[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]
 #[domain_event(aggregate = "Budget")]
@@ -180,6 +181,50 @@ impl Budget {
     }
 }
 
-// TransactionAdded,
 // TransactionConnected,
+#[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]
+#[domain_event(aggregate = "Budget")]
+pub struct TransactionConnected {
+        budget_id: Uuid,
+        tx_id: Uuid,
+        item_id: Uuid,
+}
+
+impl TransactionConnectedHandling for Budget {
+    fn apply_do_transaction_connected(&mut self, event: TransactionConnected) {
+        self.bank_transactions..get_mut(&event.tx_id).unwrap().budget_item_id = Some(event.item_id);
+    }
+
+    fn do_transaction_connected_impl(&self, tx_id: Uuid, item_id: Uuid) -> Result<TransactionConnected, CommandError> {
+        todo!()
+    }
+}
+
+// #[derive(Debug, Clone, Serialize, Deserialize)]
+// pub struct TransactionConnected {
+//     budget_id: Uuid,
+//     tx_id: Uuid,
+//     item_id: Uuid,
+// }
+//
+// impl TransactionConnected {
+//     pub fn new(budget_id: Uuid, tx_id: Uuid, item_id: Uuid) -> Self {
+//         Self {
+//             budget_id,
+//             tx_id,
+//             item_id,
+//         }
+//     }
+// }
+//
+// impl DomainEvent<Budget> for TransactionConnected {
+//     fn aggregate_id(&self) -> <Budget as Aggregate>::Id {
+//         self.budget_id
+//     }
+//
+//     fn apply(&self, state: &mut Budget) {
+//   
+//     }
+// }
 // FundsReallocated
+
