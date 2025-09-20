@@ -40,7 +40,7 @@ impl Store {
         }
     }
 
-    fn insert(&mut self, transaction: BankTransaction) -> bool {
+    pub fn insert(&mut self, transaction: BankTransaction) -> bool {
         let mut hasher = DefaultHasher::new();
         transaction.hash(&mut hasher);
         
@@ -52,7 +52,7 @@ impl Store {
         }
     }
     
-    fn remove(&mut self, id: Uuid) -> bool {
+    pub fn remove(&mut self, id: Uuid) -> bool {
         if let Some(transaction) = self.by_id.remove(&id) {
             let mut hasher = DefaultHasher::new();
             transaction.hash(&mut hasher);
@@ -62,12 +62,20 @@ impl Store {
         }
     }
     
-    fn check_hash(self,hash: &u64) -> bool {
+    pub fn check_hash(&self,hash: &u64) -> bool {
         self.all.contains(hash)
     }
+    
+    pub fn can_insert(&self, hash: &u64) -> bool {
+        !self.check_hash(hash)
+    }
 
-    fn get_mut(&mut self, id: Uuid) -> Option<&mut BankTransaction> {
-        self.by_id.get_mut(&id)
+    pub fn get_mut(&mut self, id: &Uuid) -> Option<&mut BankTransaction> {
+        self.by_id.get_mut(id)
+    }
+    
+    pub fn contains(&self, id: &Uuid) -> bool {
+        self.by_id.contains_key(id)
     }
 }
 // --- Budget Domain ---
@@ -77,6 +85,7 @@ pub struct Budget {
     pub name: String,
     pub user_id: Uuid,
     pub budget_groups: HashMap<Uuid, BudgetGroup>,
+    pub budget_items: HashMap<Uuid, BudgetItem>,
     pub bank_transactions: Store,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
@@ -192,6 +201,12 @@ impl Hash for BankTransaction {
     }
 }
 
+impl BankTransaction {
+    pub fn get_hash(&self) -> u64 {
+        get_transaction_hash(self.amount, self.balance, self.account_number.clone(), self.description.clone(), self.date)
+    }
+}
+
 pub fn get_transaction_hash(amount: Money, balance: Money, account_number: String, description: String, date: DateTime<Utc>) -> u64 {
     let mut hasher = DefaultHasher::new();
     amount.hash(&mut hasher);
@@ -260,6 +275,7 @@ impl Aggregate for Budget {
             user_id: Uuid::new_v4(),
             default_budget: false,
             budget_groups: HashMap::new(),
+            budget_items: HashMap::new(),
             bank_transactions: Store::new(),
             created_at: Utc::now(),
             updated_at: Utc::now(),

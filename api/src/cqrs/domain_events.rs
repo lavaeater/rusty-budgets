@@ -192,11 +192,20 @@ pub struct TransactionConnected {
 
 impl TransactionConnectedHandling for Budget {
     fn apply_do_transaction_connected(&mut self, event: TransactionConnected) {
-        self.bank_transactions..get_mut(&event.tx_id).unwrap().budget_item_id = Some(event.item_id);
+        self.bank_transactions.get_mut(&event.tx_id).unwrap().budget_item_id = Some(event.item_id);
     }
 
     fn do_transaction_connected_impl(&self, tx_id: Uuid, item_id: Uuid) -> Result<TransactionConnected, CommandError> {
-        todo!()
+        if self.bank_transactions.contains(&tx_id) && self.budget_items.contains_key(&item_id) {
+            let ev = TransactionConnected {
+                budget_id: self.id,
+                tx_id,
+                item_id,
+            };
+            Ok(ev)
+        } else {
+            Err(CommandError::Validation("Transaction or item does not exist."))
+        }
     }
 }
 
