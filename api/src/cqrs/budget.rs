@@ -9,7 +9,7 @@ use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::fmt::{Display, Formatter};
-use std::hash::{Hash, Hasher};
+use std::hash::{DefaultHasher, Hash, Hasher};
 use uuid::Uuid;
 
 pub_events_enum! {
@@ -28,7 +28,7 @@ pub_events_enum! {
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 struct Store {
-    all: HashSet<BankTransaction>,       // uniqueness check
+    all: HashSet<u64>,       // uniqueness check
     by_id: HashMap<Uuid, BankTransaction> // fast lookup
 }
 
@@ -41,12 +41,29 @@ impl Store {
     }
 
     fn insert(&mut self, transaction: BankTransaction) -> bool {
-        if self.all.insert(transaction.clone()) {
+        let mut hasher = DefaultHasher::new();
+        transaction.hash(&mut hasher);
+        
+        if self.all.insert(hasher.finish()) {
             self.by_id.insert(transaction.id, transaction);
             true
         } else {
             false
         }
+    }
+    
+    fn remove(&mut self, id: Uuid) -> bool {
+        if let Some(transaction) = self.by_id.remove(&id) {
+            let mut hasher = DefaultHasher::new();
+            transaction.hash(&mut hasher);
+            self.all.remove(&hasher.finish())
+        } else {
+            false
+        }
+    }
+    
+    fn check_hash(self,hash: &u64) -> bool {
+        self.all.contains(hash)
     }
 
     fn get_mut(&mut self, id: Uuid) -> Option<&mut BankTransaction> {
@@ -173,6 +190,16 @@ impl Hash for BankTransaction {
         self.description.hash(state);
         self.date.hash(state);
     }
+}
+
+pub fn get_transaction_hash(amount: Money, balance: Money, account_number: String, description: String, date: DateTime<Utc>) -> u64 {
+    let mut hasher = DefaultHasher::new();
+    amount.hash(&mut hasher);
+    balance.hash(&mut hasher);
+    account_number.hash(&mut hasher);
+    description.hash(&mut hasher);
+    date.hash(&mut hasher);
+    hasher.finish()
 }
 
 impl Display for BankTransaction {
