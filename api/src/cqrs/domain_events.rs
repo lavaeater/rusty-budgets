@@ -5,9 +5,9 @@ use crate::cqrs::money::Money;
 use chrono::{DateTime, Utc};
 use cqrs_macros::DomainEvent;
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 use std::hash::Hash;
 use uuid::Uuid;
-use std::collections::HashSet;
 
 #[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]
 #[domain_event(aggregate = "Budget")]
@@ -164,7 +164,14 @@ impl Budget {
         description: String,
         date: DateTime<Utc>,
     ) -> Result<TransactionAdded, CommandError> {
-        let bt = BankTransaction::new(transaction_id, &account_number, amount, balance, &description, date);
+        let bt = BankTransaction::new(
+            transaction_id,
+            &account_number,
+            amount,
+            balance,
+            &description,
+            date,
+        );
         if !self.bank_transactions.contains(&bt) {
             Ok(TransactionAdded {
                 budget_id: self.id,
@@ -185,17 +192,23 @@ impl Budget {
 #[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]
 #[domain_event(aggregate = "Budget")]
 pub struct TransactionConnected {
-        budget_id: Uuid,
-        tx_id: Uuid,
-        item_id: Uuid,
+    budget_id: Uuid,
+    tx_id: Uuid,
+    item_id: Uuid,
 }
-
-impl TransactionConnectedHandling for Budget {
+impl Budget {
     fn apply_do_transaction_connected(&mut self, event: TransactionConnected) {
-        self.bank_transactions.get_mut(&event.tx_id).unwrap().budget_item_id = Some(event.item_id);
+        self.bank_transactions
+            .get_mut(&event.tx_id)
+            .unwrap()
+            .budget_item_id = Some(event.item_id);
     }
 
-    fn do_transaction_connected_impl(&self, tx_id: Uuid, item_id: Uuid) -> Result<TransactionConnected, CommandError> {
+    pub fn do_transaction_connected_impl(
+        &self,
+        tx_id: Uuid,
+        item_id: Uuid,
+    ) -> Result<TransactionConnected, CommandError> {
         if self.bank_transactions.contains(&tx_id) && self.budget_items.contains_key(&item_id) {
             let ev = TransactionConnected {
                 budget_id: self.id,
@@ -204,10 +217,31 @@ impl TransactionConnectedHandling for Budget {
             };
             Ok(ev)
         } else {
-            Err(CommandError::Validation("Transaction or item does not exist."))
+            Err(CommandError::Validation(
+                "Transaction or item does not exist.",
+            ))
         }
     }
 }
+
+// impl Budget {
+//     fn apply_do_transaction_connected(&mut self, event: TransactionConnected) {
+//         self.bank_transactions.get_mut(&event.tx_id).unwrap().budget_item_id = Some(event.item_id);
+//     }
+//
+//     fn do_transaction_connected_impl(&self, tx_id: Uuid, item_id: Uuid) -> Result<TransactionConnected, CommandError> {
+//         if self.bank_transactions.contains(&tx_id) && self.budget_items.contains_key(&item_id) {
+//             let ev = TransactionConnected {
+//                 budget_id: self.id,
+//                 tx_id,
+//                 item_id,
+//             };
+//             Ok(ev)
+//         } else {
+//             Err(CommandError::Validation("Transaction or item does not exist."))
+//         }
+//     }
+// }
 
 // #[derive(Debug, Clone, Serialize, Deserialize)]
 // pub struct TransactionConnected {
@@ -232,8 +266,7 @@ impl TransactionConnectedHandling for Budget {
 //     }
 //
 //     fn apply(&self, state: &mut Budget) {
-//   
+//
 //     }
 // }
 // FundsReallocated
-

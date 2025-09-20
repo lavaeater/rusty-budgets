@@ -1,5 +1,5 @@
 use crate::cqrs::framework::DomainEvent;
-use crate::cqrs::domain_events::{BudgetCreated, GroupAdded, ItemAdded, TransactionAdded};
+use crate::cqrs::domain_events::{BudgetCreated, GroupAdded, ItemAdded, TransactionAdded, TransactionConnected};
 use crate::cqrs::framework::Aggregate;
 use crate::cqrs::money::Money;
 use crate::pub_events_enum;
@@ -19,7 +19,7 @@ pub_events_enum! {
         GroupAdded,
         ItemAdded,
         TransactionAdded,
-        // TransactionConnected,
+        TransactionConnected,
         // FundsReallocated
         // ... add other events here
     }
