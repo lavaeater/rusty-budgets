@@ -87,16 +87,19 @@ pub struct ItemAdded {
 
 impl Budget {
     fn apply_add_item(&mut self, event: &ItemAdded) {
+        let new_item = BudgetItem::new(
+            &event.name,
+            event.item_type,
+            event.budgeted_amount,
+            None,
+            None,
+        );
+        let new_item_id = new_item.id;
         _ = self.budget_groups.get_mut(&event.group_id).map(|f| {
-            f.items.push(BudgetItem::new(
-                &event.name,
-                event.item_type,
-                event.budgeted_amount,
-                None,
-                None,
-            ));
+            f.items.push(new_item);
             Some(f)
         });
+        self.budget_items_and_groups.insert(new_item_id, event.group_id);
     }
 
     fn add_item_impl(
@@ -107,7 +110,6 @@ impl Budget {
         budgeted_amount: Money,
     ) -> Result<ItemAdded, CommandError> {
         if self.budget_groups.contains_key(&group_id) {
-            //&& group.items.iter().find(|item| item.name == name).is_none()
             Ok(ItemAdded {
                 budget_id: self.id,
                 group_id,
@@ -204,7 +206,7 @@ impl TransactionConnectedHandler for Budget {
         tx_id: Uuid,
         item_id: Uuid,
     ) -> Result<TransactionConnected, CommandError> {
-        if self.bank_transactions.contains(&tx_id) && self.budget_items.contains_key(&item_id) {
+        if self.bank_transactions.contains(&tx_id) && self.budget_items_and_groups.contains_key(&item_id) {
             let ev = TransactionConnected {
                 budget_id: self.id,
                 tx_id,

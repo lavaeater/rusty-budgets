@@ -159,6 +159,57 @@ pub fn test_trans_hash() {
     hash_set.insert(t_a);
     assert!(!hash_set.insert(t_b));
 }
+
+#[test]
+pub fn connect_bank_transaction() -> anyhow::Result<()> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let budget_id = Uuid::new_v4();
+    let user_id = Uuid::new_v4();
+    let bank_account_number = "1234567890".to_string();
+
+    let _ = rt.cmd(&user_id, &budget_id, |budget| {
+        budget.create_budget("Test Budget".to_string(), user_id, true)
+    })?;
+
+    let now = Utc::now();
+
+    let res = rt.cmd(&user_id, &budget_id, |budget| {
+        budget.add_transaction(
+            Uuid::new_v4(),
+            bank_account_number.clone(),
+            Money::new_dollars(100, Currency::SEK),
+            Money::new_dollars(100, Currency::SEK),
+            "Test Transaction".to_string(),
+            now,
+        )
+    });
+
+    assert!(res.is_ok());
+    let res = res?;
+    assert_eq!(res.bank_transactions.len(), 1);
+
+    let res = rt
+        .cmd(&user_id, &budget_id, |budget| {
+            budget.add_transaction(
+                Uuid::new_v4(),
+                bank_account_number.clone(),
+                Money::new_dollars(100, Currency::SEK),
+                Money::new_dollars(100, Currency::SEK),
+                "Test Transaction".to_string(),
+                now,
+            )
+        })
+        .err();
+
+    assert!(res.is_some());
+    assert_eq!(
+        res.unwrap().to_string(),
+        "Validation error: Transaction already exists."
+    );
+
+    Ok(())
+}
+
 #[test]
 pub fn add_bank_transaction() -> anyhow::Result<()> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
