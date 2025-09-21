@@ -1,18 +1,19 @@
-use std::path::Path;
 use dioxus::logger::tracing;
-use joydb::Joydb;
 use joydb::adapters::JsonAdapter;
+use joydb::Joydb;
+use std::path::Path;
 
-use joydb::{Model};
-use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 use crate::cqrs::budget::{Budget, BudgetEvent, BudgetingType};
 use crate::cqrs::framework::{Runtime, StoredEvent};
-use crate::cqrs::money::Currency;
+use crate::cqrs::money::{Currency, Money};
 use crate::models::User;
+use joydb::Model;
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 impl JoyDbBudgetRuntime {
-    pub fn create_budget(&self,
+    pub fn create_budget(
+        &self,
         budget_name: &str,
         default_budget: bool,
         currency: Currency,
@@ -22,20 +23,39 @@ impl JoyDbBudgetRuntime {
             budget.create_budget(budget_name.to_string(), user_id, default_budget, currency)
         })
     }
-    
-    pub fn add_group(&self, budget_id: Uuid, group_name: &str, group_type: BudgetingType, user_id: Uuid) -> anyhow::Result<(Budget, Uuid)> {
+
+    pub fn add_group(
+        &self,
+        budget_id: Uuid,
+        group_name: &str,
+        group_type: BudgetingType,
+        user_id: Uuid,
+    ) -> anyhow::Result<(Budget, Uuid)> {
         self.cmd(&user_id, &budget_id, |budget| {
             budget.add_group(group_name.to_string(), group_type)
         })
     }
+
+    pub fn add_item(
+        &self,
+        budget_id: Uuid,
+        group_id: Uuid,
+        item_name: &str,
+        item_type: BudgetingType,
+        amount: Money,
+        user_id: Uuid,
+    ) -> anyhow::Result<(Budget, Uuid)> {
+        self.cmd(&user_id, &budget_id, |budget| {
+            budget.add_item(group_id, item_name.to_string(), item_type, amount)
+        })
+    }
 }
-
-
 
 #[derive(Debug, Clone, Serialize, Deserialize, Model)]
 pub struct UserBudgets {
     pub id: Uuid,
-    pub budgets: Vec<(Uuid, bool)>,}
+    pub budgets: Vec<(Uuid, bool)>,
+}
 
 joydb::state! {
     AppState,
@@ -68,7 +88,7 @@ impl JoyDbBudgetRuntime {
             db: Db::open(path).unwrap(),
         }
     }
-    
+
     pub fn new_in_memory() -> Self {
         Self {
             db: Db::new_in_memory().unwrap(),
@@ -83,11 +103,10 @@ impl JoyDbBudgetRuntime {
         E: Into<BudgetEvent>,
     {
         self.execute(user_id, id, |aggregate| {
-            command(aggregate).map(|event| event.into()) 
+            command(aggregate).map(|event| event.into())
         })
     }
-    
-    
+
     fn fetch_events(
         &self,
         id: &Uuid,

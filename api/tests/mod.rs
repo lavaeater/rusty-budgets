@@ -1,7 +1,7 @@
 use api::cqrs::budget::{BankTransaction, Budget, BudgetingType};
 use api::cqrs::framework::Runtime;
 use api::cqrs::money::{Currency, Money};
-use api::cqrs::runtime::{JoyDbBudgetRuntime};
+use api::cqrs::runtime::JoyDbBudgetRuntime;
 use api::import::import_from_skandia_excel;
 use chrono::Utc;
 use std::collections::HashSet;
@@ -48,7 +48,7 @@ pub fn add_budget_group() -> anyhow::Result<()> {
     assert_eq!(res.version, 2);
     Ok(())
 }
-// 
+//
 #[test]
 pub fn add_budget_group_that_exists() -> anyhow::Result<()> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
@@ -59,7 +59,8 @@ pub fn add_budget_group_that_exists() -> anyhow::Result<()> {
     assert!(res.is_ok());
     let (res, group_id) = res?;
     assert_eq!(res.budget_groups.values().len(), 1);
-    let res = rt.add_group(budget_id, "Inkomster", BudgetingType::Income, user_id)
+    let res = rt
+        .add_group(budget_id, "Inkomster", BudgetingType::Income, user_id)
         .err();
     assert!(res.is_some());
     assert_eq!(
@@ -69,60 +70,54 @@ pub fn add_budget_group_that_exists() -> anyhow::Result<()> {
 
     Ok(())
 }
-// 
-// #[test]
-// pub fn add_budget_item() -> anyhow::Result<()> {
-//     let rt = JoyDbBudgetRuntime::new_in_memory();
-//     let budget_id = Uuid::new_v4();
-//     let user_id = Uuid::new_v4();
-// 
-//     let _ = rt.cmd(&user_id, &budget_id, |budget| {
-//         budget.create_budget("Test Budget".to_string(), user_id, true, Currency::SEK)
-//     })?;
-// 
-//     let (res, group_id) = rt.cmd(&user_id, &budget_id, |budget| {
-//         budget.add_group("Utgifter".to_string(), BudgetingType::Expense)
-//     })?;
-//     assert_eq!(res.budget_groups.values().len(), 1);
-// 
-//     let e = rt
-//         .cmd(&user_id, &budget_id, |budget| {
-//             budget.add_item(
-//                 group_id,
-//                 "Utgifter".to_string(),
-//                 BudgetingType::Expense,
-//                 Money::new_dollars(100, Currency::SEK),
-//             )
-//         })?
-//         .0;
-//     let group = e.budget_groups.get(&group_id);
-//     assert!(group.is_some());
-//     let group = group.unwrap();
-//     assert_eq!(group.items.len(), 1);
-//     assert_eq!(
-//         e.budgeted_by_type.get(&BudgetingType::Expense).unwrap(),
-//         &Money::new_dollars(100, Currency::SEK)
-//     );
-//     assert_eq!(
-//         group.budgeted_amount,
-//         Money::new_dollars(100, Currency::SEK)
-//     );
-// 
-//     let budget_agg = rt.materialize(&budget_id)?;
-//     println!(
-//         "Budget {:?}: name={}, default={}",
-//         budget_agg.id, budget_agg.name, budget_agg.default_budget
-//     );
-// 
-//     for group in budget_agg.budget_groups.values() {
-//         println!("Group: {}", group.name);
-//     }
-// 
-//     // audit log
-//     println!("Events: {:?}", rt.events(&budget_id)?);
-//     Ok(())
-// }
-// 
+
+#[test]
+pub fn add_budget_item() -> anyhow::Result<()> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+
+    let (_, budget_id) = rt.create_budget("Test Budget", true, Currency::SEK, user_id)?;
+
+    let (res, group_id) = rt.add_group(budget_id, "Inkomster", BudgetingType::Income, user_id)?;
+
+    assert_eq!(res.budget_groups.values().len(), 1);
+
+    let (res, item_id) = rt.add_item(
+        budget_id,
+        group_id,
+        "Utgifter",
+        BudgetingType::Expense,
+        Money::new_dollars(100, Currency::SEK),
+        user_id,
+    )?;
+    let group = res.budget_groups.get(&group_id);
+    assert!(group.is_some());
+    let group = group.unwrap();
+    assert_eq!(group.items.len(), 1);
+    assert_eq!(
+        res.budgeted_by_type.get(&BudgetingType::Expense).unwrap(),
+        &Money::new_dollars(100, Currency::SEK)
+    );
+    assert_eq!(
+        group.budgeted_amount,
+        Money::new_dollars(100, Currency::SEK)
+    );
+
+    let budget_agg = rt.materialize(&budget_id)?;
+    println!(
+        "Budget {:?}: name={}, default={}",
+        budget_agg.id, budget_agg.name, budget_agg.default_budget
+    );
+
+    for group in budget_agg.budget_groups.values() {
+        println!("Group: {}", group.name);
+    }
+
+    // audit log
+    println!("Events: {:?}", rt.events(&budget_id)?);
+    Ok(())
+}
+//
 // #[test]
 // pub fn test_trans_hash() {
 //     let now = Utc::now();
@@ -154,23 +149,23 @@ pub fn add_budget_group_that_exists() -> anyhow::Result<()> {
 //     hash_set.insert(t_a);
 //     assert!(!hash_set.insert(t_b));
 // }
-// 
+//
 // #[test]
 // pub fn connect_bank_transaction() -> anyhow::Result<()> {
 //     let rt = JoyDbBudgetRuntime::new_in_memory();
 //     let budget_id = Uuid::new_v4();
 //     let user_id = Uuid::new_v4();
 //     let bank_account_number = "1234567890".to_string();
-// 
+//
 //     let _ = rt.cmd(&user_id, &budget_id, |budget| {
 //         budget.create_budget("Test Budget".to_string(), user_id, true, Currency::SEK)
 //     })?;
-// 
+//
 //     let (res, group_id) = rt.cmd(&user_id, &budget_id, |budget| {
 //         budget.add_group("Utgifter".to_string(), BudgetingType::Expense)
 //     })?;
 //     assert_eq!(res.budget_groups.values().len(), 1);
-// 
+//
 //     let (res, item_id) = rt.cmd(&user_id, &budget_id, |budget| {
 //         budget.add_item(
 //             group_id,
@@ -179,9 +174,9 @@ pub fn add_budget_group_that_exists() -> anyhow::Result<()> {
 //             Money::new_dollars(100, Currency::SEK),
 //         )
 //     })?;
-// 
+//
 //     let now = Utc::now();
-// 
+//
 //     let (res, tx_id) = rt.cmd(&user_id, &budget_id, |budget| {
 //         budget.add_transaction(
 //             Uuid::new_v4(),
@@ -192,13 +187,13 @@ pub fn add_budget_group_that_exists() -> anyhow::Result<()> {
 //             now,
 //         )
 //     })?;
-// 
+//
 //     let (res, tx_id) = rt.cmd(&user_id, &budget_id, |budget| {
 //         budget.do_transaction_connected(tx_id, item_id)
 //     })?;
-// 
+//
 //     let expected_money = Money::new_dollars(100, Currency::SEK);
-// 
+//
 //     assert_eq!(
 //         res.budgeted_by_type.get(&BudgetingType::Expense).unwrap(),
 //         &expected_money
@@ -207,23 +202,23 @@ pub fn add_budget_group_that_exists() -> anyhow::Result<()> {
 //         res.spent_by_type.get(&BudgetingType::Expense).unwrap(),
 //         &expected_money
 //     );
-// 
+//
 //     Ok(())
 // }
-// 
+//
 // #[test]
 // pub fn add_bank_transaction() -> anyhow::Result<()> {
 //     let rt = JoyDbBudgetRuntime::new_in_memory();
 //     let budget_id = Uuid::new_v4();
 //     let user_id = Uuid::new_v4();
 //     let bank_account_number = "1234567890".to_string();
-// 
+//
 //     let _ = rt.cmd(&user_id, &budget_id, |budget| {
 //         budget.create_budget("Test Budget".to_string(), user_id, true, Currency::SEK)
 //     })?;
-// 
+//
 //     let now = Utc::now();
-// 
+//
 //     let res = rt.cmd(&user_id, &budget_id, |budget| {
 //         budget.add_transaction(
 //             Uuid::new_v4(),
@@ -234,11 +229,11 @@ pub fn add_budget_group_that_exists() -> anyhow::Result<()> {
 //             now,
 //         )
 //     });
-// 
+//
 //     assert!(res.is_ok());
 //     let res = res?.0;
 //     assert_eq!(res.bank_transactions.len(), 1);
-// 
+//
 //     let res = rt
 //         .cmd(&user_id, &budget_id, |budget| {
 //             budget.add_transaction(
@@ -251,34 +246,34 @@ pub fn add_budget_group_that_exists() -> anyhow::Result<()> {
 //             )
 //         })
 //         .err();
-// 
+//
 //     assert!(res.is_some());
 //     assert_eq!(
 //         res.unwrap().to_string(),
 //         "Validation error: Transaction already exists."
 //     );
-// 
+//
 //     Ok(())
 // }
-// 
+//
 // #[test]
 // pub fn test_import_from_skandia_excel() -> anyhow::Result<()> {
 //     let rt = JoyDbBudgetRuntime::new_in_memory();
 //     let budget_id = Uuid::new_v4();
 //     let user_id = Uuid::new_v4();
-// 
+//
 //     let _ = rt.cmd(&user_id, &budget_id, |budget| {
 //         budget.create_budget("Test Budget".to_string(), user_id, true, Currency::SEK)
 //     })?;
-// 
+//
 //     let imported = import_from_skandia_excel("/home/tommie/projects/bealo/rusty-budgets/test_data/91594824853_2025-08-25-2025-09-19.xlsx", &user_id, &budget_id, &rt)?;
 //     let not_imported =import_from_skandia_excel("/home/tommie/projects/bealo/rusty-budgets/test_data/91594824853_2025-08-25-2025-09-19.xlsx", &user_id, &budget_id, &rt)?;
-// 
+//
 //     let res = rt.load(&budget_id)?.unwrap();
-// 
+//
 //     assert_eq!(res.bank_transactions.len(), 77);
 //     assert_eq!(imported, 77);
 //     assert_eq!(not_imported, 0);
-// 
+//
 //     Ok(())
 // }

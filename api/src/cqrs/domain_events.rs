@@ -64,12 +64,11 @@ pub struct GroupAdded {
 
 impl GroupAddedHandler for Budget {
     fn apply_add_group(&mut self, event: &GroupAdded)-> Uuid {
-        let group_id = Uuid::new_v4();
         self.budget_groups.insert(
-            group_id,
-            BudgetGroup::new(group_id, &event.name, event.group_type, self.currency),
+            event.group_id,
+            BudgetGroup::new(event.group_id, &event.name, event.group_type, self.currency),
         );
-        group_id
+        event.group_id
     }
     
     fn add_group_impl(
