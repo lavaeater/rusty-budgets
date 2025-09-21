@@ -6,7 +6,7 @@ pub mod cqrs;
 pub mod models;
 pub mod import;
 
-use crate::cqrs::budget::{Budget, BudgetGroup, BudgetItem, BudgetItemType};
+use crate::cqrs::budget::{Budget, BudgetGroup, BudgetItem, BudgetingType};
 use crate::models::*;
 use dioxus::prelude::*;
 use uuid::Uuid;
@@ -19,9 +19,9 @@ const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 
 #[cfg(feature = "server")]
 pub mod db {
-    use crate::cqrs::budget::{Budget, BudgetItemType};
+    use crate::cqrs::budget::{Budget, BudgetingType};
     use crate::cqrs::framework::Runtime;
-    use crate::cqrs::money::Money;
+    use crate::cqrs::money::{Currency, Money};
     use crate::models::*;
     use crate::cqrs::runtime::{Db, JoyDbBudgetRuntime, UserBudgets};
     use crate::DEFAULT_USER_EMAIL;
@@ -160,7 +160,7 @@ pub mod db {
     ) -> anyhow::Result<Budget> {
         let budget_id = Uuid::new_v4();
         match with_runtime(None).cmd(user_id, &budget_id, |budget| {
-            budget.create_budget(name.to_string(), *user_id, default_budget)
+            budget.create_budget(name.to_string(), *user_id, default_budget, Currency::SEK)
         }) {
             Ok(budget) => {
                 add_budget_to_user(user_id, &budget_id, default_budget)?;
@@ -170,10 +170,10 @@ pub mod db {
         }
     }
 
-    pub fn add_group(budget_id: &Uuid, user_id: &Uuid, name: &str) -> anyhow::Result<Budget> {
+    pub fn add_group(budget_id: &Uuid, user_id: &Uuid, name: &str, group_type: BudgetingType) -> anyhow::Result<Budget> {
         tracing::info!("add_group: {budget_id:?}, {user_id:?}, {name:?}");
         with_runtime(None).cmd(user_id, budget_id, |budget| {
-            budget.add_group(Uuid::new_v4(), name.to_string())
+            budget.add_group(Uuid::new_v4(), name.to_string(), group_type)
         })
     }
 
@@ -182,7 +182,7 @@ pub mod db {
         group_id: &Uuid,
         user_id: &Uuid,
         name: &str,
-        item_type: &BudgetItemType,
+        item_type: &BudgetingType,
         budgeted_amount: &Money,
     ) -> anyhow::Result<Budget> {
         with_runtime(None).cmd(user_id, budget_id, |budget| {
@@ -239,7 +239,7 @@ pub async fn add_group(budget_id: Uuid, name: String) -> Result<Vec<BudgetGroup>
 }
 
 #[server]
-pub async fn add_item(budget_id: Uuid, group_id: Uuid, name: String, item_type: BudgetItemType, budgeted_amount: Money) -> Result<Vec<BudgetItem>, ServerFnError> {
+pub async fn add_item(budget_id: Uuid, group_id: Uuid, name: String, item_type: BudgetingType, budgeted_amount: Money) -> Result<Vec<BudgetItem>, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
     match db::add_item(&budget_id, &group_id, &user.id, &name, &item_type, &budgeted_amount) {
         Ok(b) => {

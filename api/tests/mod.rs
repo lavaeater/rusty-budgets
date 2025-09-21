@@ -1,4 +1,4 @@
-use api::cqrs::budget::{BankTransaction, BudgetItemType};
+use api::cqrs::budget::{BankTransaction, BudgetingType};
 use api::cqrs::framework::Runtime;
 use api::cqrs::money::{Currency, Money};
 use api::cqrs::runtime::JoyDbBudgetRuntime;
@@ -16,17 +16,19 @@ pub fn create_budget() -> anyhow::Result<()> {
     let user_id = Uuid::new_v4();
 
     let res = rt.cmd(&user_id, &budget_id, |budget| {
-        budget.create_budget("Test Budget".to_string(), user_id, true)
+        budget.create_budget("Test Budget".to_string(), user_id, true, Currency::SEK)
     })?;
     assert_eq!(res.name, "Test Budget");
     assert!(res.default_budget);
     assert_eq!(res.budget_groups.values().len(), 0);
+    assert_eq!(res.currency, Currency::SEK);
 
     let res = rt.materialize(&budget_id)?;
     assert_eq!(res.name, "Test Budget");
     assert!(res.default_budget);
     assert_eq!(res.budget_groups.values().len(), 0);
     assert_eq!(res.version, 1);
+    assert_eq!(res.currency, Currency::SEK);
 
     Ok(())
 }
@@ -38,10 +40,10 @@ pub fn add_budget_group() -> anyhow::Result<()> {
     let user_id = Uuid::new_v4();
 
     let _ = rt.cmd(&user_id, &budget_id, |budget| {
-        budget.create_budget("Test Budget".to_string(), user_id, true)
+        budget.create_budget("Test Budget".to_string(), user_id, true, Currency::SEK)
     })?;
     let res = rt.cmd(&user_id, &budget_id, |budget| {
-        budget.add_group(Uuid::new_v4(), "Inkomster".to_string())
+        budget.add_group(Uuid::new_v4(), "Inkomster".to_string(), BudgetingType::Income)
     });
     assert!(res.is_ok());
     let res = res?;
@@ -62,17 +64,17 @@ pub fn add_budget_group_that_exists() -> anyhow::Result<()> {
     let user_id = Uuid::new_v4();
 
     let _ = rt.cmd(&user_id, &budget_id, |budget| {
-        budget.create_budget("Test Budget".to_string(), user_id, true)
+        budget.create_budget("Test Budget".to_string(), user_id, true, Currency::SEK)
     })?;
     let res = rt.cmd(&user_id, &budget_id, |budget| {
-        budget.add_group(Uuid::new_v4(), "Inkomster".to_string())
+        budget.add_group(Uuid::new_v4(), "Inkomster".to_string(), BudgetingType::Income)
     });
     assert!(res.is_ok());
     let res = res?;
     assert_eq!(res.budget_groups.values().len(), 1);
     let res = rt
         .cmd(&user_id, &budget_id, |budget| {
-            budget.add_group(Uuid::new_v4(), "Inkomster".to_string())
+            budget.add_group(Uuid::new_v4(), "Inkomster".to_string(), BudgetingType::Income)
         })
         .err();
     assert!(res.is_some());
@@ -91,12 +93,12 @@ pub fn add_budget_item() -> anyhow::Result<()> {
     let user_id = Uuid::new_v4();
 
     let _ = rt.cmd(&user_id, &budget_id, |budget| {
-        budget.create_budget("Test Budget".to_string(), user_id, true)
+        budget.create_budget("Test Budget".to_string(), user_id, true, Currency::SEK)
     })?;
 
     let group_id = Uuid::new_v4();
     let res = rt.cmd(&user_id, &budget_id, |budget| {
-        budget.add_group(group_id, "Utgifter".to_string())
+        budget.add_group(group_id, "Utgifter".to_string(), BudgetingType::Expense)
     })?;
     assert_eq!(res.budget_groups.values().len(), 1);
 
@@ -104,7 +106,7 @@ pub fn add_budget_item() -> anyhow::Result<()> {
         budget.add_item(
             group_id,
             "Utgifter".to_string(),
-            BudgetItemType::Expense,
+            BudgetingType::Expense,
             Money::new_dollars(100, Currency::SEK),
         )
     })?;
@@ -112,6 +114,8 @@ pub fn add_budget_item() -> anyhow::Result<()> {
     assert!(group.is_some());
     let group = group.unwrap();
     assert_eq!(group.items.len(), 1);
+    assert_eq!(e.total_by_type.get(&BudgetingType::Expense).unwrap(), &Money::new_dollars(100, Currency::SEK));
+    assert_eq!(group.budgeted_amount, Money::new_dollars(100, Currency::SEK));
 
     let budget_agg = rt.materialize(&budget_id)?;
     println!(
@@ -168,7 +172,7 @@ pub fn connect_bank_transaction() -> anyhow::Result<()> {
     let bank_account_number = "1234567890".to_string();
 
     let _ = rt.cmd(&user_id, &budget_id, |budget| {
-        budget.create_budget("Test Budget".to_string(), user_id, true)
+        budget.create_budget("Test Budget".to_string(), user_id, true, Currency::SEK)
     })?;
 
     let now = Utc::now();
@@ -218,7 +222,7 @@ pub fn add_bank_transaction() -> anyhow::Result<()> {
     let bank_account_number = "1234567890".to_string();
 
     let _ = rt.cmd(&user_id, &budget_id, |budget| {
-        budget.create_budget("Test Budget".to_string(), user_id, true)
+        budget.create_budget("Test Budget".to_string(), user_id, true, Currency::SEK)
     })?;
 
     let now = Utc::now();
@@ -267,7 +271,7 @@ pub fn test_import_from_skandia_excel() -> anyhow::Result<()> {
     let user_id = Uuid::new_v4();
 
     let _ = rt.cmd(&user_id, &budget_id, |budget| {
-        budget.create_budget("Test Budget".to_string(), user_id, true)
+        budget.create_budget("Test Budget".to_string(), user_id, true, Currency::SEK)
     })?;
 
     let imported = import_from_skandia_excel("/home/tommie/projects/bealo/rusty-budgets/test_data/91594824853_2025-08-25-2025-09-19.xlsx", &user_id, &budget_id, &rt)?;

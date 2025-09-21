@@ -165,7 +165,7 @@ pub fn derive_domain_event(input: TokenStream) -> TokenStream {
     // --- Generate code ---
     let expanded = quote! {
         pub trait #trait_name {
-            fn #apply_fn_ident(&mut self, event: &#name);
+            fn #apply_fn_ident(&mut self, event: &#name)-> Uuid;
             fn #command_fn_impl_ident(&self, #(#command_params),*) -> Result<#name, CommandError>;
         }
         
@@ -174,7 +174,7 @@ pub fn derive_domain_event(input: TokenStream) -> TokenStream {
                 self.#id_field_ident
             }
 
-            fn apply(&self, state: &mut #aggregate_ident) {
+            fn apply(&self, state: &mut #aggregate_ident) -> Uuid {
                 state.#apply_fn_ident(self)
             }
         }

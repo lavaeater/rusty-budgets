@@ -58,7 +58,7 @@ pub trait DomainEvent<A: Aggregate>: Clone + Debug + Sized {
     fn aggregate_id(&self) -> A::Id;
 
     /// Apply this event to the aggregate state.
-    fn apply(&self, state: &mut A);
+    fn apply(&self, state: &mut A) -> Uuid;
 }
 
 #[derive(Debug)]

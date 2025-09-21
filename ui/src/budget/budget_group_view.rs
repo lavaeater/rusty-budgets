@@ -1,5 +1,5 @@
 use crate::budget_item_view::BudgetItemView;
-use api::cqrs::budget::{BudgetGroup, BudgetItemType};
+use api::cqrs::budget::{BudgetGroup, BudgetingType};
 use api::cqrs::money::{Currency, Money};
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
@@ -81,11 +81,11 @@ pub fn BudgetGroupView(budget_id: Uuid, group: BudgetGroup, index: usize) -> Ele
 }
 
 #[component]
-pub fn ItemTypeSelect(mut selected_value: Signal<Option<Option<BudgetItemType>>>) -> Element {
+pub fn ItemTypeSelect(mut selected_value: Signal<Option<Option<BudgetingType>>>) -> Element {
     rsx! {
-        Select::<BudgetItemType> {
+        Select::<BudgetingType> {
             placeholder: "Välj typ",
-            on_value_change: move |value: Option<BudgetItemType>| {
+            on_value_change: move |value: Option<BudgetingType>| {
                 selected_value.set(Some(value));
                 if let Some(val) = value {
                     tracing::info!("Selected value: {:?}", val);
@@ -93,23 +93,23 @@ pub fn ItemTypeSelect(mut selected_value: Signal<Option<Option<BudgetItemType>>>
             },
             SelectTrigger { aria_label: "Väljare", width: "12rem", SelectValue {} }
             SelectList { aria_label: "Typväljare",
-                SelectOption::<BudgetItemType> {
+                SelectOption::<BudgetingType> {
                     index: 0usize,
-                    value: BudgetItemType::Income,
+                    value: BudgetingType::Income,
                     text_value: "Inkomst",
                     "Inkomst"
                     SelectItemIndicator { "✔️" }
                 }
-                SelectOption::<BudgetItemType> {
+                SelectOption::<BudgetingType> {
                     index: 1usize,
-                    value: BudgetItemType::Expense,
+                    value: BudgetingType::Expense,
                     text_value: "Utgift",
                     "Utgift"
                     SelectItemIndicator { "✔️" }
                 }
-                SelectOption::<BudgetItemType> {
+                SelectOption::<BudgetingType> {
                     index: 2usize,
-                    value: BudgetItemType::Savings,
+                    value: BudgetingType::Savings,
                     text_value: "Sparande",
                     "Sparande"
                     SelectItemIndicator { "✔️" }
