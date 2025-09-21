@@ -6,7 +6,7 @@ use joydb::adapters::JsonAdapter;
 use joydb::{Model};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use crate::cqrs::budget::{Budget, BudgetEvent};
+use crate::cqrs::budget::{Budget, BudgetEvent, BudgetingType};
 use crate::cqrs::framework::{Runtime, StoredEvent};
 use crate::cqrs::money::Currency;
 use crate::models::User;
@@ -16,12 +16,18 @@ impl JoyDbBudgetRuntime {
         budget_name: &str,
         default_budget: bool,
         currency: Currency,
-        user_id: &Uuid,
+        user_id: Uuid,
     ) -> anyhow::Result<(Budget, Uuid)> {
         self.cmd(&user_id, &Uuid::default(), |budget| {
-            budget.create_budget(budget_name.to_string(), *user_id, default_budget, currency)
+            budget.create_budget(budget_name.to_string(), user_id, default_budget, currency)
         })
-    }    
+    }
+    
+    pub fn add_group(&self, budget_id: Uuid, group_name: &str, group_type: BudgetingType, user_id: Uuid) -> anyhow::Result<(Budget, Uuid)> {
+        self.cmd(&user_id, &budget_id, |budget| {
+            budget.add_group(group_name.to_string(), group_type)
+        })
+    }
 }
 
 

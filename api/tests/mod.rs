@@ -14,7 +14,7 @@ pub fn create_budget_test() -> anyhow::Result<()> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
     let user_id = Uuid::new_v4();
 
-    let (res, budget_id) = rt.create_budget("Test Budget", true, Currency::SEK, &user_id)?;
+    let (res, budget_id) = rt.create_budget("Test Budget", true, Currency::SEK, user_id)?;
     assert_eq!(res.name, "Test Budget");
     assert!(res.default_budget);
     assert_eq!(res.budget_groups.values().len(), 0);
@@ -29,59 +29,46 @@ pub fn create_budget_test() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[test]
+pub fn add_budget_group() -> anyhow::Result<()> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+
+    let (res, budget_id) = rt.create_budget("Test Budget", true, Currency::SEK, user_id)?;
+    let res = rt.add_group(res.id, "Inkomster", BudgetingType::Income, user_id);
+    assert!(res.is_ok());
+    let res = res?.0;
+    assert_eq!(res.budget_groups.values().len(), 1);
+
+    let res = rt.materialize(&budget_id)?;
+    assert_eq!(res.name, "Test Budget");
+    assert!(res.default_budget);
+    assert_eq!(res.budget_groups.values().len(), 1);
+    assert_eq!(res.version, 2);
+    Ok(())
+}
 // 
-// #[test]
-// pub fn add_budget_group() -> anyhow::Result<()> {
-//     let rt = JoyDbBudgetRuntime::new_in_memory();
-//     let budget_id = Uuid::new_v4();
-//     let user_id = Uuid::new_v4();
-// 
-//     let _ = rt.cmd(&user_id, &budget_id, |budget| {
-//         budget.create_budget("Test Budget".to_string(), user_id, true, Currency::SEK)
-//     })?;
-//     let res = rt.cmd(&user_id, &budget_id, |budget| {
-//         budget.add_group("Inkomster".to_string(), BudgetingType::Income)
-//     });
-//     assert!(res.is_ok());
-//     let res = res?.0;
-//     assert_eq!(res.budget_groups.values().len(), 1);
-// 
-//     let res = rt.materialize(&budget_id)?;
-//     assert_eq!(res.name, "Test Budget");
-//     assert!(res.default_budget);
-//     assert_eq!(res.budget_groups.values().len(), 1);
-//     assert_eq!(res.version, 2);
-//     Ok(())
-// }
-// 
-// #[test]
-// pub fn add_budget_group_that_exists() -> anyhow::Result<()> {
-//     let rt = JoyDbBudgetRuntime::new_in_memory();
-//     let budget_id = Uuid::new_v4();
-//     let user_id = Uuid::new_v4();
-// 
-//     let _ = rt.cmd(&user_id, &budget_id, |budget| {
-//         budget.create_budget("Test Budget".to_string(), user_id, true, Currency::SEK)
-//     })?;
-//     let res = rt.cmd(&user_id, &budget_id, |budget| {
-//         budget.add_group("Inkomster".to_string(), BudgetingType::Income)
-//     });
-//     assert!(res.is_ok());
-//     let res = res?.0;
-//     assert_eq!(res.budget_groups.values().len(), 1);
-//     let res = rt
-//         .cmd(&user_id, &budget_id, |budget| {
-//             budget.add_group("Inkomster".to_string(), BudgetingType::Income)
-//         })
-//         .err();
-//     assert!(res.is_some());
-//     assert_eq!(
-//         res.unwrap().to_string(),
-//         "Validation error: Budget group already exists"
-//     );
-// 
-//     Ok(())
-// }
+#[test]
+pub fn add_budget_group_that_exists() -> anyhow::Result<()> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+
+    let (_, budget_id) = rt.create_budget("Test Budget", true, Currency::SEK, user_id)?;
+    let res = rt.add_group(budget_id, "Inkomster", BudgetingType::Income, user_id);
+    assert!(res.is_ok());
+    let (res, group_id) = res?;
+    assert_eq!(res.budget_groups.values().len(), 1);
+    let res = rt.add_group(budget_id, "Inkomster", BudgetingType::Income, user_id)
+        .err();
+    assert!(res.is_some());
+    assert_eq!(
+        res.unwrap().to_string(),
+        "Validation error: Budget group already exists"
+    );
+
+    Ok(())
+}
 // 
 // #[test]
 // pub fn add_budget_item() -> anyhow::Result<()> {
