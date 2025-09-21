@@ -17,7 +17,7 @@ pub fn create_budget() -> anyhow::Result<()> {
 
     let res = rt.cmd(&user_id, &budget_id, |budget| {
         budget.create_budget("Test Budget".to_string(), user_id, true, Currency::SEK)
-    })?;
+    })?.0;
     assert_eq!(res.name, "Test Budget");
     assert!(res.default_budget);
     assert_eq!(res.budget_groups.values().len(), 0);
@@ -43,10 +43,10 @@ pub fn add_budget_group() -> anyhow::Result<()> {
         budget.create_budget("Test Budget".to_string(), user_id, true, Currency::SEK)
     })?;
     let res = rt.cmd(&user_id, &budget_id, |budget| {
-        budget.add_group(Uuid::new_v4(), "Inkomster".to_string(), BudgetingType::Income)
+        budget.add_group("Inkomster".to_string(), BudgetingType::Income)
     });
     assert!(res.is_ok());
-    let res = res?;
+    let res = res?.0;
     assert_eq!(res.budget_groups.values().len(), 1);
 
     let res = rt.materialize(&budget_id)?;
@@ -67,14 +67,14 @@ pub fn add_budget_group_that_exists() -> anyhow::Result<()> {
         budget.create_budget("Test Budget".to_string(), user_id, true, Currency::SEK)
     })?;
     let res = rt.cmd(&user_id, &budget_id, |budget| {
-        budget.add_group(Uuid::new_v4(), "Inkomster".to_string(), BudgetingType::Income)
+        budget.add_group("Inkomster".to_string(), BudgetingType::Income)
     });
     assert!(res.is_ok());
-    let res = res?;
+    let res = res?.0;
     assert_eq!(res.budget_groups.values().len(), 1);
     let res = rt
         .cmd(&user_id, &budget_id, |budget| {
-            budget.add_group(Uuid::new_v4(), "Inkomster".to_string(), BudgetingType::Income)
+            budget.add_group("Inkomster".to_string(), BudgetingType::Income)
         })
         .err();
     assert!(res.is_some());
@@ -95,10 +95,9 @@ pub fn add_budget_item() -> anyhow::Result<()> {
     let _ = rt.cmd(&user_id, &budget_id, |budget| {
         budget.create_budget("Test Budget".to_string(), user_id, true, Currency::SEK)
     })?;
-
-    let group_id = Uuid::new_v4();
-    let res = rt.cmd(&user_id, &budget_id, |budget| {
-        budget.add_group(group_id, "Utgifter".to_string(), BudgetingType::Expense)
+    
+    let (res, group_id) = rt.cmd(&user_id, &budget_id, |budget| {
+        budget.add_group("Utgifter".to_string(), BudgetingType::Expense)
     })?;
     assert_eq!(res.budget_groups.values().len(), 1);
 
@@ -109,12 +108,12 @@ pub fn add_budget_item() -> anyhow::Result<()> {
             BudgetingType::Expense,
             Money::new_dollars(100, Currency::SEK),
         )
-    })?;
+    })?.0;
     let group = e.budget_groups.get(&group_id);
     assert!(group.is_some());
     let group = group.unwrap();
     assert_eq!(group.items.len(), 1);
-    assert_eq!(e.total_by_type.get(&BudgetingType::Expense).unwrap(), &Money::new_dollars(100, Currency::SEK));
+    assert_eq!(e.budgeted_by_type.get(&BudgetingType::Expense).unwrap(), &Money::new_dollars(100, Currency::SEK));
     assert_eq!(group.budgeted_amount, Money::new_dollars(100, Currency::SEK));
 
     let budget_agg = rt.materialize(&budget_id)?;
@@ -175,9 +174,23 @@ pub fn connect_bank_transaction() -> anyhow::Result<()> {
         budget.create_budget("Test Budget".to_string(), user_id, true, Currency::SEK)
     })?;
 
+    let (res, group_id) = rt.cmd(&user_id, &budget_id, |budget| {
+        budget.add_group("Utgifter".to_string(), BudgetingType::Expense)
+    })?;
+    assert_eq!(res.budget_groups.values().len(), 1);
+
+    let (res, item_id) = rt.cmd(&user_id, &budget_id, |budget| {
+        budget.add_item(
+            group_id,
+            "Utgifter".to_string(),
+            BudgetingType::Expense,
+            Money::new_dollars(100, Currency::SEK),
+        )
+    })?;
+
     let now = Utc::now();
 
-    let res = rt.cmd(&user_id, &budget_id, |budget| {
+    let (res, tx_id) = rt.cmd(&user_id, &budget_id, |budget| {
         budget.add_transaction(
             Uuid::new_v4(),
             bank_account_number.clone(),
@@ -186,30 +199,16 @@ pub fn connect_bank_transaction() -> anyhow::Result<()> {
             "Test Transaction".to_string(),
             now,
         )
-    });
-
-    assert!(res.is_ok());
-    let res = res?;
-    assert_eq!(res.bank_transactions.len(), 1);
-
-    let res = rt
-        .cmd(&user_id, &budget_id, |budget| {
-            budget.add_transaction(
-                Uuid::new_v4(),
-                bank_account_number.clone(),
-                Money::new_dollars(100, Currency::SEK),
-                Money::new_dollars(100, Currency::SEK),
-                "Test Transaction".to_string(),
-                now,
-            )
-        })
-        .err();
-
-    assert!(res.is_some());
-    assert_eq!(
-        res.unwrap().to_string(),
-        "Validation error: Transaction already exists."
-    );
+    })?;
+    
+    let (res,tx_id) = rt.cmd(&user_id, &budget_id, |budget| {
+        budget.do_transaction_connected(tx_id, item_id)
+    })?;
+    
+    let expected_money = Money::new_dollars(100, Currency::SEK);
+    
+    assert_eq!(res.budgeted_by_type.get(&BudgetingType::Expense).unwrap(), &expected_money);
+    assert_eq!(res.spent_by_type.get(&BudgetingType::Expense).unwrap(), &expected_money);
 
     Ok(())
 }
@@ -239,7 +238,7 @@ pub fn add_bank_transaction() -> anyhow::Result<()> {
     });
 
     assert!(res.is_ok());
-    let res = res?;
+    let res = res?.0;
     assert_eq!(res.bank_transactions.len(), 1);
 
     let res = rt

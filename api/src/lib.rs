@@ -173,7 +173,7 @@ pub mod db {
     pub fn add_group(budget_id: &Uuid, user_id: &Uuid, name: &str, group_type: BudgetingType) -> anyhow::Result<Budget> {
         tracing::info!("add_group: {budget_id:?}, {user_id:?}, {name:?}");
         with_runtime(None).cmd(user_id, budget_id, |budget| {
-            budget.add_group(Uuid::new_v4(), name.to_string(), group_type)
+            budget.add_group(name.to_string(), group_type)
         }).map(|(budget, _)| budget)
     }
 

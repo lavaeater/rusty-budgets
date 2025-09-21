@@ -94,7 +94,8 @@ pub struct Budget {
     pub last_event: i64,
     pub version: u64,
     pub currency: Currency,
-    pub total_by_type: HashMap<BudgetingType, Money>, 
+    pub budgeted_by_type: HashMap<BudgetingType, Money>, 
+    pub spent_by_type: HashMap<BudgetingType, Money>, 
 }
 
 impl Budget {

@@ -55,34 +55,31 @@ impl BudgetCreatedHandler for Budget {
 #[domain_event(aggregate = "Budget")]
 pub struct GroupAdded {
     pub budget_id: Uuid,
-    pub group_id: Uuid,
     pub name: String,
     pub group_type: BudgetingType,
 }
 
 impl GroupAddedHandler for Budget {
     fn apply_add_group(&mut self, event: &GroupAdded)-> Uuid {
+        let group_id = Uuid::new_v4();
         self.budget_groups.insert(
-            event.group_id,
-            BudgetGroup::new(event.group_id, &event.name, event.group_type, self.currency),
+            group_id,
+            BudgetGroup::new(group_id, &event.name, event.group_type, self.currency),
         );
-        event.group_id
+        group_id
     }
     
     fn add_group_impl(
         &self,
-        group_id: Uuid,
         name: String,
         group_type: BudgetingType,
     ) -> Result<GroupAdded, CommandError> {
-        if self.budget_groups.contains_key(&group_id)
-            || self.budget_groups.values().any(|g| g.name == name)
+        if self.budget_groups.values().any(|g| g.name == name)
         {
             Err(CommandError::Validation("Budget group already exists"))
         } else {
             Ok(GroupAdded {
                 budget_id: self.id,
-                group_id,
                 name,
                 group_type,
             })
@@ -113,7 +110,7 @@ impl ItemAddedHandler for Budget {
         _ = self.budget_groups.get_mut(&event.group_id).map(|f| {
             f.items.push(new_item);
             f.budgeted_amount += event.budgeted_amount;
-            self.total_by_type.entry(event.item_type).and_modify(|v| {
+            self.budgeted_by_type.entry(event.item_type).and_modify(|v| {
                 *v += event.budgeted_amount;
             }).or_insert(event.budgeted_amount);
             Some(f)
@@ -227,7 +224,7 @@ impl TransactionConnectedHandler for Budget {
         group.actual_spent += tx.amount;
         
         //Update budget total
-        self.total_by_type.entry(group.group_type).and_modify(|v| {
+        self.spent_by_type.entry(group.group_type).and_modify(|v| {
             *v += tx.amount;
         }).or_insert(tx.amount);
         // Update item
