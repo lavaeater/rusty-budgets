@@ -218,18 +218,43 @@ pub struct TransactionConnected {
     item_id: Uuid,
 }
 
+impl Budget {
+    pub fn get_budget_group_mut(&mut self, group_id: &Uuid) -> Option<&mut BudgetGroup> {
+        self.budget_groups.get_mut(group_id)
+    }
+    
+    pub fn get_budget_item_mut(&mut self, item_id: &Uuid) -> Option<&mut BudgetItem> {
+        if let  Some(group_id) = self.budget_items_and_groups.get(item_id) {
+            // Update group
+            if let Some(group) = self.budget_groups.get_mut(&group_id) {
+                return group.items.iter_mut().find(|item| item.id == *item_id)
+            }
+        }
+        None
+    }
+}
+
 impl TransactionConnectedHandler for Budget {
     fn apply_do_transaction_connected(&mut self, event: &TransactionConnected) -> Uuid {
         // Connect transaction to item
         let tx = self.bank_transactions
             .get_mut(&event.tx_id)
             .unwrap();
-            tx.budget_item_id = Some(event.item_id);
+        
+        if tx.budget_item_id.is_some() {
+            let previous_budget_item_id = tx.budget_item_id.unwrap();
+            let previous_group_id = self.budget_items_and_groups.get(&previous_budget_item_id).unwrap();
+            let previous_group = self.budget_groups.get_mut(&previous_group_id).unwrap();
+            previous_group.actual_spent -= tx.amount;
+            let previous_item = previous_group.items.iter_mut().find(|item| item.id == previous_budget_item_id).unwrap();
+            previous_item.actual_spent -= tx.amount;
+        }
+        tx.budget_item_id = Some(event.item_id);
         let group_id = self.budget_items_and_groups.get(&event.item_id).unwrap();
         // Update group
         let group = self.budget_groups.get_mut(&group_id).unwrap();
         group.actual_spent += tx.amount;
-        
+
         //Update budget total
         self.spent_by_type.entry(group.group_type).and_modify(|v| {
             *v += tx.amount;
