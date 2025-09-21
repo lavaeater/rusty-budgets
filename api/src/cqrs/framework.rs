@@ -94,7 +94,7 @@ where
     fn append(&self, user_id: &Uuid, ev: E)-> anyhow::Result<()>;
 
     /// Execute a command: decide → append → return event.
-    fn execute<F>(&self, user_id: &Uuid, id: &A::Id, command: F) -> anyhow::Result<A>
+    fn execute<F>(&self, user_id: &Uuid, id: &A::Id, command: F) -> anyhow::Result<(A, Uuid)>
     where
         F: FnOnce(&A) -> Result<E, CommandError>,
     {
@@ -105,11 +105,11 @@ where
         let ev = command(&current)?;
         tracing::info!("We have event: {ev:?}");
 
-        ev.apply(&mut current);
+        let latest_id = ev.apply(&mut current);
         tracing::info!("We have current: {current:?}");
         
         self.append(user_id, ev.clone())?;
-        Ok(current)
+        Ok((current, latest_id))
     }
     
     /// Materialize latest state after commands.

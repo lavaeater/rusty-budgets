@@ -100,8 +100,8 @@ pub struct ItemAdded {
     pub budgeted_amount: Money,
 }
 
-impl Budget {
-    fn apply_add_item(&mut self, event: &ItemAdded) {
+impl ItemAddedHandler for Budget {
+    fn apply_add_item(&mut self, event: &ItemAdded) -> Uuid {
         let new_item = BudgetItem::new(
             &event.name,
             event.item_type,
@@ -120,8 +120,9 @@ impl Budget {
         });
         self.budget_items_and_groups
             .insert(new_item_id, event.group_id);
+        new_item_id
     }
-
+    
     fn add_item_impl(
         &self,
         group_id: Uuid,
@@ -164,8 +165,8 @@ impl Hash for TransactionAdded {
     }
 }
 
-impl Budget {
-    fn apply_add_transaction(&mut self, event: &TransactionAdded) {
+impl TransactionAddedHandler for Budget {
+    fn apply_add_transaction(&mut self, event: &TransactionAdded)-> Uuid {
         self.bank_transactions.insert(BankTransaction::new(
             event.transaction_id,
             &event.account_number,
@@ -174,6 +175,7 @@ impl Budget {
             &event.description,
             event.date,
         ));
+        event.transaction_id
     }
 
     fn add_transaction_impl(
@@ -213,7 +215,7 @@ pub struct TransactionConnected {
 }
 
 impl TransactionConnectedHandler for Budget {
-    fn apply_do_transaction_connected(&mut self, event: &TransactionConnected) {
+    fn apply_do_transaction_connected(&mut self, event: &TransactionConnected) -> Uuid {
         // Connect transaction to item
         let tx = self.bank_transactions
             .get_mut(&event.tx_id)
@@ -231,6 +233,7 @@ impl TransactionConnectedHandler for Budget {
         // Update item
         let item = group.items.iter_mut().find(|item| item.id == event.item_id).unwrap();
         item.actual_spent += tx.amount;
+        event.tx_id
     }
 
     fn do_transaction_connected_impl(

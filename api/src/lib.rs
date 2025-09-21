@@ -164,7 +164,7 @@ pub mod db {
         }) {
             Ok(budget) => {
                 add_budget_to_user(user_id, &budget_id, default_budget)?;
-                Ok(budget)
+                Ok(budget.0)
             }
             Err(_) => Err(anyhow::anyhow!("Could not create budget")),
         }
@@ -174,7 +174,7 @@ pub mod db {
         tracing::info!("add_group: {budget_id:?}, {user_id:?}, {name:?}");
         with_runtime(None).cmd(user_id, budget_id, |budget| {
             budget.add_group(Uuid::new_v4(), name.to_string(), group_type)
-        })
+        }).map(|(budget, _)| budget)
     }
 
     pub fn add_item(
@@ -187,7 +187,7 @@ pub mod db {
     ) -> anyhow::Result<Budget> {
         with_runtime(None).cmd(user_id, budget_id, |budget| {
             budget.add_item(*group_id, name.to_string(), *item_type, *budgeted_amount)
-        })
+        }).map(|(budget, _)| budget)
     }
 
     pub fn create_user(
