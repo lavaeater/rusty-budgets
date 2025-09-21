@@ -236,6 +236,7 @@ impl Display for BankTransaction {
 
 impl BudgetItem {
     pub fn new(
+        id: Uuid,
         name: &str,
         item_type: BudgetingType,
         budgeted_amount: Money,
@@ -243,7 +244,7 @@ impl BudgetItem {
         tags: Option<Vec<String>>,
     ) -> Self {
         Self {
-            id: Uuid::new_v4(),
+            id,
             name: name.to_string(),
             item_type,
             budgeted_amount,

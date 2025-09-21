@@ -117,94 +117,86 @@ pub fn add_budget_item() -> anyhow::Result<()> {
     println!("Events: {:?}", rt.events(&budget_id)?);
     Ok(())
 }
-//
-// #[test]
-// pub fn test_trans_hash() {
-//     let now = Utc::now();
-//     let bank_account_number = "1234567890".to_string();
-//     let t_a = BankTransaction::new(
-//         Uuid::new_v4(),
-//         &bank_account_number,
-//         Money::new_dollars(100, Currency::SEK),
-//         Money::new_dollars(100, Currency::SEK),
-//         "Test Transaction",
-//         now,
-//     );
-//     let mut hasher_a = DefaultHasher::new();
-//     let t_b = BankTransaction::new(
-//         Uuid::new_v4(),
-//         &bank_account_number,
-//         Money::new_dollars(100, Currency::SEK),
-//         Money::new_dollars(100, Currency::SEK),
-//         "Test Transaction",
-//         now,
-//     );
-//     let mut hasher_b = DefaultHasher::new();
-//     t_a.hash(&mut hasher_a);
-//     t_b.hash(&mut hasher_b);
-//     let hash_a = hasher_a.finish();
-//     let hash_b = hasher_b.finish();
-//     assert_eq!(hash_a, hash_b);
-//     let mut hash_set = HashSet::new();
-//     hash_set.insert(t_a);
-//     assert!(!hash_set.insert(t_b));
-// }
-//
-// #[test]
-// pub fn connect_bank_transaction() -> anyhow::Result<()> {
-//     let rt = JoyDbBudgetRuntime::new_in_memory();
-//     let budget_id = Uuid::new_v4();
-//     let user_id = Uuid::new_v4();
-//     let bank_account_number = "1234567890".to_string();
-//
-//     let _ = rt.cmd(&user_id, &budget_id, |budget| {
-//         budget.create_budget("Test Budget".to_string(), user_id, true, Currency::SEK)
-//     })?;
-//
-//     let (res, group_id) = rt.cmd(&user_id, &budget_id, |budget| {
-//         budget.add_group("Utgifter".to_string(), BudgetingType::Expense)
-//     })?;
-//     assert_eq!(res.budget_groups.values().len(), 1);
-//
-//     let (res, item_id) = rt.cmd(&user_id, &budget_id, |budget| {
-//         budget.add_item(
-//             group_id,
-//             "Utgifter".to_string(),
-//             BudgetingType::Expense,
-//             Money::new_dollars(100, Currency::SEK),
-//         )
-//     })?;
-//
-//     let now = Utc::now();
-//
-//     let (res, tx_id) = rt.cmd(&user_id, &budget_id, |budget| {
-//         budget.add_transaction(
-//             Uuid::new_v4(),
-//             bank_account_number.clone(),
-//             Money::new_dollars(100, Currency::SEK),
-//             Money::new_dollars(100, Currency::SEK),
-//             "Test Transaction".to_string(),
-//             now,
-//         )
-//     })?;
-//
-//     let (res, tx_id) = rt.cmd(&user_id, &budget_id, |budget| {
-//         budget.do_transaction_connected(tx_id, item_id)
-//     })?;
-//
-//     let expected_money = Money::new_dollars(100, Currency::SEK);
-//
-//     assert_eq!(
-//         res.budgeted_by_type.get(&BudgetingType::Expense).unwrap(),
-//         &expected_money
-//     );
-//     assert_eq!(
-//         res.spent_by_type.get(&BudgetingType::Expense).unwrap(),
-//         &expected_money
-//     );
-//
-//     Ok(())
-// }
+
+#[test]
+pub fn test_trans_hash() {
+    let now = Utc::now();
+    let bank_account_number = "1234567890".to_string();
+    let t_a = BankTransaction::new(
+        Uuid::new_v4(),
+        &bank_account_number,
+        Money::new_dollars(100, Currency::SEK),
+        Money::new_dollars(100, Currency::SEK),
+        "Test Transaction",
+        now,
+    );
+    let mut hasher_a = DefaultHasher::new();
+    let t_b = BankTransaction::new(
+        Uuid::new_v4(),
+        &bank_account_number,
+        Money::new_dollars(100, Currency::SEK),
+        Money::new_dollars(100, Currency::SEK),
+        "Test Transaction",
+        now,
+    );
+    let mut hasher_b = DefaultHasher::new();
+    t_a.hash(&mut hasher_a);
+    t_b.hash(&mut hasher_b);
+    let hash_a = hasher_a.finish();
+    let hash_b = hasher_b.finish();
+    assert_eq!(hash_a, hash_b);
+    let mut hash_set = HashSet::new();
+    hash_set.insert(t_a);
+    assert!(!hash_set.insert(t_b));
+}
+
+#[test]
+pub fn connect_bank_transaction() -> anyhow::Result<()> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let bank_account_number = "1234567890".to_string();
+
+    let (res, budget_id) = rt.create_budget("Test Budget", true, Currency::SEK, user_id)?;
+
+    let (res, group_id) = rt.add_group(budget_id, "Utgifter", BudgetingType::Expense, user_id)?;
+    assert_eq!(res.budget_groups.values().len(), 1);
+
+    let (res, item_id) = rt.add_item(
+        budget_id,
+        group_id,
+        "Utgifter",
+        BudgetingType::Expense,
+        Money::new_dollars(100, Currency::SEK),
+        user_id,
+    )?;
+
+    let now = Utc::now();
+
+    let (res, tx_id) = rt.add_transaction(
+            budget_id,
+            &bank_account_number,
+            Money::new_dollars(100, Currency::SEK),
+            Money::new_dollars(100, Currency::SEK),
+            "Test Transaction",
+            now,
+            user_id,
+        )?;
+
+    let (res, tx_id) = rt.connect_transaction(budget_id, tx_id, item_id, user_id)?;
+
+    let expected_money = Money::new_dollars(100, Currency::SEK);
+
+    assert_eq!(
+        res.budgeted_by_type.get(&BudgetingType::Expense).unwrap(),
+        &expected_money
+    );
+    assert_eq!(
+        res.spent_by_type.get(&BudgetingType::Expense).unwrap(),
+        &expected_money
+    );
+
+    Ok(())
+}
 //
 // #[test]
 // pub fn add_bank_transaction() -> anyhow::Result<()> {

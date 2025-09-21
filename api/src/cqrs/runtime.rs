@@ -2,7 +2,7 @@ use dioxus::logger::tracing;
 use joydb::adapters::JsonAdapter;
 use joydb::Joydb;
 use std::path::Path;
-
+use chrono::{DateTime, Utc};
 use crate::cqrs::budget::{Budget, BudgetEvent, BudgetingType};
 use crate::cqrs::framework::{Runtime, StoredEvent};
 use crate::cqrs::money::{Currency, Money};
@@ -47,6 +47,33 @@ impl JoyDbBudgetRuntime {
     ) -> anyhow::Result<(Budget, Uuid)> {
         self.cmd(&user_id, &budget_id, |budget| {
             budget.add_item(group_id, item_name.to_string(), item_type, amount)
+        })
+    }
+
+    pub fn add_transaction(
+        &self,
+        budget_id: Uuid,
+        bank_account_number: &str,
+        amount: Money,
+        balance: Money,
+        description: &str,
+        date: DateTime<Utc>,
+        user_id: Uuid,
+    ) -> anyhow::Result<(Budget, Uuid)> {
+        self.cmd(&user_id, &budget_id, |budget| {
+            budget.add_transaction(
+                bank_account_number.to_string(),
+                amount,
+                balance,
+                description.to_string(),
+                date,
+            )
+        })
+    }
+    
+    pub fn connect_transaction(&self, budget_id: Uuid,tx_id: Uuid, item_id: Uuid, user_id: Uuid) -> anyhow::Result<(Budget, Uuid)> {
+        self.cmd(&user_id, &budget_id, |budget| {
+            budget.do_transaction_connected(tx_id, item_id)
         })
     }
 }

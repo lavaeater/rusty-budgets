@@ -105,6 +105,7 @@ pub struct ItemAdded {
 impl ItemAddedHandler for Budget {
     fn apply_add_item(&mut self, event: &ItemAdded) -> Uuid {
         let new_item = BudgetItem::new(
+            event.item_id,
             &event.name,
             event.item_type,
             event.budgeted_amount,
