@@ -1,7 +1,9 @@
-use crate::cqrs::budget::{BankTransaction, Budget, BudgetGroup, BudgetItem, BudgetItemType};
+use crate::cqrs::budget::{
+    get_transaction_hash, BankTransaction, Budget, BudgetGroup, BudgetItem, BudgetingType,
+};
 use crate::cqrs::framework::DomainEvent;
 use crate::cqrs::framework::{Aggregate, CommandError};
-use crate::cqrs::money::Money;
+use crate::cqrs::money::{Currency, Money};
 use chrono::{DateTime, Utc};
 use cqrs_macros::DomainEvent;
 use serde::{Deserialize, Serialize};
@@ -11,32 +13,38 @@ use uuid::Uuid;
 #[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]
 #[domain_event(aggregate = "Budget")]
 pub struct BudgetCreated {
+    #[event_id]
     pub budget_id: Uuid,
     pub name: String,
     pub user_id: Uuid,
     pub default_budget: bool,
+    pub currency: Currency,
 }
 
-impl Budget {
-    fn apply_create_budget(&mut self, event: &BudgetCreated) {
+impl BudgetCreatedHandler for Budget {
+    fn apply_create_budget(&mut self, event: &BudgetCreated) -> Uuid {
         self.id = event.budget_id;
         self.name = event.name.clone();
         self.user_id = event.user_id;
         self.default_budget = event.default_budget;
+        self.currency = event.currency;
+        self.id
     }
 
     fn create_budget_impl(
         &self,
         name: String,
         user_id: Uuid,
-        default: bool,
+        default_budget: bool,
+        currency: Currency
     ) -> Result<BudgetCreated, CommandError> {
         if self.version == 0 && self.last_event == 0 {
             Ok(BudgetCreated {
-                budget_id: self.id,
+                budget_id: Uuid::new_v4(),
                 name,
                 user_id,
-                default_budget: default,
+                default_budget,
+                currency
             })
         } else {
             Err(CommandError::Validation("Budget already exists"))
@@ -48,28 +56,35 @@ impl Budget {
 #[domain_event(aggregate = "Budget")]
 pub struct GroupAdded {
     pub budget_id: Uuid,
+    #[event_id]
     pub group_id: Uuid,
     pub name: String,
+    pub group_type: BudgetingType,
 }
 
-impl Budget {
-    fn apply_add_group(&mut self, event: &GroupAdded) {
+impl GroupAddedHandler for Budget {
+    fn apply_add_group(&mut self, event: &GroupAdded)-> Uuid {
         self.budget_groups.insert(
             event.group_id,
-            BudgetGroup::new(event.group_id, &event.name),
+            BudgetGroup::new(event.group_id, &event.name, event.group_type, self.currency),
         );
+        event.group_id
     }
-
-    fn add_group_impl(&self, group_id: Uuid, name: String) -> Result<GroupAdded, CommandError> {
-        if self.budget_groups.contains_key(&group_id)
-            || self.budget_groups.values().any(|g| g.name == name)
+    
+    fn add_group_impl(
+        &self,
+        name: String,
+        group_type: BudgetingType,
+    ) -> Result<GroupAdded, CommandError> {
+        if self.budget_groups.values().any(|g| g.name == name)
         {
             Err(CommandError::Validation("Budget group already exists"))
         } else {
             Ok(GroupAdded {
                 budget_id: self.id,
-                group_id,
+                group_id: Uuid::new_v4(),
                 name,
+                group_type,
             })
         }
     }
@@ -80,37 +95,49 @@ impl Budget {
 pub struct ItemAdded {
     pub budget_id: Uuid,
     pub group_id: Uuid,
+    #[event_id]
+    pub item_id: Uuid,
     pub name: String,
-    pub item_type: BudgetItemType,
+    pub item_type: BudgetingType,
     pub budgeted_amount: Money,
 }
 
-impl Budget {
-    fn apply_add_item(&mut self, event: &ItemAdded) {
+impl ItemAddedHandler for Budget {
+    fn apply_add_item(&mut self, event: &ItemAdded) -> Uuid {
+        let new_item = BudgetItem::new(
+            event.item_id,
+            &event.name,
+            event.item_type,
+            event.budgeted_amount,
+            None,
+            None,
+        );
+        let new_item_id = new_item.id;
         _ = self.budget_groups.get_mut(&event.group_id).map(|f| {
-            f.items.push(BudgetItem::new(
-                &event.name,
-                event.item_type,
-                event.budgeted_amount,
-                None,
-                None,
-            ));
+            f.items.push(new_item);
+            f.budgeted_amount += event.budgeted_amount;
+            self.budgeted_by_type.entry(event.item_type).and_modify(|v| {
+                *v += event.budgeted_amount;
+            }).or_insert(event.budgeted_amount);
             Some(f)
         });
+        self.budget_items_and_groups
+            .insert(new_item_id, event.group_id);
+        new_item_id
     }
-
+    
     fn add_item_impl(
         &self,
         group_id: Uuid,
         name: String,
-        item_type: BudgetItemType,
+        item_type: BudgetingType,
         budgeted_amount: Money,
     ) -> Result<ItemAdded, CommandError> {
         if self.budget_groups.contains_key(&group_id) {
-            //&& group.items.iter().find(|item| item.name == name).is_none()
             Ok(ItemAdded {
                 budget_id: self.id,
                 group_id,
+                item_id: Uuid::new_v4(),
                 name,
                 item_type,
                 budgeted_amount,
@@ -125,6 +152,7 @@ impl Budget {
 #[domain_event(aggregate = "Budget")]
 pub struct TransactionAdded {
     pub budget_id: Uuid,
+    #[event_id]
     pub transaction_id: Uuid,
     pub account_number: String,
     pub amount: Money,
@@ -142,8 +170,8 @@ impl Hash for TransactionAdded {
     }
 }
 
-impl Budget {
-    fn apply_add_transaction(&mut self, event: &TransactionAdded) {
+impl TransactionAddedHandler for Budget {
+    fn apply_add_transaction(&mut self, event: &TransactionAdded)-> Uuid {
         self.bank_transactions.insert(BankTransaction::new(
             event.transaction_id,
             &event.account_number,
@@ -152,23 +180,24 @@ impl Budget {
             &event.description,
             event.date,
         ));
+        event.transaction_id
     }
 
     fn add_transaction_impl(
         &self,
-        transaction_id: Uuid,
         account_number: String,
         amount: Money,
         balance: Money,
         description: String,
         date: DateTime<Utc>,
     ) -> Result<TransactionAdded, CommandError> {
-        let bt = BankTransaction::new(transaction_id, &account_number, amount, balance, &description, date);
-        if !self.bank_transactions.contains(&bt) {
+        let hash = get_transaction_hash(&amount, &balance, &account_number, &description, &date);
+
+        if self.bank_transactions.can_insert(&hash) {
             Ok(TransactionAdded {
                 budget_id: self.id,
                 account_number,
-                transaction_id,
+                transaction_id: Uuid::new_v4(),
                 amount,
                 balance,
                 description,
@@ -180,6 +209,57 @@ impl Budget {
     }
 }
 
-// TransactionAdded,
 // TransactionConnected,
+#[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]
+#[domain_event(aggregate = "Budget")]
+pub struct TransactionConnected {
+    budget_id: Uuid,
+    tx_id: Uuid,
+    item_id: Uuid,
+}
+
+impl TransactionConnectedHandler for Budget {
+    fn apply_do_transaction_connected(&mut self, event: &TransactionConnected) -> Uuid {
+        // Connect transaction to item
+        let tx = self.bank_transactions
+            .get_mut(&event.tx_id)
+            .unwrap();
+            tx.budget_item_id = Some(event.item_id);
+        let group_id = self.budget_items_and_groups.get(&event.item_id).unwrap();
+        // Update group
+        let group = self.budget_groups.get_mut(&group_id).unwrap();
+        group.actual_spent += tx.amount;
+        
+        //Update budget total
+        self.spent_by_type.entry(group.group_type).and_modify(|v| {
+            *v += tx.amount;
+        }).or_insert(tx.amount);
+        // Update item
+        let item = group.items.iter_mut().find(|item| item.id == event.item_id).unwrap();
+        item.actual_spent += tx.amount;
+        event.tx_id
+    }
+
+    fn do_transaction_connected_impl(
+        &self,
+        tx_id: Uuid,
+        item_id: Uuid,
+    ) -> Result<TransactionConnected, CommandError> {
+        if self.bank_transactions.contains(&tx_id)
+            && self.budget_items_and_groups.contains_key(&item_id)
+        {
+            let ev = TransactionConnected {
+                budget_id: self.id,
+                tx_id,
+                item_id,
+            };
+            Ok(ev)
+        } else {
+            Err(CommandError::Validation(
+                "Transaction or item does not exist.",
+            ))
+        }
+    }
+}
+
 // FundsReallocated

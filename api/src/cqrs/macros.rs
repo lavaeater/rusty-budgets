@@ -1,3 +1,4 @@
+
 /// Macro to define an enum of events with optional derives, automatic `From` impls, and `apply` dispatcher
 #[macro_export]
 macro_rules! pub_events_enum {
@@ -38,7 +39,7 @@ macro_rules! pub_events_enum {
                 }
             }
             
-            fn apply(&self, state: &mut A) {
+            fn apply(&self, state: &mut A)-> Uuid {
                 match self {
                     $(
                         $name::$variant(e) => e.apply(state),

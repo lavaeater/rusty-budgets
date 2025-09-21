@@ -1,19 +1,88 @@
-use std::path::Path;
 use dioxus::logger::tracing;
-use joydb::Joydb;
 use joydb::adapters::JsonAdapter;
-
-use joydb::{Model};
+use joydb::Joydb;
+use std::path::Path;
+use chrono::{DateTime, Utc};
+use crate::cqrs::budget::{Budget, BudgetEvent, BudgetingType};
+use crate::cqrs::framework::{Runtime, StoredEvent};
+use crate::cqrs::money::{Currency, Money};
+use crate::models::User;
+use joydb::Model;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use crate::cqrs::budget::{Budget, BudgetEvent};
-use crate::cqrs::framework::{Runtime, StoredEvent};
-use crate::models::User;
+
+impl JoyDbBudgetRuntime {
+    pub fn create_budget(
+        &self,
+        budget_name: &str,
+        default_budget: bool,
+        currency: Currency,
+        user_id: Uuid,
+    ) -> anyhow::Result<(Budget, Uuid)> {
+        self.cmd(&user_id, &Uuid::default(), |budget| {
+            budget.create_budget(budget_name.to_string(), user_id, default_budget, currency)
+        })
+    }
+
+    pub fn add_group(
+        &self,
+        budget_id: Uuid,
+        group_name: &str,
+        group_type: BudgetingType,
+        user_id: Uuid,
+    ) -> anyhow::Result<(Budget, Uuid)> {
+        self.cmd(&user_id, &budget_id, |budget| {
+            budget.add_group(group_name.to_string(), group_type)
+        })
+    }
+
+    pub fn add_item(
+        &self,
+        budget_id: Uuid,
+        group_id: Uuid,
+        item_name: &str,
+        item_type: BudgetingType,
+        amount: Money,
+        user_id: Uuid,
+    ) -> anyhow::Result<(Budget, Uuid)> {
+        self.cmd(&user_id, &budget_id, |budget| {
+            budget.add_item(group_id, item_name.to_string(), item_type, amount)
+        })
+    }
+
+    pub fn add_transaction(
+        &self,
+        budget_id: Uuid,
+        bank_account_number: &str,
+        amount: Money,
+        balance: Money,
+        description: &str,
+        date: DateTime<Utc>,
+        user_id: Uuid,
+    ) -> anyhow::Result<(Budget, Uuid)> {
+        self.cmd(&user_id, &budget_id, |budget| {
+            budget.add_transaction(
+                bank_account_number.to_string(),
+                amount,
+                balance,
+                description.to_string(),
+                date,
+            )
+        })
+    }
+    
+    pub fn connect_transaction(&self, budget_id: Uuid,tx_id: Uuid, item_id: Uuid, user_id: Uuid) -> anyhow::Result<(Budget, Uuid)> {
+        self.cmd(&user_id, &budget_id, |budget| {
+            budget.do_transaction_connected(tx_id, item_id)
+        })
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Model)]
 pub struct UserBudgets {
     pub id: Uuid,
-    pub budgets: Vec<(Uuid, bool)>,}
+    pub budgets: Vec<(Uuid, bool)>,
+}
 
 joydb::state! {
     AppState,
@@ -46,7 +115,7 @@ impl JoyDbBudgetRuntime {
             db: Db::open(path).unwrap(),
         }
     }
-    
+
     pub fn new_in_memory() -> Self {
         Self {
             db: Db::new_in_memory().unwrap(),
@@ -55,17 +124,16 @@ impl JoyDbBudgetRuntime {
 
     /// Ergonomic command execution - eliminates all the boilerplate!
     /// Usage: rt.cmd(id, |budget| budget.create_budget(name, user_id, default))
-    pub fn cmd<F, E>(&self, user_id: &Uuid, id: &Uuid, command: F) -> anyhow::Result<Budget>
+    pub fn cmd<F, E>(&self, user_id: &Uuid, id: &Uuid, command: F) -> anyhow::Result<(Budget, Uuid)>
     where
         F: FnOnce(&Budget) -> Result<E, crate::cqrs::framework::CommandError>,
         E: Into<BudgetEvent>,
     {
         self.execute(user_id, id, |aggregate| {
-            command(aggregate).map(|event| event.into()) 
+            command(aggregate).map(|event| event.into())
         })
     }
-    
-    
+
     fn fetch_events(
         &self,
         id: &Uuid,

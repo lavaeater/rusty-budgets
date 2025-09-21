@@ -2,13 +2,14 @@ use std::cmp::Ordering;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::hash::Hash;
-use std::ops::{Add, Mul, Sub};
+use std::ops::{Add, AddAssign, Mul, Sub, SubAssign};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Currency {
     EUR,
     USD,
+    #[default]
     SEK,
     // extend as needed
 }
@@ -23,11 +24,13 @@ impl Display for Currency {
     }
 }
 
-#[derive(Debug, Clone, Copy, Eq, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Copy, Eq, Serialize, Deserialize)]
 pub struct Money {
     cents: i64, // stored in minor units (cents/öre)
     currency: Currency,
 }
+
+
 
 impl PartialOrd for Money {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
@@ -82,6 +85,13 @@ impl Add for Money {
     }
 }
 
+impl AddAssign for Money {
+    fn add_assign(&mut self, rhs: Money) {
+        assert_eq!(self.currency, rhs.currency, "Currency mismatch");
+        self.cents += rhs.cents;
+    }
+}
+
 impl Mul for Money {
     type Output = Money;
     fn mul(self, rhs: Self) -> Self::Output {
@@ -95,6 +105,13 @@ impl Sub for Money {
     fn sub(self, rhs: Money) -> Self::Output {
         assert_eq!(self.currency, rhs.currency, "Currency mismatch");
         Money::new_cents(self.cents - rhs.cents, self.currency)
+    }
+}
+
+impl SubAssign for Money {
+    fn sub_assign(&mut self, rhs: Money) {
+        assert_eq!(self.currency, rhs.currency, "Currency mismatch");
+        self.cents -= rhs.cents;
     }
 }
 

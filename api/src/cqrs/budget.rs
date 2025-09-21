@@ -1,15 +1,15 @@
 use crate::cqrs::framework::DomainEvent;
-use crate::cqrs::domain_events::{BudgetCreated, GroupAdded, ItemAdded, TransactionAdded};
+use crate::cqrs::domain_events::{BudgetCreated, GroupAdded, ItemAdded, TransactionAdded, TransactionConnected};
 use crate::cqrs::framework::Aggregate;
-use crate::cqrs::money::Money;
+use crate::cqrs::money::{Currency, Money};
 use crate::pub_events_enum;
 use chrono::{DateTime, Utc};
 use joydb::Model;
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::fmt::{Display, Formatter};
-use std::hash::{Hash, Hasher};
+use std::hash::{DefaultHasher, Hash, Hasher};
 use uuid::Uuid;
 
 pub_events_enum! {
@@ -19,12 +19,66 @@ pub_events_enum! {
         GroupAdded,
         ItemAdded,
         TransactionAdded,
-        // TransactionConnected,
+        TransactionConnected,
         // FundsReallocated
         // ... add other events here
     }
 }
 
+
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+pub struct Store {
+    all: HashSet<u64>,       // uniqueness check
+    by_id: HashMap<Uuid, BankTransaction> // fast lookup
+}
+
+impl Store {
+    pub fn len(&self) -> usize {
+        self.all.len()
+    }
+    
+    pub fn is_empty(&self) -> bool {
+        self.all.is_empty()
+    }
+
+    pub fn insert(&mut self, transaction: BankTransaction) -> bool {
+        let mut hasher = DefaultHasher::new();
+        transaction.hash(&mut hasher);
+        
+        if self.all.insert(hasher.finish()) {
+            self.by_id.insert(transaction.id, transaction);
+            true
+        } else {
+            false
+        }
+    }
+    
+    pub fn remove(&mut self, id: Uuid) -> bool {
+        if let Some(transaction) = self.by_id.remove(&id) {
+            let mut hasher = DefaultHasher::new();
+            transaction.hash(&mut hasher);
+            self.all.remove(&hasher.finish())
+        } else {
+            false
+        }
+    }
+    
+    pub fn check_hash(&self,hash: &u64) -> bool {
+        self.all.contains(hash)
+    }
+    
+    pub fn can_insert(&self, hash: &u64) -> bool {
+        !self.check_hash(hash)
+    }
+
+    pub fn get_mut(&mut self, id: &Uuid) -> Option<&mut BankTransaction> {
+        self.by_id.get_mut(id)
+    }
+    
+    pub fn contains(&self, id: &Uuid) -> bool {
+        self.by_id.contains_key(id)
+    }
+}
 // --- Budget Domain ---
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Model)]
 pub struct Budget {
@@ -32,12 +86,16 @@ pub struct Budget {
     pub name: String,
     pub user_id: Uuid,
     pub budget_groups: HashMap<Uuid, BudgetGroup>,
-    pub bank_transactions: HashSet<BankTransaction>,
+    pub budget_items_and_groups: HashMap<Uuid, Uuid>,
+    pub bank_transactions: Store,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub default_budget: bool,
     pub last_event: i64,
     pub version: u64,
+    pub currency: Currency,
+    pub budgeted_by_type: HashMap<BudgetingType, Money>, 
+    pub spent_by_type: HashMap<BudgetingType, Money>, 
 }
 
 impl Budget {
@@ -56,19 +114,25 @@ impl Budget {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq)]
 pub struct BudgetGroup {
     pub id: Uuid,
     pub name: String,
+    pub group_type: BudgetingType,
     pub items: Vec<BudgetItem>,
+    pub budgeted_amount: Money,
+    pub actual_spent: Money,
 }
 
 impl BudgetGroup {
-    pub fn new(id: Uuid, name: &str) -> Self {
+    pub fn new(id: Uuid, name: &str, group_type: BudgetingType, currency: Currency) -> Self {
         Self {
             id,
             name: name.to_string(),
-            items: Vec::new(),
+            group_type,
+            budgeted_amount: Money::new_cents(0, currency),
+            actual_spent: Money::new_cents(0, currency),
+            ..Self::default()
         }
     }
 }
@@ -77,29 +141,30 @@ impl BudgetGroup {
 pub struct BudgetItem {
     pub id: Uuid,
     pub name: String,
-    pub item_type: BudgetItemType,
+    pub item_type: BudgetingType,
     pub budgeted_amount: Money,
     pub actual_spent: Money,
     pub notes: Option<String>,
     pub tags: Vec<String>,
 }
 
-#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq)]
-pub enum BudgetItemType {
+#[derive(Default,Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub enum BudgetingType {
+    #[default]
     Income,
     Expense,
     Savings,
 }
 
-impl Display for BudgetItemType {
+impl Display for BudgetingType {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{}",
             match self {
-                BudgetItemType::Income => "Inkomst",
-                BudgetItemType::Expense => "Utgift",
-                BudgetItemType::Savings => "Sparande",
+                BudgetingType::Income => "Inkomst",
+                BudgetingType::Expense => "Utgift",
+                BudgetingType::Savings => "Sparande",
             }
         )
     }
@@ -147,6 +212,22 @@ impl Hash for BankTransaction {
     }
 }
 
+impl BankTransaction {
+    pub fn get_hash(&self) -> u64 {
+        get_transaction_hash(&self.amount, &self.balance, &self.account_number, &self.description, &self.date)
+    }
+}
+
+pub fn get_transaction_hash(amount: &Money, balance: &Money, account_number: &str, description: &str, date: &DateTime<Utc>) -> u64 {
+    let mut hasher = DefaultHasher::new();
+    amount.hash(&mut hasher);
+    balance.hash(&mut hasher);
+    account_number.hash(&mut hasher);
+    description.hash(&mut hasher);
+    date.hash(&mut hasher);
+    hasher.finish()
+}
+
 impl Display for BankTransaction {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "{}, {}, {}", self.description, self.amount, self.date)
@@ -155,14 +236,15 @@ impl Display for BankTransaction {
 
 impl BudgetItem {
     pub fn new(
+        id: Uuid,
         name: &str,
-        item_type: BudgetItemType,
+        item_type: BudgetingType,
         budgeted_amount: Money,
         notes: Option<String>,
         tags: Option<Vec<String>>,
     ) -> Self {
         Self {
-            id: Uuid::new_v4(),
+            id,
             name: name.to_string(),
             item_type,
             budgeted_amount,
@@ -201,15 +283,13 @@ impl Aggregate for Budget {
     fn _new(id: Self::Id) -> Self {
         Self {
             id,
-            name: String::new(),
-            user_id: Uuid::new_v4(),
-            default_budget: false,
-            budget_groups: HashMap::new(),
-            bank_transactions: HashSet::new(),
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
-            last_event: 0,
-            version: 0,
+            ..Self::default()
+        }
+    }
+    
+    fn _default() -> Self {
+        Self {
+            ..Self::default()
         }
     }
 
