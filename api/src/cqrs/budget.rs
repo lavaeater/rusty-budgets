@@ -285,6 +285,12 @@ impl Aggregate for Budget {
             ..Self::default()
         }
     }
+    
+    fn _default() -> Self {
+        Self {
+            ..Self::default()
+        }
+    }
 
     fn update_timestamp(&mut self, timestamp: i64, updated_at: DateTime<Utc>) {
         if self.last_event < timestamp {

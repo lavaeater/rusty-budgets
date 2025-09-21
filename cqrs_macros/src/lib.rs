@@ -1,4 +1,5 @@
 // cqrs_macros/src/lib.rs
+
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::quote;
@@ -26,23 +27,20 @@ fn derive_command_fn_name(struct_name: &str) -> String {
         words.push(current);
     }
 
-    // Try to match last word with known verb suffix
     if let Some(last) = words.last() {
         for (suffix, replacement) in &verb_map {
             if last.eq_ignore_ascii_case(&suffix.to_lowercase()) {
-                // Replace last word with the verb
                 let mut fn_parts = vec![replacement.to_string()];
-                fn_parts.extend(words[..words.len()-1].iter().cloned());
+                fn_parts.extend(words[..words.len() - 1].iter().cloned());
                 return fn_parts.join("_");
             }
         }
     }
 
-    // Default: prefix with "do_"
     format!("do_{}", words.join("_"))
 }
 
-#[proc_macro_derive(DomainEvent, attributes(domain_event))]
+#[proc_macro_derive(DomainEvent, attributes(domain_event, event_id))]
 pub fn derive_domain_event(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = &input.ident;
@@ -52,7 +50,7 @@ pub fn derive_domain_event(input: TokenStream) -> TokenStream {
     let mut command_fn_name = None;
     let mut id_field_override = None;
 
-    // Parse attributes on the struct
+    // Parse #[domain_event(...)] attributes
     for attr in input.attrs.iter().filter(|a| a.path().is_ident("domain_event")) {
         if let Meta::List(meta_list) = &attr.meta {
             let args: syn::Result<
@@ -91,40 +89,32 @@ pub fn derive_domain_event(input: TokenStream) -> TokenStream {
         aggregate_name.expect("domain_event attribute must specify aggregate = \"...\"");
     let aggregate_ident: syn::Ident = syn::parse_str(&aggregate_name).unwrap();
 
-    // --- Derive command fn name from struct if not provided ---
     let command_fn_ident: syn::Ident = if let Some(name) = command_fn_name {
         syn::parse_str(&name).unwrap()
     } else {
-        // Turn e.g. `GroupAdded` into `add_group`
         let struct_name = name.to_string();
         let fn_name = derive_command_fn_name(&struct_name);
         syn::Ident::new(&fn_name, Span::call_site())
     };
 
-    // Build apply function name
     let apply_fn_name = format!("apply_{}", command_fn_ident);
     let apply_fn_ident = syn::Ident::new(&apply_fn_name, Span::call_site());
 
-    // Build implementation function name
     let command_fn_impl_name = format!("{}_impl", command_fn_ident);
     let command_fn_impl_ident = syn::Ident::new(&command_fn_impl_name, Span::call_site());
     let trait_name = syn::Ident::new(&format!("{}Handler", name), Span::call_site());
 
-    // --- Infer the aggregate_id field ---
+    // --- Infer aggregate_id field ---
     let mut id_field_ident = None;
 
     if let Data::Struct(ds) = &input.data {
         if let Fields::Named(fields_named) = &ds.fields {
-            // If override was given, use that
             if let Some(override_name) = id_field_override {
                 id_field_ident = fields_named.named.iter()
                     .find(|f| f.ident.as_ref().unwrap().to_string() == override_name)
                     .map(|f| f.ident.clone())
-                    .unwrap_or_else(|| {
-                        panic!("No field named `{}` found in {}", override_name, name);
-                    });
+                    .unwrap_or_else(|| panic!("No field named `{}` found in {}", override_name, name));
             } else {
-                // Convention-based detection
                 let conv_names = vec![
                     "aggregate_id".to_string(),
                     format!("{}_id", aggregate_name.to_lowercase()),
@@ -143,7 +133,7 @@ pub fn derive_domain_event(input: TokenStream) -> TokenStream {
     let id_field_ident = id_field_ident
         .unwrap_or_else(|| panic!("Could not infer aggregate id field for `{}`. Use #[domain_event(id = \"...\")]", name));
 
-    // --- Extract struct fields (excluding aggregate_id) for command function parameters ---
+    // --- Extract struct fields (excluding aggregate_id + #[event_id]) ---
     let mut command_params = Vec::new();
     let mut field_assignments = Vec::new();
 
@@ -151,12 +141,20 @@ pub fn derive_domain_event(input: TokenStream) -> TokenStream {
         if let Fields::Named(fields_named) = &ds.fields {
             for field in &fields_named.named {
                 if let Some(field_name) = &field.ident {
-                    // Skip the aggregate_id field
-                    if field_name != &id_field_ident {
-                        let field_type = &field.ty;
-                        command_params.push(quote! { #field_name: #field_type });
-                        field_assignments.push(quote! { #field_name });
+                    // Skip aggregate_id
+                    if field_name == &id_field_ident {
+                        continue;
                     }
+
+                    // Skip #[event_id] fields
+                    let skip_for_command = field.attrs.iter().any(|a| a.path().is_ident("event_id"));
+                    if skip_for_command {
+                        continue;
+                    }
+
+                    let field_type = &field.ty;
+                    command_params.push(quote! { #field_name: #field_type });
+                    field_assignments.push(quote! { #field_name });
                 }
             }
         }
@@ -165,10 +163,10 @@ pub fn derive_domain_event(input: TokenStream) -> TokenStream {
     // --- Generate code ---
     let expanded = quote! {
         pub trait #trait_name {
-            fn #apply_fn_ident(&mut self, event: &#name)-> Uuid;
+            fn #apply_fn_ident(&mut self, event: &#name) -> Uuid;
             fn #command_fn_impl_ident(&self, #(#command_params),*) -> Result<#name, CommandError>;
         }
-        
+
         impl DomainEvent<#aggregate_ident> for #name {
             fn aggregate_id(&self) -> <#aggregate_ident as Aggregate>::Id {
                 self.#id_field_ident
@@ -181,7 +179,6 @@ pub fn derive_domain_event(input: TokenStream) -> TokenStream {
 
         impl #aggregate_ident {
             pub fn #command_fn_ident(&self, #(#command_params),*) -> Result<#name, CommandError> {
-                // Call the implementation function that the developer must provide
                 self.#command_fn_impl_ident(#(#field_assignments),*)
             }
         }
@@ -189,6 +186,7 @@ pub fn derive_domain_event(input: TokenStream) -> TokenStream {
 
     TokenStream::from(expanded)
 }
+
 
 #[cfg(test)]
 fn test_derive_command_fn_name() {

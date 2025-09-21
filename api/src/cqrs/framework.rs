@@ -2,28 +2,33 @@
 // Framework (Generic Core)
 // ===========================
 
-use std::error::Error;
-use std::fmt::{Debug, Display, Formatter};
-use std::hash::Hash;
 use chrono::{DateTime, Utc};
 use dioxus::logger::tracing;
 use serde::{Deserialize, Serialize};
+use std::error::Error;
+use std::fmt::{Debug, Display, Formatter};
+use std::hash::Hash;
 use uuid::Uuid;
 
 /// Aggregate: domain state that evolves by applying events.
 pub trait Aggregate: Sized + Debug + Clone {
     /// Identifier type for this aggregate.
-    type Id: Eq + Hash + Clone + Debug;
+    type Id: Eq + Hash + Clone + Debug + Default;
 
     /// Create a blank/new instance for a given id.
     fn _new(id: Self::Id) -> Self;
-    
+    fn _default() -> Self;
+
     fn update_timestamp(&mut self, timestamp: i64, updated_at: DateTime<Utc>);
     fn _version(&self) -> u64;
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct StoredEvent<A, E> where A: Aggregate, E: DomainEvent<A> {
+pub struct StoredEvent<A, E>
+where
+    A: Aggregate,
+    E: DomainEvent<A>,
+{
     pub id: Uuid,
     pub aggregate_id: A::Id,
     pub timestamp: i64,
@@ -37,16 +42,21 @@ impl<A: Aggregate, E: DomainEvent<A>> StoredEvent<A, E> {
         let aggregate_id = data.aggregate_id();
         let event_id = Uuid::new_v4();
         let n = Utc::now();
-        let timestamp = n
-            .timestamp_nanos_opt()
-            .unwrap();
-        
+        let timestamp = n.timestamp_nanos_opt().unwrap();
+
         let created_at = n;
-        
-        Self { id: event_id, aggregate_id, timestamp, created_at, data, user_id }
+
+        Self {
+            id: event_id,
+            aggregate_id,
+            timestamp,
+            created_at,
+            data,
+            user_id,
+        }
     }
-    
-    pub fn apply(&self, state:  &mut A) {
+
+    pub fn apply(&self, state: &mut A) {
         self.data.apply(state);
         state.update_timestamp(self.timestamp, self.created_at);
     }
@@ -87,31 +97,41 @@ where
 {
     /// Load and rebuild current state from stored events.
     fn load(&self, id: &A::Id) -> anyhow::Result<Option<A>>;
-    
+
     fn snapshot(&self, agg: &A) -> anyhow::Result<()>;
 
     /// Append one new event to the stream.
-    fn append(&self, user_id: &Uuid, ev: E)-> anyhow::Result<()>;
+    fn append(&self, user_id: &Uuid, ev: E) -> anyhow::Result<()>;
 
     /// Execute a command: decide → append → return event.
     fn execute<F>(&self, user_id: &Uuid, id: &A::Id, command: F) -> anyhow::Result<(A, Uuid)>
     where
         F: FnOnce(&A) -> Result<E, CommandError>,
     {
-        tracing::info!("execute: {user_id:?}, {id:?}");    
-        let mut current = self.load(id)?.unwrap_or_else(|| A::_new(id.clone()));
-        tracing::info!("We have current: {current:?}");
+        let d: A::Id = Default::default();
+        if id == &d {
+            tracing::info!("This is ugly trick for creating new aggregates");
+            let mut current = A::_default();
+            let ev = command(&current)?;
+            let latest_id = ev.apply(&mut current);
+            self.append(user_id, ev.clone())?;
+            Ok((current, latest_id))
+        } else {
+            tracing::info!("execute: {user_id:?}, {id:?}");
+            let mut current = self.load(id)?.unwrap_or_else(|| A::_new(id.clone()));
+            tracing::info!("We have current: {current:?}");
 
-        let ev = command(&current)?;
-        tracing::info!("We have event: {ev:?}");
+            let ev = command(&current)?;
+            tracing::info!("We have event: {ev:?}");
 
-        let latest_id = ev.apply(&mut current);
-        tracing::info!("We have current: {current:?}");
-        
-        self.append(user_id, ev.clone())?;
-        Ok((current, latest_id))
+            let latest_id = ev.apply(&mut current);
+            tracing::info!("We have current: {current:?}");
+
+            self.append(user_id, ev.clone())?;
+            Ok((current, latest_id))
+        }
     }
-    
+
     /// Materialize latest state after commands.
     fn materialize(&self, id: &A::Id) -> anyhow::Result<A> {
         let state = self.load(id)?;

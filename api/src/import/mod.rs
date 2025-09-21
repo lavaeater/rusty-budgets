@@ -36,7 +36,6 @@ pub fn import_from_skandia_excel(path: &str, user_id: &Uuid, budget_id: &Uuid, r
                 };
                 match runtime.cmd(&user_id, &budget_id, |budget| {
                     budget.add_transaction(
-                        Uuid::new_v4(),
                         acct_no.clone(),
                         amount,
                         balance,

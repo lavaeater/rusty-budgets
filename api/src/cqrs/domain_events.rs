@@ -13,6 +13,7 @@ use uuid::Uuid;
 #[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]
 #[domain_event(aggregate = "Budget")]
 pub struct BudgetCreated {
+    #[event_id]
     pub budget_id: Uuid,
     pub name: String,
     pub user_id: Uuid,
@@ -39,7 +40,7 @@ impl BudgetCreatedHandler for Budget {
     ) -> Result<BudgetCreated, CommandError> {
         if self.version == 0 && self.last_event == 0 {
             Ok(BudgetCreated {
-                budget_id: self.id,
+                budget_id: Uuid::new_v4(),
                 name,
                 user_id,
                 default_budget,
@@ -55,6 +56,8 @@ impl BudgetCreatedHandler for Budget {
 #[domain_event(aggregate = "Budget")]
 pub struct GroupAdded {
     pub budget_id: Uuid,
+    #[event_id]
+    pub group_id: Uuid,
     pub name: String,
     pub group_type: BudgetingType,
 }
@@ -80,6 +83,7 @@ impl GroupAddedHandler for Budget {
         } else {
             Ok(GroupAdded {
                 budget_id: self.id,
+                group_id: Uuid::new_v4(),
                 name,
                 group_type,
             })
@@ -92,6 +96,8 @@ impl GroupAddedHandler for Budget {
 pub struct ItemAdded {
     pub budget_id: Uuid,
     pub group_id: Uuid,
+    #[event_id]
+    pub item_id: Uuid,
     pub name: String,
     pub item_type: BudgetingType,
     pub budgeted_amount: Money,
@@ -131,6 +137,7 @@ impl ItemAddedHandler for Budget {
             Ok(ItemAdded {
                 budget_id: self.id,
                 group_id,
+                item_id: Uuid::new_v4(),
                 name,
                 item_type,
                 budgeted_amount,
@@ -145,6 +152,7 @@ impl ItemAddedHandler for Budget {
 #[domain_event(aggregate = "Budget")]
 pub struct TransactionAdded {
     pub budget_id: Uuid,
+    #[event_id]
     pub transaction_id: Uuid,
     pub account_number: String,
     pub amount: Money,
@@ -177,7 +185,6 @@ impl TransactionAddedHandler for Budget {
 
     fn add_transaction_impl(
         &self,
-        transaction_id: Uuid,
         account_number: String,
         amount: Money,
         balance: Money,
@@ -190,7 +197,7 @@ impl TransactionAddedHandler for Budget {
             Ok(TransactionAdded {
                 budget_id: self.id,
                 account_number,
-                transaction_id,
+                transaction_id: Uuid::new_v4(),
                 amount,
                 balance,
                 description,

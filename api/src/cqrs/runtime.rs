@@ -8,7 +8,23 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use crate::cqrs::budget::{Budget, BudgetEvent};
 use crate::cqrs::framework::{Runtime, StoredEvent};
+use crate::cqrs::money::Currency;
 use crate::models::User;
+
+impl JoyDbBudgetRuntime {
+    pub fn create_budget(&self,
+        budget_name: &str,
+        default_budget: bool,
+        currency: Currency,
+        user_id: &Uuid,
+    ) -> anyhow::Result<(Budget, Uuid)> {
+        self.cmd(&user_id, &Uuid::default(), |budget| {
+            budget.create_budget(budget_name.to_string(), *user_id, default_budget, currency)
+        })
+    }    
+}
+
+
 
 #[derive(Debug, Clone, Serialize, Deserialize, Model)]
 pub struct UserBudgets {
