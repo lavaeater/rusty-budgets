@@ -81,7 +81,7 @@ impl Store {
     }
 }
 // --- Budget Domain ---
-#[derive(Debug, Clone, Serialize, Deserialize, Model, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Model)]
 pub struct Budget {
     pub id: Uuid,
     pub name: String,
@@ -99,9 +99,21 @@ pub struct Budget {
     pub spent_by_type: HashMap<BudgetingType, Money>, 
 }
 
-impl Budget {
-    pub fn new() -> Self {
+impl Default for Budget {
+    fn default() -> Self {
         Self {
+            id: Default::default(),
+            name: "".to_string(),
+            user_id: Default::default(),
+            budget_groups: Default::default(),
+            budget_items_and_groups: Default::default(),
+            bank_transactions: Default::default(),
+            created_at: Default::default(),
+            updated_at: Default::default(),
+            default_budget: false,
+            last_event: 0,
+            version: 0,
+            currency: Default::default(),
             budgeted_by_type: HashMap::from([
                 (BudgetingType::Expense, Money::default()),
                 (BudgetingType::Savings, Money::default()),
@@ -112,7 +124,7 @@ impl Budget {
                 (BudgetingType::Savings, Money::default()),
                 (BudgetingType::Income, Money::default()),
             ]),
-            ..Default::default()
+            
         }
     }
 }
@@ -307,7 +319,7 @@ impl Aggregate for Budget {
     }
     
     fn _default() -> Self {
-        Self::new()
+        Self::default()
     }
 
     fn update_timestamp(&mut self, timestamp: i64, updated_at: DateTime<Utc>) {
