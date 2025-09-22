@@ -1,6 +1,7 @@
 //! This crate contains all shared fullstack server functions.
 
 extern crate alloc;
+extern crate core;
 
 pub mod cqrs;
 pub mod models;

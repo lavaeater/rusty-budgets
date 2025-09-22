@@ -10,6 +10,7 @@ use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::hash::{DefaultHasher, Hash, Hasher};
+use dioxus::html::track::default;
 use uuid::Uuid;
 
 pub_events_enum! {
@@ -80,7 +81,7 @@ impl Store {
     }
 }
 // --- Budget Domain ---
-#[derive(Debug, Clone, Serialize, Deserialize, Default, Model)]
+#[derive(Debug, Clone, Serialize, Deserialize, Model, Default)]
 pub struct Budget {
     pub id: Uuid,
     pub name: String,
@@ -96,6 +97,24 @@ pub struct Budget {
     pub currency: Currency,
     pub budgeted_by_type: HashMap<BudgetingType, Money>, 
     pub spent_by_type: HashMap<BudgetingType, Money>, 
+}
+
+impl Budget {
+    pub fn new() -> Self {
+        Self {
+            budgeted_by_type: HashMap::from([
+                (BudgetingType::Expense, Money::default()),
+                (BudgetingType::Savings, Money::default()),
+                (BudgetingType::Income, Money::default()),
+            ]),
+            spent_by_type:HashMap::from([
+                (BudgetingType::Expense, Money::default()),
+                (BudgetingType::Savings, Money::default()),
+                (BudgetingType::Income, Money::default()),
+            ]),
+            ..Default::default()
+        }
+    }
 }
 
 impl Budget {
@@ -288,9 +307,7 @@ impl Aggregate for Budget {
     }
     
     fn _default() -> Self {
-        Self {
-            ..Self::default()
-        }
+        Self::new()
     }
 
     fn update_timestamp(&mut self, timestamp: i64, updated_at: DateTime<Utc>) {

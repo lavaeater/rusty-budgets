@@ -1,7 +1,5 @@
 use crate::cqrs::money::{Currency, Money};
 use crate::cqrs::runtime::JoyDbBudgetRuntime;
-use alloc::vec::Vec;
-use std::env;
 use calamine::{open_workbook, DataType, Reader, Xlsx};
 use chrono::{DateTime, NaiveDate, Utc};
 use uuid::Uuid;
@@ -65,7 +63,7 @@ pub fn import_from_skandia_excel(
     Ok(imported)
 }
 
-pub fn import_bank_transactions(bytes: Vec<u8>) -> anyhow::Result<()> {
+// pub fn import_bank_transactions(_bytes: Vec<u8>) -> anyhow::Result<()> {
     // let mut csv_reader = csv::Reader::from_reader(bytes.as_slice());
     // let mut _imported = 0;
     // let mut _skipped = 0;
@@ -143,5 +141,5 @@ pub fn import_bank_transactions(bytes: Vec<u8>) -> anyhow::Result<()> {
     //         _imported += 1;
     //     }
     // }
-    Ok(())
-}
+//     Ok(())
+// }
