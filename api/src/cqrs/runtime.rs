@@ -73,7 +73,7 @@ impl JoyDbBudgetRuntime {
     
     pub fn connect_transaction(&self, budget_id: Uuid,tx_id: Uuid, item_id: Uuid, user_id: Uuid) -> anyhow::Result<(Budget, Uuid)> {
         self.cmd(&user_id, &budget_id, |budget| {
-            budget.do_transaction_connected(tx_id, item_id)
+            budget.connect_transaction(tx_id, item_id)
         })
     }
 }

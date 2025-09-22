@@ -242,7 +242,7 @@ impl Budget {
 }
 
 impl TransactionConnectedHandler for Budget {
-    fn apply_do_transaction_connected(&mut self, event: &TransactionConnected) -> Uuid {
+    fn apply_connect_transaction(&mut self, event: &TransactionConnected) -> Uuid {
         println!("Applying transaction connected event: {}", event);
         // Connect transaction to item
         let tx = self.bank_transactions
@@ -284,7 +284,7 @@ impl TransactionConnectedHandler for Budget {
         event.tx_id
     }
 
-    fn do_transaction_connected_impl(
+    fn connect_transaction_impl(
         &self,
         tx_id: Uuid,
         item_id: Uuid,
