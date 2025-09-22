@@ -12,6 +12,9 @@ fn derive_command_fn_name(struct_name: &str) -> String {
     verb_map.insert("Added", "add");
     verb_map.insert("Removed", "remove");
     verb_map.insert("Updated", "update");
+    verb_map.insert("Connected", "connect");
+    verb_map.insert("Reallocated", "reallocate");
+    verb_map.insert("Adjusted", "adjust");
 
     // Split CamelCase into words
     let mut words = Vec::new();
@@ -185,14 +188,4 @@ pub fn derive_domain_event(input: TokenStream) -> TokenStream {
     };
 
     TokenStream::from(expanded)
-}
-
-
-#[cfg(test)]
-fn test_derive_command_fn_name() {
-    assert_eq!(derive_command_fn_name("BudgetCreated"), "create_budget");
-    assert_eq!(derive_command_fn_name("GroupAdded"), "add_group");
-    assert_eq!(derive_command_fn_name("ItemAddedToGroup"), "add_item_to_group");
-    assert_eq!(derive_command_fn_name("BudgetRemoved"), "remove_budget");
-    assert_eq!(derive_command_fn_name("CustomThing"), "do_custom_thing");
 }

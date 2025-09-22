@@ -1,23 +1,29 @@
 use crate::cqrs::money::{Currency, Money};
 use crate::cqrs::runtime::JoyDbBudgetRuntime;
-use alloc::vec::Vec;
 use calamine::{open_workbook, DataType, Reader, Xlsx};
 use chrono::{DateTime, NaiveDate, Utc};
 use uuid::Uuid;
 
-pub fn import_from_skandia_excel(path: &str, user_id: &Uuid, budget_id: &Uuid, runtime: &JoyDbBudgetRuntime) -> anyhow::Result<u64> {
+pub fn import_from_skandia_excel(
+    path: &str,
+    user_id: &Uuid,
+    budget_id: &Uuid,
+    runtime: &JoyDbBudgetRuntime,
+) -> anyhow::Result<u64> {
     let mut excel: Xlsx<_> = open_workbook(path)?;
     let mut imported = 0u64;
     if let Ok(r) = excel.worksheet_range("Kontoutdrag") {
         let mut account_number: Option<String> = None;
-        
+
         for (row_num, row) in r.rows().enumerate() {
             if row_num == 0 {
                 account_number = Some(row[1].to_string());
             } else if row_num > 4 {
                 println!("row={:?}", row);
-                let amount = Money::new_cents((row[2].as_f64().unwrap() * 100.0) as i64, Currency::SEK);
-                let balance = Money::new_cents((row[3].as_f64().unwrap() * 100.0) as i64, Currency::SEK);
+                let amount =
+                    Money::new_cents((row[2].as_f64().unwrap() * 100.0) as i64, Currency::SEK);
+                let balance =
+                    Money::new_cents((row[3].as_f64().unwrap() * 100.0) as i64, Currency::SEK);
                 let date_str = row[0].to_string();
                 let naive_date = NaiveDate::parse_from_str(&date_str, "%Y-%m-%d")?;
 
@@ -26,23 +32,22 @@ pub fn import_from_skandia_excel(path: &str, user_id: &Uuid, budget_id: &Uuid, r
                     .and_hms_opt(0, 0, 0) // hours, minutes, seconds
                     .unwrap()
                     .and_utc();
-               
-               
+
                 let description = row[1].to_string();
                 let acct_no = if account_number.is_some() {
                     account_number.clone().unwrap()
                 } else {
                     return Err(anyhow::anyhow!("Could not find account number"));
                 };
-                match runtime.cmd(&user_id, &budget_id, |budget| {
-                    budget.add_transaction(
-                        acct_no.clone(),
-                        amount,
-                        balance,
-                        description,
-                        date,
-                    )
-                }) {
+                match runtime.add_transaction(
+                    *budget_id,
+                    &acct_no,
+                    amount,
+                    balance,
+                    &description,
+                    date,
+                    *user_id,
+                ) {
                     Ok(_) => {
                         // println!("Transaction added!")
                         imported += 1;
@@ -54,15 +59,15 @@ pub fn import_from_skandia_excel(path: &str, user_id: &Uuid, budget_id: &Uuid, r
             }
         }
     }
-    
+
     Ok(imported)
 }
 
-pub fn import_bank_transactions(bytes: Vec<u8>) -> anyhow::Result<()> {
+// pub fn import_bank_transactions(_bytes: Vec<u8>) -> anyhow::Result<()> {
     // let mut csv_reader = csv::Reader::from_reader(bytes.as_slice());
     // let mut _imported = 0;
     // let mut _skipped = 0;
-    // 
+    //
     // /*
     // Motsvarar kolumnerna i CSV filen direkt från Swedbank
     //  */
@@ -94,12 +99,12 @@ pub fn import_bank_transactions(bytes: Vec<u8>) -> anyhow::Result<()> {
     //         account_total,
     //         reference,
     //     );
-    // 
+    //
     //     // Calculate hash for the record
     //     let bookkeeping_date = sea_orm::prelude::Date::from_str(bookkeeping_date)
     //         .unwrap_or_else(|_| (sea_orm::prelude::Date::MIN));
     //     let record_hash = calculate_bank_transaction_hash(&other_fields);
-    // 
+    //
     //     // Check if member with similar data already exists
     //     if QueryCore::bank_transaction_exists_by_hash(conn, &record_hash).await {
     //         _skipped += 1;
@@ -114,7 +119,7 @@ pub fn import_bank_transactions(bytes: Vec<u8>) -> anyhow::Result<()> {
     //         .collect::<String>()
     //         .parse::<Decimal>()
     //         .unwrap_or_default();
-    // 
+    //
     //     // Create the member
     //     let bank_transaction_model = bank_transaction::Model {
     //         id: Uuid::default(),
@@ -125,7 +130,7 @@ pub fn import_bank_transactions(bytes: Vec<u8>) -> anyhow::Result<()> {
     //         other_fields: other_fields.to_string(),
     //         hash: String::default(),
     //     };
-    // 
+    //
     //     if let Err(e) =
     //         MutationCore::create_bank_transaction(conn, bank_transaction_model)
     //             .await
@@ -136,5 +141,5 @@ pub fn import_bank_transactions(bytes: Vec<u8>) -> anyhow::Result<()> {
     //         _imported += 1;
     //     }
     // }
-    Ok(())
-}
+//     Ok(())
+// }

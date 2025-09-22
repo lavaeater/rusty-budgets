@@ -118,7 +118,7 @@ where
             Ok((current, latest_id))
         } else {
             tracing::info!("execute: {user_id:?}, {id:?}");
-            let mut current = self.load(id)?.unwrap_or_else(|| A::_new(id.clone()));
+            let mut current = self.load(id)?.unwrap();
             tracing::info!("We have current: {current:?}");
 
             let ev = command(&current)?;
