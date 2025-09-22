@@ -76,6 +76,18 @@ impl JoyDbBudgetRuntime {
             budget.connect_transaction(tx_id, item_id)
         })
     }
+    
+    pub fn reallocate_item_funds(&self, budget_id: Uuid, from_item_id: Uuid, to_item_id: Uuid, amount: Money, user_id: Uuid) -> anyhow::Result<(Budget, Uuid)> {
+        self.cmd(&user_id, &budget_id, |budget| {
+            budget.reallocate_item_funds(from_item_id, to_item_id, amount)
+        })
+    }
+    
+    pub fn adjust_item_funds(&self, budget_id: Uuid, item_id: Uuid, amount: Money, user_id: Uuid) -> anyhow::Result<(Budget, Uuid)> {
+        self.cmd(&user_id, &budget_id, |budget| {
+            budget.adjust_item_funds(item_id, amount)
+        })
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Model)]

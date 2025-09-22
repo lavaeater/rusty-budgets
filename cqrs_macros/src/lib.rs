@@ -13,6 +13,8 @@ fn derive_command_fn_name(struct_name: &str) -> String {
     verb_map.insert("Removed", "remove");
     verb_map.insert("Updated", "update");
     verb_map.insert("Connected", "connect");
+    verb_map.insert("Reallocated", "reallocate");
+    verb_map.insert("Adjusted", "adjust");
 
     // Split CamelCase into words
     let mut words = Vec::new();

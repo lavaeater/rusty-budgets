@@ -1,5 +1,5 @@
 use crate::cqrs::framework::DomainEvent;
-use crate::cqrs::domain_events::{BudgetCreated, GroupAdded, ItemAdded, TransactionAdded, TransactionConnected};
+use crate::cqrs::domain_events::{BudgetCreated, GroupAdded, ItemAdded, ItemFundsAdjusted, ItemFundsReallocated, TransactionAdded, TransactionConnected};
 use crate::cqrs::framework::Aggregate;
 use crate::cqrs::money::{Currency, Money};
 use crate::pub_events_enum;
@@ -10,7 +10,6 @@ use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::hash::{DefaultHasher, Hash, Hasher};
-use dioxus::html::track::default;
 use uuid::Uuid;
 
 pub_events_enum! {
@@ -21,8 +20,8 @@ pub_events_enum! {
         ItemAdded,
         TransactionAdded,
         TransactionConnected,
-        // FundsReallocated
-        // ... add other events here
+        ItemFundsReallocated,
+        ItemFundsAdjusted,
     }
 }
 
@@ -130,18 +129,42 @@ impl Default for Budget {
 }
 
 impl Budget {
-    pub fn get_item_mut(&mut self, item_id: &Uuid) -> Option<&mut BudgetItem> {
-        self.budget_groups
-            .iter_mut()
-            .flat_map(move |(_, group)| group.items.iter_mut())
-            .find(|item| item.id == *item_id)
+    pub fn get_item(&self, item_id: &Uuid) -> Option<&BudgetItem> {
+        if let  Some(group_id) = self.budget_items_and_groups.get(item_id) {
+            // Update group
+            if let Some(group) = self.budget_groups.get(group_id) {
+                return group.items.iter().find(|item| item.id == *item_id)
+            }
+        }
+        None
     }
 
-    pub fn get_item(&self, item_id: &Uuid) -> Option<&BudgetItem> {
-        self.budget_groups
-            .iter()
-            .flat_map(move |(_, group)| group.items.iter())
-            .find(|item| item.id == *item_id)
+    pub fn get_group_mut(&mut self, group_id: &Uuid) -> Option<&mut BudgetGroup> {
+        self.budget_groups.get_mut(group_id)
+    }
+    
+    pub fn get_group_mut_for_item_id(&mut self, item_id: &Uuid) -> Option<&mut BudgetGroup> {
+        if let Some(group_id) = self.budget_items_and_groups.get(item_id) {
+            return self.budget_groups.get_mut(group_id)
+        }
+        None
+    }
+
+    pub fn get_group_for_item_id(&self, item_id: &Uuid) -> Option<&BudgetGroup> {
+        if let Some(group_id) = self.budget_items_and_groups.get(item_id) {
+            return self.budget_groups.get(group_id)
+        }
+        None
+    }
+
+    pub fn get_item_mut(&mut self, item_id: &Uuid) -> Option<&mut BudgetItem> {
+        if let  Some(group_id) = self.budget_items_and_groups.get(item_id) {
+            // Update group
+            if let Some(group) = self.budget_groups.get_mut(group_id) {
+                return group.items.iter_mut().find(|item| item.id == *item_id)
+            }
+        }
+        None
     }
 }
 

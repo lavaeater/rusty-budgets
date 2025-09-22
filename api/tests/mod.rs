@@ -347,3 +347,39 @@ pub fn reconnect_bank_transaction() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[test]
+pub fn readjust_item_funds() -> anyhow::Result<()> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    
+    let (_res, budget_id) = rt.create_budget("Test Budget", true, Currency::SEK, user_id)?;
+
+    let (_res, group_id) = rt.add_group(budget_id, "Utgifter", BudgetingType::Expense, user_id)?;
+
+    let (_res, from_item_id) = rt.add_item(
+        budget_id,
+        group_id,
+        "Hyra",
+        BudgetingType::Expense,
+        Money::new_dollars(100, Currency::SEK),
+        user_id,
+    )?;
+
+    let (_res, to_item_id) = rt.add_item(
+        budget_id,
+        group_id,
+        "Livsmedel",
+        BudgetingType::Expense,
+        Money::new_dollars(50, Currency::SEK),
+        user_id,
+    )?;
+    
+    let (res, _) = rt.reallocate_item_funds(budget_id, from_item_id, to_item_id, Money::new_dollars(50, Currency::SEK), user_id)?;
+    let from_item = res.get_item(&from_item_id).unwrap();
+    let to_item = res.get_item(&from_item_id).unwrap();
+    assert_eq!(from_item.budgeted_amount, Money::new_dollars(50, Currency::SEK));
+    assert_eq!(to_item.budgeted_amount, Money::new_dollars(100, Currency::SEK));
+    
+    Ok(())
+}
