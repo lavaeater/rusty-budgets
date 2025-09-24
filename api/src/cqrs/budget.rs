@@ -10,13 +10,74 @@ use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::hash::{DefaultHasher, Hash, Hasher};
+use std::sync::Arc;
 use uuid::Uuid;
+
+/// Generic module for Arc serialization/deserialization helpers
+pub mod arc_helpers {
+    use super::*;
+
+    // HashMap<K, Arc<V>>
+    pub fn deserialize_hashmap_arc<'de, D, K, V>(deserializer: D) -> Result<HashMap<K, Arc<V>>, D::Error>
+    where
+        D: Deserializer<'de>,
+        K: Deserialize<'de> + std::hash::Hash + Eq,
+        V: Deserialize<'de>,
+    {
+        let map: HashMap<K, V> = HashMap::deserialize(deserializer)?;
+        Ok(map.into_iter().map(|(k, v)| (k, Arc::new(v))).collect())
+    }
+
+    pub fn serialize_hashmap_arc<S, K, V>(map: &HashMap<K, Arc<V>>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+        K: Serialize + std::hash::Hash + Eq,
+        V: Serialize,
+    {
+        let map_ref: HashMap<&K, &V> = map.iter().map(|(k, v)| (k, v.as_ref())).collect();
+        map_ref.serialize(serializer)
+    }
+
+    // Vec<Arc<V>>
+    pub fn deserialize_vec_arc<'de, D, V>(deserializer: D) -> Result<Vec<Arc<V>>, D::Error>
+    where
+        D: Deserializer<'de>,
+        V: Deserialize<'de>,
+    {
+        let vec: Vec<V> = Vec::deserialize(deserializer)?;
+        Ok(vec.into_iter().map(Arc::new).collect())
+    }
+
+    pub fn serialize_vec_arc<S, V>(vec: &Vec<Arc<V>>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+        V: Serialize,
+    {
+        let vec_ref: Vec<&V> = vec.iter().map(|v| v.as_ref()).collect();
+        vec_ref.serialize(serializer)
+    }
+}
+
+/// The store
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+pub struct BudgetItemStore {
+    #[serde(
+        deserialize_with = "arc_helpers::deserialize_hashmap_arc",
+        serialize_with = "arc_helpers::serialize_hashmap_arc"
+    )]
+    items: HashMap<Uuid, Arc<BudgetItem>>,
+
+    #[serde(
+        deserialize_with = "arc_helpers::deserialize_vec_arc",
+        serialize_with = "arc_helpers::serialize_vec_arc"
+    )]
+    by_type: HashMap<BudgetingType, Vec<Arc<BudgetItem>>>,
+}
 
 pub_events_enum! {
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub enum BudgetEvent {
         BudgetCreated,
-        GroupAdded,
         ItemAdded,
         TransactionAdded,
         TransactionConnected,
@@ -25,34 +86,21 @@ pub_events_enum! {
     }
 }
 
-
-#[derive(Default, Debug, Clone, Serialize, Deserialize)]
-pub struct Store {
-    all: HashSet<u64>,       // uniqueness check
-    by_id: HashMap<Uuid, BankTransaction> // fast lookup
-}
-
-impl Store {
+impl BudgetItemStore {
     pub fn len(&self) -> usize {
-        self.all.len()
-    }
-    
-    pub fn is_empty(&self) -> bool {
-        self.all.is_empty()
+        self.items.len()
     }
 
-    pub fn insert(&mut self, transaction: BankTransaction) -> bool {
-        let mut hasher = DefaultHasher::new();
-        transaction.hash(&mut hasher);
-        
-        if self.all.insert(hasher.finish()) {
-            self.by_id.insert(transaction.id, transaction);
-            true
-        } else {
-            false
-        }
+    pub fn is_empty(&self) -> bool {
+        self.items.is_empty()
     }
-    
+
+    pub fn insert(&mut self, item: &BudgetItem) -> bool {
+        self.by_type.entry(item.budgeting_type).and_modify(|e| {
+            e.push(item);
+        })
+    }
+
     pub fn remove(&mut self, id: Uuid) -> bool {
         if let Some(transaction) = self.by_id.remove(&id) {
             let mut hasher = DefaultHasher::new();
@@ -62,11 +110,11 @@ impl Store {
             false
         }
     }
-    
+
     pub fn check_hash(&self,hash: &u64) -> bool {
         self.all.contains(hash)
     }
-    
+
     pub fn can_insert(&self, hash: &u64) -> bool {
         !self.check_hash(hash)
     }
@@ -74,20 +122,76 @@ impl Store {
     pub fn get_mut(&mut self, id: &Uuid) -> Option<&mut BankTransaction> {
         self.by_id.get_mut(id)
     }
-    
+
     pub fn contains(&self, id: &Uuid) -> bool {
         self.by_id.contains_key(id)
     }
 }
+
+
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+pub struct BankTransactionStore {
+    all: HashSet<u64>,       // uniqueness check
+    by_id: HashMap<Uuid, BankTransaction> // fast lookup
+}
+
+
+impl BankTransactionStore {
+    pub fn len(&self) -> usize {
+        self.all.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.all.is_empty()
+    }
+
+    pub fn insert(&mut self, transaction: BankTransaction) -> bool {
+        let mut hasher = DefaultHasher::new();
+        transaction.hash(&mut hasher);
+
+        if self.all.insert(hasher.finish()) {
+            self.by_id.insert(transaction.id, transaction);
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn remove(&mut self, id: Uuid) -> bool {
+        if let Some(transaction) = self.by_id.remove(&id) {
+            let mut hasher = DefaultHasher::new();
+            transaction.hash(&mut hasher);
+            self.all.remove(&hasher.finish())
+        } else {
+            false
+        }
+    }
+
+    pub fn check_hash(&self,hash: &u64) -> bool {
+        self.all.contains(hash)
+    }
+
+    pub fn can_insert(&self, hash: &u64) -> bool {
+        !self.check_hash(hash)
+    }
+
+    pub fn get_mut(&mut self, id: &Uuid) -> Option<&mut BankTransaction> {
+        self.by_id.get_mut(id)
+    }
+
+    pub fn contains(&self, id: &Uuid) -> bool {
+        self.by_id.contains_key(id)
+    }
+}
+
 // --- Budget Domain ---
 #[derive(Debug, Clone, Serialize, Deserialize, Model)]
 pub struct Budget {
     pub id: Uuid,
     pub name: String,
     pub user_id: Uuid,
-    pub budget_groups: HashMap<Uuid, BudgetGroup>,
-    pub budget_items_and_groups: HashMap<Uuid, Uuid>,
-    pub bank_transactions: Store,
+    pub budget_items_by_type: HashMap<BudgetingType, BudgetItem>,
+    pub bank_transactions: BankTransactionStore,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub default_budget: bool,
@@ -104,8 +208,7 @@ impl Default for Budget {
             id: Default::default(),
             name: "".to_string(),
             user_id: Default::default(),
-            budget_groups: Default::default(),
-            budget_items_and_groups: Default::default(),
+            budget_items: Default::default(),
             bank_transactions: Default::default(),
             created_at: Default::default(),
             updated_at: Default::default(),
