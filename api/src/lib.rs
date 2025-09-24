@@ -227,10 +227,10 @@ pub async fn create_budget(
 }
 
 #[server]
-pub async fn add_group(budget_id: Uuid, name: String) -> Result<Vec<BudgetGroup>, ServerFnError> {
+pub async fn add_group(budget_id: Uuid, name: String, group_type: BudgetingType) -> Result<Vec<BudgetGroup>, ServerFnError> {
     tracing::info!("Adding group {} to budget {}", name, budget_id);
     let user = db::get_default_user(None).expect("Could not get default user");
-    match db::add_group(&budget_id, &user.id, &name) {
+    match db::add_group(&budget_id, &user.id, &name, group_type) {
         Ok(b) => Ok(b.budget_groups.values().cloned().collect()),
         Err(e) => {
             tracing::error!(error = %e, "Could not get default budget");
