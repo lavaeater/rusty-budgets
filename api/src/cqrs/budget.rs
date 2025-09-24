@@ -5,7 +5,7 @@ use crate::cqrs::money::{Currency, Money};
 use crate::pub_events_enum;
 use chrono::{DateTime, Utc};
 use joydb::Model;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::fmt::{Display, Formatter};
@@ -13,65 +13,100 @@ use std::hash::{DefaultHasher, Hash, Hasher};
 use std::sync::Arc;
 use uuid::Uuid;
 
-/// Generic module for Arc serialization/deserialization helpers
-pub mod arc_helpers {
-    use super::*;
+/// The store
+#[derive(Default, Debug, Clone)]
+pub struct BudgetItemStore {
+    items: HashMap<Uuid, Arc<BudgetItem>>,
+    by_type: HashMap<BudgetingType, Vec<Arc<BudgetItem>>>,
+}
 
-    // HashMap<K, Arc<V>>
-    pub fn deserialize_hashmap_arc<'de, D, K, V>(deserializer: D) -> Result<HashMap<K, Arc<V>>, D::Error>
+impl Serialize for BudgetItemStore {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
-        D: Deserializer<'de>,
-        K: Deserialize<'de> + std::hash::Hash + Eq,
-        V: Deserialize<'de>,
+        S: Serializer
     {
-        let map: HashMap<K, V> = HashMap::deserialize(deserializer)?;
-        Ok(map.into_iter().map(|(k, v)| (k, Arc::new(v))).collect())
-    }
-
-    pub fn serialize_hashmap_arc<S, K, V>(map: &HashMap<K, Arc<V>>, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-        K: Serialize + std::hash::Hash + Eq,
-        V: Serialize,
-    {
-        let map_ref: HashMap<&K, &V> = map.iter().map(|(k, v)| (k, v.as_ref())).collect();
-        map_ref.serialize(serializer)
-    }
-
-    // Vec<Arc<V>>
-    pub fn deserialize_vec_arc<'de, D, V>(deserializer: D) -> Result<Vec<Arc<V>>, D::Error>
-    where
-        D: Deserializer<'de>,
-        V: Deserialize<'de>,
-    {
-        let vec: Vec<V> = Vec::deserialize(deserializer)?;
-        Ok(vec.into_iter().map(Arc::new).collect())
-    }
-
-    pub fn serialize_vec_arc<S, V>(vec: &Vec<Arc<V>>, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-        V: Serialize,
-    {
-        let vec_ref: Vec<&V> = vec.iter().map(|v| v.as_ref()).collect();
-        vec_ref.serialize(serializer)
+        use serde::ser::SerializeStruct;
+        
+        let mut state = serializer.serialize_struct("BudgetItemStore", 2)?;
+        
+        // Serialize items by dereferencing the Arc to get the inner BudgetItem
+        let items_map: HashMap<Uuid, &BudgetItem> = self.items
+            .iter()
+            .map(|(k, v)| (*k, v.as_ref()))
+            .collect();
+        state.serialize_field("items", &items_map)?;
+        
+        // Serialize by_type by dereferencing the Arc in each Vec
+        let by_type_map: HashMap<BudgetingType, Vec<&BudgetItem>> = self.by_type
+            .iter()
+            .map(|(k, v)| (*k, v.iter().map(|arc| arc.as_ref()).collect()))
+            .collect();
+        state.serialize_field("by_type", &by_type_map)?;
+        
+        state.end()
     }
 }
 
-/// The store
-#[derive(Default, Debug, Clone, Serialize, Deserialize)]
-pub struct BudgetItemStore {
-    #[serde(
-        deserialize_with = "arc_helpers::deserialize_hashmap_arc",
-        serialize_with = "arc_helpers::serialize_hashmap_arc"
-    )]
-    items: HashMap<Uuid, Arc<BudgetItem>>,
+impl<'de> Deserialize<'de> for BudgetItemStore {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>
+    {
+        use serde::de::{self, MapAccess, Visitor};
+        use std::fmt;
 
-    #[serde(
-        deserialize_with = "arc_helpers::deserialize_vec_arc",
-        serialize_with = "arc_helpers::serialize_vec_arc"
-    )]
-    by_type: HashMap<BudgetingType, Vec<Arc<BudgetItem>>>,
+        #[derive(Deserialize)]
+        #[serde(field_identifier, rename_all = "lowercase")]
+        enum Field { Items, ByType }
+
+        struct BudgetItemStoreVisitor;
+
+        impl<'de> Visitor<'de> for BudgetItemStoreVisitor {
+            type Value = BudgetItemStore;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("struct BudgetItemStore")
+            }
+
+            fn visit_map<V>(self, mut map: V) -> Result<BudgetItemStore, V::Error>
+            where
+                V: MapAccess<'de>,
+            {
+                let mut items: Option<HashMap<Uuid, BudgetItem>> = None;
+                
+                while let Some(key) = map.next_key()? {
+                    match key {
+                        Field::Items => {
+                            if items.is_some() {
+                                return Err(de::Error::duplicate_field("items"));
+                            }
+                            items = Some(map.next_value()?);
+                        }
+                        Field::ByType => {
+                            // We'll ignore the by_type field during deserialization
+                            // and reconstruct it from the items
+                            let _: HashMap<BudgetingType, Vec<BudgetItem>> = map.next_value()?;
+                        }
+                    }
+                }
+
+                let items = items.ok_or_else(|| de::Error::missing_field("items"))?;
+                
+                // Reconstruct the store with Arc wrappers and dual indexing
+                let mut store = BudgetItemStore::default();
+                for (id, item) in items {
+                    let item_arc = Arc::new(item);
+                    store.items.insert(id, item_arc.clone());
+                    store.by_type.entry(item_arc.item_type).or_insert_with(Vec::new).push(item_arc);
+                }
+
+                Ok(store)
+            }
+        }
+
+        const FIELDS: &'static [&'static str] = &["items", "by_type"];
+        deserializer.deserialize_struct("BudgetItemStore", FIELDS, BudgetItemStoreVisitor)
+    }
 }
 
 pub_events_enum! {
@@ -96,35 +131,38 @@ impl BudgetItemStore {
     }
 
     pub fn insert(&mut self, item: &BudgetItem) -> bool {
-        self.by_type.entry(item.budgeting_type).and_modify(|e| {
-            e.push(item);
-        })
-    }
-
-    pub fn remove(&mut self, id: Uuid) -> bool {
-        if let Some(transaction) = self.by_id.remove(&id) {
-            let mut hasher = DefaultHasher::new();
-            transaction.hash(&mut hasher);
-            self.all.remove(&hasher.finish())
+        if !self.items.contains_key(&item.id) {
+            let arc = Arc::new(item.clone());
+            self.items.insert(item.id, arc.clone());
+            self.by_type.entry(item.item_type).or_insert_with(Vec::new).push(arc);
+            true
         } else {
             false
         }
     }
 
-    pub fn check_hash(&self,hash: &u64) -> bool {
-        self.all.contains(hash)
+    pub fn remove(&mut self, id: Uuid) -> bool {
+        if self.items.contains_key(&id) {
+            let arc = self.items.remove(&id).unwrap();
+            self.by_type.entry(arc.item_type).and_modify(|v| {
+                v.retain(|x| x.id != id);
+            });
+            true
+        } else {
+            false
+        }
+    }
+    
+    pub fn get_mut(&mut self, id: &Uuid) -> Option<&mut BudgetItem> {
+        self.items.get_mut(id).and_then(|arc| Some(Arc::make_mut(arc)))
     }
 
-    pub fn can_insert(&self, hash: &u64) -> bool {
-        !self.check_hash(hash)
-    }
-
-    pub fn get_mut(&mut self, id: &Uuid) -> Option<&mut BankTransaction> {
-        self.by_id.get_mut(id)
+    pub fn get(&self, id: &Uuid) -> Option<&BudgetItem> {
+        self.items.get(id).and_then(|arc| Some(arc.as_ref()))
     }
 
     pub fn contains(&self, id: &Uuid) -> bool {
-        self.by_id.contains_key(id)
+        self.items.contains_key(id)
     }
 }
 
@@ -190,7 +228,7 @@ pub struct Budget {
     pub id: Uuid,
     pub name: String,
     pub user_id: Uuid,
-    pub budget_items_by_type: HashMap<BudgetingType, BudgetItem>,
+    pub budget_items: BudgetItemStore,
     pub bank_transactions: BankTransactionStore,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
@@ -233,18 +271,9 @@ impl Default for Budget {
 
 impl Budget {
     pub fn get_item(&self, item_id: &Uuid) -> Option<&BudgetItem> {
-        if let  Some(group_id) = self.budget_items_and_groups.get(item_id) {
-            // Update group
-            if let Some(group) = self.budget_groups.get(group_id) {
-                return group.items.iter().find(|item| item.id == *item_id)
-            }
-        }
-        None
+        self.budget_items.get(item_id)
     }
 
-    pub fn get_group_mut(&mut self, group_id: &Uuid) -> Option<&mut BudgetGroup> {
-        self.budget_groups.get_mut(group_id)
-    }
     
     pub fn get_group_mut_for_item_id(&mut self, item_id: &Uuid) -> Option<&mut BudgetGroup> {
         if let Some(group_id) = self.budget_items_and_groups.get(item_id) {
