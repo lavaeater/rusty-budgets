@@ -24,29 +24,16 @@ impl JoyDbBudgetRuntime {
         })
     }
 
-    pub fn add_group(
-        &self,
-        budget_id: Uuid,
-        group_name: &str,
-        group_type: BudgetingType,
-        user_id: Uuid,
-    ) -> anyhow::Result<(Budget, Uuid)> {
-        self.cmd(&user_id, &budget_id, |budget| {
-            budget.add_group(group_name.to_string(), group_type)
-        })
-    }
-
     pub fn add_item(
         &self,
-        budget_id: Uuid,
-        group_id: Uuid,
+        budget_id: &Uuid,
         item_name: &str,
-        item_type: BudgetingType,
-        amount: Money,
-        user_id: Uuid,
+        item_type: &BudgetingType,
+        amount: &Money,
+        user_id: &Uuid,
     ) -> anyhow::Result<(Budget, Uuid)> {
-        self.cmd(&user_id, &budget_id, |budget| {
-            budget.add_item(group_id, item_name.to_string(), item_type, amount)
+        self.cmd(user_id, budget_id, |budget| {
+            budget.add_item(item_name.to_string(), *item_type, *amount)
         })
     }
 

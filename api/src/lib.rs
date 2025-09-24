@@ -4,16 +4,16 @@ extern crate alloc;
 extern crate core;
 
 pub mod cqrs;
-pub mod models;
 pub mod import;
+pub mod models;
 
 use crate::cqrs::budget::{Budget, BudgetGroup, BudgetItem, BudgetingType};
-use crate::models::*;
-use dioxus::prelude::*;
-use uuid::Uuid;
 use crate::cqrs::money::Money;
+use crate::models::*;
 #[cfg(feature = "server")]
 use dioxus::logger::tracing;
+use dioxus::prelude::*;
+use uuid::Uuid;
 
 #[cfg(feature = "server")]
 const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
@@ -23,8 +23,8 @@ pub mod db {
     use crate::cqrs::budget::{Budget, BudgetingType};
     use crate::cqrs::framework::Runtime;
     use crate::cqrs::money::{Currency, Money};
-    use crate::models::*;
     use crate::cqrs::runtime::{Db, JoyDbBudgetRuntime, UserBudgets};
+    use crate::models::*;
     use crate::DEFAULT_USER_EMAIL;
     use chrono::NaiveDate;
     use dioxus::logger::tracing;
@@ -171,24 +171,16 @@ pub mod db {
         }
     }
 
-    pub fn add_group(budget_id: &Uuid, user_id: &Uuid, name: &str, group_type: BudgetingType) -> anyhow::Result<Budget> {
-        tracing::info!("add_group: {budget_id:?}, {user_id:?}, {name:?}");
-        with_runtime(None).cmd(user_id, budget_id, |budget| {
-            budget.add_group(name.to_string(), group_type)
-        }).map(|(budget, _)| budget)
-    }
-
     pub fn add_item(
         budget_id: &Uuid,
-        group_id: &Uuid,
         user_id: &Uuid,
         name: &str,
         item_type: &BudgetingType,
         budgeted_amount: &Money,
     ) -> anyhow::Result<Budget> {
-        with_runtime(None).cmd(user_id, budget_id, |budget| {
-            budget.add_item(*group_id, name.to_string(), *item_type, *budgeted_amount)
-        }).map(|(budget, _)| budget)
+        with_runtime(None)
+            .add_item(budget_id, name, item_type, budgeted_amount, user_id)
+            .map(|(budget, _)| budget)
     }
 
     pub fn create_user(
@@ -227,26 +219,26 @@ pub async fn create_budget(
 }
 
 #[server]
-pub async fn add_group(budget_id: Uuid, name: String, group_type: BudgetingType) -> Result<Vec<BudgetGroup>, ServerFnError> {
-    tracing::info!("Adding group {} to budget {}", name, budget_id);
+pub async fn add_item(
+    budget_id: Uuid,
+    group_id: Uuid,
+    name: String,
+    item_type: BudgetingType,
+    budgeted_amount: Money,
+) -> Result<Vec<BudgetItem>, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
-    match db::add_group(&budget_id, &user.id, &name, group_type) {
-        Ok(b) => Ok(b.budget_groups.values().cloned().collect()),
-        Err(e) => {
-            tracing::error!(error = %e, "Could not get default budget");
-            Err(ServerFnError::ServerError(e.to_string()))
-        }
-    }
-}
-
-#[server]
-pub async fn add_item(budget_id: Uuid, group_id: Uuid, name: String, item_type: BudgetingType, budgeted_amount: Money) -> Result<Vec<BudgetItem>, ServerFnError> {
-    let user = db::get_default_user(None).expect("Could not get default user");
-    match db::add_item(&budget_id, &group_id, &user.id, &name, &item_type, &budgeted_amount) {
+    match db::add_item(
+        &budget_id,
+        &group_id,
+        &user.id,
+        &name,
+        &item_type,
+        &budgeted_amount,
+    ) {
         Ok(b) => {
             let g = b.budget_groups.get(&group_id).expect("Could not get group");
             Ok(g.items.clone())
-        },
+        }
         Err(e) => {
             tracing::error!(error = %e, "Could not get default budget");
             Err(ServerFnError::ServerError(e.to_string()))
