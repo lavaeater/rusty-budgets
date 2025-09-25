@@ -106,15 +106,20 @@ pub mod db {
     }
 
     pub fn get_default_budget(user_id: &Uuid) -> anyhow::Result<Option<Budget>> {
-        match with_client(None).get::<UserBudgets>(&user_id) {
+        match with_client(None).get::<UserBudgets>(user_id) {
             Ok(b) => match b {
-                None => Ok(None),
+                None => { 
+                    tracing::info!("User has no budgets");
+                    Ok(None)
+                },
                 Some(b) => match b.budgets.iter().find(|(_, default)| *default) {
                     Some((budget_id, _)) => match with_runtime(None).load(&budget_id) {
-                        Ok(budget) => Ok(budget),
+                        Ok(budget) => { Ok(budget) },
                         Err(_) => Err(anyhow::anyhow!("Could not load default budget")),
                     },
-                    None => Ok(None),
+                    None => {
+                        tracing::info!("User had budgets but none were default");
+                        Ok(None) },
                 },
             },
             Err(_) => Err(anyhow::anyhow!("Could not get default budget")),
@@ -163,13 +168,10 @@ pub mod db {
         user_id: &Uuid,
         default_budget: bool,
     ) -> anyhow::Result<Budget> {
-        let budget_id = Uuid::new_v4();
-        match with_runtime(None).cmd(user_id, &budget_id, |budget| {
-            budget.create_budget(name.to_string(), *user_id, default_budget, Currency::SEK)
-        }) {
-            Ok(budget) => {
+        match with_runtime(None).create_budget(&name.to_string(), default_budget, Currency::SEK, *user_id) {
+            Ok((budget, budget_id)) => {
                 add_budget_to_user(user_id, &budget_id, default_budget)?;
-                Ok(budget.0)
+                Ok(budget)
             }
             Err(_) => Err(anyhow::anyhow!("Could not create budget")),
         }
