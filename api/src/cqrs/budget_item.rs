@@ -174,9 +174,11 @@ impl BudgetItemStore {
         self.items_and_types.get(id)
     }
     
-    pub fn items_by_type(&self, budgeting_type: &BudgetingType)-> Option<Vec<&BudgetItem>> {
-        self.Is by_type.get(budgeting_type)
+    pub fn items_by_type(&self, budgeting_type: &BudgetingType) -> Option<Vec<&BudgetItem>> {
+        self.by_type.get(budgeting_type)
+            .map(|items| items.iter().map(|arc| arc.as_ref()).collect())
     }
+    
     pub fn get_mut(&mut self, id: &Uuid) -> Option<&mut BudgetItem> {
         self.items.get_mut(id).and_then(|arc| Some(Arc::make_mut(arc)))
     }
