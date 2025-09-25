@@ -10,6 +10,7 @@ use crate::{BudgetItemView, Button, Separator};
 #[component]
 pub fn BudgetingTypeCard(budget_id: Uuid, budgeting_type: BudgetingType, items: Vec<BudgetItem>) -> Element {
     let budgeting_type_name = use_signal(|| budgeting_type.to_string());
+    let new_item_label = format!("Ny {}", budgeting_type);
     let mut budget_items = use_signal(|| items);
     let mut show_new_item = use_signal(|| budget_items().is_empty());
     let mut new_item_name = use_signal(|| "".to_string());
@@ -20,7 +21,7 @@ pub fn BudgetingTypeCard(budget_id: Uuid, budgeting_type: BudgetingType, items: 
         div { padding_bottom: "1rem",
             if show_new_item() {
                 div { id: "new_item",
-                    label { "Ny post" }
+                    label { {new_item_label} }
                     input {
                         r#type: "text",
                         placeholder: "Namn",
@@ -60,7 +61,7 @@ pub fn BudgetingTypeCard(budget_id: Uuid, budgeting_type: BudgetingType, items: 
                     onclick: move |_| {
                         show_new_item.set(true);
                     },
-                    "Ny post"
+                    {{ new_item_label }}
                 }
             }
         }

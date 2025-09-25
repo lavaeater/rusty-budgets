@@ -35,7 +35,10 @@ pub fn Button(
     children: Element,
 ) -> Element {
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("/src/budget_components/button/style.css") }
+        document::Link {
+            rel: "stylesheet",
+            href: asset!("/src/budget_components/button/style.css"),
+        }
 
         button {
             class: "button",

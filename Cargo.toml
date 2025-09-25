@@ -1,5 +1,3 @@
-cargo-features = ["codegen-backend"]
-
 [workspace]
 resolver = "2"
 members = [
@@ -29,9 +27,6 @@ api = { path = "api" }
 cqrs_macros = { path = "cqrs_macros" }
 
 [profile]
-
-[profile.dev]
-codegen-backend = "cranelift"
 
 [profile.wasm-dev]
 inherits = "dev"
