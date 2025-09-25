@@ -15,10 +15,10 @@ pub fn BudgetingTypeTabs(budget_id: Uuid, items_by_type: Vec<(usize,BudgetingTyp
             max_width: "16rem",
             TabList {
                 for bt in BudgetingType::iter() {
-                    TabTrigger { value: bt.to_string(), index: 0usize, "{bt}"  }
+                    TabTrigger { value: bt.to_string(), index: 0usize, "{bt}" }
                 }
             }
-            for (index, budgeting_type, items) in items_by_type {
+            for (index , budgeting_type , items) in items_by_type {
                 TabContent { index, value: budgeting_type.to_string(),
                     BudgetingTypeCard { budget_id, budgeting_type, items }
                 }
