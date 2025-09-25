@@ -1,13 +1,11 @@
-use crate::budget_groups::BudgetGroups;
-use dioxus::logger::tracing;
-use dioxus_primitives::label::Label;
-use api::cqrs::budget::Budget;
-use dioxus::prelude::*;
-use uuid::Uuid;
 use crate::Input;
+use api::cqrs::budget::Budget;
+use dioxus::logger::tracing;
+use dioxus::prelude::*;
+use dioxus_primitives::label::Label;
+use uuid::Uuid;
 
-
-const HERO_CSS: Asset = asset!("/assets/styling/budget-hero.css");
+const HERO_CSS: Asset = asset!("assets/styling/budget-hero.css");
 pub static CURRENT_BUDGET_ID: GlobalSignal<Uuid> = Signal::global(|| Uuid::default());
 #[component]
 pub fn BudgetHero() -> Element {
@@ -33,10 +31,6 @@ pub fn BudgetHero() -> Element {
                     // Header
                     div { class: "budget-header",
                         h1 { class: "budget-title", {budget.name} }
-                    }
-                    BudgetGroups {
-                        budget_id: budget.id,
-                        groups: budget.budget_groups.values().cloned().collect(),
                     }
                 }
             }

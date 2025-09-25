@@ -47,7 +47,7 @@ impl<'de> Deserialize<'de> for BudgetItemStore {
     where
         D: Deserializer<'de>,
     {
-        use serde::de::{self, Error, MapAccess, Visitor};
+        use serde::de::{self, MapAccess, Visitor};
         use std::fmt;
 
         #[derive(Deserialize)]
@@ -174,7 +174,7 @@ impl BudgetItemStore {
         self.items_and_types.get(id)
     }
     
-    pub fn items_by_type(&self, budgeting_type: &BudgetingType) -> Option<Vec<&BudgetItem>> {
+    pub fn by_type(&self, budgeting_type: &BudgetingType) -> Option<Vec<&BudgetItem>> {
         self.by_type.get(budgeting_type)
             .map(|items| items.iter().map(|arc| arc.as_ref()).collect())
     }

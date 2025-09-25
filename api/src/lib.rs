@@ -237,8 +237,8 @@ pub async fn add_item(
         &budgeted_amount,
     ) {
         Ok(b) => {
-            let items = b.budget_items.type_for().get(&group_id).expect("Could not get group");
-            Ok(g.items.clone())
+            let items = b.budget_items.by_type(&item_type).expect("Could not get budgeting_type");
+            Ok(items.iter().map(|item| (*item).clone()).collect())
         }
         Err(e) => {
             tracing::error!(error = %e, "Could not get default budget");

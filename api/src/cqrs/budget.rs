@@ -5,11 +5,8 @@ use crate::cqrs::money::{Currency, Money};
 use crate::pub_events_enum;
 use chrono::{DateTime, Utc};
 use joydb::Model;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::fmt::Display;
-use std::hash::{Hash, Hasher};
-use serde::ser::SerializeStruct;
 use uuid::Uuid;
 use crate::cqrs::bank_transaction::BankTransactionStore;
 use crate::cqrs::budget_item::{BudgetItem, BudgetItemStore};
@@ -81,7 +78,7 @@ impl Budget {
     }
 
     pub fn get_type_for_item(&self, item_id: &Uuid) -> Option<&BudgetingType> {
-        self.budget_items.items_and_types.get(item_id)
+        self.budget_items.type_for(item_id)
     }
 
     pub fn get_item_mut(&mut self, item_id: &Uuid) -> Option<&mut BudgetItem> {
