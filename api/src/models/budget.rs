@@ -89,6 +89,10 @@ impl Budget {
     pub fn get_item_mut(&mut self, item_id: &Uuid) -> Option<&mut BudgetItem> {
         self.budget_items.get_mut(item_id)
     }
+    
+    pub fn items_by_type(&self) -> Vec<(usize, BudgetingType, Vec<BudgetItem>)> {
+        self.budget_items.items_by_type()
+    }
 }
 
 // --- Aggregate implementation ---

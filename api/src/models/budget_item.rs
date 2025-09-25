@@ -1,10 +1,11 @@
+use crate::models::budgeting_type::BudgetingType;
+use crate::models::money::Money;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::sync::Arc;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use strum::IntoEnumIterator;
 use uuid::Uuid;
-use crate::models::budgeting_type::BudgetingType;
-use crate::models::money::Money;
 
 /// The store
 #[derive(Default, Debug, Clone)]
@@ -17,27 +18,26 @@ pub struct BudgetItemStore {
 impl Serialize for BudgetItemStore {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
-        S: Serializer
+        S: Serializer,
     {
         use serde::ser::SerializeStruct;
-        
+
         let mut state = serializer.serialize_struct("BudgetItemStore", 3)?;
-        
+
         // Serialize items by dereferencing the Arc to get the inner BudgetItem
-        let items_map: HashMap<Uuid, &BudgetItem> = self.items
-            .iter()
-            .map(|(k, v)| (*k, v.as_ref()))
-            .collect();
+        let items_map: HashMap<Uuid, &BudgetItem> =
+            self.items.iter().map(|(k, v)| (*k, v.as_ref())).collect();
         state.serialize_field("items", &items_map)?;
-        
+
         // Serialize by_type by dereferencing the Arc in each Vec
-        let by_type_map: HashMap<BudgetingType, Vec<&BudgetItem>> = self.by_type
+        let by_type_map: HashMap<BudgetingType, Vec<&BudgetItem>> = self
+            .by_type
             .iter()
             .map(|(k, v)| (*k, v.iter().map(|arc| arc.as_ref()).collect()))
             .collect();
         state.serialize_field("by_type", &by_type_map)?;
         state.serialize_field("items_and_types", &self.items_and_types)?;
-        
+
         state.end()
     }
 }
@@ -100,13 +100,12 @@ impl<'de> Deserialize<'de> for BudgetItemStore {
 
                 let items = items.ok_or_else(|| de::Error::missing_field("items"))?;
                 let by_type = by_type.ok_or_else(|| de::Error::missing_field("by_type"))?;
-                let items_and_types = items_and_types.ok_or_else(|| de::Error::missing_field("items_and_types"))?;
+                let items_and_types =
+                    items_and_types.ok_or_else(|| de::Error::missing_field("items_and_types"))?;
 
                 // Convert the deserialized data to the expected format with Arc
-                let items_with_arc: HashMap<Uuid, Arc<BudgetItem>> = items
-                    .into_iter()
-                    .map(|(k, v)| (k, Arc::new(v)))
-                    .collect();
+                let items_with_arc: HashMap<Uuid, Arc<BudgetItem>> =
+                    items.into_iter().map(|(k, v)| (k, Arc::new(v))).collect();
 
                 let by_type_with_arc: HashMap<BudgetingType, Vec<Arc<BudgetItem>>> = by_type
                     .into_iter()
@@ -163,24 +162,34 @@ impl BudgetItemStore {
             None
         }
     }
-    
+
     pub fn change_type(&mut self, id: &Uuid, budgeting_type: BudgetingType) {
         if let Some(item) = self.remove(*id) {
             self.insert(&item, budgeting_type);
         }
     }
-    
+
     pub fn type_for(&self, id: &Uuid) -> Option<&BudgetingType> {
         self.items_and_types.get(id)
     }
-    
+
     pub fn by_type(&self, budgeting_type: &BudgetingType) -> Option<Vec<&BudgetItem>> {
-        self.by_type.get(budgeting_type)
+        self.by_type
+            .get(budgeting_type)
             .map(|items| items.iter().map(|arc| arc.as_ref()).collect())
     }
-    
+
+    pub fn items_by_type(&self) -> Vec<(usize, BudgetingType, Vec<BudgetItem>)> {
+        BudgetingType::iter()
+            .enumerate()
+            .map(|(index, t)| (index, t, self.by_type(&t).unwrap_or_default().into_iter().cloned().collect()))
+            .collect::<Vec<_>>()
+    }
+
     pub fn get_mut(&mut self, id: &Uuid) -> Option<&mut BudgetItem> {
-        self.items.get_mut(id).and_then(|arc| Some(Arc::make_mut(arc)))
+        self.items
+            .get_mut(id)
+            .and_then(|arc| Some(Arc::make_mut(arc)))
     }
 
     pub fn get(&self, id: &Uuid) -> Option<&BudgetItem> {

@@ -7,10 +7,7 @@ use crate::budget_components::{Tabs, TabList, TabTrigger, TabContent};
 use crate::budget::BudgetingTypeCard;
 
 #[component]
-pub fn BudgetingTypeTabs(budget_id: Uuid, items_by_type: HashMap<BudgetingType, Vec<BudgetItem>>) -> Element {
-    let items_by_type = BudgetingType::iter().enumerate()
-        .map(|(index, t)| (index,t, items_by_type.get(&t).cloned().unwrap_or_default()))
-        .collect::<Vec<_>>();
+pub fn BudgetingTypeTabs(budget_id: Uuid, items_by_type: Vec<(usize,BudgetingType, Vec<BudgetItem>)>) -> Element {
     rsx! {
         Tabs {
             default_value: items_by_type.first().unwrap().1.to_string(),

@@ -1,4 +1,4 @@
-use crate::Input;
+use crate::{BudgetingTypeTabs, Input};
 use api::models::Budget;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
@@ -30,9 +30,12 @@ pub fn BudgetHero() -> Element {
                 div { class: "budget-hero-container",
                     // Header
                     div { class: "budget-header",
-                        h1 { class: "budget-title", {budget.name} }
+                        h1 { class: "budget-title", {budget.name.clone()} }
                     }
-                    div { class: "budget-hero-content",}
+                    div { class: "budget-hero-content",
+                        h1 { class: "header", "TABS" } 
+                        BudgetingTypeTabs { budget_id: budget.id, items_by_type: budget.items_by_type() }
+                    }
                 }
             }
         }
