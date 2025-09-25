@@ -1,5 +1,5 @@
 use crate::Input;
-use api::cqrs::budget::Budget;
+use api::models::budget::Budget;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use dioxus_primitives::label::Label;

@@ -5,7 +5,7 @@ use std::hash::{DefaultHasher, Hash, Hasher};
 use uuid::Uuid;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use crate::cqrs::money::Money;
+use crate::models::money::Money;
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct BankTransactionStore {

@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use uuid::Uuid;
-use crate::cqrs::budgeting_type::BudgetingType;
-use crate::cqrs::money::Money;
+use crate::models::budgeting_type::BudgetingType;
+use crate::models::money::Money;
 
 /// The store
 #[derive(Default, Debug, Clone)]

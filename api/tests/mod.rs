@@ -1,13 +1,13 @@
-use api::cqrs::budgeting_type::BudgetingType;
+use api::models::budgeting_type::BudgetingType;
 use api::cqrs::framework::Runtime;
-use api::cqrs::money::{Currency, Money};
+use api::models::money::{Currency, Money};
 use api::cqrs::runtime::JoyDbBudgetRuntime;
 use api::import::import_from_skandia_excel;
 use chrono::Utc;
 use std::collections::HashSet;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use uuid::Uuid;
-use api::cqrs::bank_transaction::BankTransaction;
+use api::models::bank_transaction::BankTransaction;
 
 #[cfg(test)]
 #[test]

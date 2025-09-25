@@ -3,14 +3,14 @@ use joydb::adapters::JsonAdapter;
 use joydb::Joydb;
 use std::path::Path;
 use chrono::{DateTime, Utc};
-use crate::cqrs::budget::{Budget, BudgetEvent};
+use crate::models::budget::{Budget, BudgetEvent};
 use crate::cqrs::framework::{Runtime, StoredEvent};
-use crate::cqrs::money::{Currency, Money};
+use crate::models::money::{Currency, Money};
 use crate::models::User;
 use joydb::Model;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use crate::cqrs::budgeting_type::BudgetingType;
+use crate::models::budgeting_type::BudgetingType;
 
 impl JoyDbBudgetRuntime {
     pub fn create_budget(

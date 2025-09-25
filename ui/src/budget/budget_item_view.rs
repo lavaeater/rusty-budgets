@@ -1,5 +1,5 @@
-use api::cqrs::budget_item::BudgetItem;
-use api::cqrs::budgeting_type::BudgetingType;
+use api::models::budget_item::BudgetItem;
+use api::models::budgeting_type::BudgetingType;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
 

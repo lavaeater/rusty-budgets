@@ -1,16 +1,21 @@
 use crate::cqrs::framework::DomainEvent;
-use crate::cqrs::domain_events::{BudgetCreated, ItemAdded, ItemFundsAdjusted, ItemFundsReallocated, TransactionAdded, TransactionConnected};
+use crate::events::item_funds_adjusted::ItemFundsAdjusted;
 use crate::cqrs::framework::Aggregate;
-use crate::cqrs::money::{Currency, Money};
+use crate::models::money::{Currency, Money};
 use crate::pub_events_enum;
 use chrono::{DateTime, Utc};
 use joydb::Model;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
-use crate::cqrs::bank_transaction::BankTransactionStore;
-use crate::cqrs::budget_item::{BudgetItem, BudgetItemStore};
-use crate::cqrs::budgeting_type::BudgetingType;
+use crate::events::budget_created::BudgetCreated;
+use crate::events::item_added::ItemAdded;
+use crate::events::item_funds_reallocated::ItemFundsReallocated;
+use crate::events::transaction_added::TransactionAdded;
+use crate::events::transaction_connected::TransactionConnected;
+use crate::models::bank_transaction::BankTransactionStore;
+use crate::models::budget_item::{BudgetItem, BudgetItemStore};
+use crate::models::budgeting_type::BudgetingType;
 
 pub_events_enum! {
     #[derive(Debug, Clone, Serialize, Deserialize)]
