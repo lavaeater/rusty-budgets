@@ -15,7 +15,7 @@ pub fn BudgetingTypeTabs(budget_id: Uuid, items_by_type: Vec<(usize,BudgetingTyp
             TabList {
                 for bt in BudgetingType::iter() {
                     TabTrigger { value: bt.to_string(), index: 0usize,
-                        h4 { {"bt"} }
+                        h2 { { bt.to_string() } }
                     }
                 }
             }

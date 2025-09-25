@@ -5,7 +5,7 @@ use crate::budget_components::{Collapsible, CollapsibleContent, CollapsibleTrigg
 
 use uuid::Uuid;
 use api::models::{BudgetItem, BudgetingType, Currency, Money};
-use crate::{BudgetItemView, Separator};
+use crate::{BudgetItemView, Button, Separator};
 
 #[component]
 pub fn BudgetingTypeCard(budget_id: Uuid, budgeting_type: BudgetingType, items: Vec<BudgetItem>) -> Element {
@@ -18,7 +18,6 @@ pub fn BudgetingTypeCard(budget_id: Uuid, budgeting_type: BudgetingType, items: 
     rsx! {
         h3 { {budgeting_type_name} }
         div { padding_bottom: "1rem",
-            p { padding: "0", {budgeting_type_name} }
             if show_new_item() {
                 div { id: "new_item",
                     label { "Ny post" }
@@ -55,7 +54,7 @@ pub fn BudgetingTypeCard(budget_id: Uuid, budgeting_type: BudgetingType, items: 
                     }
                 }
             } else {
-                button {
+                Button {
                     class: "button",
                     "data-style": "primary",
                     onclick: move |_| {

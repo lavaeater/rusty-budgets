@@ -33,7 +33,6 @@ pub fn BudgetHero() -> Element {
                         h1 { class: "budget-title", {budget.name.clone()} }
                     }
                     div { class: "budget-hero-content",
-                        h1 { class: "header", "TABS" }
                         BudgetingTypeTabs {
                             budget_id: budget.id,
                             items_by_type: budget.items_by_type(),
