@@ -4,3 +4,6 @@ pub mod domain_events;
 pub mod budget;
 pub mod money;
 pub mod runtime;
+pub mod budget_item;
+pub mod bank_transaction;
+pub mod budgeting_type;

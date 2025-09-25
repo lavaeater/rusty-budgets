@@ -7,20 +7,22 @@ pub mod cqrs;
 pub mod import;
 pub mod models;
 
-use crate::cqrs::budget::{Budget, BudgetGroup, BudgetItem, BudgetingType};
+use crate::cqrs::budget::Budget;
 use crate::cqrs::money::Money;
 use crate::models::*;
 #[cfg(feature = "server")]
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use uuid::Uuid;
+use crate::cqrs::budget_item::BudgetItem;
+use crate::cqrs::budgeting_type::BudgetingType;
 
 #[cfg(feature = "server")]
 const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 
 #[cfg(feature = "server")]
 pub mod db {
-    use crate::cqrs::budget::{Budget, BudgetingType};
+    use crate::cqrs::budget::Budget;
     use crate::cqrs::framework::Runtime;
     use crate::cqrs::money::{Currency, Money};
     use crate::cqrs::runtime::{Db, JoyDbBudgetRuntime, UserBudgets};
@@ -31,6 +33,7 @@ pub mod db {
     use joydb::JoydbError;
     use once_cell::sync::Lazy;
     use uuid::Uuid;
+    use crate::cqrs::budgeting_type::BudgetingType;
 
     pub static CLIENT: Lazy<JoyDbBudgetRuntime> = Lazy::new(|| {
         tracing::info!("Init DB Client");
@@ -221,7 +224,6 @@ pub async fn create_budget(
 #[server]
 pub async fn add_item(
     budget_id: Uuid,
-    group_id: Uuid,
     name: String,
     item_type: BudgetingType,
     budgeted_amount: Money,
@@ -229,14 +231,13 @@ pub async fn add_item(
     let user = db::get_default_user(None).expect("Could not get default user");
     match db::add_item(
         &budget_id,
-        &group_id,
         &user.id,
         &name,
         &item_type,
         &budgeted_amount,
     ) {
         Ok(b) => {
-            let g = b.budget_groups.get(&group_id).expect("Could not get group");
+            let items = b.budget_items.type_for().get(&group_id).expect("Could not get group");
             Ok(g.items.clone())
         }
         Err(e) => {

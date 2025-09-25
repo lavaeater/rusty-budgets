@@ -1,4 +1,4 @@
-use api::cqrs::budget::BudgetItem;
+use api::cqrs::budget_item::BudgetItem;
 use dioxus::prelude::*;
 use dioxus::logger::tracing;
 #[component]

@@ -1,5 +1,5 @@
 use crate::budget_item_view::BudgetItemView;
-use api::cqrs::budget::{BudgetGroup, BudgetingType};
+use api::cqrs::budget::BudgetGroup;
 use api::cqrs::money::{Currency, Money};
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
@@ -7,6 +7,8 @@ use dioxus_primitives::select::*;
 use crate::budget_components::collapsible::*;
 
 use uuid::Uuid;
+use api::cqrs::budgeting_type::BudgetingType;
+
 #[component]
 pub fn BudgetGroupView(budget_id: Uuid, group: BudgetGroup, index: usize) -> Element {
     let mut budget_items = use_signal(|| group.items.clone());

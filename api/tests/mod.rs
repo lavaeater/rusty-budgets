@@ -1,4 +1,4 @@
-use api::cqrs::budget::{BankTransaction, BudgetingType};
+use api::cqrs::budgeting_type::BudgetingType;
 use api::cqrs::framework::Runtime;
 use api::cqrs::money::{Currency, Money};
 use api::cqrs::runtime::JoyDbBudgetRuntime;
@@ -7,6 +7,7 @@ use chrono::Utc;
 use std::collections::HashSet;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use uuid::Uuid;
+use api::cqrs::bank_transaction::BankTransaction;
 
 #[cfg(test)]
 #[test]

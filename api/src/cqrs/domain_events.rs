@@ -1,6 +1,4 @@
-use crate::cqrs::budget::{
-    get_transaction_hash, BankTransaction, Budget, BudgetGroup, BudgetItem, BudgetingType,
-};
+use crate::cqrs::budget::Budget;
 use crate::cqrs::framework::DomainEvent;
 use crate::cqrs::framework::{Aggregate, CommandError};
 use crate::cqrs::money::{Currency, Money};
@@ -10,6 +8,9 @@ use cqrs_macros::DomainEvent;
 use serde::{Deserialize, Serialize};
 use std::hash::Hash;
 use uuid::Uuid;
+use crate::cqrs::bank_transaction::{get_transaction_hash, BankTransaction};
+use crate::cqrs::budget_item::BudgetItem;
+use crate::cqrs::budgeting_type::BudgetingType;
 
 #[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]
 #[domain_event(aggregate = "Budget")]
