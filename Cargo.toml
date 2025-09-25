@@ -20,6 +20,8 @@ serde = { version = "1.0.219", features = ["derive"] }
 serde_json = { version = "1.0.142" }
 anyhow = "1.0.98"
 joydb = { version = "0.1.0", features = ["json"] }
+strum = { version = "0.27.2", features = ["derive"] }
+
 
 # workspace
 ui = { path = "ui" }

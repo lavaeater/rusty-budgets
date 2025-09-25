@@ -4,9 +4,9 @@ use cqrs_macros::DomainEvent;
 use uuid::Uuid;
 use chrono::{DateTime, Utc};
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
-use crate::models::bank_transaction::{get_transaction_hash, BankTransaction};
-use crate::models::budget::Budget;
-use crate::models::money::Money;
+use crate::models::{get_transaction_hash, BankTransaction};
+use crate::models::Budget;
+use crate::models::Money;
 
 #[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]
 #[domain_event(aggregate = "Budget")]

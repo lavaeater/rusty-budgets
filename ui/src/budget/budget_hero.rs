@@ -1,5 +1,5 @@
 use crate::Input;
-use api::models::budget::Budget;
+use api::models::Budget;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use dioxus_primitives::label::Label;
@@ -32,6 +32,7 @@ pub fn BudgetHero() -> Element {
                     div { class: "budget-header",
                         h1 { class: "budget-title", {budget.name} }
                     }
+                    div { class: "budget-hero-content",}
                 }
             }
         }

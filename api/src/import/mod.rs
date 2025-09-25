@@ -1,4 +1,4 @@
-use crate::models::money::{Currency, Money};
+use crate::models::{Currency, Money};
 use crate::cqrs::runtime::JoyDbBudgetRuntime;
 use calamine::{open_workbook, DataType, Reader, Xlsx};
 use chrono::{DateTime, NaiveDate, Utc};

@@ -8,24 +8,20 @@ pub mod import;
 pub mod models;
 pub mod events;
 
-use models::budget::Budget;
-use models::money::Money;
+use models::*;
 use crate::models::*;
 #[cfg(feature = "server")]
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use uuid::Uuid;
-use models::budget_item::BudgetItem;
-use models::budgeting_type::BudgetingType;
 
 #[cfg(feature = "server")]
 const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 
 #[cfg(feature = "server")]
 pub mod db {
-    use crate::models::budget::Budget;
+    use crate::models::*;
     use crate::cqrs::framework::Runtime;
-    use crate::models::money::{Currency, Money};
     use crate::cqrs::runtime::{Db, JoyDbBudgetRuntime, UserBudgets};
     use crate::models::*;
     use crate::DEFAULT_USER_EMAIL;
@@ -34,7 +30,6 @@ pub mod db {
     use joydb::JoydbError;
     use once_cell::sync::Lazy;
     use uuid::Uuid;
-    use crate::models::budgeting_type::BudgetingType;
 
     pub static CLIENT: Lazy<JoyDbBudgetRuntime> = Lazy::new(|| {
         tracing::info!("Init DB Client");

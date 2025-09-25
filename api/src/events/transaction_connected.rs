@@ -3,7 +3,7 @@ use uuid::Uuid;
 use serde::{Deserialize, Serialize};
 use cqrs_macros::DomainEvent;
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
-use crate::models::budget::Budget;
+use crate::models::Budget;
 
 // TransactionConnected,
 #[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]

@@ -1,8 +1,9 @@
 use core::fmt;
 use core::fmt::{Display, Formatter};
 use serde::{Deserialize, Serialize};
+use strum_macros::EnumIter;
 
-#[derive(Default,Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Default,Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, EnumIter)]
 pub enum BudgetingType {
     #[default]
     Income,

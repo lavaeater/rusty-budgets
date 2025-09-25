@@ -2,9 +2,9 @@ use serde::{Deserialize, Serialize};
 use cqrs_macros::DomainEvent;
 use uuid::Uuid;
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
-use crate::models::budget::Budget;
-use crate::models::budgeting_type::BudgetingType;
-use crate::models::money::Money;
+use crate::models::Budget;
+use crate::models::BudgetingType;
+use crate::models::Money;
 
 // FundsReallocated
 #[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]

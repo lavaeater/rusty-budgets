@@ -2,8 +2,8 @@ use uuid::Uuid;
 use serde::{Deserialize, Serialize};
 use cqrs_macros::DomainEvent;
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
-use crate::models::budget::Budget;
-use crate::models::money::Currency;
+use crate::models::Budget;
+use crate::models::Currency;
 
 #[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]
 #[domain_event(aggregate = "Budget")]
