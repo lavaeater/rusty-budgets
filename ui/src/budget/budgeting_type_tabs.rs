@@ -12,10 +12,11 @@ pub fn BudgetingTypeTabs(budget_id: Uuid, items_by_type: Vec<(usize,BudgetingTyp
         Tabs {
             default_value: items_by_type.first().unwrap().1.to_string(),
             horizontal: true,
-            max_width: "16rem",
             TabList {
                 for bt in BudgetingType::iter() {
-                    TabTrigger { value: bt.to_string(), index: 0usize, "{bt}" }
+                    TabTrigger { value: bt.to_string(), index: 0usize,
+                        h4 { {"bt"} }
+                    }
                 }
             }
             for (index , budgeting_type , items) in items_by_type {
