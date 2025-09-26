@@ -65,8 +65,8 @@ pub fn BudgetingTypeCard(budget_id: Uuid, budgeting_type: BudgetingType, items: 
                 }
             }
         }
-        for (index , item) in budget_items().iter().enumerate() {
-            BudgetItemView { item: item.clone(), item_type: budgeting_type, index }
+        for item in budget_items() {
+            BudgetItemView { item: item.clone(), item_type: budgeting_type }
             Separator {
                 style: "margin: 15px 0; width: 50%;",
                 horizontal: true,
