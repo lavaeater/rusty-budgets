@@ -2,6 +2,7 @@ use std::cmp::Ordering;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::hash::Hash;
+use std::iter::Sum;
 use std::ops::{Add, AddAssign, Mul, Neg, Sub, SubAssign};
 use serde::{Deserialize, Serialize};
 
@@ -117,6 +118,12 @@ impl SubAssign for Money {
     fn sub_assign(&mut self, rhs: Money) {
         assert_eq!(self.currency, rhs.currency, "Currency mismatch");
         self.cents -= rhs.cents;
+    }
+}
+
+impl Sum for Money {
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(Money::default(), |a, b| a + b)
     }
 }
 

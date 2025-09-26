@@ -63,6 +63,7 @@ dependencies = [
  "serde_json",
  "strum",
  "strum_macros 0.26.4",
+ "sum",
  "tokio",
  "uuid",
 ]
@@ -4718,6 +4719,12 @@ name = "subtle"
 version = "2.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
+
+[[package]]
+name = "sum"
+version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1f18991ca3310bc0cd28b47049690c6c35d9f43c9753f803c27f95eee9e9d85"
 
 [[package]]
 name = "syn"

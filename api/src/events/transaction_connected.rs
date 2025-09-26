@@ -52,7 +52,7 @@ impl TransactionConnectedHandler for Budget {
                 });
 
             let previous_item = self.budget_items.get_mut(&previous_budget_item_id).unwrap();
-            previous_item.actual_spent -= tx.amount;
+            previous_item.spent_amount -= tx.amount;
         }
         tx.budget_item_id = Some(event.item_id);
         // Update group
@@ -67,7 +67,7 @@ impl TransactionConnectedHandler for Budget {
             .or_insert(tx.amount);
         // Update item
         let item = self.budget_items.get_mut(&event.item_id).unwrap();
-        item.actual_spent += tx.amount;
+        item.spent_amount += tx.amount;
         event.tx_id
     }
 

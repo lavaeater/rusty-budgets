@@ -93,6 +93,16 @@ impl Budget {
     pub fn items_by_type(&self) -> Vec<(usize, BudgetingType, Vec<BudgetItem>)> {
         self.budget_items.items_by_type()
     }
+    
+    pub fn budgeted_for_type(&self, budgeting_type: &BudgetingType) -> Money {
+        self.budget_items.by_type(budgeting_type).unwrap_or_default().iter().map(|item| item.budgeted_amount).sum()
+    }
+    
+    pub fn spent_for_type(&self, budgeting_type: &BudgetingType) -> Money {
+        self.budget_items.by_type(budgeting_type).unwrap_or_default().iter().map(|item| item.spent_amount).sum()
+    }
+    
+    
 }
 
 // --- Aggregate implementation ---
