@@ -64,7 +64,7 @@ impl Rule {
                 let base_sum = store.get(base).map_or(Money::default(), |items| items.iter().map(|i| kind.pick(i)).sum::<Money>());
                 let subtract_sum: Money = subtracts
                     .iter()
-                    .map(|t| store.get(t).map_or(0, |items| items.iter().map(|i| kind.pick(i)).sum::<Money>()))
+                    .map(|t| store.get(t).map_or(Money::default(), |items| items.iter().map(|i| kind.pick(i)).sum::<Money>()))
                     .sum();
                 base_sum - subtract_sum
             }
@@ -78,12 +78,12 @@ fn main() {
     use Rule::*;
     let mut store = BudgetItemStore::default();
     store.insert(&BudgetItem::new(Uuid::new_v4(), "Lön", Money::new_dollars(5000, Currency::SEK),None, None), Income);
-    store.insert(Expense, vec![BudgetItem { amount: 3000 }]);
-    store.insert(Savings, vec![BudgetItem { amount: 1000 }]);
+    store.insert(&BudgetItem::new(Uuid::new_v4(), "Lön", Money::new_dollars(3000, Currency::SEK),None, None), Expense);
+    store.insert(&BudgetItem::new(Uuid::new_v4(), "Lön", Money::new_dollars(1000, Currency::SEK),None, None), Savings);
 
     let income_rule = Sum(vec![Income]);
     let remaining_rule = Difference(Income, vec![Expense, Savings]);
 
-    println!("Income = {}", income_rule.evaluate(&store));
-    println!("Remaining = {}", remaining_rule.evaluate(&store));
+    println!("Income = {}", income_rule.evaluate(&store.hash_by_type(), ValueKind::Budgeted));
+    println!("Remaining = {}", remaining_rule.evaluate(&store.hash_by_type(), ValueKind::Spent));
 }

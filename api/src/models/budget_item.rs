@@ -182,8 +182,33 @@ impl BudgetItemStore {
     pub fn items_by_type(&self) -> Vec<(usize, BudgetingType, Vec<BudgetItem>)> {
         BudgetingType::iter()
             .enumerate()
-            .map(|(index, t)| (index, t, self.by_type(&t).unwrap_or_default().into_iter().cloned().collect()))
+            .map(|(index, t)| {
+                (
+                    index,
+                    t,
+                    self.by_type(&t)
+                        .unwrap_or_default()
+                        .into_iter()
+                        .cloned()
+                        .collect(),
+                )
+            })
             .collect::<Vec<_>>()
+    }
+
+    pub fn hash_by_type(&self) -> HashMap<BudgetingType, Vec<BudgetItem>> {
+        BudgetingType::iter()
+            .map(|(t)| {
+                (
+                    t,
+                    self.by_type(&t)
+                        .unwrap_or_default()
+                        .into_iter()
+                        .cloned()
+                        .collect::<Vec<_>>(),
+                )
+            })
+            .collect::<HashMap<_, _>>()
     }
 
     pub fn get_mut(&mut self, id: &Uuid) -> Option<&mut BudgetItem> {
