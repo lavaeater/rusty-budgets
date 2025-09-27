@@ -198,7 +198,7 @@ impl BudgetItemStore {
 
     pub fn hash_by_type(&self) -> HashMap<BudgetingType, Vec<BudgetItem>> {
         BudgetingType::iter()
-            .map(|(t)| {
+            .map(|t| {
                 (
                     t,
                     self.by_type(&t)
@@ -213,12 +213,11 @@ impl BudgetItemStore {
 
     pub fn get_mut(&mut self, id: &Uuid) -> Option<&mut BudgetItem> {
         self.items
-            .get_mut(id)
-            .and_then(|arc| Some(Arc::make_mut(arc)))
+            .get_mut(id).map(Arc::make_mut)
     }
 
     pub fn get(&self, id: &Uuid) -> Option<&BudgetItem> {
-        self.items.get(id).and_then(|arc| Some(arc.as_ref()))
+        self.items.get(id).map(|arc| arc.as_ref())
     }
 
     pub fn contains(&self, id: &Uuid) -> bool {

@@ -102,7 +102,9 @@ impl Budget {
         self.budget_items.by_type(budgeting_type).unwrap_or_default().iter().map(|item| item.spent_amount).sum()
     }
     
-    
+    pub fn recalculate(&mut self) {
+        
+    }
 }
 
 // --- Aggregate implementation ---
