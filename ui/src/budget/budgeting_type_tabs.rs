@@ -6,6 +6,8 @@ use strum::IntoEnumIterator;
 use crate::budget_components::{Tabs, TabList, TabTrigger, TabContent};
 use crate::budget::BudgetingTypeCard;
 
+
+
 #[component]
 pub fn BudgetingTypeTabs(budget_id: Uuid, items_by_type: Vec<(usize,BudgetingType, Vec<BudgetItem>)>) -> Element {
     rsx! {
