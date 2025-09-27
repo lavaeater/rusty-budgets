@@ -16,6 +16,7 @@ use crate::events::transaction_connected::TransactionConnected;
 use crate::models::bank_transaction::BankTransactionStore;
 use crate::models::budget_item::{BudgetItem, BudgetItemStore};
 use crate::models::budgeting_type::BudgetingType;
+use crate::models::BudgetingTypeOverview;
 
 pub_events_enum! {
     #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -45,7 +46,8 @@ pub struct Budget {
     pub version: u64,
     pub currency: Currency,
     pub budgeted_by_type: HashMap<BudgetingType, Money>, 
-    pub spent_by_type: HashMap<BudgetingType, Money>, 
+    pub actual_by_type: HashMap<BudgetingType, Money>,
+    pub budgeting_overview: HashMap<BudgetingType, BudgetingTypeOverview>,
 }
 
 impl Default for Budget {
@@ -62,12 +64,17 @@ impl Default for Budget {
             last_event: 0,
             version: 0,
             currency: Default::default(),
+            budgeting_overview: HashMap::from([
+                (BudgetingType::Expense, BudgetingTypeOverview::default()),
+                (BudgetingType::Savings, BudgetingTypeOverview::default()),
+                (BudgetingType::Income, BudgetingTypeOverview::default()),
+            ]),
             budgeted_by_type: HashMap::from([
                 (BudgetingType::Expense, Money::default()),
                 (BudgetingType::Savings, Money::default()),
                 (BudgetingType::Income, Money::default()),
             ]),
-            spent_by_type:HashMap::from([
+            actual_by_type:HashMap::from([
                 (BudgetingType::Expense, Money::default()),
                 (BudgetingType::Savings, Money::default()),
                 (BudgetingType::Income, Money::default()),
@@ -99,11 +106,16 @@ impl Budget {
     }
     
     pub fn spent_for_type(&self, budgeting_type: &BudgetingType) -> Money {
-        self.budget_items.by_type(budgeting_type).unwrap_or_default().iter().map(|item| item.spent_amount).sum()
+        self.budget_items.by_type(budgeting_type).unwrap_or_default().iter().map(|item| item.actual_amount).sum()
     }
     
     pub fn recalculate(&mut self) {
-        
+        self.budgeted_by_type
+            .entry(event.item_type)
+            .and_modify(|v| {
+                *v += event.budgeted_amount;
+            })
+            .or_insert(event.budgeted_amount);
     }
 }
 

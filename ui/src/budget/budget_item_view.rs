@@ -17,7 +17,7 @@ pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType) -> Element {
 
             // Right side: actual / budgeted
             div { class: "text-gray-700",
-                "{item.spent_amount.to_string()} / {item.budgeted_amount.to_string()}"
+                "{item.actual_amount.to_string()} / {item.budgeted_amount.to_string()}"
             }
         }
     }

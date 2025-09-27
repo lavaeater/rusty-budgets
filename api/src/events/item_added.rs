@@ -1,11 +1,11 @@
-use serde::{Deserialize, Serialize};
-use cqrs_macros::DomainEvent;
-use uuid::Uuid;
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
 use crate::models::Budget;
 use crate::models::BudgetItem;
 use crate::models::BudgetingType;
 use crate::models::Money;
+use cqrs_macros::DomainEvent;
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]
 #[domain_event(aggregate = "Budget")]
@@ -29,13 +29,7 @@ impl ItemAddedHandler for Budget {
         );
         let new_item_id = new_item.id;
         self.budget_items.insert(&new_item, event.item_type);
-        self.budgeted_by_type
-            .entry(event.item_type)
-            .and_modify(|v| {
-                *v += event.budgeted_amount;
-            })
-            .or_insert(event.budgeted_amount);
-
+        self.recalculate();
         new_item_id
     }
 

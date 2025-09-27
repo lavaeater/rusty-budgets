@@ -14,6 +14,13 @@ pub enum BudgetingType {
     Savings,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, Copy, Default, Hash)]
+pub struct BudgetingTypeOverview {
+    pub budgeted_amount: Money,
+    pub actual_amount: Money,
+    pub remaining_budget: Money
+}
+
 impl Display for BudgetingType {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(
@@ -42,7 +49,7 @@ impl ValueKind {
     fn pick(&self, item: &BudgetItem) -> Money {
         match self {
             ValueKind::Budgeted => item.budgeted_amount,
-            ValueKind::Spent => item.spent_amount,
+            ValueKind::Spent => item.actual_amount,
         }
     }
 }
@@ -71,8 +78,6 @@ impl Rule {
         }
     }
 }
-
-
 
 #[cfg(test)]
 #[test]

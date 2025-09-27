@@ -131,7 +131,7 @@ pub fn connect_bank_transaction() -> anyhow::Result<()> {
         &expected_money
     );
     assert_eq!(
-        res.spent_by_type.get(&BudgetingType::Expense).unwrap(),
+        res.actual_by_type.get(&BudgetingType::Expense).unwrap(),
         &expected_money
     );
 
@@ -260,7 +260,7 @@ pub fn reconnect_bank_transaction() -> anyhow::Result<()> {
         &expected_money
     );
     assert_eq!(
-        res.spent_by_type
+        res.actual_by_type
             .get(&BudgetingType::Expense)
             .expect("Expect the spent amount for Expenses"),
         &expected_money
@@ -272,7 +272,7 @@ pub fn reconnect_bank_transaction() -> anyhow::Result<()> {
         &expected_money
     );
     assert_eq!(
-        res.spent_by_type
+        res.actual_by_type
             .get(&BudgetingType::Savings)
             .expect("Expect the default amount for Savings"),
         &Money::default()
@@ -287,7 +287,7 @@ pub fn reconnect_bank_transaction() -> anyhow::Result<()> {
         &expected_money
     );
     assert_eq!(
-        res.spent_by_type
+        res.actual_by_type
             .get(&BudgetingType::Expense)
             .expect("Expect the default spent amount for Expenses"),
         &Money::default()
@@ -299,7 +299,7 @@ pub fn reconnect_bank_transaction() -> anyhow::Result<()> {
         &expected_money
     );
     assert_eq!(
-        res.spent_by_type
+        res.actual_by_type
             .get(&BudgetingType::Savings)
             .expect("Expect the correct spent amount for Savings"),
         &expected_money

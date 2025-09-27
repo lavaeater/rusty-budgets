@@ -45,21 +45,21 @@ impl TransactionConnectedHandler for Budget {
             println!("Previous type id: {}", previous_budgeting_type);
             
             //Update budget total
-            self.spent_by_type
+            self.actual_by_type
                 .entry(*previous_budgeting_type)
                 .and_modify(|v| {
                     *v -= tx.amount;
                 });
 
             let previous_item = self.budget_items.get_mut(&previous_budget_item_id).unwrap();
-            previous_item.spent_amount -= tx.amount;
+            previous_item.actual_amount -= tx.amount;
         }
         tx.budget_item_id = Some(event.item_id);
         // Update group
         let budgeting_type = self.budget_items.type_for(&event.item_id).unwrap();
        
         //Update budget total
-        self.spent_by_type
+        self.actual_by_type
             .entry(*budgeting_type)
             .and_modify(|v| {
                 *v += tx.amount;
@@ -67,7 +67,7 @@ impl TransactionConnectedHandler for Budget {
             .or_insert(tx.amount);
         // Update item
         let item = self.budget_items.get_mut(&event.item_id).unwrap();
-        item.spent_amount += tx.amount;
+        item.actual_amount += tx.amount;
         event.tx_id
     }
 

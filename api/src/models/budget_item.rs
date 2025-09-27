@@ -230,7 +230,7 @@ pub struct BudgetItem {
     pub id: Uuid,
     pub name: String,
     pub budgeted_amount: Money,
-    pub spent_amount: Money,
+    pub actual_amount: Money,
     pub notes: Option<String>,
     pub tags: Vec<String>,
 }
@@ -247,7 +247,7 @@ impl BudgetItem {
             id,
             name: name.to_string(),
             budgeted_amount,
-            spent_amount: Money::new_dollars(0, budgeted_amount.currency()),
+            actual_amount: Money::new_dollars(0, budgeted_amount.currency()),
             notes,
             tags: tags.unwrap_or_default(),
         }
