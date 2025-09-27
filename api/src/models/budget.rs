@@ -16,7 +16,9 @@ use crate::events::transaction_connected::TransactionConnected;
 use crate::models::bank_transaction::BankTransactionStore;
 use crate::models::budget_item::{BudgetItem, BudgetItemStore};
 use crate::models::budgeting_type::BudgetingType;
-use crate::models::BudgetingTypeOverview;
+use crate::models::BudgetingType::{Expense, Income, Savings};
+use crate::models::{BudgetingTypeOverview, Rule};
+use crate::models::Rule::Sum;
 
 pub_events_enum! {
     #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -110,14 +112,20 @@ impl Budget {
     }
     
     pub fn recalculate(&mut self) {
-        self.budgeted_by_type
-            .entry(event.item_type)
-            .and_modify(|v| {
-                *v += event.budgeted_amount;
-            })
-            .or_insert(event.budgeted_amount);
+        //1. How much do we have left to budget (i.e. Income - Expenses - Savings)
+        //2. How much do have )
+        // self.budgeted_by_type
+        //     .entry(event.item_type)
+        //     .and_modify(|v| {
+        //         *v += event.budgeted_amount;
+        //     })
+        //     .or_insert(event.budgeted_amount);
     }
 }
+
+const INCOME_RULE:Rule = Sum(vec![Income]);
+const remaining_rule: Rule = Difference(Income, vec![Expense, Savings]);
+
 
 // --- Aggregate implementation ---
 impl Aggregate for Budget {
