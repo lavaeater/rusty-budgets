@@ -1,12 +1,12 @@
+use crate::cqrs::framework::{Runtime, StoredEvent};
+use crate::models::*;
+use chrono::{DateTime, Utc};
 use dioxus::logger::tracing;
 use joydb::adapters::JsonAdapter;
 use joydb::Joydb;
-use std::path::Path;
-use chrono::{DateTime, Utc};
-use crate::models::*;
-use crate::cqrs::framework::{Runtime, StoredEvent};
 use joydb::Model;
 use serde::{Deserialize, Serialize};
+use std::path::Path;
 use uuid::Uuid;
 
 impl JoyDbBudgetRuntime {
@@ -35,6 +35,32 @@ impl JoyDbBudgetRuntime {
         })
     }
 
+    pub fn add_and_connect_tx(
+        &self,
+        budget_id: Uuid,
+        bank_account_number: &str,
+        amount: Money,
+        balance: Money,
+        description: &str,
+        date: DateTime<Utc>,
+        item_id: Uuid,
+        user_id: Uuid,
+    ) -> anyhow::Result<(Budget, Uuid)> {
+        if let Ok((_, tx_id)) = self.add_transaction(
+            budget_id,
+            bank_account_number,
+            amount,
+            balance,
+            description,
+            date,
+            user_id,
+        ) {
+            self.connect_transaction(budget_id, tx_id, item_id, user_id)
+        } else {
+            Err(anyhow::anyhow!("Failed to add transaction"))
+        }
+    }
+
     pub fn add_transaction(
         &self,
         budget_id: Uuid,
@@ -55,20 +81,39 @@ impl JoyDbBudgetRuntime {
             )
         })
     }
-    
-    pub fn connect_transaction(&self, budget_id: Uuid,tx_id: Uuid, item_id: Uuid, user_id: Uuid) -> anyhow::Result<(Budget, Uuid)> {
+
+    pub fn connect_transaction(
+        &self,
+        budget_id: Uuid,
+        tx_id: Uuid,
+        item_id: Uuid,
+        user_id: Uuid,
+    ) -> anyhow::Result<(Budget, Uuid)> {
         self.cmd(&user_id, &budget_id, |budget| {
             budget.connect_transaction(tx_id, item_id)
         })
     }
-    
-    pub fn reallocate_item_funds(&self, budget_id: Uuid, from_item_id: Uuid, to_item_id: Uuid, amount: Money, user_id: Uuid) -> anyhow::Result<(Budget, Uuid)> {
+
+    pub fn reallocate_item_funds(
+        &self,
+        budget_id: Uuid,
+        from_item_id: Uuid,
+        to_item_id: Uuid,
+        amount: Money,
+        user_id: Uuid,
+    ) -> anyhow::Result<(Budget, Uuid)> {
         self.cmd(&user_id, &budget_id, |budget| {
             budget.reallocate_item_funds(from_item_id, to_item_id, amount)
         })
     }
-    
-    pub fn adjust_item_funds(&self, budget_id: Uuid, item_id: Uuid, amount: Money, user_id: Uuid) -> anyhow::Result<(Budget, Uuid)> {
+
+    pub fn adjust_item_funds(
+        &self,
+        budget_id: Uuid,
+        item_id: Uuid,
+        amount: Money,
+        user_id: Uuid,
+    ) -> anyhow::Result<(Budget, Uuid)> {
         self.cmd(&user_id, &budget_id, |budget| {
             budget.adjust_item_funds(item_id, amount)
         })

@@ -18,8 +18,7 @@ pub struct ItemFundsReallocated {
 
 impl ItemFundsReallocatedHandler for Budget {
     fn apply_reallocate_item_funds(&mut self, event: &ItemFundsReallocated) -> Uuid {
-        let from_item = self.get_item_mut(&event.from_item_id).unwrap();
-        from_item.budgeted_amount -= event.amount;
+        self.budget_items.add_budgeted_amount(&event.from_item_id, -event.amount);
         
         let from_type = self.budget_items.type_for(&event.from_item_id).unwrap();
         self.budgeted_by_type
@@ -29,16 +28,15 @@ impl ItemFundsReallocatedHandler for Budget {
             }).or_insert(-event.amount);
 
         
-        let to_item = self.get_item_mut(&event.to_item_id).unwrap();
-        to_item.budgeted_amount += event.amount;
-
+        self.budget_items.add_budgeted_amount(&event.to_item_id, event.amount);
+        
         let to_type = self.budget_items.type_for(&event.to_item_id).unwrap();
         self.budgeted_by_type
             .entry(*to_type)
             .and_modify(|v| {
                 *v += event.amount;
             }).or_insert(event.amount);
-        
+        self.recalc_overview();
         event.from_item_id
     }
 

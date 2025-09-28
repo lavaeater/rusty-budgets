@@ -31,6 +31,16 @@ pub struct Money {
     currency: Currency,
 }
 
+impl Money {
+    pub fn multiply(&self, rhs: i64) -> Money {
+        Money::new_cents(self.cents * rhs, self.currency)
+    }
+    
+    pub fn divide(&self, rhs: i64) -> Money {
+        Money::new_cents(self.cents / rhs, self.currency)
+    }
+}
+
 impl Neg for Money {
     type Output = Money;
     fn neg(self) -> Self::Output {

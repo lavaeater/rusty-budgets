@@ -149,22 +149,24 @@ impl BudgetItemStore {
         }
     }
 
-    pub fn remove(&mut self, id: Uuid) -> Option<BudgetItem> {
+    pub fn remove(&mut self, id: Uuid) -> Option<(BudgetItem, BudgetingType)> {
         if self.items.contains_key(&id) {
             let arc = self.items.remove(&id).unwrap();
             if let Some(item_type) = self.items_and_types.remove(&id) {
                 self.by_type.entry(item_type).and_modify(|v| {
                     v.retain(|x| x.id != id);
                 });
+                Some((Arc::try_unwrap(arc).unwrap(), item_type))
+            } else {
+                None
             }
-            Some(Arc::try_unwrap(arc).unwrap())
         } else {
             None
         }
     }
 
     pub fn change_type(&mut self, id: &Uuid, budgeting_type: BudgetingType) {
-        if let Some(item) = self.remove(*id) {
+        if let Some((item, _old_type)) = self.remove(*id) {
             self.insert(&item, budgeting_type);
         }
     }
@@ -210,9 +212,55 @@ impl BudgetItemStore {
             .collect::<HashMap<_, _>>()
     }
 
-    pub fn get_mut(&mut self, id: &Uuid) -> Option<&mut BudgetItem> {
-        self.items
-            .get_mut(id).map(Arc::make_mut)
+    pub fn add_actual_amount(&mut self, id: &Uuid, amount: Money) {
+        if let Some(item) = self.items.get(id) {
+            self.modify_item(
+                id,
+                None,
+                None,
+                Some(item.actual_amount + amount),
+                None,
+                None,
+            );
+        }
+    }
+
+    pub fn add_budgeted_amount(&mut self, id: &Uuid, amount: Money) {
+        if let Some(item) = self.items.get(id) {
+            self.modify_item(
+                id,
+                None,
+                Some(item.budgeted_amount + amount),
+                None,
+                None,
+                None,
+            );
+        }
+    }
+
+    pub fn modify_item(
+        &mut self,
+        id: &Uuid,
+        name: Option<String>,
+        budgeted_amount: Option<Money>,
+        actual_amount: Option<Money>,
+        notes: Option<String>,
+        tags: Option<Vec<String>>,
+    ) {
+        if let Some(old_item) = self.items.get(&id) {
+            let new_item = Arc::new(BudgetItem {
+                id: *id,
+                name: name.unwrap_or(old_item.name.clone()),
+                budgeted_amount: budgeted_amount.unwrap_or(old_item.budgeted_amount),
+                actual_amount: actual_amount.unwrap_or(old_item.actual_amount),
+                notes: notes,
+                tags: tags.unwrap_or(old_item.tags.clone()),
+            });
+            if let Some((_old_item, item_type)) = self.remove(*id) {
+                self.insert(&new_item, item_type);
+                
+            }
+        }
     }
 
     pub fn get(&self, id: &Uuid) -> Option<&BudgetItem> {

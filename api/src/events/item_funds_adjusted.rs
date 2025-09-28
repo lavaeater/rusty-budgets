@@ -15,13 +15,13 @@ pub struct ItemFundsAdjusted {
 
 impl ItemFundsAdjustedHandler for Budget {
     fn apply_adjust_item_funds(&mut self, event: &ItemFundsAdjusted) -> Uuid {
-        let item = self.get_item_mut(&event.item_id).unwrap();
-        item.budgeted_amount += event.amount;
+        self.budget_items.add_budgeted_amount(&event.item_id, event.amount);
         let item_type = self.budget_items.type_for(&event.item_id).unwrap();
         self.budgeted_by_type.entry(*item_type)
             .and_modify(|v|
                 {*v += event.amount})
             .or_insert(event.amount);
+        self.recalc_overview();
         event.item_id
     }
 

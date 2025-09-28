@@ -1,9 +1,9 @@
-use core::fmt::Display;
-use uuid::Uuid;
-use serde::{Deserialize, Serialize};
-use cqrs_macros::DomainEvent;
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
 use crate::models::Budget;
+use core::fmt::Display;
+use cqrs_macros::DomainEvent;
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 // TransactionConnected,
 #[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]
@@ -40,10 +40,11 @@ impl TransactionConnectedHandler for Budget {
             let previous_budget_item_id = tx.budget_item_id.unwrap();
             println!("Previous budget item id: {}", previous_budget_item_id);
             let previous_budgeting_type = self
-                .budget_items.type_for(&previous_budget_item_id)
+                .budget_items
+                .type_for(&previous_budget_item_id)
                 .unwrap();
             println!("Previous type id: {}", previous_budgeting_type);
-            
+
             //Update budget total
             self.actual_by_type
                 .entry(*previous_budgeting_type)
@@ -51,13 +52,13 @@ impl TransactionConnectedHandler for Budget {
                     *v -= tx.amount;
                 });
 
-            let previous_item = self.budget_items.get_mut(&previous_budget_item_id).unwrap();
-            previous_item.actual_amount -= tx.amount;
+            self.budget_items.add_actual_amount(&previous_budget_item_id, -tx.amount);
         }
         tx.budget_item_id = Some(event.item_id);
         // Update group
-        let budgeting_type = self.budget_items.type_for(&event.item_id).unwrap();
-       
+        let budgeting_type = self.budget_items
+            .type_for(&event.item_id).unwrap();
+
         //Update budget total
         self.actual_by_type
             .entry(*budgeting_type)
@@ -66,8 +67,8 @@ impl TransactionConnectedHandler for Budget {
             })
             .or_insert(tx.amount);
         // Update item
-        let item = self.budget_items.get_mut(&event.item_id).unwrap();
-        item.actual_amount += tx.amount;
+        self.budget_items.add_actual_amount(&event.item_id, tx.amount);
+        self.recalc_overview();
         event.tx_id
     }
 
@@ -76,9 +77,7 @@ impl TransactionConnectedHandler for Budget {
         tx_id: Uuid,
         item_id: Uuid,
     ) -> Result<TransactionConnected, CommandError> {
-        if self.bank_transactions.contains(&tx_id)
-            && self.budget_items.contains(&item_id)
-        {
+        if self.bank_transactions.contains(&tx_id) && self.budget_items.contains(&item_id) {
             let ev = TransactionConnected {
                 budget_id: self.id,
                 tx_id,

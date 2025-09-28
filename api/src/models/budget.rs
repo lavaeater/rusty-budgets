@@ -94,10 +94,6 @@ impl Budget {
     pub fn get_type_for_item(&self, item_id: &Uuid) -> Option<&BudgetingType> {
         self.budget_items.type_for(item_id)
     }
-
-    pub fn get_item_mut(&mut self, item_id: &Uuid) -> Option<&mut BudgetItem> {
-        self.budget_items.get_mut(item_id)
-    }
     
     pub fn items_by_type(&self) -> Vec<(usize, BudgetingType, Vec<BudgetItem>)> {
         self.budget_items.items_by_type()
@@ -111,7 +107,7 @@ impl Budget {
         self.budget_items.by_type(budgeting_type).unwrap_or_default().iter().map(|item| item.actual_amount).sum()
     }
     
-    pub fn recalculate(&mut self) {
+    pub fn recalc_overview(&mut self) {
         let income_sum = Sum(vec![Income]);
         let budgeted_income = income_sum.evaluate(&self.budget_items.hash_by_type(), Some(ValueKind::Budgeted));
         let spent_income = income_sum.evaluate(&self.budget_items.hash_by_type(), Some(ValueKind::Spent));        
