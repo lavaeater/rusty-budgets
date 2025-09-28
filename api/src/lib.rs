@@ -30,6 +30,7 @@ pub mod db {
     use joydb::JoydbError;
     use once_cell::sync::Lazy;
     use uuid::Uuid;
+    use crate::import::import_from_skandia_excel;
 
     pub static CLIENT: Lazy<JoyDbBudgetRuntime> = Lazy::new(|| {
         tracing::info!("Init DB Client");
@@ -121,6 +122,15 @@ pub mod db {
             Err(_) => Err(anyhow::anyhow!("Could not get default budget")),
         }
     }
+    
+    pub fn get_budget(budget_id: &Uuid) -> anyhow::Result<Budget> {
+        match with_runtime(None).load(&budget_id) {
+            Ok(budget) => match budget {
+                None => Err(anyhow::anyhow!("Could not load budget")),
+                Some(budget) => Ok(budget),,
+                Err(_) => Err(anyhow::anyhow!("Could not load budget")),
+            }
+        }
 
     pub fn add_budget_to_user(
         user_id: &Uuid,
@@ -176,6 +186,17 @@ pub mod db {
             }
             Err(_) => Err(anyhow::anyhow!("Could not create budget")),
         }
+    }
+
+    pub fn import_transactions(
+        budget_id: &Uuid,
+        user_id: &Uuid,
+        file_name: &str,
+    ) -> anyhow::Result<Budget> {
+        let runtime = with_runtime(None);
+        let _ = import_from_skandia_excel(file_name,user_id, budget_id, runtime)?;
+        let budget = with_runtime(None).load(budget_id)?;
+        Ok(budget)
     }
 
     pub fn add_item(
@@ -260,6 +281,18 @@ pub async fn get_default_user() -> Result<User, ServerFnError> {
 pub async fn get_default_budget() -> Result<Option<Budget>, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
     match db::get_default_budget(&user.id) {
+        Ok(b) => Ok(b),
+        Err(e) => {
+            tracing::error!(error = %e, "Could not get default budget");
+            Err(ServerFnError::ServerError(e.to_string()))
+        }
+    }
+}
+
+#[server]
+pub async fn import_transactions(budget_id: Uuid, file_name: String) -> Result<Budget, ServerFnError> {
+    let user = db::get_default_user(None).expect("Could not get default user");
+    match db::import_transactions(&budget_id, &user.id, &file_name) {
         Ok(b) => Ok(b),
         Err(e) => {
             tracing::error!(error = %e, "Could not get default budget");

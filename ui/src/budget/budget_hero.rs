@@ -3,6 +3,7 @@ use api::models::Budget;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use dioxus_primitives::label::Label;
+use crate::file_chooser::*;
 
 const HERO_CSS: Asset = asset!("assets/styling/budget-hero.css");
 #[component]
@@ -10,6 +11,7 @@ pub fn BudgetHero() -> Element {
     let budget_resource = use_server_future(api::get_default_budget)?;
 
     let mut budget_signal = use_signal(|| None::<Budget>);
+    
     use_context_provider(|| budget_signal);
     
     let mut budget_name = use_signal(|| "".to_string());
@@ -18,6 +20,15 @@ pub fn BudgetHero() -> Element {
         if let Some(Ok(Some(budget))) = budget_resource.read().as_ref() {
             tracing::info!("We have budget: {}", budget.id);
             budget_signal.set(Some(budget.clone()));
+        }
+    });
+    
+    let mut file_chosen = use_signal(|| None::<String>);
+    
+    use_effect(move || {
+        if let Some(file_name) = file_chosen() {
+            tracing::info!("File chosen: {}", file_name);
+            file_chosen.set(None);
         }
     });
 
@@ -31,6 +42,12 @@ pub fn BudgetHero() -> Element {
                     // Header
                     div { class: "budget-header",
                         h1 { class: "budget-title", {budget.name.clone()} }
+                        FileDialog {
+                            on_chosen: move |event| {
+                                tracing::info!("File chosen: {}",event.data);
+                                file_chosen.set(Some(event.data));
+                            },
+                        }
                     }
                     div { class: "budget-hero-content",
                         BudgetingTypeTabs {

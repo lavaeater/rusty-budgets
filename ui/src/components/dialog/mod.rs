@@ -71,7 +71,10 @@ pub struct DialogRootProps {
 #[component]
 pub fn DialogRoot(props: DialogRootProps) -> Element {
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("/src/components/dialog/style.css") }
+        document::Link {
+            rel: "stylesheet",
+            href: asset!("/src/components/dialog/style.css"),
+        }
         dialog::DialogRoot {
             class: "dialog-backdrop",
             id: props.id,
