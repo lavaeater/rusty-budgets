@@ -6,30 +6,19 @@ use dioxus_primitives::label::Label;
 use uuid::Uuid;
 
 const HERO_CSS: Asset = asset!("assets/styling/budget-hero.css");
-pub static CURRENT_BUDGET_ID: GlobalSignal<Uuid> = Signal::global(|| Uuid::default());
-pub static CURRENT_BUDGET_UPDATED: GlobalSignal<bool> = Signal::global(|| true);
 #[component]
 pub fn BudgetHero() -> Element {
-    let budget_resource = use_server_future(move || {
-        let updated = *CURRENT_BUDGET_UPDATED.read();
-        tracing::info!("In the future, first: {}", updated);
-        if updated {
-            tracing::info!("In the future, change global value");
-            *CURRENT_BUDGET_UPDATED.write() = false;
-        }
-        api::get_default_budget(CURRENT_BUDGET_UPDATED())
-    })?;
-    
+    let budget_resource = use_server_future(api::get_default_budget)?;
+
     let mut budget_signal = use_signal(|| None::<Budget>);
+    use_context_provider(|| budget_signal);
+    
     let mut budget_name = use_signal(|| "".to_string());
 
     use_effect(move || {
         if let Some(Ok(Some(budget))) = budget_resource.read().as_ref() {
             tracing::info!("We have budget: {}", budget.id);
-            *CURRENT_BUDGET_ID.write() = budget.id;
             budget_signal.set(Some(budget.clone()));
-            let updated = *CURRENT_BUDGET_UPDATED.read();
-            tracing::info!("In the effect: {}", updated);
         }
     });
 
@@ -94,7 +83,7 @@ pub fn BudgetHero() -> Element {
                         onclick: move |_| async move {
                             if let Ok(budget) = api::create_budget(budget_name.to_string(), None).await {
                                 tracing::info!("UI received a budget: {budget:?}");
-                                *CURRENT_BUDGET_UPDATED.write() = true;
+                                budget_signal.set(Some(budget));
                             }
                         },
                         "Skapa budget"

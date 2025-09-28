@@ -4,9 +4,8 @@ use dioxus_primitives::select::*;
 use crate::budget_components::{Collapsible, CollapsibleContent, CollapsibleTrigger};
 
 use uuid::Uuid;
-use api::models::{BudgetItem, BudgetingType, Currency, Money};
+use api::models::{Budget, BudgetItem, BudgetingType, Currency, Money};
 use crate::{BudgetItemView, Button, Separator};
-use crate::budget::budget_hero::CURRENT_BUDGET_UPDATED;
 
 #[component]
 pub fn BudgetingTypeCard(budget_id: Uuid, budgeting_type: BudgetingType, items: Vec<BudgetItem>) -> Element {
@@ -16,6 +15,8 @@ pub fn BudgetingTypeCard(budget_id: Uuid, budgeting_type: BudgetingType, items: 
     let mut show_new_item = use_signal(|| budget_items().is_empty());
     let mut new_item_name = use_signal(|| "".to_string());
     let mut new_item_amount = use_signal(|| Money::new_dollars(0, Currency::SEK));
+    
+    let mut budget_signal = use_context::<Signal<Option<Budget>>>();
 
     rsx! {
         h3 { {budgeting_type_name} }
@@ -40,7 +41,7 @@ pub fn BudgetingTypeCard(budget_id: Uuid, budgeting_type: BudgetingType, items: 
                         class: "button",
                         "data-style": "primary",
                         onclick: move |_| async move {
-                            if let Ok(_) = api::add_item(
+                            if let Ok(updated_budget) = api::add_item(
                                     budget_id,
                                     new_item_name(),
                                     budgeting_type,
@@ -48,7 +49,7 @@ pub fn BudgetingTypeCard(budget_id: Uuid, budgeting_type: BudgetingType, items: 
                                 )
                                 .await
                             {
-                                *CURRENT_BUDGET_UPDATED.write() = true;
+                                budget_signal.set(Some(updated_budget));
                             }
                             show_new_item.set(false);
                         },
