@@ -38,6 +38,7 @@ impl Display for BudgetingType {
 pub enum Rule {
     Sum(Vec<BudgetingType>),
     Difference(BudgetingType, Vec<BudgetingType>),
+    SelfDiff(BudgetingType)
 }
 
 pub enum ValueKind {
@@ -64,18 +65,27 @@ impl Rule {
             Rule::Sum(types) => types
                 .iter()
                 .map(|t| {
-                    store.get(t).map_or(Money::default(), |items| items.iter().map(|i| kind.pick(i)).sum::<Money>())
+                    Self::get_sum(store, &kind, t)
                 })
                 .sum(),
             Rule::Difference(base, subtracts) => {
-                let base_sum = store.get(base).map_or(Money::default(), |items| items.iter().map(|i| kind.pick(i)).sum::<Money>());
+                let base_sum = Self::get_sum(store, &kind, base);
                 let subtract_sum: Money = subtracts
                     .iter()
-                    .map(|t| store.get(t).map_or(Money::default(), |items| items.iter().map(|i| kind.pick(i)).sum::<Money>()))
+                    .map(|t| Self::get_sum(store, &kind, t))
                     .sum();
                 base_sum - subtract_sum
             }
+            Rule::SelfDiff(base ) => {
+                let budget_sum = Self::get_sum(store, &ValueKind::Budgeted, base);
+                let spent_sum = Self::get_sum(store, &ValueKind::Spent, base);
+                budget_sum - spent_sum
+            }
         }
+    }
+
+    pub fn get_sum(store: &HashMap<BudgetingType, Vec<BudgetItem>>, kind: &ValueKind, base: &BudgetingType) -> Money {
+        store.get(base).map_or(Money::default(), |items| items.iter().map(|i| kind.pick(i)).sum::<Money>())
     }
 }
 
