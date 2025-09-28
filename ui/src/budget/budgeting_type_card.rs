@@ -9,10 +9,10 @@ use crate::{BudgetItemView, Button, Separator};
 
 #[component]
 pub fn BudgetingTypeCard(budget_id: Uuid, budgeting_type: BudgetingType, items: Vec<BudgetItem>) -> Element {
+    tracing::info!("Budgeting type: {}, item count: {}", budgeting_type, items.len());
     let budgeting_type_name = use_signal(|| budgeting_type.to_string());
     let new_item_label = format!("Ny {}", budgeting_type);
-    let mut budget_items = use_signal(|| items);
-    let mut show_new_item = use_signal(|| budget_items().is_empty());
+    let mut show_new_item = use_signal(|| items.is_empty());
     let mut new_item_name = use_signal(|| "".to_string());
     let mut new_item_amount = use_signal(|| Money::new_dollars(0, Currency::SEK));
     
@@ -67,7 +67,7 @@ pub fn BudgetingTypeCard(budget_id: Uuid, budgeting_type: BudgetingType, items: 
                 }
             }
         }
-        for item in budget_items() {
+        for item in items {
             BudgetItemView { item: item.clone(), item_type: budgeting_type }
             Separator {
                 style: "margin: 15px 0; width: 50%;",
