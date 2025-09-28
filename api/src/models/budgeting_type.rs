@@ -58,21 +58,21 @@ impl ValueKind {
 impl Rule {
     pub fn evaluate(
         &self,
-        store: &HashMap<BudgetingType, Vec<BudgetItem>>,
-        kind: ValueKind,
+        store: &HashMap<BudgetingType, Vec<&BudgetItem>>,
+        kind: Option<ValueKind>,
     ) -> Money {
         match self {
             Rule::Sum(types) => types
                 .iter()
                 .map(|t| {
-                    Self::get_sum(store, &kind, t)
+                    Self::get_sum(store, kind.as_ref().unwrap(), t)
                 })
                 .sum(),
             Rule::Difference(base, subtracts) => {
-                let base_sum = Self::get_sum(store, &kind, base);
+                let base_sum = Self::get_sum(store, kind.as_ref().unwrap(), base);
                 let subtract_sum: Money = subtracts
                     .iter()
-                    .map(|t| Self::get_sum(store, &kind, t))
+                    .map(|t| Self::get_sum(store, kind.as_ref().unwrap(), t))
                     .sum();
                 base_sum - subtract_sum
             }
@@ -84,7 +84,7 @@ impl Rule {
         }
     }
 
-    pub fn get_sum(store: &HashMap<BudgetingType, Vec<BudgetItem>>, kind: &ValueKind, base: &BudgetingType) -> Money {
+    pub fn get_sum(store: &HashMap<BudgetingType, Vec<&BudgetItem>>, kind: &ValueKind, base: &BudgetingType) -> Money {
         store.get(base).map_or(Money::default(), |items| items.iter().map(|i| kind.pick(i)).sum::<Money>())
     }
 }
@@ -102,6 +102,6 @@ fn test_calculate_rules() {
     let income_rule = Sum(vec![Income]);
     let remaining_rule = Difference(Income, vec![Expense, Savings]);
 
-    assert_eq!(income_rule.evaluate(&store.hash_by_type(), ValueKind::Budgeted), Money::new_dollars(5000, Currency::SEK));
+    assert_eq!(income_rule.evaluate(&store.hash_by_type(), &ValueKind::Budgeted), Money::new_dollars(5000, Currency::SEK));
     assert_eq!(remaining_rule.evaluate(&store.hash_by_type(), ValueKind::Budgeted), Money::new_dollars(1000, Currency::SEK));
 }

@@ -18,7 +18,7 @@ use crate::models::budget_item::{BudgetItem, BudgetItemStore};
 use crate::models::budgeting_type::BudgetingType;
 use crate::models::BudgetingType::{Expense, Income, Savings};
 use crate::models::{BudgetingTypeOverview, Rule, ValueKind};
-use crate::models::Rule::{Difference, Sum};
+use crate::models::Rule::{Difference, SelfDiff, Sum};
 
 pub_events_enum! {
     #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -113,10 +113,10 @@ impl Budget {
     
     pub fn recalculate(&mut self) {
         let income_sum = Sum(vec![Income]);
-        let budgeted_income = income_sum.evaluate(&self.budget_items.hash_by_type(), ValueKind::Budgeted);
-        let spent_income = income_sum.evaluate(&self.budget_items.hash_by_type(), ValueKind::Spent);        
+        let budgeted_income = income_sum.evaluate(&self.budget_items.hash_by_type(), Some(ValueKind::Budgeted));
+        let spent_income = income_sum.evaluate(&self.budget_items.hash_by_type(), Some(ValueKind::Spent));        
         let remaining_rule = Difference(Income, vec![Expense, Savings]);
-        let remaining_income = remaining_rule.evaluate(&self.budget_items.hash_by_type(), ValueKind::Budgeted);
+        let remaining_income = remaining_rule.evaluate(&self.budget_items.hash_by_type(), Some(ValueKind::Budgeted));
         
         let income_overview = BudgetingTypeOverview {
             budgeted_amount: budgeted_income,
@@ -127,19 +127,34 @@ impl Budget {
         self.budgeting_overview.insert(Income, income_overview);
         
         let expense_sum = Sum(vec![Expense]);
-        let budgeted_expenses = expense_sum.evaluate(&self.budget_items.hash_by_type(), ValueKind::Budgeted);
-        let spent_expenses = expense_sum.evaluate(&self.budget_items.hash_by_type(), ValueKind::Spent);
+        let budgeted_expenses = expense_sum.evaluate(&self.budget_items.hash_by_type(), Some(ValueKind::Budgeted));
+        let spent_expenses = expense_sum.evaluate(&self.budget_items.hash_by_type(), Some(ValueKind::Spent));
 
-        let remaining_expenses = remaining_rule.evaluate(&self.budget_items.hash_by_type(), ValueKind::Budgeted);
+        let self_difference_rule = SelfDiff(Expense); 
+        let self_diff = self_difference_rule.evaluate(&self.budget_items.hash_by_type(), None);
+        
+        let expense_overview = BudgetingTypeOverview {
+            budgeted_amount: budgeted_expenses,
+            actual_amount: spent_expenses,
+            remaining_budget: self_diff,
+        };
+        
+        self.budgeting_overview.insert(Expense, expense_overview);
 
-        //1. How much do we have left to budget (i.e. Income - Expenses - Savings)
-        //2. How much do have )
-        // self.budgeted_by_type
-        //     .entry(event.item_type)
-        //     .and_modify(|v| {
-        //         *v += event.budgeted_amount;
-        //     })
-        //     .or_insert(event.budgeted_amount);
+        let savings_sum = Sum(vec![Savings]);
+        let budgeted_savings = savings_sum.evaluate(&self.budget_items.hash_by_type(), Some(ValueKind::Budgeted));
+        let spent_savings = savings_sum.evaluate(&self.budget_items.hash_by_type(), Some(ValueKind::Spent));
+
+        let self_difference_rule = SelfDiff(Savings);
+        let self_diff = self_difference_rule.evaluate(&self.budget_items.hash_by_type(), None);
+
+        let savings_overview = BudgetingTypeOverview {
+            budgeted_amount: budgeted_savings,
+            actual_amount: spent_savings,
+            remaining_budget: self_diff,
+        };
+
+        self.budgeting_overview.insert(Savings, savings_overview);
     }
 }
 

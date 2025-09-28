@@ -196,7 +196,7 @@ impl BudgetItemStore {
             .collect::<Vec<_>>()
     }
 
-    pub fn hash_by_type(&self) -> HashMap<BudgetingType, Vec<BudgetItem>> {
+    pub fn hash_by_type(&self) -> HashMap<BudgetingType, Vec<&BudgetItem>> {
         BudgetingType::iter()
             .map(|t| {
                 (
@@ -204,7 +204,6 @@ impl BudgetItemStore {
                     self.by_type(&t)
                         .unwrap_or_default()
                         .into_iter()
-                        .cloned()
                         .collect::<Vec<_>>(),
                 )
             })
