@@ -1,14 +1,12 @@
+use crate::cqrs::framework::{Runtime, StoredEvent};
+use crate::models::*;
+use chrono::{DateTime, Utc};
 use dioxus::logger::tracing;
 use joydb::adapters::JsonAdapter;
 use joydb::Joydb;
-use std::path::Path;
-use chrono::{DateTime, Utc};
-use crate::cqrs::budget::{Budget, BudgetEvent, BudgetingType};
-use crate::cqrs::framework::{Runtime, StoredEvent};
-use crate::cqrs::money::{Currency, Money};
-use crate::models::User;
 use joydb::Model;
 use serde::{Deserialize, Serialize};
+use std::path::Path;
 use uuid::Uuid;
 
 impl JoyDbBudgetRuntime {
@@ -24,30 +22,43 @@ impl JoyDbBudgetRuntime {
         })
     }
 
-    pub fn add_group(
+    pub fn add_item(
         &self,
-        budget_id: Uuid,
-        group_name: &str,
-        group_type: BudgetingType,
-        user_id: Uuid,
+        budget_id: &Uuid,
+        item_name: &str,
+        item_type: &BudgetingType,
+        amount: &Money,
+        user_id: &Uuid,
     ) -> anyhow::Result<(Budget, Uuid)> {
-        self.cmd(&user_id, &budget_id, |budget| {
-            budget.add_group(group_name.to_string(), group_type)
+        self.cmd(user_id, budget_id, |budget| {
+            budget.add_item(item_name.to_string(), *item_type, *amount)
         })
     }
 
-    pub fn add_item(
+    pub fn add_and_connect_tx(
         &self,
         budget_id: Uuid,
-        group_id: Uuid,
-        item_name: &str,
-        item_type: BudgetingType,
+        bank_account_number: &str,
         amount: Money,
+        balance: Money,
+        description: &str,
+        date: DateTime<Utc>,
+        item_id: Uuid,
         user_id: Uuid,
     ) -> anyhow::Result<(Budget, Uuid)> {
-        self.cmd(&user_id, &budget_id, |budget| {
-            budget.add_item(group_id, item_name.to_string(), item_type, amount)
-        })
+        if let Ok((_, tx_id)) = self.add_transaction(
+            budget_id,
+            bank_account_number,
+            amount,
+            balance,
+            description,
+            date,
+            user_id,
+        ) {
+            self.connect_transaction(budget_id, tx_id, item_id, user_id)
+        } else {
+            Err(anyhow::anyhow!("Failed to add transaction"))
+        }
     }
 
     pub fn add_transaction(
@@ -70,20 +81,39 @@ impl JoyDbBudgetRuntime {
             )
         })
     }
-    
-    pub fn connect_transaction(&self, budget_id: Uuid,tx_id: Uuid, item_id: Uuid, user_id: Uuid) -> anyhow::Result<(Budget, Uuid)> {
+
+    pub fn connect_transaction(
+        &self,
+        budget_id: Uuid,
+        tx_id: Uuid,
+        item_id: Uuid,
+        user_id: Uuid,
+    ) -> anyhow::Result<(Budget, Uuid)> {
         self.cmd(&user_id, &budget_id, |budget| {
             budget.connect_transaction(tx_id, item_id)
         })
     }
-    
-    pub fn reallocate_item_funds(&self, budget_id: Uuid, from_item_id: Uuid, to_item_id: Uuid, amount: Money, user_id: Uuid) -> anyhow::Result<(Budget, Uuid)> {
+
+    pub fn reallocate_item_funds(
+        &self,
+        budget_id: Uuid,
+        from_item_id: Uuid,
+        to_item_id: Uuid,
+        amount: Money,
+        user_id: Uuid,
+    ) -> anyhow::Result<(Budget, Uuid)> {
         self.cmd(&user_id, &budget_id, |budget| {
             budget.reallocate_item_funds(from_item_id, to_item_id, amount)
         })
     }
-    
-    pub fn adjust_item_funds(&self, budget_id: Uuid, item_id: Uuid, amount: Money, user_id: Uuid) -> anyhow::Result<(Budget, Uuid)> {
+
+    pub fn adjust_item_funds(
+        &self,
+        budget_id: Uuid,
+        item_id: Uuid,
+        amount: Money,
+        user_id: Uuid,
+    ) -> anyhow::Result<(Budget, Uuid)> {
         self.cmd(&user_id, &budget_id, |budget| {
             budget.adjust_item_funds(item_id, amount)
         })
@@ -200,7 +230,7 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
 
     fn append(&self, user_id: &Uuid, ev: BudgetEvent) -> anyhow::Result<()> {
         let stored_event = StoredEvent::new(ev, *user_id);
-        tracing::info!("We have event: {stored_event:?}");
+        tracing::debug!("We have event: {stored_event:?}");
         self.db.insert(&stored_event)?;
         Ok(())
     }

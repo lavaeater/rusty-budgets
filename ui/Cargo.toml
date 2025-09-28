@@ -8,3 +8,4 @@ dioxus = { features= ["router", "fullstack"], workspace = true }
 dioxus-primitives = { workspace = true }
 api = { workspace = true }
 uuid = { version = "1.17.0", features = ["v4"] }
+strum = { workspace = true }

@@ -1,5 +1,5 @@
 #budget-hero-container {
-    margin: 0;
+    margin: 20px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -14,4 +14,11 @@
     font-size: x-large;
     color: white;
     text-align: center;
+}
+
+#budget-hero-content {
+    margin: 0;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
 }

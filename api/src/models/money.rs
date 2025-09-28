@@ -2,7 +2,8 @@ use std::cmp::Ordering;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::hash::Hash;
-use std::ops::{Add, AddAssign, Mul, Sub, SubAssign};
+use std::iter::Sum;
+use std::ops::{Add, AddAssign, Mul, Neg, Sub, SubAssign};
 use serde::{Deserialize, Serialize};
 
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -30,7 +31,22 @@ pub struct Money {
     currency: Currency,
 }
 
+impl Money {
+    pub fn multiply(&self, rhs: i64) -> Money {
+        Money::new_cents(self.cents * rhs, self.currency)
+    }
+    
+    pub fn divide(&self, rhs: i64) -> Money {
+        Money::new_cents(self.cents / rhs, self.currency)
+    }
+}
 
+impl Neg for Money {
+    type Output = Money;
+    fn neg(self) -> Self::Output {
+        Money::new_cents(-self.cents, self.currency)
+    }
+}
 
 impl PartialOrd for Money {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
@@ -112,6 +128,12 @@ impl SubAssign for Money {
     fn sub_assign(&mut self, rhs: Money) {
         assert_eq!(self.currency, rhs.currency, "Currency mismatch");
         self.cents -= rhs.cents;
+    }
+}
+
+impl Sum for Money {
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(Money::default(), |a, b| a + b)
     }
 }
 

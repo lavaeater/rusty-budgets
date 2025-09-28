@@ -1,24 +1,23 @@
-use crate::budget_groups::BudgetGroups;
+use crate::{BudgetingTypeTabs, Input};
+use api::models::Budget;
 use dioxus::logger::tracing;
-use dioxus_primitives::label::Label;
-use api::cqrs::budget::Budget;
 use dioxus::prelude::*;
+use dioxus_primitives::label::Label;
 use uuid::Uuid;
-use crate::Input;
 
-
-const HERO_CSS: Asset = asset!("/assets/styling/budget-hero.css");
-pub static CURRENT_BUDGET_ID: GlobalSignal<Uuid> = Signal::global(|| Uuid::default());
+const HERO_CSS: Asset = asset!("assets/styling/budget-hero.css");
 #[component]
 pub fn BudgetHero() -> Element {
     let budget_resource = use_server_future(api::get_default_budget)?;
+
     let mut budget_signal = use_signal(|| None::<Budget>);
+    use_context_provider(|| budget_signal);
+    
     let mut budget_name = use_signal(|| "".to_string());
 
     use_effect(move || {
         if let Some(Ok(Some(budget))) = budget_resource.read().as_ref() {
-            tracing::info!("We have budget: {budget:?}");
-            *CURRENT_BUDGET_ID.write() = budget.id;
+            tracing::info!("We have budget: {}", budget.id);
             budget_signal.set(Some(budget.clone()));
         }
     });
@@ -26,17 +25,19 @@ pub fn BudgetHero() -> Element {
     // Handle the resource state
     match budget_signal() {
         Some(budget) => {
-            tracing::info!("The budget signal was updated: {budget:?}");
+            tracing::info!("The budget signal was updated: {}", budget.id);
             rsx! {
                 document::Link { rel: "stylesheet", href: HERO_CSS }
                 div { class: "budget-hero-container",
                     // Header
                     div { class: "budget-header",
-                        h1 { class: "budget-title", {budget.name} }
+                        h1 { class: "budget-title", {budget.name.clone()} }
                     }
-                    BudgetGroups {
-                        budget_id: budget.id,
-                        groups: budget.budget_groups.values().cloned().collect(),
+                    div { class: "budget-hero-content",
+                        BudgetingTypeTabs {
+                            budget_id: budget.id,
+                            items_by_type: budget.items_by_type(),
+                        }
                     }
                 }
             }
@@ -82,7 +83,7 @@ pub fn BudgetHero() -> Element {
                         onclick: move |_| async move {
                             if let Ok(budget) = api::create_budget(budget_name.to_string(), None).await {
                                 tracing::info!("UI received a budget: {budget:?}");
-                                budget_signal.set(Some(budget))
+                                budget_signal.set(Some(budget));
                             }
                         },
                         "Skapa budget"

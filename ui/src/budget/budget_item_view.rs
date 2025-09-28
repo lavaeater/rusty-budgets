@@ -1,22 +1,21 @@
-use api::cqrs::budget::BudgetItem;
-use dioxus::prelude::*;
+use dioxus::fullstack::server_fn::serde::{Deserialize, Serialize};
+use api::models::*;
 use dioxus::logger::tracing;
+use dioxus::prelude::*;
+use uuid::Uuid;
+
 #[component]
-pub fn BudgetItemView(item: BudgetItem, index: usize) -> Element {
-    tracing::info!("item_name: {}", item.name);
-    tracing::info!("item_type: {}", item.item_type.to_string());
-    tracing::info!("item_amount: {}", item.budgeted_amount.to_string());
-    let gaah =format!("{}{}{}",item.name, item.item_type.to_string(), item.budgeted_amount.to_string());
-    
-    let item_amount = use_signal(|| item.budgeted_amount.to_string());
-    let item_type = use_signal(|| item.item_type.to_string());
-    
+pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType) -> Element {
     rsx! {
-        div {
-            h1 { {item.name} }
-            h2 { {item.item_type.to_string()} }
-            h2 { {item.budgeted_amount.to_string()} }
-            h2 { {item.actual_spent.to_string()} }
+        div { class: "flex justify-between items-center p-2 border-b border-gray-200 text-sm",
+
+            // Left side: name
+            div { class: "font-medium", "{item.name}" }
+
+            // Right side: actual / budgeted
+            div { class: "text-gray-700",
+                "{item.actual_amount.to_string()} / {item.budgeted_amount.to_string()}"
+            }
         }
     }
 }

@@ -1,8 +1,7 @@
-use api::cqrs::budget::{BankTransaction, BudgetingType};
 use api::cqrs::framework::Runtime;
-use api::cqrs::money::{Currency, Money};
 use api::cqrs::runtime::JoyDbBudgetRuntime;
 use api::import::import_from_skandia_excel;
+use api::models::*;
 use chrono::Utc;
 use std::collections::HashSet;
 use std::hash::{DefaultHasher, Hash, Hasher};
@@ -17,56 +16,13 @@ pub fn create_budget_test() -> anyhow::Result<()> {
     let (res, budget_id) = rt.create_budget("Test Budget", true, Currency::SEK, user_id)?;
     assert_eq!(res.name, "Test Budget");
     assert!(res.default_budget);
-    assert_eq!(res.budget_groups.values().len(), 0);
     assert_eq!(res.currency, Currency::SEK);
 
     let res = rt.materialize(&budget_id)?;
     assert_eq!(res.name, "Test Budget");
     assert!(res.default_budget);
-    assert_eq!(res.budget_groups.values().len(), 0);
     assert_eq!(res.version, 1);
     assert_eq!(res.currency, Currency::SEK);
-
-    Ok(())
-}
-
-#[test]
-pub fn add_budget_group() -> anyhow::Result<()> {
-    let rt = JoyDbBudgetRuntime::new_in_memory();
-    let user_id = Uuid::new_v4();
-
-    let (res, budget_id) = rt.create_budget("Test Budget", true, Currency::SEK, user_id)?;
-    let res = rt.add_group(res.id, "Inkomster", BudgetingType::Income, user_id);
-    assert!(res.is_ok());
-    let res = res?.0;
-    assert_eq!(res.budget_groups.values().len(), 1);
-
-    let res = rt.materialize(&budget_id)?;
-    assert_eq!(res.name, "Test Budget");
-    assert!(res.default_budget);
-    assert_eq!(res.budget_groups.values().len(), 1);
-    assert_eq!(res.version, 2);
-    Ok(())
-}
-//
-#[test]
-pub fn add_budget_group_that_exists() -> anyhow::Result<()> {
-    let rt = JoyDbBudgetRuntime::new_in_memory();
-    let user_id = Uuid::new_v4();
-
-    let (_, budget_id) = rt.create_budget("Test Budget", true, Currency::SEK, user_id)?;
-    let res = rt.add_group(budget_id, "Inkomster", BudgetingType::Income, user_id);
-    assert!(res.is_ok());
-    let (res, _group_id) = res?;
-    assert_eq!(res.budget_groups.values().len(), 1);
-    let res = rt
-        .add_group(budget_id, "Inkomster", BudgetingType::Income, user_id)
-        .err();
-    assert!(res.is_some());
-    assert_eq!(
-        res.unwrap().to_string(),
-        "Validation error: Budget group already exists"
-    );
 
     Ok(())
 }
@@ -78,29 +34,17 @@ pub fn add_budget_item() -> anyhow::Result<()> {
 
     let (_, budget_id) = rt.create_budget("Test Budget", true, Currency::SEK, user_id)?;
 
-    let (res, group_id) = rt.add_group(budget_id, "Inkomster", BudgetingType::Income, user_id)?;
-
-    assert_eq!(res.budget_groups.values().len(), 1);
-
-    let (res, _item_id) = rt.add_item(
-        budget_id,
-        group_id,
+    let (res, item_id) = rt.add_item(
+        &budget_id,
         "Utgifter",
-        BudgetingType::Expense,
-        Money::new_dollars(100, Currency::SEK),
-        user_id,
+        &BudgetingType::Expense,
+        &Money::new_dollars(100, Currency::SEK),
+        &user_id,
     )?;
-    let group = res.budget_groups.get(&group_id);
-    assert!(group.is_some());
-    let group = group.unwrap();
-    assert_eq!(group.items.len(), 1);
+
     assert_eq!(
         res.budgeted_by_type.get(&BudgetingType::Expense).unwrap(),
         &Money::new_dollars(100, Currency::SEK)
-    );
-    assert_eq!(
-        group.budgeted_amount,
-        Money::new_dollars(100, Currency::SEK)
     );
 
     let budget_agg = rt.materialize(&budget_id)?;
@@ -109,9 +53,38 @@ pub fn add_budget_item() -> anyhow::Result<()> {
         budget_agg.id, budget_agg.name, budget_agg.default_budget
     );
 
-    for group in budget_agg.budget_groups.values() {
-        println!("Group: {}", group.name);
-    }
+    let new_item = budget_agg.get_item(&item_id).unwrap();
+    assert_eq!(new_item.name, "Utgifter");
+    assert_eq!(
+        new_item.budgeted_amount,
+        Money::new_dollars(100, Currency::SEK)
+    );
+
+    //Verify that the budget overview is updated
+    let income_overview = budget_agg
+        .budgeting_overview
+        .get(&BudgetingType::Income)
+        .unwrap();
+    assert_eq!(
+        income_overview.budgeted_amount,
+        Money::new_dollars(0, Currency::SEK)
+    );
+    let expense_overview = budget_agg
+        .budgeting_overview
+        .get(&BudgetingType::Expense)
+        .unwrap();
+    assert_eq!(
+        expense_overview.budgeted_amount,
+        Money::new_dollars(100, Currency::SEK)
+    );
+    let savings_overview = budget_agg
+        .budgeting_overview
+        .get(&BudgetingType::Savings)
+        .unwrap();
+    assert_eq!(
+        savings_overview.budgeted_amount,
+        Money::new_dollars(0, Currency::SEK)
+    );
 
     // audit log
     println!("Events: {:?}", rt.events(&budget_id)?);
@@ -155,19 +128,17 @@ pub fn connect_bank_transaction() -> anyhow::Result<()> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
     let user_id = Uuid::new_v4();
     let bank_account_number = "1234567890".to_string();
+    let hundred_money = Money::new_dollars(100, Currency::SEK);
+    let zero_money = Money::new_dollars(0, Currency::SEK);
 
     let (_res, budget_id) = rt.create_budget("Test Budget", true, Currency::SEK, user_id)?;
 
-    let (res, group_id) = rt.add_group(budget_id, "Utgifter", BudgetingType::Expense, user_id)?;
-    assert_eq!(res.budget_groups.values().len(), 1);
-
     let (_res, item_id) = rt.add_item(
-        budget_id,
-        group_id,
+        &budget_id,
         "Utgifter",
-        BudgetingType::Expense,
-        Money::new_dollars(100, Currency::SEK),
-        user_id,
+        &BudgetingType::Expense,
+        &hundred_money,
+        &user_id,
     )?;
 
     let now = Utc::now();
@@ -175,8 +146,8 @@ pub fn connect_bank_transaction() -> anyhow::Result<()> {
     let (_res, tx_id) = rt.add_transaction(
         budget_id,
         &bank_account_number,
-        Money::new_dollars(100, Currency::SEK),
-        Money::new_dollars(100, Currency::SEK),
+        hundred_money,
+        hundred_money,
         "Test Transaction",
         now,
         user_id,
@@ -184,16 +155,22 @@ pub fn connect_bank_transaction() -> anyhow::Result<()> {
 
     let (res, _tx_id) = rt.connect_transaction(budget_id, tx_id, item_id, user_id)?;
 
-    let expected_money = Money::new_dollars(100, Currency::SEK);
-
     assert_eq!(
         res.budgeted_by_type.get(&BudgetingType::Expense).unwrap(),
-        &expected_money
+        &hundred_money
     );
     assert_eq!(
-        res.spent_by_type.get(&BudgetingType::Expense).unwrap(),
-        &expected_money
+        res.actual_by_type.get(&BudgetingType::Expense).unwrap(),
+        &hundred_money
     );
+
+    //Verify that the budget overview is updated
+    let income_overview = res.budgeting_overview.get(&BudgetingType::Income).unwrap();
+    assert_eq!(income_overview.budgeted_amount, zero_money);
+    let expense_overview = res.budgeting_overview.get(&BudgetingType::Expense).unwrap();
+    assert_eq!(expense_overview.budgeted_amount, hundred_money);
+    let savings_overview = res.budgeting_overview.get(&BudgetingType::Savings).unwrap();
+    assert_eq!(savings_overview.budgeted_amount, zero_money);
 
     Ok(())
 }
@@ -280,27 +257,20 @@ pub fn reconnect_bank_transaction() -> anyhow::Result<()> {
 
     let (_res, budget_id) = rt.create_budget("Test Budget", true, Currency::SEK, user_id)?;
 
-    let (_res, group_id) = rt.add_group(budget_id, "Utgifter", BudgetingType::Expense, user_id)?;
-
     let (_res, original_item_id) = rt.add_item(
-        budget_id,
-        group_id,
+        &budget_id,
         "Utgifter",
-        BudgetingType::Expense,
-        Money::new_dollars(100, Currency::SEK),
-        user_id,
+        &BudgetingType::Expense,
+        &Money::new_dollars(100, Currency::SEK),
+        &user_id,
     )?;
 
-    let (_res, savings_group_id) =
-        rt.add_group(budget_id, "Sparande", BudgetingType::Savings, user_id)?;
-
     let (_res, new_item_id) = rt.add_item(
-        budget_id,
-        savings_group_id,
+        &budget_id,
         "Savings",
-        BudgetingType::Savings,
-        Money::new_dollars(100, Currency::SEK),
-        user_id,
+        &BudgetingType::Savings,
+        &Money::new_dollars(100, Currency::SEK),
+        &user_id,
     )?;
 
     let now = Utc::now();
@@ -327,7 +297,7 @@ pub fn reconnect_bank_transaction() -> anyhow::Result<()> {
         &expected_money
     );
     assert_eq!(
-        res.spent_by_type
+        res.actual_by_type
             .get(&BudgetingType::Expense)
             .expect("Expect the spent amount for Expenses"),
         &expected_money
@@ -339,7 +309,7 @@ pub fn reconnect_bank_transaction() -> anyhow::Result<()> {
         &expected_money
     );
     assert_eq!(
-        res.spent_by_type
+        res.actual_by_type
             .get(&BudgetingType::Savings)
             .expect("Expect the default amount for Savings"),
         &Money::default()
@@ -354,7 +324,7 @@ pub fn reconnect_bank_transaction() -> anyhow::Result<()> {
         &expected_money
     );
     assert_eq!(
-        res.spent_by_type
+        res.actual_by_type
             .get(&BudgetingType::Expense)
             .expect("Expect the default spent amount for Expenses"),
         &Money::default()
@@ -366,7 +336,7 @@ pub fn reconnect_bank_transaction() -> anyhow::Result<()> {
         &expected_money
     );
     assert_eq!(
-        res.spent_by_type
+        res.actual_by_type
             .get(&BudgetingType::Savings)
             .expect("Expect the correct spent amount for Savings"),
         &expected_money
@@ -382,24 +352,20 @@ pub fn reallocate_item_funds() -> anyhow::Result<()> {
 
     let (_res, budget_id) = rt.create_budget("Test Budget", true, Currency::SEK, user_id)?;
 
-    let (_res, group_id) = rt.add_group(budget_id, "Utgifter", BudgetingType::Expense, user_id)?;
-
     let (_res, from_item_id) = rt.add_item(
-        budget_id,
-        group_id,
+        &budget_id,
         "Hyra",
-        BudgetingType::Expense,
-        Money::new_dollars(100, Currency::SEK),
-        user_id,
+        &BudgetingType::Expense,
+        &Money::new_dollars(100, Currency::SEK),
+        &user_id,
     )?;
 
     let (_res, to_item_id) = rt.add_item(
-        budget_id,
-        group_id,
+        &budget_id,
         "Livsmedel",
-        BudgetingType::Expense,
-        Money::new_dollars(50, Currency::SEK),
-        user_id,
+        &BudgetingType::Expense,
+        &Money::new_dollars(50, Currency::SEK),
+        &user_id,
     )?;
 
     let (res, _) = rt.reallocate_item_funds(
@@ -430,15 +396,12 @@ pub fn adjust_item_funds() -> anyhow::Result<()> {
 
     let (_res, budget_id) = rt.create_budget("Test Budget", true, Currency::SEK, user_id)?;
 
-    let (_res, group_id) = rt.add_group(budget_id, "Utgifter", BudgetingType::Expense, user_id)?;
-
     let (_res, item_id) = rt.add_item(
-        budget_id,
-        group_id,
+        &budget_id,
         "Hyra",
-        BudgetingType::Expense,
-        Money::new_dollars(100, Currency::SEK),
-        user_id,
+        &BudgetingType::Expense,
+        &Money::new_dollars(100, Currency::SEK),
+        &user_id,
     )?;
 
     let (res, _) = rt.adjust_item_funds(
@@ -448,9 +411,182 @@ pub fn adjust_item_funds() -> anyhow::Result<()> {
         user_id,
     )?;
     let item = res.get_item(&item_id).unwrap();
-    assert_eq!(
-        item.budgeted_amount,
-        Money::new_dollars(50, Currency::SEK)
+    assert_eq!(item.budgeted_amount, Money::new_dollars(50, Currency::SEK));
+    Ok(())
+}
+
+#[test]
+fn test_calculate_rules() {
+    use BudgetingType::*;
+    use Rule::*;
+    let mut store = BudgetItemStore::default();
+    store.insert(
+        &BudgetItem::new(
+            Uuid::new_v4(),
+            "Lön",
+            Money::new_dollars(5000, Currency::SEK),
+            None,
+            None,
+        ),
+        Income,
     );
+    store.insert(
+        &BudgetItem::new(
+            Uuid::new_v4(),
+            "Lön",
+            Money::new_dollars(3000, Currency::SEK),
+            None,
+            None,
+        ),
+        Expense,
+    );
+    store.insert(
+        &BudgetItem::new(
+            Uuid::new_v4(),
+            "Lön",
+            Money::new_dollars(1000, Currency::SEK),
+            None,
+            None,
+        ),
+        Savings,
+    );
+
+    let income_rule = Sum(vec![Income]);
+    let remaining_rule = Difference(Income, vec![Expense, Savings]);
+
+    assert_eq!(
+        income_rule.evaluate(&store.hash_by_type(), Some(ValueKind::Budgeted)),
+        Money::new_dollars(5000, Currency::SEK)
+    );
+    assert_eq!(
+        remaining_rule.evaluate(&store.hash_by_type(), Some(ValueKind::Budgeted)),
+        Money::new_dollars(1000, Currency::SEK)
+    );
+}
+
+#[test]
+pub fn test_budeting_overview() -> anyhow::Result<()> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let bank_account_number = "1234567890".to_string();
+    let zero_money = Money::new_dollars(0, Currency::SEK);
+    let hundred_money = Money::new_dollars(100, Currency::SEK);
+    let thousand_money = hundred_money.multiply(10);
+    let fivehundred_money = hundred_money.multiply(5);
+
+    let (_, budget_id) = rt.create_budget("Test Budget", true, Currency::SEK, user_id)?;
+
+    let (_, income_id) = rt.add_item(
+        &budget_id,
+        "Lön T",
+        &BudgetingType::Income,
+        &thousand_money,
+        &user_id,
+    )?;
+
+    let (_, rent_id) = rt.add_item(
+        &budget_id,
+        "Hyra",
+        &BudgetingType::Expense,
+        &fivehundred_money,
+        &user_id,
+    )?;
+
+    let (_, savings_id) = rt.add_item(
+        &budget_id,
+        "Spara",
+        &BudgetingType::Savings,
+        &hundred_money,
+        &user_id,
+    )?;
+
+    let budget = rt.materialize(&budget_id)?;
+    let income_overview = budget
+        .budgeting_overview
+        .get(&BudgetingType::Income)
+        .unwrap();
+    assert_eq!(income_overview.budgeted_amount, thousand_money);
+    assert_eq!(income_overview.actual_amount, zero_money);
+    assert_eq!(
+        income_overview.remaining_budget,
+        fivehundred_money - hundred_money
+    );
+
+    let expense_overview = budget
+        .budgeting_overview
+        .get(&BudgetingType::Expense)
+        .unwrap();
+    assert_eq!(expense_overview.budgeted_amount, fivehundred_money);
+    assert_eq!(expense_overview.actual_amount, zero_money);
+    assert_eq!(expense_overview.remaining_budget, fivehundred_money);
+
+    let savings_overview = budget
+        .budgeting_overview
+        .get(&BudgetingType::Savings)
+        .unwrap();
+    assert_eq!(savings_overview.budgeted_amount, hundred_money);
+    assert_eq!(savings_overview.actual_amount, zero_money);
+    assert_eq!(savings_overview.remaining_budget, hundred_money);
+
+    let (_, _) = rt.add_and_connect_tx(
+        budget_id,
+        &bank_account_number,
+        hundred_money.multiply(9),
+        fivehundred_money.multiply(4),
+        "Löneinsättning",
+        Utc::now(),
+        income_id,
+        user_id,
+    )?;
+
+    let (_, _) = rt.add_and_connect_tx(
+        budget_id,
+        &bank_account_number,
+        Money::new_dollars(450, Currency::SEK),
+        Money::new_dollars(15000, Currency::SEK),
+        "Bet. Hyra",
+        Utc::now(),
+        rent_id,
+        user_id,
+    )?;
+    let (_, _) = rt.add_and_connect_tx(
+        budget_id,
+        &bank_account_number,
+        Money::new_dollars(100, Currency::SEK),
+        Money::new_dollars(15000, Currency::SEK),
+        "Överföring sparande",
+        Utc::now(),
+        savings_id,
+        user_id,
+    )?;
+
+    let budget = rt.materialize(&budget_id)?;
+    let income_overview = budget
+        .budgeting_overview
+        .get(&BudgetingType::Income)
+        .unwrap();
+    assert_eq!(income_overview.budgeted_amount, thousand_money);
+    assert_eq!(income_overview.actual_amount, hundred_money.multiply(9));
+    assert_eq!(
+        income_overview.remaining_budget,
+        fivehundred_money - hundred_money
+    );
+
+    let expense_overview = budget
+        .budgeting_overview
+        .get(&BudgetingType::Expense)
+        .unwrap();
+    assert_eq!(expense_overview.budgeted_amount, fivehundred_money);
+    assert_eq!(expense_overview.actual_amount, Money::new_dollars(450, Currency::SEK));
+    assert_eq!(expense_overview.remaining_budget, Money::new_dollars(50, Currency::SEK));
+
+    let savings_overview = budget
+        .budgeting_overview
+        .get(&BudgetingType::Savings)
+        .unwrap();
+    assert_eq!(savings_overview.budgeted_amount, hundred_money);
+    assert_eq!(savings_overview.actual_amount, hundred_money);
+    assert_eq!(savings_overview.remaining_budget, zero_money);
+
     Ok(())
 }
