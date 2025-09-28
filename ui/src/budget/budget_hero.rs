@@ -3,7 +3,6 @@ use api::models::Budget;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use dioxus_primitives::label::Label;
-use uuid::Uuid;
 
 const HERO_CSS: Asset = asset!("assets/styling/budget-hero.css");
 #[component]

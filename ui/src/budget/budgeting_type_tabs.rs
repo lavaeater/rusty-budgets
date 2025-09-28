@@ -1,5 +1,5 @@
 use crate::budget::BudgetingTypeCard;
-use crate::budget_components::{TabContent, TabList, TabTrigger, Tabs};
+use crate::components::{TabContent, TabList, TabTrigger, Tabs};
 use api::models::{Budget, BudgetItem, BudgetingType, BudgetingTypeOverview};
 use dioxus::prelude::*;
 use uuid::Uuid;

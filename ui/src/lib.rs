@@ -6,5 +6,7 @@ pub use hero::Hero;
 mod budget;
 pub use budget::*;
 
-mod budget_components;
-pub use budget_components::*;
+mod components;
+mod file_chooser;
+
+pub use components::*;

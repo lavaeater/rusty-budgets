@@ -44,7 +44,7 @@ pub fn Collapsible(props: CollapsibleProps) -> Element {
     rsx! {
         document::Link {
             rel: "stylesheet",
-            href: asset!("/src/budget_components/collapsible/style.css"),
+            href: asset!("/src/components/collapsible/style.css"),
         }
         collapsible::Collapsible {
             keep_mounted: props.keep_mounted,

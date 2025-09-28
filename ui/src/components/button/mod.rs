@@ -37,7 +37,7 @@ pub fn Button(
     rsx! {
         document::Link {
             rel: "stylesheet",
-            href: asset!("/src/budget_components/button/style.css"),
+            href: asset!("/src/components/button/style.css"),
         }
 
         button {

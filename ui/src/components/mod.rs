@@ -4,6 +4,7 @@ mod collapsible;
 mod tabs;
 mod separator;
 mod button;
+mod dialog;
 
 pub use input::*;
 pub use accordion::*;

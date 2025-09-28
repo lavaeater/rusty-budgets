@@ -1,7 +1,7 @@
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use dioxus_primitives::select::*;
-use crate::budget_components::{Collapsible, CollapsibleContent, CollapsibleTrigger};
+use crate::components::{Collapsible, CollapsibleContent, CollapsibleTrigger};
 
 use uuid::Uuid;
 use api::models::{Budget, BudgetItem, BudgetingType, Currency, Money};
