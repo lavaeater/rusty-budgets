@@ -14,7 +14,7 @@ pub enum BudgetingType {
     Savings,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Copy, Default, Hash)]
+#[derive(Debug, Clone, Serialize, Deserialize, Copy, Default, Hash, PartialEq, Eq)]
 pub struct BudgetingTypeOverview {
     pub budgeted_amount: Money,
     pub actual_amount: Money,

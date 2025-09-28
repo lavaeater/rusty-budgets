@@ -95,8 +95,11 @@ impl Budget {
         self.budget_items.type_for(item_id)
     }
     
-    pub fn items_by_type(&self) -> Vec<(usize, BudgetingType, Vec<BudgetItem>)> {
-        self.budget_items.items_by_type()
+    pub fn items_by_type(&self) -> Vec<(usize, BudgetingType, BudgetingTypeOverview, Vec<BudgetItem>)> {
+        self.budget_items.items_by_type().iter().map(|(index, t, items)| {
+            let overview = self.budgeting_overview.get(t).unwrap();
+            (*index, *t, *overview, items.clone())
+        }).collect::<Vec<_>>()
     }
     
     pub fn budgeted_for_type(&self, budgeting_type: &BudgetingType) -> Money {

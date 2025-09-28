@@ -1,27 +1,31 @@
-use std::collections::HashMap;
+use crate::budget::BudgetingTypeCard;
+use crate::budget_components::{TabContent, TabList, TabTrigger, Tabs};
+use api::models::{BudgetItem, BudgetingType, BudgetingTypeOverview};
 use dioxus::prelude::*;
 use uuid::Uuid;
-use api::models::{BudgetItem, BudgetingType};
-use strum::IntoEnumIterator;
-use crate::budget_components::{Tabs, TabList, TabTrigger, TabContent};
-use crate::budget::BudgetingTypeCard;
-
-
+use crate::budget::BudgetingTypeOverviewView;
 
 #[component]
-pub fn BudgetingTypeTabs(budget_id: Uuid, items_by_type: Vec<(usize,BudgetingType, Vec<BudgetItem>)>) -> Element {
+pub fn BudgetingTypeTabs(
+    budget_id: Uuid,
+    items_by_type: Vec<(usize, BudgetingType, BudgetingTypeOverview, Vec<BudgetItem>)>,
+) -> Element {
     rsx! {
         Tabs {
             default_value: items_by_type.first().unwrap().1.to_string(),
             horizontal: true,
             TabList {
-                for bt in BudgetingType::iter() {
-                    TabTrigger { value: bt.to_string(), index: 0usize,
-                        h2 { {bt.to_string()} }
+                for (index , budgeting_type , overview , _) in &items_by_type {
+                    TabTrigger { value: budgeting_type.to_string(), index: *index,
+                        BudgetingTypeOverviewView {
+                            budget_id,
+                            budgeting_type: *budgeting_type,
+                            overview: *overview,
+                        }
                     }
                 }
             }
-            for (index , budgeting_type , items) in items_by_type {
+            for (index , budgeting_type , _ , items) in items_by_type {
                 TabContent { index, value: budgeting_type.to_string(),
                     BudgetingTypeCard { budget_id, budgeting_type, items }
                 }
