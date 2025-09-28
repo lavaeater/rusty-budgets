@@ -20,6 +20,7 @@ const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 
 #[cfg(feature = "server")]
 pub mod db {
+    use anyhow::Error;
     use crate::cqrs::framework::Runtime;
     use crate::cqrs::runtime::{Db, JoyDbBudgetRuntime, UserBudgets};
     use crate::models::*;
@@ -127,10 +128,11 @@ pub mod db {
         match with_runtime(None).load(&budget_id) {
             Ok(budget) => match budget {
                 None => Err(anyhow::anyhow!("Could not load budget")),
-                Some(budget) => Ok(budget),,
-                Err(_) => Err(anyhow::anyhow!("Could not load budget")),
-            }
+                Some(budget) => Ok(budget),
+            },
+            Err(_) => Err(anyhow::anyhow!("Could not load budget"))
         }
+    }
 
     pub fn add_budget_to_user(
         user_id: &Uuid,
@@ -195,8 +197,7 @@ pub mod db {
     ) -> anyhow::Result<Budget> {
         let runtime = with_runtime(None);
         let _ = import_from_skandia_excel(file_name,user_id, budget_id, runtime)?;
-        let budget = with_runtime(None).load(budget_id)?;
-        Ok(budget)
+        get_budget(budget_id)
     }
 
     pub fn add_item(

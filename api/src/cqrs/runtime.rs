@@ -211,7 +211,7 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
             ev.apply(&mut budget);
         }
         let version = budget.version - version;
-        if version % 5 == 0 {
+        if version > 5 { // more than 5 events since last snapshot
             self.snapshot(&budget)?;
         }
         Ok(Some(budget))
