@@ -11,26 +11,32 @@ pub static CURRENT_BUDGET_UPDATED: GlobalSignal<bool> = Signal::global(|| true);
 #[component]
 pub fn BudgetHero() -> Element {
     let budget_resource = use_server_future(move || {
-        tracing::info!("In the future: {}",CURRENT_BUDGET_UPDATED());
+        let updated = *CURRENT_BUDGET_UPDATED.read();
+        tracing::info!("In the future, first: {}", updated);
+        if updated {
+            tracing::info!("In the future, change global value");
+            *CURRENT_BUDGET_UPDATED.write() = false;
+        }
         api::get_default_budget(CURRENT_BUDGET_UPDATED())
     })?;
+    
     let mut budget_signal = use_signal(|| None::<Budget>);
     let mut budget_name = use_signal(|| "".to_string());
 
     use_effect(move || {
         if let Some(Ok(Some(budget))) = budget_resource.read().as_ref() {
-            *CURRENT_BUDGET_UPDATED.write() = false;
             tracing::info!("We have budget: {}", budget.id);
             *CURRENT_BUDGET_ID.write() = budget.id;
             budget_signal.set(Some(budget.clone()));
-            tracing::info!("In the effect: {}", CURRENT_BUDGET_UPDATED());
+            let updated = *CURRENT_BUDGET_UPDATED.read();
+            tracing::info!("In the effect: {}", updated);
         }
     });
 
     // Handle the resource state
     match budget_signal() {
         Some(budget) => {
-            tracing::info!("The budget signal was updated: {budget:?}");
+            tracing::info!("The budget signal was updated: {}", budget.id);
             rsx! {
                 document::Link { rel: "stylesheet", href: HERO_CSS }
                 div { class: "budget-hero-container",

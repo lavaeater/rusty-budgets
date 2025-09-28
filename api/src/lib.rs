@@ -257,7 +257,8 @@ pub async fn get_default_user() -> Result<User, ServerFnError> {
 }
 
 #[server]
-pub async fn get_default_budget(_changed: bool) -> Result<Option<Budget>, ServerFnError> {
+pub async fn get_default_budget(changed: bool) -> Result<Option<Budget>, ServerFnError> {
+    tracing::info!("Changed: {}", changed);
     let user = db::get_default_user(None).expect("Could not get default user");
     match db::get_default_budget(&user.id) {
         Ok(b) => Ok(b),
