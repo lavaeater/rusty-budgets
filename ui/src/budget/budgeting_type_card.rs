@@ -6,6 +6,7 @@ use crate::budget_components::{Collapsible, CollapsibleContent, CollapsibleTrigg
 use uuid::Uuid;
 use api::models::{BudgetItem, BudgetingType, Currency, Money};
 use crate::{BudgetItemView, Button, Separator};
+use crate::budget::budget_hero::CURRENT_BUDGET_UPDATED;
 
 #[component]
 pub fn BudgetingTypeCard(budget_id: Uuid, budgeting_type: BudgetingType, items: Vec<BudgetItem>) -> Element {
@@ -39,7 +40,7 @@ pub fn BudgetingTypeCard(budget_id: Uuid, budgeting_type: BudgetingType, items: 
                         class: "button",
                         "data-style": "primary",
                         onclick: move |_| async move {
-                            if let Ok(items) = api::add_item(
+                            if let Ok(_) = api::add_item(
                                     budget_id,
                                     new_item_name(),
                                     budgeting_type,
@@ -47,7 +48,7 @@ pub fn BudgetingTypeCard(budget_id: Uuid, budgeting_type: BudgetingType, items: 
                                 )
                                 .await
                             {
-                                budget_items.set(items);
+                                *CURRENT_BUDGET_UPDATED.write() = true;
                             }
                             show_new_item.set(false);
                         },

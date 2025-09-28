@@ -4,15 +4,15 @@ extern crate alloc;
 extern crate core;
 
 pub mod cqrs;
+pub mod events;
 pub mod import;
 pub mod models;
-pub mod events;
 
-use models::*;
 use crate::models::*;
 #[cfg(feature = "server")]
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
+use models::*;
 use uuid::Uuid;
 
 #[cfg(feature = "server")]
@@ -20,9 +20,9 @@ const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 
 #[cfg(feature = "server")]
 pub mod db {
-    use crate::models::*;
     use crate::cqrs::framework::Runtime;
     use crate::cqrs::runtime::{Db, JoyDbBudgetRuntime, UserBudgets};
+    use crate::models::*;
     use crate::models::*;
     use crate::DEFAULT_USER_EMAIL;
     use chrono::NaiveDate;
@@ -103,18 +103,19 @@ pub mod db {
     pub fn get_default_budget(user_id: &Uuid) -> anyhow::Result<Option<Budget>> {
         match with_client(None).get::<UserBudgets>(user_id) {
             Ok(b) => match b {
-                None => { 
+                None => {
                     tracing::info!("User has no budgets");
                     Ok(None)
-                },
+                }
                 Some(b) => match b.budgets.iter().find(|(_, default)| *default) {
                     Some((budget_id, _)) => match with_runtime(None).load(&budget_id) {
-                        Ok(budget) => { Ok(budget) },
+                        Ok(budget) => Ok(budget),
                         Err(_) => Err(anyhow::anyhow!("Could not load default budget")),
                     },
                     None => {
                         tracing::info!("User had budgets but none were default");
-                        Ok(None) },
+                        Ok(None)
+                    }
                 },
             },
             Err(_) => Err(anyhow::anyhow!("Could not get default budget")),
@@ -163,7 +164,12 @@ pub mod db {
         user_id: &Uuid,
         default_budget: bool,
     ) -> anyhow::Result<Budget> {
-        match with_runtime(None).create_budget(&name.to_string(), default_budget, Currency::SEK, *user_id) {
+        match with_runtime(None).create_budget(
+            &name.to_string(),
+            default_budget,
+            Currency::SEK,
+            *user_id,
+        ) {
             Ok((budget, budget_id)) => {
                 add_budget_to_user(user_id, &budget_id, default_budget)?;
                 Ok(budget)
@@ -225,18 +231,12 @@ pub async fn add_item(
     name: String,
     item_type: BudgetingType,
     budgeted_amount: Money,
-) -> Result<Vec<BudgetItem>, ServerFnError> {
+) -> Result<Budget, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
-    match db::add_item(
-        &budget_id,
-        &user.id,
-        &name,
-        &item_type,
-        &budgeted_amount,
-    ) {
+    match db::add_item(&budget_id, &user.id, &name, &item_type, &budgeted_amount) {
         Ok(b) => {
-            let items = b.budget_items.by_type(&item_type).expect("Could not get budgeting_type");
-            Ok(items.iter().map(|item| (*item).clone()).collect())
+            // let items = b.budget_items.by_type(&item_type).expect("Could not get budgeting_type");
+            Ok(b)
         }
         Err(e) => {
             tracing::error!(error = %e, "Could not get default budget");
@@ -257,7 +257,7 @@ pub async fn get_default_user() -> Result<User, ServerFnError> {
 }
 
 #[server]
-pub async fn get_default_budget() -> Result<Option<Budget>, ServerFnError> {
+pub async fn get_default_budget(_changed: bool) -> Result<Option<Budget>, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
     match db::get_default_budget(&user.id) {
         Ok(b) => Ok(b),

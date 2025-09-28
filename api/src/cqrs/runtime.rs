@@ -230,7 +230,7 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
 
     fn append(&self, user_id: &Uuid, ev: BudgetEvent) -> anyhow::Result<()> {
         let stored_event = StoredEvent::new(ev, *user_id);
-        tracing::info!("We have event: {stored_event:?}");
+        tracing::debug!("We have event: {stored_event:?}");
         self.db.insert(&stored_event)?;
         Ok(())
     }

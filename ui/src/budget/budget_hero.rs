@@ -7,17 +7,23 @@ use uuid::Uuid;
 
 const HERO_CSS: Asset = asset!("assets/styling/budget-hero.css");
 pub static CURRENT_BUDGET_ID: GlobalSignal<Uuid> = Signal::global(|| Uuid::default());
+pub static CURRENT_BUDGET_UPDATED: GlobalSignal<bool> = Signal::global(|| true);
 #[component]
 pub fn BudgetHero() -> Element {
-    let budget_resource = use_server_future(api::get_default_budget)?;
+    let budget_resource = use_server_future(move || {
+        tracing::info!("In the future: ",CURRENT_BUDGET_UPDATED());
+        api::get_default_budget(CURRENT_BUDGET_UPDATED())
+    })?;
     let mut budget_signal = use_signal(|| None::<Budget>);
     let mut budget_name = use_signal(|| "".to_string());
 
     use_effect(move || {
         if let Some(Ok(Some(budget))) = budget_resource.read().as_ref() {
-            tracing::info!("We have budget: {budget:?}");
+            *CURRENT_BUDGET_UPDATED.write() = false;
+            tracing::info!("We have budget: {}", budget.id);
             *CURRENT_BUDGET_ID.write() = budget.id;
             budget_signal.set(Some(budget.clone()));
+            tracing::info!("In the effect: ", CURRENT_BUDGET_UPDATED());
         }
     });
 
@@ -82,7 +88,7 @@ pub fn BudgetHero() -> Element {
                         onclick: move |_| async move {
                             if let Ok(budget) = api::create_budget(budget_name.to_string(), None).await {
                                 tracing::info!("UI received a budget: {budget:?}");
-                                budget_signal.set(Some(budget))
+                                *CURRENT_BUDGET_UPDATED.write() = true;
                             }
                         },
                         "Skapa budget"
