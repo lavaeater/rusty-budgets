@@ -201,26 +201,20 @@ impl JoyDbBudgetRuntime {
 impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
     fn load(&self, id: &Uuid) -> Result<Option<Budget>, anyhow::Error> {
         let budget = self.get_budget(id)?;
-        match budget {
-            Some(mut budget) => {
-                let events = self.fetch_events(id, budget.last_event)?;
-                for ev in events {
-                    ev.apply(&mut budget);
-                }
-                Ok(Some(budget))
-            }
-            None => {
-                let mut budget = Budget {
-                    id: *id,
-                    ..Default::default()
-                };
-                let events = self.fetch_events(id, budget.last_event)?;
-                for ev in events {
-                    ev.apply(&mut budget);
-                }
-                Ok(Some(budget))
-            }
+        let mut  budget = budget.unwrap_or(Budget {
+            id: *id,
+            ..Default::default()
+        });
+        let version = budget.version;
+        let events = self.fetch_events(id, budget.last_event)?;
+        for ev in events {
+            ev.apply(&mut budget);
         }
+        let version = budget.version - version;
+        if version % 5 == 0 {
+            self.snapshot(&budget)?;
+        }
+        Ok(Some(budget))
     }
 
     fn snapshot(&self, agg: &Budget) -> anyhow::Result<()> {

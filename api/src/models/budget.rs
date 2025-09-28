@@ -187,7 +187,7 @@ impl Aggregate for Budget {
         }
     }
 
-    fn _version(&self) -> u64 {
+    fn version(&self) -> u64 {
         self.version
     }
 }

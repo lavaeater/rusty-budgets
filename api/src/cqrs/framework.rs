@@ -20,7 +20,7 @@ pub trait Aggregate: Sized + Debug + Clone {
     fn _default() -> Self;
 
     fn update_timestamp(&mut self, timestamp: i64, updated_at: DateTime<Utc>);
-    fn _version(&self) -> u64;
+    fn version(&self) -> u64;
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
