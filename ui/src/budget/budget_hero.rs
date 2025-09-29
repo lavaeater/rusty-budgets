@@ -23,7 +23,6 @@ pub fn BudgetHero() -> Element {
         if let Some(Ok(Some(budget))) = budget_resource.read().as_ref() {
             tracing::info!("We have budget: {}", budget.id);
             budget_signal.set(Some(budget.clone()));
-            budget_id.set(budget.id);
         }
     });
     
@@ -42,6 +41,7 @@ pub fn BudgetHero() -> Element {
     match budget_signal() {
         Some(budget) => {
             tracing::info!("The budget signal was updated: {}", budget.id);
+            budget_id.set(budget.id);
             rsx! {
                 document::Link { rel: "stylesheet", href: HERO_CSS }
                 div { class: "budget-hero-container",
