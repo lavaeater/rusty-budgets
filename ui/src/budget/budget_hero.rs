@@ -1,5 +1,5 @@
 use std::future::Future;
-use crate::{BudgetingTypeTabs, Input};
+use crate::{BudgetTabs, Input};
 use api::models::Budget;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
@@ -53,7 +53,7 @@ pub fn BudgetHero() -> Element {
                         }
                     }
                     div { class: "budget-hero-content",
-                        BudgetingTypeTabs {
+                        BudgetTabs {
                             budget_id: budget.id,
                             items_by_type: budget.items_by_type(),
                         }

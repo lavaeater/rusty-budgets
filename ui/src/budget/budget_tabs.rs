@@ -6,7 +6,7 @@ use uuid::Uuid;
 use crate::budget::BudgetingTypeOverviewView;
 
 #[component]
-pub fn BudgetingTypeTabs(
+pub fn BudgetTabs(
     budget_id: Uuid,
     items_by_type: Vec<(usize, BudgetingType, BudgetingTypeOverview, Vec<BudgetItem>)>,
 ) -> Element {
