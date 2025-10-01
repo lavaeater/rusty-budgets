@@ -20,6 +20,7 @@ use joydb::Model;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
+use crate::models::budget_period::BudgetPeriodStore;
 
 pub_events_enum! {
     #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -45,6 +46,7 @@ pub struct Budget {
     budgeted_by_type: HashMap<BudgetingType, Money>,
     actual_by_type: HashMap<BudgetingType, Money>,
     budgeting_overview: HashMap<BudgetingType, BudgetingTypeOverview>,
+    budget_periods: BudgetPeriodStore,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub default_budget: bool,
@@ -59,6 +61,7 @@ impl Default for Budget {
             id: Default::default(),
             name: "".to_string(),
             user_id: Default::default(),
+            budget_periods: Default::default(),
             budget_items: Default::default(),
             bank_transactions: Default::default(),
             created_at: Default::default(),
@@ -68,19 +71,19 @@ impl Default for Budget {
             version: 0,
             currency: Default::default(),
             budgeting_overview: HashMap::from([
-                (BudgetingType::Expense, BudgetingTypeOverview::default()),
-                (BudgetingType::Savings, BudgetingTypeOverview::default()),
-                (BudgetingType::Income, BudgetingTypeOverview::default()),
+                (Expense, BudgetingTypeOverview::default()),
+                (Savings, BudgetingTypeOverview::default()),
+                (Income, BudgetingTypeOverview::default()),
             ]),
             budgeted_by_type: HashMap::from([
-                (BudgetingType::Expense, Money::default()),
-                (BudgetingType::Savings, Money::default()),
-                (BudgetingType::Income, Money::default()),
+                (Expense, Money::default()),
+                (Savings, Money::default()),
+                (Income, Money::default()),
             ]),
             actual_by_type: HashMap::from([
-                (BudgetingType::Expense, Money::default()),
-                (BudgetingType::Savings, Money::default()),
-                (BudgetingType::Income, Money::default()),
+                (Expense, Money::default()),
+                (Savings, Money::default()),
+                (Income, Money::default()),
             ]),
         }
     }
