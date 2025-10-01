@@ -1,6 +1,5 @@
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
 use crate::models::Budget;
-use crate::models::BudgetItem;
 use crate::models::BudgetingType;
 use crate::models::Money;
 use cqrs_macros::DomainEvent;

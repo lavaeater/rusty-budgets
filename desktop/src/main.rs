@@ -1,3 +1,4 @@
+#![allow(unused_imports)]
 use dioxus::logger::tracing::Level;
 use dioxus::prelude::*;
 mod views;

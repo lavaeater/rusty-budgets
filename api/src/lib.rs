@@ -1,5 +1,6 @@
 //! This crate contains all shared fullstack server functions.
-
+#![allow(unused_imports)]
+#![allow(dead_code)]
 extern crate alloc;
 extern crate core;
 

@@ -18,7 +18,7 @@ use crate::models::bank_transaction::BankTransactionStore;
 use crate::models::budget_item::{BudgetItem, BudgetItemStore};
 use crate::models::budgeting_type::BudgetingType;
 use crate::models::BudgetingType::{Expense, Income, Savings};
-use crate::models::{BudgetingTypeOverview, Rule, ValueKind};
+use crate::models::{BudgetingTypeOverview, ValueKind};
 use crate::models::Rule::{Difference, SelfDiff, Sum};
 
 pub_events_enum! {
