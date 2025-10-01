@@ -32,7 +32,7 @@ impl Hash for TransactionAdded {
 
 impl TransactionAddedHandler for Budget {
     fn apply_add_transaction(&mut self, event: &TransactionAdded) -> Uuid {
-        self.bank_transactions.insert(BankTransaction::new(
+        self.insert_transaction(BankTransaction::new(
             event.transaction_id,
             &event.account_number,
             event.amount,
@@ -53,7 +53,7 @@ impl TransactionAddedHandler for Budget {
     ) -> Result<TransactionAdded, CommandError> {
         let hash = get_transaction_hash(&amount, &balance, &account_number, &description, &date);
 
-        if self.bank_transactions.can_insert(&hash) {
+        if self.can_insert_transaction(&hash) {
             Ok(TransactionAdded {
                 budget_id: self.id,
                 account_number,

@@ -213,27 +213,27 @@ impl BudgetItemStore {
             .collect::<HashMap<_, _>>()
     }
 
-    pub fn add_actual_amount(&mut self, id: &Uuid, amount: Money) {
+    pub fn add_actual_amount(&mut self, id: &Uuid, amount: &Money) {
         if let Some(item) = self.items.get(id) {
             self.modify_item(
                 id,
                 None,
                 None,
                 None,
-                Some(item.actual_amount + amount),
+                Some(item.actual_amount + *amount),
                 None,
                 None,
             );
         }
     }
 
-    pub fn add_budgeted_amount(&mut self, id: &Uuid, amount: Money) {
+    pub fn add_budgeted_amount(&mut self, id: &Uuid, amount: &Money) {
         if let Some(item) = self.items.get(id) {
             self.modify_item(
                 id,
                 None,
                 None,
-                Some(item.budgeted_amount + amount),
+                Some(item.budgeted_amount + *amount),
                 None,
                 None,
                 None,

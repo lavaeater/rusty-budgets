@@ -28,12 +28,7 @@ impl ItemAddedHandler for Budget {
             None,
         );
         let new_item_id = new_item.id;
-        self.budget_items.insert(&new_item, event.item_type);
-        self.budgeted_by_type
-            .entry(event.item_type)
-            .and_modify(|v| *v += event.budgeted_amount)
-            .or_insert(event.budgeted_amount);
-        self.recalc_overview();
+        self.insert_item(&new_item, event.item_type);
         new_item_id
     }
 

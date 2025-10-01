@@ -21,7 +21,7 @@ pub struct ItemModified {
 
 impl ItemModifiedHandler for Budget {
     fn apply_modify_item(&mut self, event: &ItemModified) -> Uuid {
-        self.budget_items.modify_item(
+        self.modify_budget_item(
             &event.item_id,
             event.name.clone(),
             event.item_type,
@@ -42,7 +42,7 @@ impl ItemModifiedHandler for Budget {
         notes: Option<String>,
         tags: Option<Vec<String>>,
     ) -> Result<ItemModified, CommandError> {
-        if self.budget_items.contains(&item_id) {
+        if self.contains_budget_item(&item_id) {
             Ok(ItemModified {
                 budget_id: self.id,
                 item_id,
