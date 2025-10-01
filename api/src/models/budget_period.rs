@@ -1,18 +1,24 @@
-use crate::models::{
-    BankTransactionStore, BudgetItemStore, BudgetingType, BudgetingTypeOverview, Money,
-};
+use crate::models::{BankTransactionStore, BudgetItem, BudgetItemStore, BudgetingType, BudgetingTypeOverview, Money};
 use chrono::{DateTime, Datelike, Utc};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::HashMap;
+use std::sync::Arc;
+use uuid::Uuid;
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct BudgetPeriodStore {
+    pub current_period_id: Option<BudgetPeriodId>,
     pub budget_periods: HashMap<BudgetPeriodId, BudgetPeriod>,
 }
 
 impl BudgetPeriodStore {
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new(year: i32, month: u32) -> Self {
+        let id = BudgetPeriodId::from(year, month);
+        let period = BudgetPeriod::new_for(&id);
+        Self {
+            budget_periods: HashMap::from([(id, period.clone())]),
+            current_period_id: Some(id),
+        }
     }
 
     pub fn get_period_before(&self, year: i32, month: u32) -> Option<BudgetPeriod> {

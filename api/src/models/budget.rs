@@ -41,11 +41,6 @@ pub struct Budget {
     pub id: Uuid,
     pub name: String,
     pub user_id: Uuid,
-    budget_items: BudgetItemStore,
-    bank_transactions: BankTransactionStore,
-    budgeted_by_type: HashMap<BudgetingType, Money>,
-    actual_by_type: HashMap<BudgetingType, Money>,
-    budgeting_overview: HashMap<BudgetingType, BudgetingTypeOverview>,
     budget_periods: BudgetPeriodStore,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
@@ -62,29 +57,12 @@ impl Default for Budget {
             name: "".to_string(),
             user_id: Default::default(),
             budget_periods: Default::default(),
-            budget_items: Default::default(),
-            bank_transactions: Default::default(),
             created_at: Default::default(),
             updated_at: Default::default(),
             default_budget: false,
             last_event: 0,
             version: 0,
             currency: Default::default(),
-            budgeting_overview: HashMap::from([
-                (Expense, BudgetingTypeOverview::default()),
-                (Savings, BudgetingTypeOverview::default()),
-                (Income, BudgetingTypeOverview::default()),
-            ]),
-            budgeted_by_type: HashMap::from([
-                (Expense, Money::default()),
-                (Savings, Money::default()),
-                (Income, Money::default()),
-            ]),
-            actual_by_type: HashMap::from([
-                (Expense, Money::default()),
-                (Savings, Money::default()),
-                (Income, Money::default()),
-            ]),
         }
     }
 }
