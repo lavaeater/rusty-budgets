@@ -78,12 +78,11 @@ impl TransactionConnectedHandler for Budget {
         item_id: Uuid,
     ) -> Result<TransactionConnected, CommandError> {
         if self.bank_transactions.contains(&tx_id) && self.budget_items.contains(&item_id) {
-            let ev = TransactionConnected {
+            Ok(TransactionConnected {
                 budget_id: self.id,
                 tx_id,
                 item_id,
-            };
-            Ok(ev)
+            })
         } else {
             Err(CommandError::Validation(
                 "Transaction or item does not exist.",
