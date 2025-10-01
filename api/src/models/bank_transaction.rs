@@ -14,6 +14,11 @@ pub struct BankTransactionStore {
 }
 
 impl BankTransactionStore {
+    
+    pub fn clear(&mut self) {
+        self.all.clear();
+        self.by_id.clear();
+    }
     pub fn len(&self) -> usize {
         self.all.len()
     }

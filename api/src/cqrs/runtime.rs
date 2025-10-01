@@ -35,6 +35,24 @@ impl JoyDbBudgetRuntime {
         })
     }
 
+    #[allow(clippy::too_many_arguments)]
+    pub fn modify_item(
+        &self,
+        budget_id: &Uuid,
+        item_id: &Uuid,
+        name: Option<String>,
+        item_type: Option<BudgetingType>,
+        budgeted_amount: Option<Money>,
+        notes: Option<String>,
+        tags: Option<Vec<String>>,
+        user_id: &Uuid,
+    ) -> anyhow::Result<(Budget, Uuid)> {
+        self.cmd(user_id, budget_id,|budget| {
+            budget.modify_item(*item_id, name, item_type, budgeted_amount, notes, tags)
+        })
+    }
+
+    #[allow(clippy::too_many_arguments)]
     pub fn add_and_connect_tx(
         &self,
         budget_id: Uuid,
@@ -61,6 +79,7 @@ impl JoyDbBudgetRuntime {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn add_transaction(
         &self,
         budget_id: Uuid,

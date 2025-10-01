@@ -11,6 +11,7 @@ use uuid::Uuid;
 use crate::events::budget_created::BudgetCreated;
 use crate::events::item_added::ItemAdded;
 use crate::events::item_funds_reallocated::ItemFundsReallocated;
+use crate::events::ItemModified;
 use crate::events::transaction_added::TransactionAdded;
 use crate::events::transaction_connected::TransactionConnected;
 use crate::models::bank_transaction::BankTransactionStore;
@@ -29,6 +30,7 @@ pub_events_enum! {
         TransactionConnected,
         ItemFundsReallocated,
         ItemFundsAdjusted,
+        ItemModified,
     }
 }
 
@@ -41,15 +43,15 @@ pub struct Budget {
     pub user_id: Uuid,
     pub budget_items: BudgetItemStore,
     pub bank_transactions: BankTransactionStore,
+    pub budgeted_by_type: HashMap<BudgetingType, Money>, 
+    pub actual_by_type: HashMap<BudgetingType, Money>,
+    pub budgeting_overview: HashMap<BudgetingType, BudgetingTypeOverview>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub default_budget: bool,
     pub last_event: i64,
     pub version: u64,
     pub currency: Currency,
-    pub budgeted_by_type: HashMap<BudgetingType, Money>, 
-    pub actual_by_type: HashMap<BudgetingType, Money>,
-    pub budgeting_overview: HashMap<BudgetingType, BudgetingTypeOverview>,
 }
 
 impl Default for Budget {

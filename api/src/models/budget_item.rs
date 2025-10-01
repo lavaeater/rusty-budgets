@@ -218,6 +218,7 @@ impl BudgetItemStore {
                 id,
                 None,
                 None,
+                None,
                 Some(item.actual_amount + amount),
                 None,
                 None,
@@ -229,6 +230,7 @@ impl BudgetItemStore {
         if let Some(item) = self.items.get(id) {
             self.modify_item(
                 id,
+                None,
                 None,
                 Some(item.budgeted_amount + amount),
                 None,
@@ -242,6 +244,7 @@ impl BudgetItemStore {
         &mut self,
         id: &Uuid,
         name: Option<String>,
+        item_type: Option<BudgetingType>,
         budgeted_amount: Option<Money>,
         actual_amount: Option<Money>,
         notes: Option<String>,
@@ -253,12 +256,12 @@ impl BudgetItemStore {
                 name: name.unwrap_or(old_item.name.clone()),
                 budgeted_amount: budgeted_amount.unwrap_or(old_item.budgeted_amount),
                 actual_amount: actual_amount.unwrap_or(old_item.actual_amount),
-                notes: notes,
+                notes,
                 tags: tags.unwrap_or(old_item.tags.clone()),
             });
-            if let Some((_old_item, item_type)) = self.remove(*id) {
-                self.insert(&new_item, item_type);
-                
+            if let Some((_old_item, mut old_item_type)) = self.remove(*id) {
+                old_item_type = item_type.unwrap_or(old_item_type);
+                self.insert(&new_item, old_item_type);
             }
         }
     }
