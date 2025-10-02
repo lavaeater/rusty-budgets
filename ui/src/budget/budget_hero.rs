@@ -1,11 +1,11 @@
-use std::future::Future;
+use crate::file_chooser::*;
 use crate::{BudgetTabs, Input};
 use api::models::Budget;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use dioxus_primitives::label::Label;
+use std::future::Future;
 use uuid::Uuid;
-use crate::file_chooser::*;
 
 const HERO_CSS: Asset = asset!("assets/styling/budget-hero.css");
 #[component]
@@ -13,10 +13,10 @@ pub fn BudgetHero() -> Element {
     let budget_resource = use_server_future(api::get_default_budget)?;
 
     let mut budget_signal = use_signal(|| None::<Budget>);
-    let mut budget_id = use_signal(|| Uuid::default());
-    
+    let mut budget_id = use_signal(Uuid::default);
+
     use_context_provider(|| budget_signal);
-    
+
     let mut budget_name = use_signal(|| "".to_string());
 
     use_effect(move || {
@@ -25,12 +25,12 @@ pub fn BudgetHero() -> Element {
             budget_signal.set(Some(budget.clone()));
         }
     });
-    
+
     let import_file = move |file: FileChosen| {
         let file_name = file.data.to_string();
         spawn(async move {
             if !file_name.is_empty() {
-                if let Ok(new_aggregate) = api::import_transactions(budget_id(),file_name).await {
+                if let Ok(new_aggregate) = api::import_transactions(budget_id(), file_name).await {
                     budget_signal.set(Some(new_aggregate));
                 }
             }
@@ -52,6 +52,12 @@ pub fn BudgetHero() -> Element {
                         FileDialog { on_chosen: import_file }
                     }
                     div { class: "budget-hero-content",
+                        BudgetTabs {
+                            budget_id: budget.id,
+                            items_by_type: budget.items_by_type(),
+                        }
+                    }
+                                        div { class: "budget-hero-content",
                         BudgetTabs {
                             budget_id: budget.id,
                             items_by_type: budget.items_by_type(),
