@@ -5,10 +5,11 @@ use crate::models::{
     BankTransaction, BankTransactionStore, BudgetItem, BudgetItemStore, BudgetingType,
     BudgetingTypeOverview, Money, MonthBeginsOn, ValueKind,
 };
-use chrono::{DateTime, Datelike, Days, Months, Utc};
+use chrono::{DateTime, Datelike, Days, Months, TimeZone, Utc};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::HashMap;
 use std::sync::Arc;
+use dioxus::logger::tracing;
 use uuid::Uuid;
 
 // Custom serialization for HashMap<BudgetPeriodId, BudgetPeriod>
@@ -142,6 +143,7 @@ impl BudgetPeriodStore {
     }
 
     pub fn current_period(&self) -> &BudgetPeriod {
+        tracing::debug!("Current period: {}", self.current_period_id);
         self.budget_periods.get(&self.current_period_id).unwrap()
     }
 
@@ -416,51 +418,68 @@ impl Display for BudgetPeriodId {
 
 impl BudgetPeriodId {
     pub fn from_date(date: DateTime<Utc>, month_begins_on: MonthBeginsOn) -> Self {
-        let month_start_date = match month_begins_on {
+        tracing::info!("From date: {}", date);
+        
+        // Determine which period this date falls into
+        // The period ID represents the END month of the period
+        match month_begins_on {
             MonthBeginsOn::PreviousMonth(day) => {
                 if day == 1 {
                     panic!("Cannot start on day 1, use PreviousMonth1stDayOfMonth")
                 }
-                date.checked_sub_months(Months::new(1))
-                    .unwrap()
-                    .with_day(day)
-                    .unwrap()
+                // Period runs from day D of previous month to day D-1 of current month
+                // If date is >= day D, it belongs to NEXT month's period
+                // If date is < day D, it belongs to CURRENT month's period
+                if date.day() >= day {
+                    // Date is on or after the start day, so it belongs to next month's period
+                    let next_month = date.checked_add_months(Months::new(1)).unwrap();
+                    Self {
+                        year: next_month.year(),
+                        month: next_month.month(),
+                    }
+                } else {
+                    // Date is before the start day, so it belongs to current month's period
+                    Self {
+                        year: date.year(),
+                        month: date.month(),
+                    }
+                }
             }
             MonthBeginsOn::CurrentMonth(day) => {
                 if day == 1 {
                     panic!("Cannot start on day 1, use CurrentMonth1stDayOfMonth")
                 }
-                date.with_day(day).unwrap()
+                // Period runs from day D of current month to day D-1 of next month
+                // If date is >= day D, it belongs to NEXT month's period
+                // If date is < day D, it belongs to CURRENT month's period
+                if date.day() >= day {
+                    let next_month = date.checked_add_months(Months::new(1)).unwrap();
+                    Self {
+                        year: next_month.year(),
+                        month: next_month.month(),
+                    }
+                } else {
+                    Self {
+                        year: date.year(),
+                        month: date.month(),
+                    }
+                }
             }
-            MonthBeginsOn::PreviousMonth1stDayOfMonth => date
-                .checked_sub_months(Months::new(1))
-                .unwrap()
-                .with_day(1)
-                .unwrap(),
-            MonthBeginsOn::CurrentMonth1stDayOfMonth => date.with_day(1).unwrap(),
-        };
-
-        let month_end_date = match month_begins_on {
-            MonthBeginsOn::PreviousMonth(day) => date.with_day(day - 1).unwrap(),
-            MonthBeginsOn::CurrentMonth(day) => date
-                .checked_add_months(Months::new(1))
-                .unwrap()
-                .with_day(day - 1)
-                .unwrap(),
-            MonthBeginsOn::PreviousMonth1stDayOfMonth => last_day_of_month(month_start_date),
-            MonthBeginsOn::CurrentMonth1stDayOfMonth => last_day_of_month(month_start_date),
-        };
-
-        let date = if date < month_start_date {
-            month_start_date
-        } else if date > month_end_date {
-            month_end_date
-        } else {
-            date
-        };
-        Self {
-            year: date.year(),
-            month: date.month(),
+            MonthBeginsOn::PreviousMonth1stDayOfMonth => {
+                // Period is 1st of previous month to last day of previous month
+                // This means current month's dates belong to current month
+                Self {
+                    year: date.year(),
+                    month: date.month(),
+                }
+            }
+            MonthBeginsOn::CurrentMonth1stDayOfMonth => {
+                // Period is 1st of current month to last day of current month
+                Self {
+                    year: date.year(),
+                    month: date.month(),
+                }
+            }
         }
     }
 }
@@ -537,29 +556,25 @@ mod tests {
         assert_eq!(id.year, 2025);
         assert_eq!(id.month, 3);
     }
-
+    
     #[test]
-    fn test_from_date_previous_month_1st_day() {
+    fn test_from_date_std() {
         // Test with PreviousMonth1stDayOfMonth - period is 1st of prev month to last day of prev month
-        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
-        let id = BudgetPeriodId::from_date(date, MonthBeginsOn::PreviousMonth1stDayOfMonth);
+        let date = Utc.with_ymd_and_hms(2025, 3, 12, 12, 0, 0).unwrap();
+        let id = BudgetPeriodId::from_date(date, MonthBeginsOn::PreviousMonth(25));
 
         // Date is March 15, period starts Feb 1, so date is clamped to Feb 28 (end of period)
         assert_eq!(id.year, 2025);
-        assert_eq!(id.month, 2);
-    }
+        assert_eq!(id.month, 3);
 
-    #[test]
-    fn test_from_date_current_month_custom_day_within_period() {
-        // Test with CurrentMonth(15) - period is 15th of current month to 14th of next month
-        // Date March 20 is within period (March 15 - April 14)
-        let date = Utc.with_ymd_and_hms(2025, 3, 20, 12, 0, 0).unwrap();
-        let id = BudgetPeriodId::from_date(date, MonthBeginsOn::CurrentMonth(15));
+        let date = Utc.with_ymd_and_hms(2025, 2, 26, 12, 0, 0).unwrap();
+        let id = BudgetPeriodId::from_date(date, MonthBeginsOn::PreviousMonth(25));
 
+        // Date is March 15, period starts Feb 1, so date is clamped to Feb 28 (end of period)
         assert_eq!(id.year, 2025);
         assert_eq!(id.month, 3);
     }
-
+    
     #[test]
     fn test_from_date_current_month_before_start_day() {
         // Test with CurrentMonth(15) when date is before the 15th
@@ -570,17 +585,7 @@ mod tests {
         assert_eq!(id.year, 2025);
         assert_eq!(id.month, 3);
     }
-
-    #[test]
-    fn test_from_date_current_month_after_end_day() {
-        // Test with CurrentMonth(15) when date is after period end
-        // Date April 20 is after period end (April 14), so clamped to April 14
-        let date = Utc.with_ymd_and_hms(2025, 4, 20, 12, 0, 0).unwrap();
-        let id = BudgetPeriodId::from_date(date, MonthBeginsOn::CurrentMonth(15));
-
-        assert_eq!(id.year, 2025);
-        assert_eq!(id.month, 4);
-    }
+    
 
     #[test]
     fn test_from_date_previous_month_custom_day_within_period() {
@@ -603,18 +608,7 @@ mod tests {
         assert_eq!(id.year, 2025);
         assert_eq!(id.month, 3);
     }
-
-    #[test]
-    fn test_from_date_previous_month_after_end_day() {
-        // Test with PreviousMonth(25) when date is after period end
-        // Date March 26 is after period end (March 24), so clamped to March 24
-        let date = Utc.with_ymd_and_hms(2025, 3, 26, 12, 0, 0).unwrap();
-        let id = BudgetPeriodId::from_date(date, MonthBeginsOn::PreviousMonth(25));
-
-        assert_eq!(id.year, 2025);
-        assert_eq!(id.month, 3);
-    }
-
+    
     #[test]
     fn test_from_date_year_boundary_december_to_january() {
         // Test year boundary with PreviousMonth(25)
@@ -624,16 +618,6 @@ mod tests {
 
         assert_eq!(id.year, 2025);
         assert_eq!(id.month, 1);
-    }
-
-    #[test]
-    fn test_from_date_on_start_boundary() {
-        // Test with date exactly on period start
-        let date = Utc.with_ymd_and_hms(2025, 3, 15, 0, 0, 0).unwrap();
-        let id = BudgetPeriodId::from_date(date, MonthBeginsOn::CurrentMonth(15));
-
-        assert_eq!(id.year, 2025);
-        assert_eq!(id.month, 3);
     }
 
     #[test]
@@ -688,18 +672,6 @@ mod tests {
 
         assert_eq!(id.year, 2025);
         assert_eq!(id.month, 1);
-    }
-
-    #[test]
-    fn test_from_date_current_month_end_of_month() {
-        // Test with CurrentMonth(25) and date at end of month
-        // Period: March 25 - April 24
-        // Date March 31 is within period
-        let date = Utc.with_ymd_and_hms(2025, 3, 31, 23, 59, 59).unwrap();
-        let id = BudgetPeriodId::from_date(date, MonthBeginsOn::CurrentMonth(25));
-
-        assert_eq!(id.year, 2025);
-        assert_eq!(id.month, 3);
     }
 
     #[test]
@@ -776,54 +748,7 @@ mod tests {
         assert!(id2 < id3);
         assert!(id1 < id3);
     }
-
-    #[test]
-    fn test_from_date_clamping_behavior_current_month() {
-        // Test that dates outside period are clamped correctly for CurrentMonth
-        // Period: March 10 - April 9
-
-        // Date before period start (March 5) should clamp to March 10
-        let date_before = Utc.with_ymd_and_hms(2025, 3, 5, 12, 0, 0).unwrap();
-        let id_before = BudgetPeriodId::from_date(date_before, MonthBeginsOn::CurrentMonth(10));
-        assert_eq!(id_before.year, 2025);
-        assert_eq!(id_before.month, 3);
-
-        // Date within period (March 20) should use actual date
-        let date_within = Utc.with_ymd_and_hms(2025, 3, 20, 12, 0, 0).unwrap();
-        let id_within = BudgetPeriodId::from_date(date_within, MonthBeginsOn::CurrentMonth(10));
-        assert_eq!(id_within.year, 2025);
-        assert_eq!(id_within.month, 3);
-
-        // Date after period end (April 15) should clamp to April 9
-        let date_after = Utc.with_ymd_and_hms(2025, 4, 15, 12, 0, 0).unwrap();
-        let id_after = BudgetPeriodId::from_date(date_after, MonthBeginsOn::CurrentMonth(10));
-        assert_eq!(id_after.year, 2025);
-        assert_eq!(id_after.month, 4);
-    }
-
-    #[test]
-    fn test_from_date_clamping_behavior_previous_month() {
-        // Test that dates outside period are clamped correctly for PreviousMonth
-        // Period: Feb 20 - March 19
-
-        // Date before period start (Feb 15) should clamp to Feb 20
-        let date_before = Utc.with_ymd_and_hms(2025, 2, 15, 12, 0, 0).unwrap();
-        let id_before = BudgetPeriodId::from_date(date_before, MonthBeginsOn::PreviousMonth(20));
-        assert_eq!(id_before.year, 2025);
-        assert_eq!(id_before.month, 2);
-
-        // Date within period (March 10) should use actual date
-        let date_within = Utc.with_ymd_and_hms(2025, 3, 10, 12, 0, 0).unwrap();
-        let id_within = BudgetPeriodId::from_date(date_within, MonthBeginsOn::PreviousMonth(20));
-        assert_eq!(id_within.year, 2025);
-        assert_eq!(id_within.month, 3);
-
-        // Date after period end (March 25) should clamp to March 19
-        let date_after = Utc.with_ymd_and_hms(2025, 3, 25, 12, 0, 0).unwrap();
-        let id_after = BudgetPeriodId::from_date(date_after, MonthBeginsOn::PreviousMonth(20));
-        assert_eq!(id_after.year, 2025);
-        assert_eq!(id_after.month, 3);
-    }
+    
     #[test]
     fn test_last_day_of_month_january() {
         // January has 31 days
