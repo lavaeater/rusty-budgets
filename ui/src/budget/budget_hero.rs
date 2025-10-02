@@ -57,7 +57,7 @@ pub fn BudgetHero() -> Element {
                             items_by_type: budget.items_by_type(),
                         }
                     }
-                                        div { class: "budget-hero-content",
+                    div { class: "budget-hero-content",
                         BudgetTabs {
                             budget_id: budget.id,
                             items_by_type: budget.items_by_type(),
