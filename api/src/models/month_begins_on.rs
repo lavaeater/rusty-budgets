@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 pub enum MonthBeginsOn {
     PreviousMonth(u32),
     CurrentMonth(u32),
+    PreviousMonth1stDayOfMonth,
+    CurrentMonth1stDayOfMonth,
 }
 
 impl Default for MonthBeginsOn {

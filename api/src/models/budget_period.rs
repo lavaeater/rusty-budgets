@@ -1,10 +1,7 @@
 use crate::models::BudgetingType::{Expense, Income, Savings};
 use crate::models::Rule::{Difference, SelfDiff, Sum};
-use crate::models::{
-    BankTransaction, BankTransactionStore, BudgetItem, BudgetItemStore, BudgetingType,
-    BudgetingTypeOverview, Money, ValueKind,
-};
-use chrono::{DateTime, Datelike, Utc};
+use crate::models::{BankTransaction, BankTransactionStore, BudgetItem, BudgetItemStore, BudgetingType, BudgetingTypeOverview, Money, MonthBeginsOn, ValueKind};
+use chrono::{DateTime, Datelike, Days, Months, Utc};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -12,15 +9,18 @@ use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BudgetPeriodStore {
+    month_begins_on: MonthBeginsOn,
     current_period_id: BudgetPeriodId,
     budget_periods: HashMap<BudgetPeriodId, BudgetPeriod>,
 }
 
 impl Default for BudgetPeriodStore {
     fn default() -> Self {
+        let month_begins_on = MonthBeginsOn::default();
         let date = Utc::now();
-        let id = BudgetPeriodId::from(date.year(), date.month());
+        let id = BudgetPeriodId::from_date(date, month_begins_on);
         Self {
+            month_begins_on,
             current_period_id: id,
             budget_periods: HashMap::from([(id, BudgetPeriod::new_for(&id))]),
         }
@@ -28,10 +28,12 @@ impl Default for BudgetPeriodStore {
 }
 
 impl BudgetPeriodStore {
-    pub fn new(year: i32, month: u32) -> Self {
-        let id = BudgetPeriodId::from(year, month);
+    pub fn new(date: DateTime<Utc>, month_begins_on: Option<MonthBeginsOn>) -> Self {
+        let month_begins_on = month_begins_on.unwrap_or_default();
+        let id = BudgetPeriodId::from_date(date, month_begins_on);
         let period = BudgetPeriod::new_for(&id);
         Self {
+            month_begins_on,
             budget_periods: HashMap::from([(id, period.clone())]),
             current_period_id: id,
         }
@@ -49,7 +51,7 @@ impl BudgetPeriodStore {
     }
 
     pub fn get_for_date(&mut self, date: DateTime<Utc>) -> &mut BudgetPeriod {
-        self.get_period_mut(&BudgetPeriodId::from_date(date))
+        self.get_period_mut(&BudgetPeriodId::from_date(date, self.month_begins_on))
     }
     
     pub fn set_current_period(&mut self, date: DateTime<Utc>) {
@@ -332,12 +334,34 @@ pub struct BudgetPeriodId {
     pub month: u32,
 }
 
-impl BudgetPeriodId {
-    pub fn from(year: i32, month: u32) -> Self {
-        Self { year, month }
-    }
-    
-    pub fn from_date(date: DateTime<Utc>) -> Self {
+impl BudgetPeriodId {    
+    pub fn from_date(date: DateTime<Utc>, month_begins_on: MonthBeginsOn) -> Self {
+        let month_begins_date = match month_begins_on {
+            MonthBeginsOn::PreviousMonth(day) => { 
+                date.checked_sub_months(Months::new(1)).unwrap().with_day(day).unwrap()
+            },
+            MonthBeginsOn::CurrentMonth(day) => date.with_day(day).unwrap(),
+            MonthBeginsOn::PreviousMonth1stDayOfMonth => {
+                date.checked_sub_months(Months::new(1)).unwrap().with_day(1).unwrap()
+            }
+            MonthBeginsOn::CurrentMonth1stDayOfMonth => {
+                date.with_day(1).unwrap()
+            }
+        };
+        let month_ends_on = match month_begins_on {
+            MonthBeginsOn::PreviousMonth(day) => {
+                month_begins_date.with_day(day-1).unwrap()
+            }
+            MonthBeginsOn::CurrentMonth(day) => {
+                month_begins_date.checked_add_months(Months::new(1)).unwrap().with_day(day-1).unwrap()
+            }
+            MonthBeginsOn::PreviousMonth1stDayOfMonth => {
+                last_day_of_month(month_begins_date)
+            }
+            MonthBeginsOn::CurrentMonth1stDayOfMonth => {
+                last_day_of_month(month_begins_date)
+            }
+        };
         Self {
             year: date.year(),
             month: date.month(),
@@ -393,8 +417,12 @@ impl BudgetPeriod {
         period.clear_hashmaps_and_transactions();
         period
     }
-    pub fn new_for_year_and_month(year: i32, month: u32) -> Self {
-        let id = BudgetPeriodId::from(year, month);
-        Self::new_for(&id)
-    }
+}
+
+fn last_day_of_month(dt: DateTime<Utc>) -> DateTime<Utc> {
+    let year = dt.year();
+    let month = dt.month();
+    
+    let first_next_month = dt.checked_add_months(Months::new(1)).unwrap().with_day(1).unwrap();
+    first_next_month.checked_sub_days(Days::new(1)).unwrap()
 }

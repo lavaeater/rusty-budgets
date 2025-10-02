@@ -72,7 +72,7 @@ impl Budget {
         let today = Utc::now();
         Self {
             id,
-            budget_periods: BudgetPeriodStore::new(today.year(), today.month()),
+            budget_periods: BudgetPeriodStore::new(today, None),
             ..Default::default()
         }
     }
