@@ -11,10 +11,60 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use uuid::Uuid;
 
+// Custom serialization for HashMap<BudgetPeriodId, BudgetPeriod>
+mod budget_period_map_serde {
+    use super::{BudgetPeriod, BudgetPeriodId};
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+    use std::collections::HashMap;
+
+    pub fn serialize<S>(
+        map: &HashMap<BudgetPeriodId, BudgetPeriod>,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let string_map: HashMap<String, &BudgetPeriod> = map
+            .iter()
+            .map(|(k, v)| (k.to_string(), v))
+            .collect();
+        string_map.serialize(serializer)
+    }
+
+    pub fn deserialize<'de, D>(
+        deserializer: D,
+    ) -> Result<HashMap<BudgetPeriodId, BudgetPeriod>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let string_map: HashMap<String, BudgetPeriod> = HashMap::deserialize(deserializer)?;
+        string_map
+            .into_iter()
+            .map(|(k, v)| {
+                let parts: Vec<&str> = k.split('-').collect();
+                if parts.len() != 2 {
+                    return Err(serde::de::Error::custom(format!(
+                        "Invalid BudgetPeriodId format: {}",
+                        k
+                    )));
+                }
+                let year = parts[0]
+                    .parse::<i32>()
+                    .map_err(|e| serde::de::Error::custom(format!("Invalid year: {}", e)))?;
+                let month = parts[1]
+                    .parse::<u32>()
+                    .map_err(|e| serde::de::Error::custom(format!("Invalid month: {}", e)))?;
+                Ok((BudgetPeriodId { year, month }, v))
+            })
+            .collect()
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BudgetPeriodStore {
     month_begins_on: MonthBeginsOn,
     current_period_id: BudgetPeriodId,
+    #[serde(serialize_with = "budget_period_map_serde::serialize", deserialize_with = "budget_period_map_serde::deserialize")]
     budget_periods: HashMap<BudgetPeriodId, BudgetPeriod>,
 }
 
