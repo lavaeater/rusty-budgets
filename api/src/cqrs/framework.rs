@@ -57,8 +57,9 @@ impl<A: Aggregate, E: DomainEvent<A>> StoredEvent<A, E> {
     }
 
     pub fn apply(&self, state: &mut A) {
-        self.data.apply(state);
         state.update_timestamp(self.timestamp, self.created_at);
+        self.data.apply(state);
+        
     }
 }
 

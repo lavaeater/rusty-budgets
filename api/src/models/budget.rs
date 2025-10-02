@@ -9,6 +9,7 @@ use crate::events::transaction_connected::TransactionConnected;
 use crate::events::ItemModified;
 use crate::models::bank_transaction::BankTransactionStore;
 use crate::models::budget_item::{BudgetItem, BudgetItemStore};
+use crate::models::budget_period::BudgetPeriodStore;
 use crate::models::budgeting_type::BudgetingType;
 use crate::models::money::{Currency, Money};
 use crate::models::BudgetingType::{Expense, Income, Savings};
@@ -20,7 +21,6 @@ use joydb::Model;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
-use crate::models::budget_period::BudgetPeriodStore;
 
 pub_events_enum! {
     #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -88,18 +88,15 @@ impl Budget {
     pub fn items_by_type(
         &self,
     ) -> Vec<(usize, BudgetingType, BudgetingTypeOverview, Vec<BudgetItem>)> {
-        self.budget_periods
-            .items_by_type()
+        self.budget_periods.items_by_type()
     }
 
     pub fn budgeted_for_type(&self, budgeting_type: &BudgetingType) -> Money {
-        self.budget_periods
-            .budgeted_for_type(budgeting_type)
+        self.budget_periods.budgeted_for_type(budgeting_type)
     }
 
     pub fn spent_for_type(&self, budgeting_type: &BudgetingType) -> Money {
-        self.budget_periods
-            .spent_for_type(budgeting_type)
+        self.budget_periods.spent_for_type(budgeting_type)
     }
 
     pub fn recalc_overview(&mut self) {
@@ -143,7 +140,8 @@ impl Budget {
     }
 
     pub fn update_budget_actual_amount(&mut self, budgeting_type: &BudgetingType, amount: &Money) {
-        self.budget_periods.update_budget_actual_amount(budgeting_type, amount);
+        self.budget_periods
+            .update_budget_actual_amount(budgeting_type, amount);
     }
 
     pub fn update_budget_budgeted_amount(
@@ -151,15 +149,18 @@ impl Budget {
         budgeting_type: &BudgetingType,
         amount: &Money,
     ) {
-        self.budget_periods.update_budget_budgeted_amount(budgeting_type, amount)
+        self.budget_periods
+            .update_budget_budgeted_amount(budgeting_type, amount)
     }
 
     pub fn add_actual_amount_to_item(&mut self, item_id: &Uuid, amount: &Money) {
-        self.budget_periods.add_actual_amount_to_item(item_id, amount);
+        self.budget_periods
+            .add_actual_amount_to_item(item_id, amount);
     }
 
     pub fn add_budgeted_amount_to_item(&mut self, item_id: &Uuid, amount: &Money) {
-        self.budget_periods.add_budgeted_amount_to_item(item_id, amount);
+        self.budget_periods
+            .add_budgeted_amount_to_item(item_id, amount);
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -183,21 +184,28 @@ impl Budget {
             tags,
         );
     }
-    
-    pub fn get_budgeted_by_type(&self, budgeting_type: &BudgetingType)-> Option<&Money> {
+
+    pub fn get_budgeted_by_type(&self, budgeting_type: &BudgetingType) -> Option<&Money> {
         self.budget_periods.get_budgeted_by_type(budgeting_type)
     }
-    
-    pub fn get_actual_by_type(&self, budgeting_type: &BudgetingType)-> Option<&Money> {
-        self.budget_periods.get_actual_by_type(budgeting_type) 
+
+    pub fn get_actual_by_type(&self, budgeting_type: &BudgetingType) -> Option<&Money> {
+        self.budget_periods.get_actual_by_type(budgeting_type)
     }
-    
-    pub fn get_budgeting_overview(&self, budgeting_type: &BudgetingType)-> Option<&BudgetingTypeOverview> {
+
+    pub fn get_budgeting_overview(
+        &self,
+        budgeting_type: &BudgetingType,
+    ) -> Option<&BudgetingTypeOverview> {
         self.budget_periods.get_budgeting_overview(budgeting_type)
     }
-    
-    pub fn list_bank_transactions(&self) -> Vec<&BankTransaction>{
+
+    pub fn list_bank_transactions(&self) -> Vec<&BankTransaction> {
         self.budget_periods.list_bank_transactions()
+    }
+
+    fn ensure_time_period(&mut self, updated_at: DateTime<Utc>) {
+        self.budget_periods.set_current_period(updated_at);
     }
 }
 

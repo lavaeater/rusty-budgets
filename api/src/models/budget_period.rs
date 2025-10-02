@@ -12,8 +12,8 @@ use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BudgetPeriodStore {
-    pub current_period_id: BudgetPeriodId,
-    pub budget_periods: HashMap<BudgetPeriodId, BudgetPeriod>,
+    current_period_id: BudgetPeriodId,
+    budget_periods: HashMap<BudgetPeriodId, BudgetPeriod>,
 }
 
 impl Default for BudgetPeriodStore {
@@ -37,12 +37,10 @@ impl BudgetPeriodStore {
         }
     }
 
-    pub fn get_period_before(&self, year: i32, month: u32) -> Option<BudgetPeriod> {
+    pub fn get_period_before(&self, id: &BudgetPeriodId) -> Option<BudgetPeriod> {
         if self.budget_periods.is_empty() {
             return None;
         }
-        let id = BudgetPeriodId { year, month };
-
         self.budget_periods
             .keys()
             .filter(|key| key.year < id.year || (key.year == id.year && key.month < id.month))
@@ -51,15 +49,17 @@ impl BudgetPeriodStore {
     }
 
     pub fn get_for_date(&mut self, date: DateTime<Utc>) -> &mut BudgetPeriod {
-        let year = date.year();
-        let month = date.month();
-        self.get_period(year, month)
+        self.get_period_mut(&BudgetPeriodId::from_date(date))
+    }
+    
+    pub fn set_current_period(&mut self, date: DateTime<Utc>) {
+        let period = self.get_for_date(date);
+        self.current_period_id = period.id;
     }
 
-    pub fn get_period(&mut self, year: i32, month: u32) -> &mut BudgetPeriod {
-        let id = BudgetPeriodId { year, month };
-        let previous_period = self.get_period_before(year, month);
-        self.budget_periods.entry(id).or_insert_with(|| {
+    pub fn get_period_mut(&mut self, id: &BudgetPeriodId) -> &mut BudgetPeriod {
+        let previous_period = self.get_period_before(id);
+        self.budget_periods.entry(*id).or_insert_with(|| {
             if let Some(previous_period) = previous_period {
                 let period = previous_period.clone_to(&id);
                 period.clone()
@@ -67,8 +67,7 @@ impl BudgetPeriodStore {
                 let period = BudgetPeriod::new_for(&id);
                 period.clone()
             }
-        });
-        self.budget_periods.get_mut(&id).unwrap()
+        })
     }
 
     pub fn current_period(&self) -> &BudgetPeriod {
@@ -336,6 +335,13 @@ pub struct BudgetPeriodId {
 impl BudgetPeriodId {
     pub fn from(year: i32, month: u32) -> Self {
         Self { year, month }
+    }
+    
+    pub fn from_date(date: DateTime<Utc>) -> Self {
+        Self {
+            year: date.year(),
+            month: date.month(),
+        }
     }
 }
 
