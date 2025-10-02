@@ -9,7 +9,7 @@ use crate::events::transaction_connected::TransactionConnected;
 use crate::events::ItemModified;
 use crate::models::bank_transaction::BankTransactionStore;
 use crate::models::budget_item::{BudgetItem, BudgetItemStore};
-use crate::models::budget_period::BudgetPeriodStore;
+use crate::models::budget_period::{BudgetPeriodId, BudgetPeriodStore};
 use crate::models::budgeting_type::BudgetingType;
 use crate::models::money::{Currency, Money};
 use crate::models::BudgetingType::{Expense, Income, Savings};
@@ -48,6 +48,12 @@ pub struct Budget {
     pub last_event: i64,
     pub version: u64,
     pub currency: Currency,
+}
+
+impl Budget {
+    pub fn get_current_period_id(&self) -> &BudgetPeriodId {
+        self.budget_periods.current_period_id()
+    }
 }
 
 impl Default for Budget {

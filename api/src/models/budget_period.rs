@@ -1,3 +1,4 @@
+use core::fmt::Display;
 use crate::models::BudgetingType::{Expense, Income, Savings};
 use crate::models::Rule::{Difference, SelfDiff, Sum};
 use crate::models::{
@@ -15,6 +16,12 @@ pub struct BudgetPeriodStore {
     month_begins_on: MonthBeginsOn,
     current_period_id: BudgetPeriodId,
     budget_periods: HashMap<BudgetPeriodId, BudgetPeriod>,
+}
+
+impl BudgetPeriodStore {
+    pub(crate) fn current_period_id(&self) -> &BudgetPeriodId {
+        &self.current_period_id
+    }
 }
 
 impl Default for BudgetPeriodStore {
@@ -349,6 +356,12 @@ impl BudgetPeriodStore {
 pub struct BudgetPeriodId {
     pub year: i32,
     pub month: u32,
+}
+
+impl Display for BudgetPeriodId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}-{}", self.year, self.month)
+    }
 }
 
 impl BudgetPeriodId {
