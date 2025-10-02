@@ -23,6 +23,9 @@ pub fn create_budget_test() -> anyhow::Result<()> {
     assert!(res.default_budget);
     assert_eq!(res.version, 1);
     assert_eq!(res.currency, Currency::SEK);
+    
+    let ser = serde_json::to_string(&res)?;
+    println!("Serialized budget: {}", ser);
 
     Ok(())
 }

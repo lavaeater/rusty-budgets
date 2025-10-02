@@ -3,7 +3,6 @@
 #![allow(dead_code)]
 extern crate alloc;
 extern crate core;
-extern crate core;
 
 pub mod cqrs;
 pub mod events;
