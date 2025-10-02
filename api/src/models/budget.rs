@@ -203,8 +203,15 @@ impl Budget {
     pub fn list_bank_transactions(&self) -> Vec<&BankTransaction> {
         self.budget_periods.list_bank_transactions()
     }
+    
+    pub fn list_all_bank_transactions(&self) -> Vec<&BankTransaction> {
+        self.budget_periods.list_all_bank_transactions()
+    }
 
-    fn ensure_time_period(&mut self, updated_at: DateTime<Utc>) {
+    pub fn set_current_period(&mut self, date: &DateTime<Utc>) {
+        self.budget_periods.set_current_period(date);
+    }
+    fn ensure_time_period(&mut self, updated_at: &DateTime<Utc>) {
         self.budget_periods.set_current_period(updated_at);
     }
 }

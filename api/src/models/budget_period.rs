@@ -53,26 +53,35 @@ impl BudgetPeriodStore {
             .map(|key| self.budget_periods.get(key).unwrap().clone())
     }
 
-    pub fn get_for_date(&mut self, date: DateTime<Utc>) -> &mut BudgetPeriod {
-        self.get_period_mut(&BudgetPeriodId::from_date(date, self.month_begins_on))
+    pub fn get_period_for_date_mut(&mut self, date: &DateTime<Utc>) -> &mut BudgetPeriod {
+        self.get_period_mut(&BudgetPeriodId::from_date(*date, self.month_begins_on))
     }
 
-    pub fn set_current_period(&mut self, date: DateTime<Utc>) {
-        let period = self.get_for_date(date);
+    pub fn get_period_for_date(&mut self, date: &DateTime<Utc>) -> &BudgetPeriod {
+        self.get_period(&BudgetPeriodId::from_date(*date, self.month_begins_on))
+    }
+
+    pub fn set_current_period(&mut self, date: &DateTime<Utc>) {
+        let period = self.get_period_for_date_mut(date);
         self.current_period_id = period.id;
     }
+    
 
     pub fn get_period_mut(&mut self, id: &BudgetPeriodId) -> &mut BudgetPeriod {
         let previous_period = self.get_period_before(id);
         self.budget_periods.entry(*id).or_insert_with(|| {
             if let Some(previous_period) = previous_period {
-                let period = previous_period.clone_to(&id);
+                let period = previous_period.clone_to(id);
                 period.clone()
             } else {
-                let period = BudgetPeriod::new_for(&id);
+                let period = BudgetPeriod::new_for(id);
                 period.clone()
             }
         })
+    }
+
+    pub fn get_period(&mut self, id: &BudgetPeriodId) -> &BudgetPeriod {
+        self.get_period_mut(id)
     }
 
     pub fn current_period(&self) -> &BudgetPeriod {
@@ -225,11 +234,12 @@ impl BudgetPeriodStore {
     }
 
     pub fn insert_transaction(&mut self, tx: BankTransaction) {
-        self.current_period_mut().bank_transactions.insert(tx);
+        self.get_period_mut(&BudgetPeriodId::from_date(tx.date, self.month_begins_on))
+            .bank_transactions.insert(tx);
     }
 
     pub fn can_insert_transaction(&self, tx_hash: &u64) -> bool {
-        self.current_period().bank_transactions.can_insert(tx_hash)
+        self.budget_periods.values().all(|p| p.bank_transactions.can_insert(tx_hash))
     }
 
     pub fn contains_transaction(&self, tx_id: &Uuid) -> bool {
@@ -328,6 +338,10 @@ impl BudgetPeriodStore {
 
     pub fn list_bank_transactions(&self) -> Vec<&BankTransaction> {
         self.current_period().bank_transactions.list_transactions()
+    }
+
+    pub fn list_all_bank_transactions(&self) -> Vec<&BankTransaction> {
+        self.budget_periods.values().flat_map(|v|v.bank_transactions.list_transactions()).collect()
     }
 }
 

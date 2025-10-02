@@ -2,7 +2,7 @@ use api::cqrs::framework::Runtime;
 use api::cqrs::runtime::JoyDbBudgetRuntime;
 use api::import::import_from_skandia_excel;
 use api::models::*;
-use chrono::Utc;
+use chrono::{DateTime, Datelike, Utc};
 use std::collections::HashSet;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use uuid::Uuid;
@@ -230,16 +230,24 @@ pub fn test_import_from_skandia_excel() -> anyhow::Result<()> {
         &budget_id,
         &rt,
     )?;
+    
+    println!("Imported {} transactions", imported);
     let not_imported = import_from_skandia_excel(
         "../test_data/91594824853_2025-08-25-2025-09-19.xlsx",
         &user_id,
         &budget_id,
         &rt,
     )?;
+    
+    println!("Not imported {} transactions", not_imported);
 
-    let res = rt.load(&budget_id)?.unwrap();
+    let mut res = rt.load(&budget_id)?.unwrap();
+    
+    let date = Utc::now().with_year(2025).unwrap().with_month(9).unwrap().with_day(19).unwrap();
+    
+    res.set_current_period(&date);
 
-    assert_eq!(res.list_bank_transactions().len(), 77);
+    assert_eq!(res.list_all_bank_transactions().len(), 77);
     assert_eq!(imported, 77);
     assert_eq!(not_imported, 0);
 
