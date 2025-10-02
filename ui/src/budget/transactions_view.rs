@@ -12,6 +12,7 @@ pub fn TransactionsView(
 ) -> Element {
     rsx! {
         h1 { "Transactions" }
+        h2 { { transactions.len().to_string() }}
         div { flex: "row",
             div {
                 for transaction in transactions {
