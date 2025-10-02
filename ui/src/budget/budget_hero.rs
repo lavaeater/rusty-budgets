@@ -1,5 +1,5 @@
 use crate::file_chooser::*;
-use crate::{BudgetTabs, Input};
+use crate::{BudgetTabs, Input, TransactionsView};
 use api::models::Budget;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
@@ -58,9 +58,9 @@ pub fn BudgetHero() -> Element {
                         }
                     }
                     div { class: "budget-hero-content",
-                        BudgetTabs {
+                        TransactionsView {
                             budget_id: budget.id,
-                            items_by_type: budget.items_by_type(),
+                            transactions: budget.list_bank_transactions().into_iter().cloned().collect(),
                         }
                     }
                 }
