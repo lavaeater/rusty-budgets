@@ -70,7 +70,9 @@ impl BankTransactionStore {
     }
     
     pub fn list_transactions(&self) -> Vec<&BankTransaction> {
-        self.by_id.values().collect()
+        let mut transactions = self.by_id.values().collect::<Vec<_>>();
+        transactions.sort_by_key(|tx| tx.date);
+        transactions
     }
 }
 
