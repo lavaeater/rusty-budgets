@@ -150,10 +150,6 @@ fn is_numeric_only(s: &str) -> bool {
 /// # Returns
 /// A vector of filtered tokens (lowercase, no dates, no pure numbers, no stopwords)
 ///
-/// # Examples
-/// ```
-/// let tokens = tokenize_description("2025-09-30 WILLYS OREBRO VASTHA, OREBRO");
-/// // Returns: ["willys", "orebro", "vastha,", "orebro"]
 /// ```
 pub fn tokenize_description(description: &str) -> Vec<String> {
     /*

@@ -12,11 +12,11 @@ pub fn TransactionsView(budget_id: Uuid, transactions: Vec<BankTransaction>, ite
             rsx! {
                 h1 { "Transactions" }
                 h2 { {transactions.len().to_string()} }
-                div { flex: "row",
-                    div {
+                div {
+                    div { display: "flex", flex_direction: "row", gap: "1rem",
                         p { {tx.description.to_string()} }
                         p { {tx.amount.to_string()} }
-                        p { {tx.date.to_string()} }
+                        p { {tx.date.format("%Y-%m-%d").to_string()} }
                     }
                 }
             }
