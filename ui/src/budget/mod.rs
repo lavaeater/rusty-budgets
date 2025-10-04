@@ -15,3 +15,5 @@ pub use budget_tabs::BudgetTabs;
 pub use budgeting_type_card::BudgetingTypeCard;
 pub use budgeting_type_overview_view::BudgetingTypeOverviewView;
 pub use transactions_view::TransactionsView;
+pub use item_selector::ItemSelector;
+

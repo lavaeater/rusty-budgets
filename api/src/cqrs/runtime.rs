@@ -73,7 +73,7 @@ impl JoyDbBudgetRuntime {
             date,
             user_id,
         ) {
-            self.connect_transaction(budget_id, tx_id, item_id, user_id)
+            self.connect_transaction(&budget_id, &tx_id, &item_id, &user_id)
         } else {
             Err(anyhow::anyhow!("Failed to add transaction"))
         }
@@ -103,13 +103,13 @@ impl JoyDbBudgetRuntime {
 
     pub fn connect_transaction(
         &self,
-        budget_id: Uuid,
-        tx_id: Uuid,
-        item_id: Uuid,
-        user_id: Uuid,
+        budget_id: &Uuid,
+        tx_id: &Uuid,
+        item_id: &Uuid,
+        user_id: &Uuid,
     ) -> anyhow::Result<(Budget, Uuid)> {
-        self.cmd(&user_id, &budget_id, |budget| {
-            budget.connect_transaction(tx_id, item_id)
+        self.cmd(user_id, budget_id, |budget| {
+            budget.connect_transaction(*tx_id, *item_id)
         })
     }
 

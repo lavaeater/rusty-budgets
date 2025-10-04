@@ -213,6 +213,19 @@ pub mod db {
             .map(|(budget, _)| budget)
     }
 
+    pub fn connect_transaction(
+        budget_id: &Uuid,
+        user_id: &Uuid,
+        tx_id: &Uuid,
+        item_id: &Uuid
+    ) -> anyhow::Result<Budget> {
+        with_runtime(None)
+            .connect_transaction(budget_id, tx_id, item_id, user_id)
+            .map(|(budget, _)| { 
+                
+                budget })
+    }
+
     pub fn create_user(
         user_name: &str,
         email: &str,
@@ -298,6 +311,18 @@ pub async fn import_transactions(budget_id: Uuid, file_name: String) -> Result<B
         Ok(b) => Ok(b),
         Err(e) => {
             tracing::error!(error = %e, "Could not get default budget");
+            Err(ServerFnError::ServerError(e.to_string()))
+        }
+    }
+}
+
+#[server]
+pub async fn connect_transaction(budget_id: Uuid, tx_id: Uuid, item_id: Uuid) -> Result<Budget, ServerFnError> {
+    let user = db::get_default_user(None).expect("Could not get default user");
+    match db::connect_transaction(&budget_id, &user.id, &tx_id, &item_id) {
+        Ok(b) => Ok(b),
+        Err(e) => {
+            tracing::error!(error = %e, "Could not connect transaction to item.");
             Err(ServerFnError::ServerError(e.to_string()))
         }
     }
