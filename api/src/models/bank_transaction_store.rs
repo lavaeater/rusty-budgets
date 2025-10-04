@@ -71,12 +71,13 @@ impl BankTransactionStore {
         transactions.sort_by_key(|tx| tx.date);
         transactions
     }
-
-    pub fn list_transactions_for_connection(&self) -> Vec<&BankTransaction> {
+    
+    pub fn list_transactions_for_connection(&self) -> Vec<BankTransaction> {
         let mut transactions = self
             .by_id
             .values()
             .filter(|tx| tx.budget_item_id.is_none())
+            .cloned()
             .collect::<Vec<_>>();
         transactions.sort_by_key(|tx| tx.date);
         transactions

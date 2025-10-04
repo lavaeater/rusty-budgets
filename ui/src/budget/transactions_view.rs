@@ -6,7 +6,7 @@ use dioxus::prelude::*;
 use uuid::Uuid;
 
 #[component]
-pub fn TransactionsView(budget_id: Uuid, transactions: Vec<BankTransaction>) -> Element {
+pub fn TransactionsView(budget_id: Uuid, transactions: Vec<BankTransaction>, items: Vec<BudgetItem>) -> Element {
     transactions
         .iter()
         .filter(|tx| tx.budget_item_id.is_none())

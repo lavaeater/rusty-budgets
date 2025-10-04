@@ -71,6 +71,18 @@ pub struct BudgetPeriodStore {
 }
 
 impl BudgetPeriodStore {
+    pub(crate) fn list_transactions_for_connection(&self) -> Vec<BankTransaction> {
+        self.current_period().transactions.list_transactions_for_connection()
+    }
+}
+
+impl BudgetPeriodStore {
+    pub(crate) fn list_all_items(&self) -> Vec<BudgetItem> {
+        self.current_period().budget_items.list_all_items()
+    }
+}
+
+impl BudgetPeriodStore {
     pub(crate) fn current_period_id(&self) -> &BudgetPeriodId {
         &self.current_period_id
     }
@@ -295,15 +307,15 @@ impl BudgetPeriodStore {
 
     pub fn insert_transaction(&mut self, tx: BankTransaction) {
         self.get_period_mut(&BudgetPeriodId::from_date(tx.date, self.month_begins_on))
-            .bank_transactions.insert(tx);
+            .transactions.insert(tx);
     }
 
     pub fn can_insert_transaction(&self, tx_hash: &u64) -> bool {
-        self.budget_periods.values().all(|p| p.bank_transactions.can_insert(tx_hash))
+        self.budget_periods.values().all(|p| p.transactions.can_insert(tx_hash))
     }
 
     pub fn contains_transaction(&self, tx_id: &Uuid) -> bool {
-        self.current_period().bank_transactions.contains(tx_id)
+        self.current_period().transactions.contains(tx_id)
     }
 
     pub fn contains_budget_item(&self, item_id: &Uuid) -> bool {
@@ -311,11 +323,11 @@ impl BudgetPeriodStore {
     }
 
     pub fn get_transaction_mut(&mut self, tx_id: &Uuid) -> Option<&mut BankTransaction> {
-        self.current_period_mut().bank_transactions.get_mut(tx_id)
+        self.current_period_mut().transactions.get_mut(tx_id)
     }
 
     pub fn get_transaction(&self, tx_id: &Uuid) -> Option<&BankTransaction> {
-        self.current_period().bank_transactions.get(tx_id)
+        self.current_period().transactions.get(tx_id)
     }
 
     pub fn type_for_item(&self, item_id: &Uuid) -> Option<BudgetingType> {
@@ -397,11 +409,11 @@ impl BudgetPeriodStore {
     }
 
     pub fn list_bank_transactions(&self) -> Vec<&BankTransaction> {
-        self.current_period().bank_transactions.list_transactions()
+        self.current_period().transactions.list_transactions()
     }
 
     pub fn list_all_bank_transactions(&self) -> Vec<&BankTransaction> {
-        self.budget_periods.values().flat_map(|v|v.bank_transactions.list_transactions()).collect()
+        self.budget_periods.values().flat_map(|v|v.transactions.list_transactions()).collect()
     }
 }
 
@@ -490,7 +502,7 @@ impl BudgetPeriodId {
 pub struct BudgetPeriod {
     pub id: BudgetPeriodId,
     pub budget_items: BudgetItemStore,
-    pub bank_transactions: BankTransactionStore,
+    pub transactions: BankTransactionStore,
     pub budgeted_by_type: HashMap<BudgetingType, Money>,
     pub actual_by_type: HashMap<BudgetingType, Money>,
     pub budgeting_overview: HashMap<BudgetingType, BudgetingTypeOverview>,
@@ -498,7 +510,7 @@ pub struct BudgetPeriod {
 
 impl BudgetPeriod {
     fn clear_hashmaps_and_transactions(&mut self) {
-        self.bank_transactions.clear();
+        self.transactions.clear();
         self.budgeting_overview = HashMap::from([
             (Expense, BudgetingTypeOverview::default()),
             (Savings, BudgetingTypeOverview::default()),
@@ -525,7 +537,7 @@ impl BudgetPeriod {
         let mut period = Self {
             id: *id,
             budget_items: BudgetItemStore::default(),
-            bank_transactions: BankTransactionStore::default(),
+            transactions: BankTransactionStore::default(),
             budgeted_by_type: Default::default(),
             actual_by_type: Default::default(),
             budgeting_overview: Default::default(),

@@ -16,6 +16,12 @@ pub struct BudgetItemStore {
     items_and_types: HashMap<Uuid, BudgetingType>,
 }
 
+impl BudgetItemStore {
+    pub(crate) fn list_all_items(&self) -> Vec<BudgetItem> {
+        self.items.values().map(|i| i.as_ref()).cloned().collect()
+    }
+}
+
 impl Serialize for BudgetItemStore {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

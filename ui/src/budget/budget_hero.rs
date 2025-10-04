@@ -60,7 +60,8 @@ pub fn BudgetHero() -> Element {
                     div { class: "budget-hero-content",
                         TransactionsView {
                             budget_id: budget.id,
-                            transactions: budget.list_bank_transactions().into_iter().cloned().collect(),
+                            transactions: budget.list_transactions_for_connection(),
+                            items: budget.list_all_items(),
                         }
                     }
                 }

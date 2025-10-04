@@ -97,6 +97,12 @@ impl Budget {
         self.budget_periods.items_by_type()
     }
 
+    pub fn list_all_items(
+        &self,
+    ) -> Vec<BudgetItem> {
+        self.budget_periods.list_all_items()
+    }
+
     pub fn budgeted_for_type(&self, budgeting_type: &BudgetingType) -> Money {
         self.budget_periods.budgeted_for_type(budgeting_type)
     }
@@ -208,6 +214,10 @@ impl Budget {
 
     pub fn list_bank_transactions(&self) -> Vec<&BankTransaction> {
         self.budget_periods.list_bank_transactions()
+    }
+    
+    pub fn list_transactions_for_connection(&self) -> Vec<BankTransaction> {
+        self.budget_periods.list_transactions_for_connection()
     }
     
     pub fn list_all_bank_transactions(&self) -> Vec<&BankTransaction> {
