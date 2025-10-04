@@ -7,6 +7,7 @@ mod budgeting_type_card;
 mod budget_tabs;
 mod budgeting_type_overview_view;
 mod transactions_view;
+mod item_selector;
 
 pub use budget_hero::BudgetHero;
 pub use budget_item_view::BudgetItemView;
