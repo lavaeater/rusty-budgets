@@ -7,7 +7,7 @@ use crate::events::item_funds_reallocated::ItemFundsReallocated;
 use crate::events::transaction_added::TransactionAdded;
 use crate::events::transaction_connected::TransactionConnected;
 use crate::events::ItemModified;
-use crate::models::bank_transaction::BankTransactionStore;
+use crate::models::bank_transaction_store::BankTransactionStore;
 use crate::models::budget_item::{BudgetItem, BudgetItemStore};
 use crate::models::budget_period::{BudgetPeriodId, BudgetPeriodStore};
 use crate::models::budgeting_type::BudgetingType;

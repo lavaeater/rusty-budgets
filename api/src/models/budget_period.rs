@@ -2,7 +2,7 @@ use core::fmt::Display;
 use crate::models::BudgetingType::{Expense, Income, Savings};
 use crate::models::Rule::{Difference, SelfDiff, Sum};
 use crate::models::{
-    BankTransaction, BankTransactionStore, BudgetItem, BudgetItemStore, BudgetingType,
+    BankTransaction, BudgetItem, BudgetItemStore, BudgetingType,
     BudgetingTypeOverview, Money, MonthBeginsOn, ValueKind,
 };
 use chrono::{DateTime, Datelike, Days, Months, TimeZone, Utc};
@@ -11,6 +11,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use dioxus::logger::tracing;
 use uuid::Uuid;
+use crate::models::bank_transaction_store::BankTransactionStore;
 
 // Custom serialization for HashMap<BudgetPeriodId, BudgetPeriod>
 mod budget_period_map_serde {

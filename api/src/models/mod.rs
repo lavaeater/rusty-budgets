@@ -6,6 +6,7 @@ mod budget_item;
 mod bank_transaction;
 mod budgeting_type;
 mod budget_period;
+mod bank_transaction_store;
 
 pub use user::*;
 pub use month_begins_on::*;

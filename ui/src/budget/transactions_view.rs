@@ -7,7 +7,7 @@ use uuid::Uuid;
 
 #[component]
 pub fn TransactionsView(budget_id: Uuid, transactions: Vec<BankTransaction>) -> Element {
-    let transacations = transactions
+    transactions
         .iter()
         .filter(|tx| tx.budget_item_id.is_none())
         .collect::<Vec<_>>()
