@@ -23,9 +23,9 @@ pub fn create_budget_test() -> anyhow::Result<()> {
     assert!(res.default_budget);
     assert_eq!(res.version, 1);
     assert_eq!(res.currency, Currency::SEK);
-    
+
     let ser = serde_json::to_string(&res)?;
-    let _:Budget = serde_json::from_str(&ser)?;
+    let _: Budget = serde_json::from_str(&ser)?;
 
     Ok(())
 }
@@ -153,7 +153,7 @@ pub fn connect_bank_transaction() -> anyhow::Result<()> {
         user_id,
     )?;
 
-    let (res, _tx_id) = rt.connect_transaction(budget_id, tx_id, item_id, user_id)?;
+    let (res, _tx_id) = rt.connect_transaction(&budget_id, &tx_id, &item_id, &user_id)?;
 
     assert_eq!(
         res.get_budgeted_by_type(&BudgetingType::Expense).unwrap(),
@@ -233,7 +233,7 @@ pub fn test_import_from_skandia_excel() -> anyhow::Result<()> {
         &budget_id,
         &rt,
     )?;
-    
+
     println!("Imported {} transactions", imported);
     let not_imported = import_from_skandia_excel(
         "../test_data/91594824853_2025-08-25-2025-09-19.xlsx",
@@ -241,13 +241,19 @@ pub fn test_import_from_skandia_excel() -> anyhow::Result<()> {
         &budget_id,
         &rt,
     )?;
-    
+
     println!("Not imported {} transactions", not_imported);
 
     let mut res = rt.load(&budget_id)?.unwrap();
-    
-    let date = Utc::now().with_year(2025).unwrap().with_month(9).unwrap().with_day(19).unwrap();
-    
+
+    let date = Utc::now()
+        .with_year(2025)
+        .unwrap()
+        .with_month(9)
+        .unwrap()
+        .with_day(19)
+        .unwrap();
+
     res.set_current_period(&date);
 
     assert_eq!(res.list_all_bank_transactions().len(), 77);
@@ -294,7 +300,7 @@ pub fn reconnect_bank_transaction() -> anyhow::Result<()> {
     )?;
 
     let (res, _returned_tx_id) =
-        rt.connect_transaction(budget_id, tx_id, original_item_id, user_id)?;
+        rt.connect_transaction(&budget_id, &tx_id, &original_item_id, &user_id)?;
 
     let expected_money = Money::new_dollars(100, Currency::SEK);
 
@@ -319,7 +325,7 @@ pub fn reconnect_bank_transaction() -> anyhow::Result<()> {
         &Money::default()
     );
 
-    let (res, _tx_id) = rt.connect_transaction(budget_id, tx_id, new_item_id, user_id)?;
+    let (res, _tx_id) = rt.connect_transaction(&budget_id, &tx_id, &new_item_id, &user_id)?;
 
     assert_eq!(
         res.get_budgeted_by_type(&BudgetingType::Expense)
