@@ -15,3 +15,4 @@ pub use money::*;
 pub use budget_item::*;
 pub use bank_transaction::*;
 pub use budgeting_type::*;
+pub use bank_transaction_store::*;

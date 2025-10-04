@@ -7,6 +7,7 @@ pub mod item_funds_adjusted;
 mod period;
 mod plan;
 mod item_modified;
+mod rule_added;
 
 pub use period::BudgetPeriodEvent;
 pub use plan::BudgetPlanEvent;

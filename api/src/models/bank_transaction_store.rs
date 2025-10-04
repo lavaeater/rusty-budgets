@@ -89,10 +89,10 @@ impl BankTransactionStore {
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MatchRule {
     pub transaction_key: Vec<String>,
     pub item_name: String,
-    pub item_id: Option<Uuid>,
     pub always_apply: bool
 }
 
@@ -212,18 +212,13 @@ impl MatchRule {
     }
 
     pub fn matches_item(&self, item: &BudgetItem) -> bool {
-        let name_match = item.name.contains(&self.item_name);
-        match self.item_id {
-            Some(id) => name_match || item.id == id,
-            None => name_match
-        }
+        item.name.contains(&self.item_name)
     }
     
     pub fn create_rule_for_transaction_and_item(transaction: &BankTransaction, item: &BudgetItem) -> MatchRule {
         MatchRule {
             transaction_key: tokenize_description(&transaction.description),
             item_name: item.name.clone(),
-            item_id: Some(item.id),
             always_apply: false
         }
     }
