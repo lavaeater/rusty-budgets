@@ -1,3 +1,4 @@
+use core::fmt::Display;
 use crate::models::{BankTransaction, BudgetItem};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
@@ -91,9 +92,16 @@ impl BankTransactionStore {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MatchRule {
+    pub rule_key: String, 
     pub transaction_key: Vec<String>,
     pub item_name: String,
     pub always_apply: bool
+}
+
+impl Display for MatchRule {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "MatchRule {{ transaction_key: {:?}, item_name: {}, always_apply: {} }}", self.transaction_key, self.item_name, self.always_apply)
+    }
 }
 
 // Default stopwords to filter out from tokenized descriptions
@@ -216,10 +224,13 @@ impl MatchRule {
     }
     
     pub fn create_rule_for_transaction_and_item(transaction: &BankTransaction, item: &BudgetItem) -> MatchRule {
+        let transaction_key = tokenize_description(&transaction.description);
+        let rule_key = transaction_key.join("-");
         MatchRule {
-            transaction_key: tokenize_description(&transaction.description),
+            rule_key,
+            transaction_key,
             item_name: item.name.clone(),
-            always_apply: false
+            always_apply: true
         }
     }
 }

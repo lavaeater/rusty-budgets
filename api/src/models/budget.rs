@@ -14,7 +14,7 @@ use crate::models::budgeting_type::BudgetingType;
 use crate::models::money::{Currency, Money};
 use crate::models::BudgetingType::{Expense, Income, Savings};
 use crate::models::Rule::{Difference, SelfDiff, Sum};
-use crate::models::{BankTransaction, BudgetingTypeOverview, ValueKind};
+use crate::models::{BankTransaction, BudgetingTypeOverview, MatchRule, ValueKind};
 use crate::pub_events_enum;
 use chrono::{DateTime, Datelike, Utc};
 use joydb::Model;
@@ -42,6 +42,7 @@ pub struct Budget {
     pub name: String,
     pub user_id: Uuid,
     budget_periods: BudgetPeriodStore,
+    match_rules: Vec<MatchRule>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub default_budget: bool,
@@ -63,6 +64,7 @@ impl Default for Budget {
             name: "".to_string(),
             user_id: Default::default(),
             budget_periods: Default::default(),
+            match_rules: Vec::default(),
             created_at: Default::default(),
             updated_at: Default::default(),
             default_budget: false,
