@@ -20,7 +20,7 @@ pub fn TransactionsView(budget_id: Uuid, transactions: Vec<BankTransaction>, ite
                 p { {tx.amount.to_string()} }
                 p { {tx.date.format("%Y-%m-%d").to_string()} }
                 ItemSelector {
-                    items,
+                    items: items.clone(),
                     on_change: move |e: Option<BudgetItem>| async move {
                         if let Some(item) = e {
                             if let Ok(budget) = connect_transaction(budget_id, tx.id, item.id).await {
