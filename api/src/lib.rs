@@ -220,7 +220,8 @@ pub mod db {
         item_id: &Uuid
     ) -> anyhow::Result<Budget> {
         match with_runtime(None)
-            .connect_transaction(budget_id, tx_id, item_id, user_id) {
+            .connect_transaction(budget_id, tx_id, item_id, user_id)
+        {
             Ok((budget, _)) => {
                 create_rule(&budget, user_id, tx_id, item_id)
             }
