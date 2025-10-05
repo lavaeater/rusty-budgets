@@ -90,9 +90,8 @@ impl BankTransactionStore {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Hash, Eq, PartialEq)]
 pub struct MatchRule {
-    pub rule_key: String, 
     pub transaction_key: Vec<String>,
     pub item_name: String,
     pub always_apply: bool
@@ -224,14 +223,16 @@ impl MatchRule {
     }
     
     pub fn create_rule_for_transaction_and_item(transaction: &BankTransaction, item: &BudgetItem) -> MatchRule {
-        let transaction_key = tokenize_description(&transaction.description);
-        let rule_key = transaction_key.join("-");
+        let transaction_key = Self::create_transaction_key(transaction);
         MatchRule {
-            rule_key,
             transaction_key,
             item_name: item.name.clone(),
             always_apply: true
         }
+    }
+    
+    pub fn create_transaction_key(transaction: &BankTransaction) -> Vec<String> {
+        tokenize_description(&transaction.description)
     }
 }
 

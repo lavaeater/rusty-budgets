@@ -137,6 +137,19 @@ impl JoyDbBudgetRuntime {
             budget.adjust_item_funds(item_id, amount)
         })
     }
+
+    pub fn add_rule(
+        &self,
+        budget_id: &Uuid,
+        transaction_key: Vec<String>,
+        item_name: String,
+        always_apply: bool,
+        user_id: &Uuid,
+    ) -> anyhow::Result<(Budget, Uuid)> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.add_rule(transaction_key, item_name, always_apply)
+        })
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Model)]

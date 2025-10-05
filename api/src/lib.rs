@@ -3,8 +3,6 @@
 #![allow(dead_code)]
 extern crate alloc;
 extern crate core;
-extern crate core;
-extern crate core;
 
 pub mod cqrs;
 pub mod events;
@@ -221,11 +219,27 @@ pub mod db {
         tx_id: &Uuid,
         item_id: &Uuid
     ) -> anyhow::Result<Budget> {
+        match with_runtime(None)
+            .connect_transaction(budget_id, tx_id, item_id, user_id) {
+            Ok((budget, _)) => {
+                create_rule(&budget, user_id, tx_id, item_id)
+            }
+            Err(err) => {
+                Err(err)
+            }
+        }
+    }
+
+    
+    pub fn create_rule(budget: &Budget, user_id: &Uuid, tx_id: &Uuid, item_id: &Uuid) -> anyhow::Result<Budget> {
+        let transaction = budget.get_transaction(tx_id).unwrap();
+        let item = budget.get_item(item_id).unwrap();
+        let transaction_key = MatchRule::create_transaction_key(transaction);
+        let item_name = item.name.clone();
+        let always_apply = true;
         with_runtime(None)
-            .connect_transaction(budget_id, tx_id, item_id, user_id)
-            .map(|(budget, _)| { 
-                
-                budget })
+            .add_rule(&budget.id, transaction_key, item_name, always_apply, user_id)
+            .map(|(budget, _)| budget)
     }
 
     pub fn create_user(

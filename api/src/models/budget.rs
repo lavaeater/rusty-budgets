@@ -1,12 +1,6 @@
 use crate::cqrs::framework::Aggregate;
 use crate::cqrs::framework::DomainEvent;
-use crate::events::budget_created::BudgetCreated;
-use crate::events::item_added::ItemAdded;
-use crate::events::item_funds_adjusted::ItemFundsAdjusted;
-use crate::events::item_funds_reallocated::ItemFundsReallocated;
-use crate::events::transaction_added::TransactionAdded;
-use crate::events::transaction_connected::TransactionConnected;
-use crate::events::ItemModified;
+use crate::events::*;
 use crate::models::bank_transaction_store::BankTransactionStore;
 use crate::models::budget_item::{BudgetItem, BudgetItemStore};
 use crate::models::budget_period::{BudgetPeriodId, BudgetPeriodStore};
@@ -19,7 +13,7 @@ use crate::pub_events_enum;
 use chrono::{DateTime, Datelike, Utc};
 use joydb::Model;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use uuid::Uuid;
 
 pub_events_enum! {
@@ -32,6 +26,7 @@ pub_events_enum! {
         ItemFundsReallocated,
         ItemFundsAdjusted,
         ItemModified,
+        RuleAdded,
     }
 }
 
@@ -42,7 +37,7 @@ pub struct Budget {
     pub name: String,
     pub user_id: Uuid,
     budget_periods: BudgetPeriodStore,
-    match_rules: Vec<MatchRule>,
+    pub match_rules: HashSet<MatchRule>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub default_budget: bool,
@@ -64,7 +59,7 @@ impl Default for Budget {
             name: "".to_string(),
             user_id: Default::default(),
             budget_periods: Default::default(),
-            match_rules: Vec::default(),
+            match_rules: HashSet::default(),
             created_at: Default::default(),
             updated_at: Default::default(),
             default_budget: false,
