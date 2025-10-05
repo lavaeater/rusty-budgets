@@ -28,8 +28,6 @@ impl TransactionConnectedHandler for Budget {
     fn apply_connect_transaction(&mut self, event: &TransactionConnected) -> Uuid {
         let cost_types = Vec::from([BudgetingType::Expense, BudgetingType::Savings]);
         
-        println!("Applying transaction connected event: {}", event);
-
         // First, extract all the data we need from the transaction (immutable borrow)
         let tx = self.get_transaction(&event.tx_id).unwrap();
         let tx_amount = tx.amount;
@@ -42,15 +40,16 @@ impl TransactionConnectedHandler for Budget {
 
         // Handle previous connection if it exists
         if let Some(previous_budget_item_id) = previous_item_id {
-            println!("Transaction {} is already connected to item {}", event.tx_id, previous_budget_item_id);
-            println!("Previous budget item id: {}", previous_budget_item_id);
-            
             let previous_budgeting_type = previous_item_type.unwrap();
-            println!("Previous type id: {}", previous_budgeting_type);
-
+            // Adjust amount for cost types (negate for Expense/Savings)
+            let adjusted_amount = if cost_types.contains(&previous_budgeting_type) {
+                -tx_amount
+            } else {
+                tx_amount
+            };
             // Update budget total (remove from previous item)
-            self.update_budget_actual_amount(&previous_budgeting_type, &-tx_amount);
-            self.add_actual_amount_to_item(&previous_budget_item_id, &-tx_amount);
+            self.update_budget_actual_amount(&previous_budgeting_type, &-adjusted_amount);
+            self.add_actual_amount_to_item(&previous_budget_item_id, &-adjusted_amount);
         }
 
         // Now we can mutably borrow to update the transaction
@@ -61,9 +60,16 @@ impl TransactionConnectedHandler for Budget {
         // Update the new item
         let budgeting_type = self.type_for_item(&event.item_id).unwrap();
 
+        // Adjust amount for cost types (negate for Expense/Savings)
+        let adjusted_amount = if cost_types.contains(&budgeting_type) {
+            -tx_amount
+        } else {
+            tx_amount
+        };
+
         // Update budget total (add to new item)
-        self.update_budget_actual_amount(&budgeting_type, &tx_amount);
-        self.add_actual_amount_to_item(&event.item_id, &tx_amount);
+        self.update_budget_actual_amount(&budgeting_type, &adjusted_amount);
+        self.add_actual_amount_to_item(&event.item_id, &adjusted_amount);
         self.recalc_overview();
 
         event.tx_id

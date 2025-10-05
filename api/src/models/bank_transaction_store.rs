@@ -109,12 +109,19 @@ impl Display for MatchRule {
 
 // Default stopwords to filter out from tokenized descriptions
 static DEFAULT_STOPWORDS: Lazy<HashSet<&'static str>> = Lazy::new(|| {
+    /*
+                "orebro",
+            "vastha,",
+
+     */
     let mut set = HashSet::new();
     set.insert("kontaktlös");
     set.insert("zettle");
     set.insert("zettle_*");
     set.insert("överföring");
     set.insert("autogiro");
+    set.insert("orebro");
+    set.insert("vastha");
     set
 });
 
