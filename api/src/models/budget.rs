@@ -227,6 +227,10 @@ impl Budget {
     fn ensure_time_period(&mut self, updated_at: &DateTime<Utc>) {
         self.budget_periods.set_current_period(updated_at);
     }
+    
+    pub fn evaluate_rules(&self) -> Vec<(Uuid, Uuid)> {
+        self.budget_periods.evaluate_rules(&self.match_rules)
+    }
 }
 
 // --- Aggregate implementation ---

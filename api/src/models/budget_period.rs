@@ -1,17 +1,17 @@
-use core::fmt::Display;
+use crate::models::bank_transaction_store::BankTransactionStore;
 use crate::models::BudgetingType::{Expense, Income, Savings};
 use crate::models::Rule::{Difference, SelfDiff, Sum};
 use crate::models::{
-    BankTransaction, BudgetItem, BudgetItemStore, BudgetingType,
-    BudgetingTypeOverview, Money, MonthBeginsOn, ValueKind,
+    BankTransaction, BudgetItem, BudgetItemStore, BudgetingType, BudgetingTypeOverview, MatchRule,
+    Money, MonthBeginsOn, ValueKind,
 };
 use chrono::{DateTime, Datelike, Days, Months, TimeZone, Utc};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::collections::HashMap;
-use std::sync::Arc;
+use core::fmt::Display;
 use dioxus::logger::tracing;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use std::collections::{HashMap, HashSet};
+use std::sync::Arc;
 use uuid::Uuid;
-use crate::models::bank_transaction_store::BankTransactionStore;
 
 // Custom serialization for HashMap<BudgetPeriodId, BudgetPeriod>
 mod budget_period_map_serde {
@@ -26,10 +26,8 @@ mod budget_period_map_serde {
     where
         S: Serializer,
     {
-        let string_map: HashMap<String, &BudgetPeriod> = map
-            .iter()
-            .map(|(k, v)| (k.to_string(), v))
-            .collect();
+        let string_map: HashMap<String, &BudgetPeriod> =
+            map.iter().map(|(k, v)| (k.to_string(), v)).collect();
         string_map.serialize(serializer)
     }
 
@@ -66,28 +64,12 @@ mod budget_period_map_serde {
 pub struct BudgetPeriodStore {
     month_begins_on: MonthBeginsOn,
     current_period_id: BudgetPeriodId,
-    #[serde(serialize_with = "budget_period_map_serde::serialize", deserialize_with = "budget_period_map_serde::deserialize")]
+    #[serde(
+        serialize_with = "budget_period_map_serde::serialize",
+        deserialize_with = "budget_period_map_serde::deserialize"
+    )]
     budget_periods: HashMap<BudgetPeriodId, BudgetPeriod>,
 }
-
-impl BudgetPeriodStore {
-    pub(crate) fn list_transactions_for_connection(&self) -> Vec<BankTransaction> {
-        self.current_period().transactions.list_transactions_for_connection()
-    }
-}
-
-impl BudgetPeriodStore {
-    pub(crate) fn list_all_items(&self) -> Vec<BudgetItem> {
-        self.current_period().budget_items.list_all_items()
-    }
-}
-
-impl BudgetPeriodStore {
-    pub(crate) fn current_period_id(&self) -> &BudgetPeriodId {
-        &self.current_period_id
-    }
-}
-
 impl Default for BudgetPeriodStore {
     fn default() -> Self {
         let month_begins_on = MonthBeginsOn::default();
@@ -113,6 +95,25 @@ impl BudgetPeriodStore {
         }
     }
 
+    pub(crate) fn list_transactions_for_connection(&self) -> Vec<BankTransaction> {
+        self.current_period()
+            .transactions
+            .list_transactions_for_connection()
+    }
+    pub(crate) fn list_all_items(&self) -> Vec<BudgetItem> {
+        self.current_period().budget_items.list_all_items()
+    }
+    pub(crate) fn current_period_id(&self) -> &BudgetPeriodId {
+        &self.current_period_id
+    }
+
+    pub fn evaluate_rules(&self, rules: &HashSet<MatchRule>) -> Vec<(Uuid, Uuid)> {
+        self.budget_periods
+            .iter()
+            .flat_map(|(_, period)| period.evaluate_rules(rules))
+            .collect::<Vec<_>>()
+    }
+
     pub fn get_period_before(&self, id: &BudgetPeriodId) -> Option<BudgetPeriod> {
         if self.budget_periods.is_empty() {
             return None;
@@ -136,7 +137,6 @@ impl BudgetPeriodStore {
         let period = self.get_period_for_date_mut(date);
         self.current_period_id = period.id;
     }
-    
 
     pub fn get_period_mut(&mut self, id: &BudgetPeriodId) -> &mut BudgetPeriod {
         let previous_period = self.get_period_before(id);
@@ -307,11 +307,14 @@ impl BudgetPeriodStore {
 
     pub fn insert_transaction(&mut self, tx: BankTransaction) {
         self.get_period_mut(&BudgetPeriodId::from_date(tx.date, self.month_begins_on))
-            .transactions.insert(tx);
+            .transactions
+            .insert(tx);
     }
 
     pub fn can_insert_transaction(&self, tx_hash: &u64) -> bool {
-        self.budget_periods.values().all(|p| p.transactions.can_insert(tx_hash))
+        self.budget_periods
+            .values()
+            .all(|p| p.transactions.can_insert(tx_hash))
     }
 
     pub fn contains_transaction(&self, tx_id: &Uuid) -> bool {
@@ -409,11 +412,14 @@ impl BudgetPeriodStore {
     }
 
     pub fn list_bank_transactions(&self) -> Vec<&BankTransaction> {
-        self.current_period().transactions.list_transactions()
+        self.current_period().transactions.list_transactions(true)
     }
 
     pub fn list_all_bank_transactions(&self) -> Vec<&BankTransaction> {
-        self.budget_periods.values().flat_map(|v|v.transactions.list_transactions()).collect()
+        self.budget_periods
+            .values()
+            .flat_map(|v| v.transactions.list_transactions(true))
+            .collect()
     }
 }
 
@@ -432,7 +438,7 @@ impl Display for BudgetPeriodId {
 impl BudgetPeriodId {
     pub fn from_date(date: DateTime<Utc>, month_begins_on: MonthBeginsOn) -> Self {
         tracing::info!("From date: {}", date);
-        
+
         // Determine which period this date falls into
         // The period ID represents the END month of the period
         match month_begins_on {
@@ -545,6 +551,25 @@ impl BudgetPeriod {
         period.clear_hashmaps_and_transactions();
         period
     }
+
+    pub fn evaluate_rules(&self, rules: &HashSet<MatchRule>) -> Vec<(Uuid, Uuid)> {
+        let mut matched_transactions = Vec::new();
+        for transaction in self.transactions.list_transactions(false) {
+            for rule in rules {
+                if rule.matches_transaction(transaction) {
+                    if let Some(item_id) = self.get_item_for_rule(rule) {
+                        matched_transactions.push((transaction.id, item_id));
+                        break;
+                    }
+                }
+            }
+        }
+        matched_transactions
+    }
+
+    pub fn get_item_for_rule(&self, rule: &MatchRule) -> Option<Uuid> {
+        self.budget_items.get_item_for_rule(&rule)
+    }
 }
 
 fn last_day_of_month(dt: DateTime<Utc>) -> DateTime<Utc> {
@@ -569,7 +594,7 @@ mod tests {
         assert_eq!(id.year, 2025);
         assert_eq!(id.month, 3);
     }
-    
+
     #[test]
     fn test_from_date_std() {
         // Test with PreviousMonth1stDayOfMonth - period is 1st of prev month to last day of prev month
@@ -587,7 +612,7 @@ mod tests {
         assert_eq!(id.year, 2025);
         assert_eq!(id.month, 3);
     }
-    
+
     #[test]
     fn test_from_date_current_month_before_start_day() {
         // Test with CurrentMonth(15) when date is before the 15th
@@ -598,7 +623,6 @@ mod tests {
         assert_eq!(id.year, 2025);
         assert_eq!(id.month, 3);
     }
-    
 
     #[test]
     fn test_from_date_previous_month_custom_day_within_period() {
@@ -621,7 +645,7 @@ mod tests {
         assert_eq!(id.year, 2025);
         assert_eq!(id.month, 3);
     }
-    
+
     #[test]
     fn test_from_date_year_boundary_december_to_january() {
         // Test year boundary with PreviousMonth(25)
@@ -761,7 +785,7 @@ mod tests {
         assert!(id2 < id3);
         assert!(id1 < id3);
     }
-    
+
     #[test]
     fn test_last_day_of_month_january() {
         // January has 31 days

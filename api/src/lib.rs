@@ -1,9 +1,6 @@
 //! This crate contains all shared fullstack server functions.
 #![allow(unused_imports)]
 #![allow(dead_code)]
-extern crate alloc;
-extern crate core;
-
 pub mod cqrs;
 pub mod events;
 pub mod import;
@@ -21,18 +18,19 @@ const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 
 #[cfg(feature = "server")]
 pub mod db {
-    use anyhow::Error;
-    use crate::cqrs::framework::Runtime;
+    use crate::cqrs::framework::{CommandError, Runtime};
     use crate::cqrs::runtime::{Db, JoyDbBudgetRuntime, UserBudgets};
+    use crate::import::import_from_skandia_excel;
     use crate::models::*;
     use crate::models::*;
     use crate::DEFAULT_USER_EMAIL;
+    use anyhow::Error;
     use chrono::NaiveDate;
     use dioxus::logger::tracing;
     use joydb::JoydbError;
     use once_cell::sync::Lazy;
     use uuid::Uuid;
-    use crate::import::import_from_skandia_excel;
+    use crate::events::TransactionConnected;
 
     pub static CLIENT: Lazy<JoyDbBudgetRuntime> = Lazy::new(|| {
         tracing::info!("Init DB Client");
@@ -124,14 +122,14 @@ pub mod db {
             Err(_) => Err(anyhow::anyhow!("Could not get default budget")),
         }
     }
-    
+
     pub fn get_budget(budget_id: &Uuid) -> anyhow::Result<Budget> {
         match with_runtime(None).load(&budget_id) {
             Ok(budget) => match budget {
                 None => Err(anyhow::anyhow!("Could not load budget")),
                 Some(budget) => Ok(budget),
             },
-            Err(_) => Err(anyhow::anyhow!("Could not load budget"))
+            Err(_) => Err(anyhow::anyhow!("Could not load budget")),
         }
     }
 
@@ -197,7 +195,7 @@ pub mod db {
         file_name: &str,
     ) -> anyhow::Result<Budget> {
         let runtime = with_runtime(None);
-        let _ = import_from_skandia_excel(file_name,user_id, budget_id, runtime)?;
+        let _ = import_from_skandia_excel(file_name, user_id, budget_id, runtime)?;
         get_budget(budget_id)
     }
 
@@ -217,30 +215,50 @@ pub mod db {
         budget_id: &Uuid,
         user_id: &Uuid,
         tx_id: &Uuid,
-        item_id: &Uuid
+        item_id: &Uuid,
     ) -> anyhow::Result<Budget> {
-        match with_runtime(None)
-            .connect_transaction(budget_id, tx_id, item_id, user_id)
-        {
-            Ok((budget, _)) => {
-                create_rule(&budget, user_id, tx_id, item_id)
-            }
-            Err(err) => {
-                Err(err)
-            }
+        match with_runtime(None).connect_transaction(budget_id, tx_id, item_id, user_id) {
+            Ok((budget, _)) => match create_rule(&budget, user_id, tx_id, item_id) {
+                Ok(budget) => Ok(budget),
+                Err(_) => Ok(budget),
+            },
+            Err(err) => Err(err),
         }
     }
 
-    
-    pub fn create_rule(budget: &Budget, user_id: &Uuid, tx_id: &Uuid, item_id: &Uuid) -> anyhow::Result<Budget> {
+    pub fn create_rule(
+        budget: &Budget,
+        user_id: &Uuid,
+        tx_id: &Uuid,
+        item_id: &Uuid,
+    ) -> anyhow::Result<Budget> {
         let transaction = budget.get_transaction(tx_id).unwrap();
         let item = budget.get_item(item_id).unwrap();
         let transaction_key = MatchRule::create_transaction_key(transaction);
         let item_name = item.name.clone();
         let always_apply = true;
         with_runtime(None)
-            .add_rule(&budget.id, transaction_key, item_name, always_apply, user_id)
-            .map(|(budget, _)| budget)
+            .add_rule(
+                &budget.id,
+                transaction_key,
+                item_name,
+                always_apply,
+                user_id,
+            )
+            .map(|(budget, _)| {
+                let matches = budget.evaluate_rules();
+                for (tx_id, item_id) in matches {
+                    match budget.connect_transaction(tx_id, item_id) {
+                        Ok(_) => {
+                            tracing::info!("connceted some trannies");
+                        }
+                        Err(_) => {
+                            tracing::error!("failed to find the tranny");
+                        }
+                    }
+                }
+                budget
+            })
     }
 
     pub fn create_user(
@@ -322,7 +340,10 @@ pub async fn get_default_budget() -> Result<Option<Budget>, ServerFnError> {
 }
 
 #[server]
-pub async fn import_transactions(budget_id: Uuid, file_name: String) -> Result<Budget, ServerFnError> {
+pub async fn import_transactions(
+    budget_id: Uuid,
+    file_name: String,
+) -> Result<Budget, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
     match db::import_transactions(&budget_id, &user.id, &file_name) {
         Ok(b) => Ok(b),
@@ -334,7 +355,11 @@ pub async fn import_transactions(budget_id: Uuid, file_name: String) -> Result<B
 }
 
 #[server]
-pub async fn connect_transaction(budget_id: Uuid, tx_id: Uuid, item_id: Uuid) -> Result<Budget, ServerFnError> {
+pub async fn connect_transaction(
+    budget_id: Uuid,
+    tx_id: Uuid,
+    item_id: Uuid,
+) -> Result<Budget, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
     match db::connect_transaction(&budget_id, &user.id, &tx_id, &item_id) {
         Ok(b) => Ok(b),

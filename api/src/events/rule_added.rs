@@ -29,6 +29,7 @@ impl RuleAddedHandler for Budget {
             item_name: event.item_name.clone(),
             always_apply: event.always_apply
         });
+        
         event.budget_id
     }
 

@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use strum::IntoEnumIterator;
 use uuid::Uuid;
+use crate::models::MatchRule;
 
 /// The store
 #[derive(Default, Debug, Clone)]
@@ -14,6 +15,12 @@ pub struct BudgetItemStore {
     items: HashMap<Uuid, Arc<BudgetItem>>,
     by_type: HashMap<BudgetingType, Vec<Arc<BudgetItem>>>,
     items_and_types: HashMap<Uuid, BudgetingType>,
+}
+
+impl BudgetItemStore {
+    pub(crate) fn get_item_for_rule(&self, rule: &MatchRule) -> Option<Uuid> {
+        self.items.values().find(|i| rule.matches_item(i.as_ref())).map(|arc| arc.id)
+    }
 }
 
 impl BudgetItemStore {
