@@ -1,5 +1,5 @@
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
-use crate::models::Budget;
+use crate::models::{Budget, BudgetingType};
 use core::fmt::Display;
 use cqrs_macros::DomainEvent;
 use serde::{Deserialize, Serialize};
@@ -26,6 +26,8 @@ impl Display for TransactionConnected {
 
 impl TransactionConnectedHandler for Budget {
     fn apply_connect_transaction(&mut self, event: &TransactionConnected) -> Uuid {
+        let cost_types = Vec::from([BudgetingType::Expense, BudgetingType::Savings]);
+        
         println!("Applying transaction connected event: {}", event);
 
         // First, extract all the data we need from the transaction (immutable borrow)

@@ -10,19 +10,15 @@ use api::connect_transaction;
 #[component]
 pub fn TransactionsView(budget_id: Uuid, transactions: Vec<BankTransaction>, items: Vec<BudgetItem>) -> Element {
     let mut budget_signal = use_context::<Signal<Option<Budget>>>();
-    
-    
-    match transactions.first() {
-        Some(tx) => {
-            let tx = tx.clone();
-            rsx! {
-                h1 { "Transactions" }
-                h2 { {transactions.len().to_string()} }
-                div { display: "flex", flex_direction: "row", gap: "1rem",
-                    p { {tx.description.to_string()} }
-                    p { {tx.amount.to_string()} }
-                    p { {tx.date.format("%Y-%m-%d").to_string()} }
-                }
+    rsx! {
+        h1 { "Transactions" }
+        h2 { {transactions.len().to_string()} }
+        for tx in transactions {
+
+            div { display: "flex", flex_direction: "row", gap: "1rem",
+                p { {tx.description.to_string()} }
+                p { {tx.amount.to_string()} }
+                p { {tx.date.format("%Y-%m-%d").to_string()} }
                 ItemSelector {
                     items,
                     on_change: move |e: Option<BudgetItem>| async move {
@@ -34,6 +30,15 @@ pub fn TransactionsView(budget_id: Uuid, transactions: Vec<BankTransaction>, ite
                     },
                 }
             }
+        }
+
+    }
+    
+    
+    match transactions.first() {
+        Some(tx) => {
+            let tx = tx.clone();
+            
         }
             None => {
                 rsx! {
