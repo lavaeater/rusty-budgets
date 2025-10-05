@@ -33,18 +33,4 @@ pub fn TransactionsView(budget_id: Uuid, transactions: Vec<BankTransaction>, ite
         }
 
     }
-    
-    
-    match transactions.first() {
-        Some(tx) => {
-            let tx = tx.clone();
-            
-        }
-            None => {
-                rsx! {
-                    h1 { "Transactions" }
-                    h2 { "No transactions" }
-                }
-            }
-    }
 }
