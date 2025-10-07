@@ -30,8 +30,8 @@ pub fn BudgetHero() -> Element {
         let file_name = file.data.to_string();
         spawn(async move {
             if !file_name.is_empty() {
-                if let Ok(new_aggregate) = api::import_transactions(budget_id(), file_name).await {
-                    budget_signal.set(Some(new_aggregate));
+                if let Ok(updated_budget) = api::import_transactions(budget_id(), file_name).await {
+                    budget_signal.set(Some(updated_budget));
                 }
             }
         });
