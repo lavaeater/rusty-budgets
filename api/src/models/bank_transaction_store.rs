@@ -101,7 +101,7 @@ impl BankTransactionStore {
             .filter(|tx| tx.budget_item_id.is_none())
             .cloned()
             .collect::<Vec<_>>();
-        transactions.sort_by_key(|tx| tx.date);
+        transactions.sort_by(|a, b| a.date.cmp(&b.date).then_with(|| a.description.cmp(&b.description)));
         transactions
     }
 }
