@@ -104,11 +104,6 @@ impl BankTransactionStore {
         transactions.sort_by_key(|tx| tx.date);
         transactions
     }
-
-    fn suggest_item_for(_description: &str) -> Option<Uuid> {
-        // TODO: Implement matching against rules / heuristics
-        None
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Hash, Eq, PartialEq)]
