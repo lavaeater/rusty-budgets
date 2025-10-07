@@ -240,10 +240,7 @@ pub fn tokenize_description_with_stopwords(
 impl MatchRule {
     pub fn matches_transaction(&self, transaction: &BankTransaction) -> bool {
         let tokenized_transaction_description = tokenize_description(&transaction.description);
-        if self.transaction_key.iter().all(|key| tokenized_transaction_description.contains(key)) {
-            return true;
-        }
-        false
+        self.transaction_key == tokenized_transaction_description
     }
 
     pub fn matches_item(&self, item: &BudgetItem) -> bool {
