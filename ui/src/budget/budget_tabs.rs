@@ -7,10 +7,12 @@ use crate::budget::BudgetingTypeOverviewView;
 
 #[component]
 pub fn BudgetTabs(
-    budget_id: Uuid,
-    items_by_type: Vec<(usize, BudgetingType, BudgetingTypeOverview, Vec<BudgetItem>)>,
 ) -> Element {
-    rsx! {
+    let budget_signal = use_context::<Signal<Option<Budget>>>();
+     match budget_signal() {
+        Some(budget) => {
+            let items_by_type = budget.items_by_type();
+            rsx! {
         Tabs {
             default_value: items_by_type.first().unwrap().1.to_string(),
             horizontal: true,
@@ -18,7 +20,6 @@ pub fn BudgetTabs(
                 for (index , budgeting_type , overview , _) in &items_by_type {
                     TabTrigger { value: budgeting_type.to_string(), index: *index,
                         BudgetingTypeOverviewView {
-                            budget_id,
                             budgeting_type: *budgeting_type,
                             overview: *overview,
                         }
@@ -27,8 +28,15 @@ pub fn BudgetTabs(
             }
             for (index , budgeting_type , _ , items) in items_by_type {
                 TabContent { index, value: budgeting_type.to_string(),
-                    BudgetingTypeCard { budget_id, budgeting_type, items }
+                    BudgetingTypeCard { budgeting_type, items }
                 }
+            }
+        }
+    }
+        }
+        None => {
+            rsx! {
+                h1 { "Ingen budget - än" }
             }
         }
     }

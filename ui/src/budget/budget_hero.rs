@@ -52,10 +52,7 @@ pub fn BudgetHero() -> Element {
                         FileDialog { on_chosen: import_file }
                     }
                     div { class: "budget-hero-content",
-                        BudgetTabs {
-                            budget_id: budget.id,
-                            items_by_type: budget.items_by_type(),
-                        }
+                        BudgetTabs {}
                     }
                     div { class: "budget-hero-content",
                         TransactionsView {

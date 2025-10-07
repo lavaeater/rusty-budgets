@@ -8,7 +8,7 @@ use api::models::{Budget, BudgetItem, BudgetingType, Currency, Money};
 use crate::{BudgetItemView, Button, Separator};
 
 #[component]
-pub fn BudgetingTypeCard(budget_id: Uuid, budgeting_type: BudgetingType, items: Vec<BudgetItem>) -> Element {
+pub fn BudgetingTypeCard(budgeting_type: BudgetingType, items: Vec<BudgetItem>) -> Element {
     tracing::info!("Budgeting type: {}, item count: {}", budgeting_type, items.len());
     let budgeting_type_name = use_signal(|| budgeting_type.to_string());
     let new_item_label = format!("Ny {}", budgeting_type);
@@ -17,6 +17,7 @@ pub fn BudgetingTypeCard(budget_id: Uuid, budgeting_type: BudgetingType, items: 
     let mut new_item_amount = use_signal(|| Money::new_dollars(0, Currency::SEK));
     
     let mut budget_signal = use_context::<Signal<Option<Budget>>>();
+    let budget_id = budget_signal().unwrap().id;
 
     rsx! {
         h3 { {budgeting_type_name} }

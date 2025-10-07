@@ -1,16 +1,15 @@
-use api::models::{BudgetingType, BudgetingTypeOverview};
+use api::models::{Budget, BudgetingType, BudgetingTypeOverview};
 use dioxus::prelude::*;
 use uuid::Uuid;
 
 #[component]
 pub fn BudgetingTypeOverviewView(
-    budget_id: Uuid,
     budgeting_type: BudgetingType,
     overview: BudgetingTypeOverview,
 ) -> Element {
-    match budgeting_type {
-        BudgetingType::Income => {
-            rsx! {
+            match budgeting_type {
+                BudgetingType::Income => {
+                    rsx! {
                 div {
                     h2 { {budgeting_type.to_string()} }
                     div {
@@ -33,9 +32,9 @@ pub fn BudgetingTypeOverviewView(
                     }
                 }
             }
-        }
-        BudgetingType::Expense => {    
-            rsx! {
+                }
+                BudgetingType::Expense => {
+                    rsx! {
                 div {
                     h2 { {budgeting_type.to_string()} }
                     div {
@@ -58,9 +57,9 @@ pub fn BudgetingTypeOverviewView(
                     }
                 }
             }
-        }
-        BudgetingType::Savings => {    
-            rsx! {
+                }
+                BudgetingType::Savings => {
+                    rsx! {
                 div {
                     h2 { {budgeting_type.to_string()} }
                     div {
@@ -83,7 +82,6 @@ pub fn BudgetingTypeOverviewView(
                     }
                 }
             }
+                }
+            }            
         }
-    }
-
-}
