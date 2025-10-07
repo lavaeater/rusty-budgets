@@ -51,9 +51,7 @@ pub fn BudgetHero() -> Element {
                         h2 { {budget.get_current_period_id().to_string()} }
                         FileDialog { on_chosen: import_file }
                     }
-                    div { class: "budget-hero-content",
-                        BudgetTabs {}
-                    }
+                    div { class: "budget-hero-content", BudgetTabs {} }
                     div { class: "budget-hero-content",
                         TransactionsView {
                             budget_id: budget.id,

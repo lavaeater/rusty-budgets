@@ -70,6 +70,7 @@ pub struct BudgetPeriodStore {
     )]
     budget_periods: HashMap<BudgetPeriodId, BudgetPeriod>,
 }
+
 impl Default for BudgetPeriodStore {
     fn default() -> Self {
         let month_begins_on = MonthBeginsOn::default();
@@ -413,6 +414,9 @@ impl BudgetPeriodStore {
 
     pub fn list_bank_transactions(&self) -> Vec<&BankTransaction> {
         self.current_period().transactions.list_transactions(true)
+    }
+    pub fn list_transactions_for_item(&self, item_id: &Uuid, sorted: bool) -> Vec<&BankTransaction> {
+        self.current_period().transactions.list_transactions_for_item(item_id, sorted)
     }
 
     pub fn list_all_bank_transactions(&self) -> Vec<&BankTransaction> {

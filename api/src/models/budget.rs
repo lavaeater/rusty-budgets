@@ -213,6 +213,10 @@ impl Budget {
         self.budget_periods.list_bank_transactions()
     }
     
+    pub fn list_transactions_for_item(&self, item_id: &Uuid, sorted:bool) -> Vec<&BankTransaction> {
+        self.budget_periods.list_transactions_for_item(item_id, sorted)
+    }
+    
     pub fn list_transactions_for_connection(&self) -> Vec<BankTransaction> {
         self.budget_periods.list_transactions_for_connection()
     }

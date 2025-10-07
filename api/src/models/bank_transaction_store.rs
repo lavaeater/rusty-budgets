@@ -20,6 +20,16 @@ pub struct BankTransactionStore {
 }
 
 impl BankTransactionStore {
+    pub fn list_transactions_for_item(&self, item_id: &Uuid, sorted: bool) -> Vec<&BankTransaction> {
+        let mut transactions = self.by_id.values().filter(|tx| tx.budget_item_id == Some(*item_id)).collect::<Vec<_>>();
+        if sorted {
+            transactions.sort_by_key(|tx| tx.date);
+        }
+        transactions
+    }
+}
+
+impl BankTransactionStore {
     pub fn clear(&mut self) {
         self.hashes.clear();
         self.by_id.clear();
