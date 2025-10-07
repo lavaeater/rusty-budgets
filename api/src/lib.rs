@@ -20,6 +20,7 @@ const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 pub mod db {
     use crate::cqrs::framework::{CommandError, Runtime};
     use crate::cqrs::runtime::{Db, JoyDbBudgetRuntime, UserBudgets};
+    use crate::events::TransactionConnected;
     use crate::import::import_from_skandia_excel;
     use crate::models::*;
     use crate::models::*;
@@ -30,7 +31,6 @@ pub mod db {
     use joydb::JoydbError;
     use once_cell::sync::Lazy;
     use uuid::Uuid;
-    use crate::events::TransactionConnected;
 
     pub static CLIENT: Lazy<JoyDbBudgetRuntime> = Lazy::new(|| {
         tracing::info!("Init DB Client");
@@ -217,31 +217,30 @@ pub mod db {
         tx_id: &Uuid,
         item_id: &Uuid,
     ) -> anyhow::Result<Budget> {
-        match with_runtime(None)
-            .connect_transaction(budget_id, tx_id, item_id, user_id) {
-            Ok((budget, _)) => match create_rule(&budget, user_id, tx_id, item_id) {
-                Ok(budget) => Ok(budget),
-                Err(_) => Ok(budget),
-            },
-            Err(err) => Err(err),
-        }
-    }
-    /*
-    .map(|(budget, _)| {
+        match with_runtime(None).connect_transaction(budget_id, tx_id, item_id, user_id) {
+            Ok((budget, _)) => {
+                let budget = create_rule(&budget, user_id, tx_id, item_id)
+                    .unwrap_or(budget);
                 let matches = budget.evaluate_rules();
+                let mut return_budget = budget.clone();
                 for (tx_id, item_id) in matches {
-                    match budget.connect_transaction(tx_id, item_id) {
-                        Ok(_) => {
-                            tracing::info!("connceted some trannies");
+                    match with_runtime(None)
+                        .connect_transaction(budget_id, &tx_id, &item_id, user_id)
+                    {
+                        Ok((b, _)) => {
+                            return_budget = b;
+                            tracing::info!("connceted some tranny");
                         }
                         Err(_) => {
-                            tracing::error!("failed to find the tranny");
+                            tracing::error!("failed to connect the tranny");
                         }
                     }
                 }
-                budget
-            })
-     */
+                Ok(return_budget)
+            }
+            Err(err) => Err(err),
+        }
+    }
 
     pub fn create_rule(
         budget: &Budget,
@@ -254,6 +253,7 @@ pub mod db {
         let transaction_key = MatchRule::create_transaction_key(transaction);
         let item_name = item.name.clone();
         let always_apply = true;
+
         with_runtime(None)
             .add_rule(
                 &budget.id,
@@ -262,20 +262,7 @@ pub mod db {
                 always_apply,
                 user_id,
             )
-            .map(|(budget, _)| {
-                let matches = budget.evaluate_rules();
-                for (tx_id, item_id) in matches {
-                    match budget.connect_transaction(tx_id, item_id) {
-                        Ok(_) => {
-                            tracing::info!("connceted some trannies");
-                        }
-                        Err(_) => {
-                            tracing::error!("failed to find the tranny");
-                        }
-                    }
-                }
-                budget
-            })
+            .map(|(budget, _)| budget)
     }
 
     pub fn create_user(
