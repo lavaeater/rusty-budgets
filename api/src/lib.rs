@@ -217,7 +217,8 @@ pub mod db {
         tx_id: &Uuid,
         item_id: &Uuid,
     ) -> anyhow::Result<Budget> {
-        match with_runtime(None).connect_transaction(budget_id, tx_id, item_id, user_id) {
+        match with_runtime(None)
+            .connect_transaction(budget_id, tx_id, item_id, user_id) {
             Ok((budget, _)) => match create_rule(&budget, user_id, tx_id, item_id) {
                 Ok(budget) => Ok(budget),
                 Err(_) => Ok(budget),
@@ -225,6 +226,22 @@ pub mod db {
             Err(err) => Err(err),
         }
     }
+    /*
+    .map(|(budget, _)| {
+                let matches = budget.evaluate_rules();
+                for (tx_id, item_id) in matches {
+                    match budget.connect_transaction(tx_id, item_id) {
+                        Ok(_) => {
+                            tracing::info!("connceted some trannies");
+                        }
+                        Err(_) => {
+                            tracing::error!("failed to find the tranny");
+                        }
+                    }
+                }
+                budget
+            })
+     */
 
     pub fn create_rule(
         budget: &Budget,

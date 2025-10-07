@@ -1,10 +1,17 @@
 use core::fmt::Display;
-use crate::models::{BankTransaction, BudgetItem};
+use crate::models::{BankTransaction, BudgetItem, Money};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::hash::{DefaultHasher, Hash, Hasher};
 use once_cell::sync::Lazy;
 use uuid::Uuid;
+
+pub struct BankAccount {
+    pub account_number: String,
+    pub bank_name: String,
+    pub balance: Money,
+    
+}
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct BankTransactionStore {
