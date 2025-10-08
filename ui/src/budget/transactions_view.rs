@@ -45,7 +45,6 @@ pub fn TransactionsView(budget_id: Uuid, transactions: Vec<BankTransaction>, ite
                         NewBudgetItemPopover { budgeting_type: BudgetingType::Savings }
                     }
                 }
-            
             }
         }
 
@@ -57,7 +56,7 @@ pub fn NewBudgetItemPopover(budgeting_type: BudgetingType) -> Element {
     let mut open = use_signal(|| false);
     rsx! {
         PopoverRoot { open: open(), on_open_change: move |v| open.set(v),
-            PopoverTrigger { "Ny {{budgeting_type.to_string()}}" }
+            PopoverTrigger { {budgeting_type.to_string()} }
             PopoverContent { gap: "0.25rem",
                 NewBudgetItem { budgeting_type, close_signal: Some(open) }
             }
