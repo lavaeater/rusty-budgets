@@ -39,6 +39,10 @@ impl Money {
     pub fn divide(&self, rhs: i64) -> Money {
         Money::new_cents(self.cents / rhs, self.currency)
     }
+    
+    pub fn is_pos(&self) -> bool {
+        self.cents >= 0
+    }
 }
 
 impl Neg for Money {

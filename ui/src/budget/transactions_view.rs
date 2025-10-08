@@ -6,7 +6,7 @@ use crate::budget::ItemSelector;
 use dioxus::prelude::*;
 use uuid::Uuid;
 use api::connect_transaction;
-use crate::{Button, PopoverContent, PopoverRoot, PopoverTrigger};
+use crate::{Button, NewBudgetItem, PopoverContent, PopoverRoot, PopoverTrigger};
 
 #[component]
 pub fn TransactionsView(budget_id: Uuid, transactions: Vec<BankTransaction>, items: Vec<BudgetItem>) -> Element {
@@ -15,7 +15,6 @@ pub fn TransactionsView(budget_id: Uuid, transactions: Vec<BankTransaction>, ite
         h1 { "Transactions" }
         h2 { {transactions.len().to_string()} }
         for tx in transactions {
-
             div { display: "flex", flex_direction: "row", gap: "1rem",
                 p { {tx.description.to_string()} }
                 p { {tx.amount.to_string()} }
@@ -30,6 +29,23 @@ pub fn TransactionsView(budget_id: Uuid, transactions: Vec<BankTransaction>, ite
                         }
                     },
                 }
+                if tx.amount.is_pos() {
+                    div {
+                        display: "flex",
+                        flex_direction: "column",
+                        gap: "1rem",
+                        NewBudgetItemPopover { budgeting_type: BudgetingType::Income }
+                    }
+                } else {
+                    div {
+                        display: "flex",
+                        flex_direction: "column",
+                        gap: "1rem",
+                        NewBudgetItemPopover { budgeting_type: BudgetingType::Expense }
+                        NewBudgetItemPopover { budgeting_type: BudgetingType::Savings }
+                    }
+                }
+            
             }
         }
 
@@ -37,43 +53,13 @@ pub fn TransactionsView(budget_id: Uuid, transactions: Vec<BankTransaction>, ite
 }
 
 #[component]
-pub fn NewBudgetItemPopover() -> Element {
+pub fn NewBudgetItemPopover(budgeting_type: BudgetingType) -> Element {
     let mut open = use_signal(|| false);
-    let mut confirmed = use_signal(|| false);
     rsx! {
         PopoverRoot { open: open(), on_open_change: move |v| open.set(v),
-            PopoverTrigger { "Ny budgetpost" }
+            PopoverTrigger { "Ny {{budgeting_type.to_string()}}" }
             PopoverContent { gap: "0.25rem",
-                h3 {
-                    padding_top: "0.25rem",
-                    padding_bottom: "0.25rem",
-                    width: "100%",
-                    text_align: "center",
-                    margin: 0,
-                    "Delete Item?"
-                }
-                Button {
-                    r#type: "button",
-                    "data-style": "outline",
-                    onclick: move |_| {
-                        open.set(false);
-                        confirmed.set(true);
-                    },
-                    "Confirm"
-                }
-                Button {
-                    r#type: "button",
-                    "data-style": "outline",
-                    onclick: move |_| {
-                        open.set(false);
-                    },
-                    "Cancel"
-                }
-            }
-        }
-        if confirmed() {
-            p { style: "color: var(--contrast-error-color); margin-top: 16px; font-weight: 600;",
-                "Item deleted!"
+                NewBudgetItem { budgeting_type, close_signal: Some(open) }
             }
         }
     }

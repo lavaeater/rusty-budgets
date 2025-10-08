@@ -37,12 +37,10 @@ pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType) -> Element {
                     div { class: "text-gray-700",
                         "{item.actual_amount.to_string()} / {item.budgeted_amount.to_string()}"
                     }
-                    div { flex_direction: "row",
-                        for transaction in transactions() {
-                            div { flex_direction: "column",
-                                p { class: "text-gray-700", "{transaction.description}" }
-                                p { class: "text-gray-700", "{transaction.amount.to_string()}" }
-                            }
+                    for transaction in transactions() {
+                        div { display: "flex", flex_direction: "row",
+                            p { class: "text-gray-700", "{transaction.description}" }
+                            p { class: "text-gray-700", "{transaction.amount.to_string()}" }
                         }
                     }
                 }

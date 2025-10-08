@@ -3,7 +3,7 @@ use api::models::{Budget, BudgetingType, Currency, Money};
 use crate::components::{Input, Button};
 
 #[component]
-pub fn NewBudgetItem(budgeting_type: BudgetingType) -> Element {
+pub fn NewBudgetItem(budgeting_type: BudgetingType, close_signal: Option<Signal<bool>>) -> Element {
     let mut budget_signal = use_context::<Signal<Option<Budget>>>();
     let budget_id = budget_signal().unwrap().id;
     let mut new_item_name = use_signal(|| "".to_string());
@@ -25,8 +25,8 @@ pub fn NewBudgetItem(budgeting_type: BudgetingType) -> Element {
                         .set(Money::new_dollars(e.value().parse().unwrap(), Currency::SEK))
                 },
             }
-            button {
-                class: "button",
+            Button {
+                r#type: "button",
                 "data-style": "primary",
                 onclick: move |_| async move {
                     if let Ok(updated_budget) = api::add_item(
@@ -38,9 +38,22 @@ pub fn NewBudgetItem(budgeting_type: BudgetingType) -> Element {
                         .await
                     {
                         budget_signal.set(Some(updated_budget));
+                        if let Some(mut closer) = close_signal {
+                            closer.set(false);
+                        }
                     }
                 },
                 "Lägg till"
+            }
+            Button {
+                r#type: "button",
+                "data-style": "outline",
+                onclick: move |_| {
+                    if let Some(mut closer) = close_signal {
+                        closer.set(false);
+                    }
+                },
+                "Avbryt"
             }
         }
     }
