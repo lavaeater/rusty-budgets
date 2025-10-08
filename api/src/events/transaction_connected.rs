@@ -27,13 +27,13 @@ impl Display for TransactionConnected {
 impl TransactionConnectedHandler for Budget {
     fn apply_connect_transaction(&mut self, event: &TransactionConnected) -> Uuid {
         let cost_types = Vec::from([BudgetingType::Expense, BudgetingType::Savings]);
-        
+
         // First, extract all the data we need from the transaction (immutable borrow)
         let tx = self.get_transaction(&event.tx_id).unwrap();
         let tx_amount = tx.amount;
         let previous_item_id = tx.budget_item_id;
         let previous_item_type = match previous_item_id {
-            Some(id) => self.type_for_item(&id),    
+            Some(id) => self.type_for_item(&id),
             None => None,
         };
         // End of immutable borrow - tx goes out of scope here
@@ -81,6 +81,13 @@ impl TransactionConnectedHandler for Budget {
         item_id: Uuid,
     ) -> Result<TransactionConnected, CommandError> {
         if self.contains_transaction(&tx_id) && self.contains_budget_item(&item_id) {
+            if let Some(tx) = self.get_transaction(&tx_id) {
+                if tx.budget_item_id == Some(item_id) {
+                    return Err(CommandError::Validation(
+                        "Transaction is already connected to this item.",
+                    ));
+                }
+            }
             Ok(TransactionConnected {
                 budget_id: self.id,
                 tx_id,
