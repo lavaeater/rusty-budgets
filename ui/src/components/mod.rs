@@ -6,6 +6,7 @@ mod separator;
 mod button;
 mod dialog;
 mod select;
+mod popover;
 
 pub use input::*;
 pub use accordion::*;
@@ -15,6 +16,8 @@ pub use separator::*;
 pub use button::*;
 pub use select::*;
 pub use dialog::*;
+pub use popover::*;
+
 
 
 

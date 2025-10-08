@@ -6,6 +6,7 @@ use crate::budget::ItemSelector;
 use dioxus::prelude::*;
 use uuid::Uuid;
 use api::connect_transaction;
+use crate::{Button, PopoverContent, PopoverRoot, PopoverTrigger};
 
 #[component]
 pub fn TransactionsView(budget_id: Uuid, transactions: Vec<BankTransaction>, items: Vec<BudgetItem>) -> Element {
@@ -32,5 +33,48 @@ pub fn TransactionsView(budget_id: Uuid, transactions: Vec<BankTransaction>, ite
             }
         }
 
+    }
+}
+
+#[component]
+pub fn NewBudgetItemPopover() -> Element {
+    let mut open = use_signal(|| false);
+    let mut confirmed = use_signal(|| false);
+    rsx! {
+        PopoverRoot { open: open(), on_open_change: move |v| open.set(v),
+            PopoverTrigger { "Ny budgetpost" }
+            PopoverContent { gap: "0.25rem",
+                h3 {
+                    padding_top: "0.25rem",
+                    padding_bottom: "0.25rem",
+                    width: "100%",
+                    text_align: "center",
+                    margin: 0,
+                    "Delete Item?"
+                }
+                Button {
+                    r#type: "button",
+                    "data-style": "outline",
+                    onclick: move |_| {
+                        open.set(false);
+                        confirmed.set(true);
+                    },
+                    "Confirm"
+                }
+                Button {
+                    r#type: "button",
+                    "data-style": "outline",
+                    onclick: move |_| {
+                        open.set(false);
+                    },
+                    "Cancel"
+                }
+            }
+        }
+        if confirmed() {
+            p { style: "color: var(--contrast-error-color); margin-top: 16px; font-weight: 600;",
+                "Item deleted!"
+            }
+        }
     }
 }
