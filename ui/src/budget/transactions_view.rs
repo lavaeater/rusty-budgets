@@ -15,7 +15,11 @@ pub fn TransactionsView(budget_id: Uuid, transactions: Vec<BankTransaction>, ite
         h1 { "Transactions" }
         h2 { {transactions.len().to_string()} }
         for tx in transactions {
-            div { display: "flex", flex_direction: "row", gap: "1rem",
+            div {
+                display: "flex",
+                flex_direction: "row",
+                gap: "1rem",
+                height: "3rem",
                 p { {tx.description.to_string()} }
                 p { {tx.amount.to_string()} }
                 p { {tx.date.format("%Y-%m-%d").to_string()} }
@@ -30,20 +34,29 @@ pub fn TransactionsView(budget_id: Uuid, transactions: Vec<BankTransaction>, ite
                     },
                 }
                 if tx.amount.is_pos() {
-                    div {
-                        display: "flex",
-                        flex_direction: "column",
-                        gap: "1rem",
-                        NewBudgetItemPopover { budgeting_type: BudgetingType::Income }
+                    NewBudgetItemPopover {
+                        budgeting_type: BudgetingType::Income,
+                        tx_id: Some(tx.id),
                     }
                 } else {
-                    div {
-                        display: "flex",
-                        flex_direction: "column",
-                        gap: "1rem",
-                        NewBudgetItemPopover { budgeting_type: BudgetingType::Expense }
-                        NewBudgetItemPopover { budgeting_type: BudgetingType::Savings }
+                    NewBudgetItemPopover {
+                        budgeting_type: BudgetingType::Expense,
+                        tx_id: Some(tx.id),
                     }
+                    NewBudgetItemPopover {
+                        budgeting_type: BudgetingType::Savings,
+                        tx_id: Some(tx.id),
+                    }
+                }
+                Button {
+                    r#type: "button",
+                    "data-style": "destructive",
+                    onclick: move |_| async move {
+                        if let Ok(updated_budget) = api::ignore_transaction(budget_id, tx.id).await {
+                            budget_signal.set(Some(updated_budget));
+                        }
+                    },
+                    "Ignorera"
                 }
             }
         }
@@ -52,13 +65,13 @@ pub fn TransactionsView(budget_id: Uuid, transactions: Vec<BankTransaction>, ite
 }
 
 #[component]
-pub fn NewBudgetItemPopover(budgeting_type: BudgetingType) -> Element {
+pub fn NewBudgetItemPopover(budgeting_type: BudgetingType, tx_id: Option<Uuid>) -> Element {
     let mut open = use_signal(|| false);
     rsx! {
         PopoverRoot { open: open(), on_open_change: move |v| open.set(v),
             PopoverTrigger { {budgeting_type.to_string()} }
             PopoverContent { gap: "0.25rem",
-                NewBudgetItem { budgeting_type, close_signal: Some(open) }
+                NewBudgetItem { budgeting_type, tx_id, close_signal: Some(open) }
             }
         }
     }

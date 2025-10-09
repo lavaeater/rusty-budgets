@@ -115,6 +115,10 @@ impl BudgetPeriodStore {
             .collect::<Vec<_>>()
     }
 
+    pub(crate) fn move_transaction_to_ignored(&mut self, tx_id: &Uuid) -> bool {
+        self.current_period_mut().transactions.ignore_transaction(tx_id)
+    }
+
     pub fn get_period_before(&self, id: &BudgetPeriodId) -> Option<BudgetPeriod> {
         if self.budget_periods.is_empty() {
             return None;

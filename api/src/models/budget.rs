@@ -23,6 +23,7 @@ pub_events_enum! {
         ItemAdded,
         TransactionAdded,
         TransactionConnected,
+        TransactionIgnored,
         ItemFundsReallocated,
         ItemFundsAdjusted,
         ItemModified,
@@ -211,6 +212,10 @@ impl Budget {
 
     pub fn list_bank_transactions(&self) -> Vec<&BankTransaction> {
         self.budget_periods.list_bank_transactions()
+    }
+    
+    pub fn move_transaction_to_ignored(&mut self, tx_id: &Uuid) -> bool {
+        self.budget_periods.move_transaction_to_ignored(tx_id)
     }
     
     pub fn list_transactions_for_item(&self, item_id: &Uuid, sorted:bool) -> Vec<&BankTransaction> {

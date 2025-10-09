@@ -205,10 +205,9 @@ pub mod db {
         name: &str,
         item_type: &BudgetingType,
         budgeted_amount: &Money,
-    ) -> anyhow::Result<Budget> {
+    ) -> anyhow::Result<(Budget, Uuid)> {
         with_runtime(None)
             .add_item(budget_id, name, item_type, budgeted_amount, user_id)
-            .map(|(budget, _)| budget)
     }
 
     pub fn connect_transaction(
@@ -219,8 +218,7 @@ pub mod db {
     ) -> anyhow::Result<Budget> {
         match with_runtime(None).connect_transaction(budget_id, tx_id, item_id, user_id) {
             Ok((budget, _)) => {
-                let budget = create_rule(&budget, user_id, tx_id, item_id)
-                    .unwrap_or(budget);
+                let budget = create_rule(&budget, user_id, tx_id, item_id).unwrap_or(budget);
                 let matches = budget.evaluate_rules();
                 let mut return_budget = budget.clone();
                 for (tx_id, item_id) in matches {
@@ -240,6 +238,16 @@ pub mod db {
             }
             Err(err) => Err(err),
         }
+    }
+
+    pub fn ignore_transaction(
+        budget_id: &Uuid,
+        user_id: &Uuid,
+        tx_id: &Uuid,
+    ) -> anyhow::Result<Budget> {
+        with_runtime(None)
+            .ignore_transaction(budget_id, tx_id, user_id)
+            .map(|(b, _)| b)
     }
 
     pub fn create_rule(
@@ -306,7 +314,7 @@ pub async fn add_item(
     name: String,
     item_type: BudgetingType,
     budgeted_amount: Money,
-) -> Result<Budget, ServerFnError> {
+) -> Result<(Budget, Uuid), ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
     match db::add_item(&budget_id, &user.id, &name, &item_type, &budgeted_amount) {
         Ok(b) => {
@@ -369,6 +377,21 @@ pub async fn connect_transaction(
         Ok(b) => Ok(b),
         Err(e) => {
             tracing::error!(error = %e, "Could not connect transaction to item.");
+            Err(ServerFnError::ServerError(e.to_string()))
+        }
+    }
+}
+
+#[server]
+pub async fn ignore_transaction(
+    budget_id: Uuid,
+    tx_id: Uuid,
+ ) -> Result<Budget, ServerFnError> {
+    let user = db::get_default_user(None).expect("Could not get default user");
+    match db::ignore_transaction(&budget_id, &user.id, &tx_id) {
+        Ok(b) => Ok(b),
+        Err(e) => {
+            tracing::error!(error = %e, "Could not ignore transaction to item.");
             Err(ServerFnError::ServerError(e.to_string()))
         }
     }

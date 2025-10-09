@@ -113,6 +113,17 @@ impl JoyDbBudgetRuntime {
         })
     }
 
+    pub fn ignore_transaction(
+        &self,
+        budget_id: &Uuid,
+        tx_id: &Uuid,
+        user_id: &Uuid,
+    ) -> anyhow::Result<(Budget, Uuid)> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.ignore_transaction(*tx_id)
+        })
+    }
+
     pub fn reallocate_item_funds(
         &self,
         budget_id: Uuid,

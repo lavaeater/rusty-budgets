@@ -16,6 +16,7 @@ fn derive_command_fn_name(struct_name: &str) -> String {
     verb_map.insert("Reallocated", "reallocate");
     verb_map.insert("Adjusted", "adjust");
     verb_map.insert("Modified", "modify");
+    verb_map.insert("Ignored", "ignore");
 
     // Split CamelCase into words
     let mut words = Vec::new();

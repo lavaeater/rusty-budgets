@@ -1,9 +1,10 @@
+use uuid::Uuid;
 use dioxus::prelude::*;
 use api::models::{Budget, BudgetingType, Currency, Money};
 use crate::components::{Input, Button};
 
 #[component]
-pub fn NewBudgetItem(budgeting_type: BudgetingType, close_signal: Option<Signal<bool>>) -> Element {
+pub fn NewBudgetItem(budgeting_type: BudgetingType,tx_id: Option<Uuid>, close_signal: Option<Signal<bool>>) -> Element {
     let mut budget_signal = use_context::<Signal<Option<Budget>>>();
     let budget_id = budget_signal().unwrap().id;
     let mut new_item_name = use_signal(|| "".to_string());
@@ -29,7 +30,7 @@ pub fn NewBudgetItem(budgeting_type: BudgetingType, close_signal: Option<Signal<
                 r#type: "button",
                 "data-style": "primary",
                 onclick: move |_| async move {
-                    if let Ok(updated_budget) = api::add_item(
+                    if let Ok((updated_budget, item_id)) = api::add_item(
                             budget_id,
                             new_item_name(),
                             budgeting_type,
@@ -37,6 +38,20 @@ pub fn NewBudgetItem(budgeting_type: BudgetingType, close_signal: Option<Signal<
                         )
                         .await
                     {
+                        if let Some(tx_id) = tx_id {
+                            if let Ok(updated_budget) = api::connect_transaction(
+                                    budget_id,
+                                    tx_id,
+                                    item_id,
+                                )
+                                .await
+                            {
+                                budget_signal.set(Some(updated_budget));
+                                if let Some(mut closer) = close_signal {
+                                    closer.set(false);
+                                }
+                            }
+                        }
                         budget_signal.set(Some(updated_budget));
                         if let Some(mut closer) = close_signal {
                             closer.set(false);

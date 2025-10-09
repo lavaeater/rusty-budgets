@@ -8,6 +8,7 @@ mod period;
 mod plan;
 mod item_modified;
 mod rule_added;
+mod transaction_ignored;
 
 pub use period::BudgetPeriodEvent;
 pub use plan::BudgetPlanEvent;
@@ -19,6 +20,8 @@ pub use item_funds_reallocated::ItemFundsReallocated;
 pub use item_funds_adjusted::ItemFundsAdjusted;
 pub use item_modified::ItemModified;
 pub use rule_added::RuleAdded;
+pub use transaction_ignored::TransactionIgnored;
+
 
 
 

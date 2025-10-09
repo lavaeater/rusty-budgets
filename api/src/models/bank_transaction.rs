@@ -15,7 +15,7 @@ pub struct BankAccount {
     pub balance: Money,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, Default)]
 pub struct BankTransaction {
     pub id: Uuid,
     pub account_number: String,
@@ -24,6 +24,8 @@ pub struct BankTransaction {
     pub date: DateTime<Utc>,
     pub budget_item_id: Option<Uuid>,
     pub balance: Money,
+    #[serde(default)]
+    pub ignored: bool,
 }
 
 impl PartialEq for BankTransaction {
@@ -66,7 +68,7 @@ pub fn get_transaction_hash(amount: &Money, balance: &Money, account_number: &st
 
 impl Display for BankTransaction {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{}, {}, {}", self.description, self.amount, self.date)
+        write!(f, "{}, {}, {}, {}", self.description, self.amount, self.date, self.ignored)
     }
 }
 
@@ -86,7 +88,8 @@ impl BankTransaction {
             balance,
             description: description.to_string(),
             date,
-            budget_item_id: None
+            budget_item_id: None,
+            ignored: false,
         }
     }
 }

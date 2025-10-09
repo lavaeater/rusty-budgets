@@ -6,17 +6,11 @@ use std::hash::{DefaultHasher, Hash, Hasher};
 use once_cell::sync::Lazy;
 use uuid::Uuid;
 
-pub struct BankAccount {
-    pub account_number: String,
-    pub bank_name: String,
-    pub balance: Money,
-    
-}
-
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct BankTransactionStore {
     hashes: HashSet<u64>,                  // uniqueness check
     by_id: HashMap<Uuid, BankTransaction>, // fast lookup
+    ignored: HashMap<Uuid, BankTransaction>
 }
 
 impl BankTransactionStore {
@@ -59,6 +53,18 @@ impl BankTransactionStore {
             let mut hasher = DefaultHasher::new();
             transaction.hash(&mut hasher);
             self.hashes.remove(&hasher.finish())
+        } else {
+            false
+        }
+    }
+    
+    pub fn ignore_transaction(&mut self, tx_id: &Uuid) -> bool {
+        if let Some(mut transaction) = self.by_id.remove(tx_id) {
+            transaction.ignored = true;
+            transaction.budget_item_id = None;
+            
+            self.ignored.insert(*tx_id, transaction);
+            true
         } else {
             false
         }
