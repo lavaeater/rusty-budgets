@@ -2,7 +2,7 @@ use api::cqrs::framework::Runtime;
 use api::cqrs::runtime::JoyDbBudgetRuntime;
 use api::import::import_from_skandia_excel;
 use api::models::*;
-use chrono::Utc;
+use chrono::{DateTime, Datelike, NaiveDate, Utc};
 use std::collections::HashSet;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use uuid::Uuid;
@@ -24,6 +24,9 @@ pub fn create_budget_test() -> anyhow::Result<()> {
     assert_eq!(res.version, 1);
     assert_eq!(res.currency, Currency::SEK);
 
+    let ser = serde_json::to_string(&res)?;
+    let _: Budget = serde_json::from_str(&ser)?;
+
     Ok(())
 }
 
@@ -43,7 +46,7 @@ pub fn add_budget_item() -> anyhow::Result<()> {
     )?;
 
     assert_eq!(
-        res.budgeted_by_type.get(&BudgetingType::Expense).unwrap(),
+        res.get_budgeted_by_type(&BudgetingType::Expense).unwrap(),
         &Money::new_dollars(100, Currency::SEK)
     );
 
@@ -62,24 +65,21 @@ pub fn add_budget_item() -> anyhow::Result<()> {
 
     //Verify that the budget overview is updated
     let income_overview = budget_agg
-        .budgeting_overview
-        .get(&BudgetingType::Income)
+        .get_budgeting_overview(&BudgetingType::Income)
         .unwrap();
     assert_eq!(
         income_overview.budgeted_amount,
         Money::new_dollars(0, Currency::SEK)
     );
     let expense_overview = budget_agg
-        .budgeting_overview
-        .get(&BudgetingType::Expense)
+        .get_budgeting_overview(&BudgetingType::Expense)
         .unwrap();
     assert_eq!(
         expense_overview.budgeted_amount,
         Money::new_dollars(100, Currency::SEK)
     );
     let savings_overview = budget_agg
-        .budgeting_overview
-        .get(&BudgetingType::Savings)
+        .get_budgeting_overview(&BudgetingType::Savings)
         .unwrap();
     assert_eq!(
         savings_overview.budgeted_amount,
@@ -93,7 +93,14 @@ pub fn add_budget_item() -> anyhow::Result<()> {
 
 #[test]
 pub fn test_trans_hash() {
-    let now = Utc::now();
+    let date_str = "2025-10-09";
+    let naive_date = NaiveDate::parse_from_str(&date_str, "%Y-%m-%d").unwrap();
+
+    // Convert to midnight UTC
+    let now: DateTime<Utc> = naive_date
+        .and_hms_opt(0, 0, 0) // hours, minutes, seconds
+        .unwrap()
+        .and_utc();
     let bank_account_number = "1234567890".to_string();
     let t_a = BankTransaction::new(
         Uuid::new_v4(),
@@ -121,6 +128,29 @@ pub fn test_trans_hash() {
     let mut hash_set = HashSet::new();
     hash_set.insert(t_a);
     assert!(!hash_set.insert(t_b));
+
+    let hash_c = get_transaction_hash(
+        &Money::new_dollars(100, Currency::SEK),
+        &Money::new_dollars(100, Currency::SEK),
+        &bank_account_number,
+        "Test Transaction",
+        &now,
+    );
+    assert_eq!(hash_a, hash_c);
+    
+    let mut set = HashSet::new();
+    set.insert(hash_a);
+    assert!(!set.insert(hash_b));
+    assert!(set.contains(&hash_c));    
+    
+    let sets : Vec<HashSet<u64>>= vec![HashSet::new(), HashSet::new(), HashSet::new()];
+    
+    assert!(sets.iter().all(|s| !s.contains(&hash_a)));
+    
+    let sets : Vec<HashSet<u64>>= vec![HashSet::new(), HashSet::new(), set];
+
+    assert!(!sets.iter().all(|s| !s.contains(&hash_a)));
+    
 }
 
 #[test]
@@ -153,23 +183,23 @@ pub fn connect_bank_transaction() -> anyhow::Result<()> {
         user_id,
     )?;
 
-    let (res, _tx_id) = rt.connect_transaction(budget_id, tx_id, item_id, user_id)?;
+    let (res, _tx_id) = rt.connect_transaction(&budget_id, &tx_id, &item_id, &user_id)?;
 
     assert_eq!(
-        res.budgeted_by_type.get(&BudgetingType::Expense).unwrap(),
+        res.get_budgeted_by_type(&BudgetingType::Expense).unwrap(),
         &hundred_money
     );
     assert_eq!(
-        res.actual_by_type.get(&BudgetingType::Expense).unwrap(),
+        res.get_actual_by_type(&BudgetingType::Expense).unwrap(),
         &hundred_money
     );
 
     //Verify that the budget overview is updated
-    let income_overview = res.budgeting_overview.get(&BudgetingType::Income).unwrap();
+    let income_overview = res.get_budgeting_overview(&BudgetingType::Income).unwrap();
     assert_eq!(income_overview.budgeted_amount, zero_money);
-    let expense_overview = res.budgeting_overview.get(&BudgetingType::Expense).unwrap();
+    let expense_overview = res.get_budgeting_overview(&BudgetingType::Expense).unwrap();
     assert_eq!(expense_overview.budgeted_amount, hundred_money);
-    let savings_overview = res.budgeting_overview.get(&BudgetingType::Savings).unwrap();
+    let savings_overview = res.get_budgeting_overview(&BudgetingType::Savings).unwrap();
     assert_eq!(savings_overview.budgeted_amount, zero_money);
 
     Ok(())
@@ -197,7 +227,7 @@ pub fn add_bank_transaction() -> anyhow::Result<()> {
 
     assert!(res.is_ok());
     let res = res?.0;
-    assert_eq!(res.bank_transactions.len(), 1);
+    assert_eq!(res.list_bank_transactions().len(), 1);
 
     let res = rt
         .add_transaction(
@@ -228,22 +258,36 @@ pub fn test_import_from_skandia_excel() -> anyhow::Result<()> {
     let (_, budget_id) = rt.create_budget("Test Budget", true, Currency::SEK, user_id)?;
 
     let imported = import_from_skandia_excel(
-        "../test_data/91594824853_2025-08-25-2025-09-19.xlsx",
+        "../test_data/91594824853_2025-09-25-2025-10-07.xlsx",
         &user_id,
         &budget_id,
         &rt,
     )?;
+
+    println!("Imported {} transactions", imported);
     let not_imported = import_from_skandia_excel(
-        "../test_data/91594824853_2025-08-25-2025-09-19.xlsx",
+        "../test_data/91594824853_2025-09-25-2025-10-07.xlsx",
         &user_id,
         &budget_id,
         &rt,
     )?;
 
-    let res = rt.load(&budget_id)?.unwrap();
+    println!("Not imported {} transactions", not_imported);
 
-    assert_eq!(res.bank_transactions.len(), 77);
-    assert_eq!(imported, 77);
+    let mut res = rt.load(&budget_id)?.unwrap();
+
+    let date = Utc::now()
+        .with_year(2025)
+        .unwrap()
+        .with_month(9)
+        .unwrap()
+        .with_day(19)
+        .unwrap();
+
+    res.set_current_period(&date);
+
+    assert_eq!(res.list_all_bank_transactions().len(), 39);
+    assert_eq!(imported, 39);
     assert_eq!(not_imported, 0);
 
     Ok(())
@@ -286,58 +330,50 @@ pub fn reconnect_bank_transaction() -> anyhow::Result<()> {
     )?;
 
     let (res, _returned_tx_id) =
-        rt.connect_transaction(budget_id, tx_id, original_item_id, user_id)?;
+        rt.connect_transaction(&budget_id, &tx_id, &original_item_id, &user_id)?;
 
     let expected_money = Money::new_dollars(100, Currency::SEK);
 
     assert_eq!(
-        res.budgeted_by_type
-            .get(&BudgetingType::Expense)
+        res.get_budgeted_by_type(&BudgetingType::Expense)
             .expect("Expect the budgeted amount for Expenses"),
         &expected_money
     );
     assert_eq!(
-        res.actual_by_type
-            .get(&BudgetingType::Expense)
+        res.get_actual_by_type(&BudgetingType::Expense)
             .expect("Expect the spent amount for Expenses"),
         &expected_money
     );
     assert_eq!(
-        res.budgeted_by_type
-            .get(&BudgetingType::Savings)
+        res.get_budgeted_by_type(&BudgetingType::Savings)
             .expect("Expect the budgeted amount for Savings"),
         &expected_money
     );
     assert_eq!(
-        res.actual_by_type
-            .get(&BudgetingType::Savings)
+        res.get_actual_by_type(&BudgetingType::Savings)
             .expect("Expect the default amount for Savings"),
         &Money::default()
     );
 
-    let (res, _tx_id) = rt.connect_transaction(budget_id, tx_id, new_item_id, user_id)?;
+    let (res, _tx_id) = rt.connect_transaction(&budget_id, &tx_id, &new_item_id, &user_id)?;
 
     assert_eq!(
-        res.budgeted_by_type
-            .get(&BudgetingType::Expense)
+        res.get_budgeted_by_type(&BudgetingType::Expense)
             .expect("Expect the spent amount for Expenses"),
         &expected_money
     );
     assert_eq!(
-        res.actual_by_type
-            .get(&BudgetingType::Expense)
+        res.get_actual_by_type(&BudgetingType::Expense)
             .expect("Expect the default spent amount for Expenses"),
         &Money::default()
     );
     assert_eq!(
-        res.budgeted_by_type
-            .get(&BudgetingType::Savings)
+        res.get_budgeted_by_type(&BudgetingType::Savings)
             .expect("Expect the budgeted amount for Savings"),
         &expected_money
     );
     assert_eq!(
-        res.actual_by_type
-            .get(&BudgetingType::Savings)
+        res.get_actual_by_type(&BudgetingType::Savings)
             .expect("Expect the correct spent amount for Savings"),
         &expected_money
     );
@@ -502,8 +538,7 @@ pub fn test_budeting_overview() -> anyhow::Result<()> {
 
     let budget = rt.materialize(&budget_id)?;
     let income_overview = budget
-        .budgeting_overview
-        .get(&BudgetingType::Income)
+        .get_budgeting_overview(&BudgetingType::Income)
         .unwrap();
     assert_eq!(income_overview.budgeted_amount, thousand_money);
     assert_eq!(income_overview.actual_amount, zero_money);
@@ -513,16 +548,14 @@ pub fn test_budeting_overview() -> anyhow::Result<()> {
     );
 
     let expense_overview = budget
-        .budgeting_overview
-        .get(&BudgetingType::Expense)
+        .get_budgeting_overview(&BudgetingType::Expense)
         .unwrap();
     assert_eq!(expense_overview.budgeted_amount, fivehundred_money);
     assert_eq!(expense_overview.actual_amount, zero_money);
     assert_eq!(expense_overview.remaining_budget, fivehundred_money);
 
     let savings_overview = budget
-        .budgeting_overview
-        .get(&BudgetingType::Savings)
+        .get_budgeting_overview(&BudgetingType::Savings)
         .unwrap();
     assert_eq!(savings_overview.budgeted_amount, hundred_money);
     assert_eq!(savings_overview.actual_amount, zero_money);
@@ -562,8 +595,7 @@ pub fn test_budeting_overview() -> anyhow::Result<()> {
 
     let budget = rt.materialize(&budget_id)?;
     let income_overview = budget
-        .budgeting_overview
-        .get(&BudgetingType::Income)
+        .get_budgeting_overview(&BudgetingType::Income)
         .unwrap();
     assert_eq!(income_overview.budgeted_amount, thousand_money);
     assert_eq!(income_overview.actual_amount, hundred_money.multiply(9));
@@ -573,16 +605,20 @@ pub fn test_budeting_overview() -> anyhow::Result<()> {
     );
 
     let expense_overview = budget
-        .budgeting_overview
-        .get(&BudgetingType::Expense)
+        .get_budgeting_overview(&BudgetingType::Expense)
         .unwrap();
     assert_eq!(expense_overview.budgeted_amount, fivehundred_money);
-    assert_eq!(expense_overview.actual_amount, Money::new_dollars(450, Currency::SEK));
-    assert_eq!(expense_overview.remaining_budget, Money::new_dollars(50, Currency::SEK));
+    assert_eq!(
+        expense_overview.actual_amount,
+        Money::new_dollars(450, Currency::SEK)
+    );
+    assert_eq!(
+        expense_overview.remaining_budget,
+        Money::new_dollars(50, Currency::SEK)
+    );
 
     let savings_overview = budget
-        .budgeting_overview
-        .get(&BudgetingType::Savings)
+        .get_budgeting_overview(&BudgetingType::Savings)
         .unwrap();
     assert_eq!(savings_overview.budgeted_amount, hundred_money);
     assert_eq!(savings_overview.actual_amount, hundred_money);

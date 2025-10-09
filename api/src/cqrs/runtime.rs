@@ -35,6 +35,24 @@ impl JoyDbBudgetRuntime {
         })
     }
 
+    #[allow(clippy::too_many_arguments)]
+    pub fn modify_item(
+        &self,
+        budget_id: &Uuid,
+        item_id: &Uuid,
+        name: Option<String>,
+        item_type: Option<BudgetingType>,
+        budgeted_amount: Option<Money>,
+        notes: Option<String>,
+        tags: Option<Vec<String>>,
+        user_id: &Uuid,
+    ) -> anyhow::Result<(Budget, Uuid)> {
+        self.cmd(user_id, budget_id,|budget| {
+            budget.modify_item(*item_id, name, item_type, budgeted_amount, notes, tags)
+        })
+    }
+
+    #[allow(clippy::too_many_arguments)]
     pub fn add_and_connect_tx(
         &self,
         budget_id: Uuid,
@@ -55,12 +73,13 @@ impl JoyDbBudgetRuntime {
             date,
             user_id,
         ) {
-            self.connect_transaction(budget_id, tx_id, item_id, user_id)
+            self.connect_transaction(&budget_id, &tx_id, &item_id, &user_id)
         } else {
             Err(anyhow::anyhow!("Failed to add transaction"))
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn add_transaction(
         &self,
         budget_id: Uuid,
@@ -84,13 +103,24 @@ impl JoyDbBudgetRuntime {
 
     pub fn connect_transaction(
         &self,
-        budget_id: Uuid,
-        tx_id: Uuid,
-        item_id: Uuid,
-        user_id: Uuid,
+        budget_id: &Uuid,
+        tx_id: &Uuid,
+        item_id: &Uuid,
+        user_id: &Uuid,
     ) -> anyhow::Result<(Budget, Uuid)> {
-        self.cmd(&user_id, &budget_id, |budget| {
-            budget.connect_transaction(tx_id, item_id)
+        self.cmd(user_id, budget_id, |budget| {
+            budget.connect_transaction(*tx_id, *item_id)
+        })
+    }
+
+    pub fn ignore_transaction(
+        &self,
+        budget_id: &Uuid,
+        tx_id: &Uuid,
+        user_id: &Uuid,
+    ) -> anyhow::Result<(Budget, Uuid)> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.ignore_transaction(*tx_id)
         })
     }
 
@@ -116,6 +146,19 @@ impl JoyDbBudgetRuntime {
     ) -> anyhow::Result<(Budget, Uuid)> {
         self.cmd(&user_id, &budget_id, |budget| {
             budget.adjust_item_funds(item_id, amount)
+        })
+    }
+
+    pub fn add_rule(
+        &self,
+        budget_id: &Uuid,
+        transaction_key: Vec<String>,
+        item_name: String,
+        always_apply: bool,
+        user_id: &Uuid,
+    ) -> anyhow::Result<(Budget, Uuid)> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.add_rule(transaction_key, item_name, always_apply)
         })
     }
 }
@@ -201,26 +244,18 @@ impl JoyDbBudgetRuntime {
 impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
     fn load(&self, id: &Uuid) -> Result<Option<Budget>, anyhow::Error> {
         let budget = self.get_budget(id)?;
-        match budget {
-            Some(mut budget) => {
-                let events = self.fetch_events(id, budget.last_event)?;
-                for ev in events {
-                    ev.apply(&mut budget);
-                }
-                Ok(Some(budget))
-            }
-            None => {
-                let mut budget = Budget {
-                    id: *id,
-                    ..Default::default()
-                };
-                let events = self.fetch_events(id, budget.last_event)?;
-                for ev in events {
-                    ev.apply(&mut budget);
-                }
-                Ok(Some(budget))
-            }
+        let mut  budget = budget.unwrap_or(Budget::new(*id));
+        let version = budget.version;
+        let events = self.fetch_events(id, budget.last_event)?;
+        for ev in events {
+            ev.apply(&mut budget);
         }
+        let version = budget.version - version;
+        if version > 5 { // more than 5 events since last snapshot
+            tracing::info!("More than 5 events since last snapshot, snapshotting");
+            self.snapshot(&budget)?;
+        }
+        Ok(Some(budget))
     }
 
     fn snapshot(&self, agg: &Budget) -> anyhow::Result<()> {

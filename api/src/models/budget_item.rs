@@ -1,11 +1,13 @@
 use crate::models::budgeting_type::BudgetingType;
 use crate::models::money::Money;
+use dioxus::logger::tracing;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::sync::Arc;
 use strum::IntoEnumIterator;
 use uuid::Uuid;
+use crate::models::MatchRule;
 
 /// The store
 #[derive(Default, Debug, Clone)]
@@ -13,6 +15,18 @@ pub struct BudgetItemStore {
     items: HashMap<Uuid, Arc<BudgetItem>>,
     by_type: HashMap<BudgetingType, Vec<Arc<BudgetItem>>>,
     items_and_types: HashMap<Uuid, BudgetingType>,
+}
+
+impl BudgetItemStore {
+    pub(crate) fn get_item_for_rule(&self, rule: &MatchRule) -> Option<Uuid> {
+        self.items.values().find(|i| rule.matches_item(i.as_ref())).map(|arc| arc.id)
+    }
+}
+
+impl BudgetItemStore {
+    pub(crate) fn list_all_items(&self) -> Vec<BudgetItem> {
+        self.items.values().map(|i| i.as_ref()).cloned().collect()
+    }
 }
 
 impl Serialize for BudgetItemStore {
@@ -156,7 +170,7 @@ impl BudgetItemStore {
                 self.by_type.entry(item_type).and_modify(|v| {
                     v.retain(|x| x.id != id);
                 });
-                Some((Arc::try_unwrap(arc).unwrap(), item_type))
+                Some((arc.as_ref().clone(), item_type))
             } else {
                 None
             }
@@ -212,25 +226,27 @@ impl BudgetItemStore {
             .collect::<HashMap<_, _>>()
     }
 
-    pub fn add_actual_amount(&mut self, id: &Uuid, amount: Money) {
+    pub fn add_actual_amount(&mut self, id: &Uuid, amount: &Money) {
         if let Some(item) = self.items.get(id) {
             self.modify_item(
                 id,
                 None,
                 None,
-                Some(item.actual_amount + amount),
+                None,
+                Some(item.actual_amount + *amount),
                 None,
                 None,
             );
         }
     }
 
-    pub fn add_budgeted_amount(&mut self, id: &Uuid, amount: Money) {
+    pub fn add_budgeted_amount(&mut self, id: &Uuid, amount: &Money) {
         if let Some(item) = self.items.get(id) {
             self.modify_item(
                 id,
                 None,
-                Some(item.budgeted_amount + amount),
+                None,
+                Some(item.budgeted_amount + *amount),
                 None,
                 None,
                 None,
@@ -238,27 +254,31 @@ impl BudgetItemStore {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn modify_item(
         &mut self,
         id: &Uuid,
         name: Option<String>,
+        item_type: Option<BudgetingType>,
         budgeted_amount: Option<Money>,
         actual_amount: Option<Money>,
         notes: Option<String>,
         tags: Option<Vec<String>>,
     ) {
-        if let Some(old_item) = self.items.get(&id) {
-            let new_item = Arc::new(BudgetItem {
+        if let Some(old_item) = self.items.get(id) {
+            let new_item = BudgetItem {
                 id: *id,
                 name: name.unwrap_or(old_item.name.clone()),
                 budgeted_amount: budgeted_amount.unwrap_or(old_item.budgeted_amount),
                 actual_amount: actual_amount.unwrap_or(old_item.actual_amount),
-                notes: notes,
+                notes,
                 tags: tags.unwrap_or(old_item.tags.clone()),
-            });
-            if let Some((_old_item, item_type)) = self.remove(*id) {
-                self.insert(&new_item, item_type);
-                
+            };
+            if let Some((_old_item, mut old_item_type)) = self.remove(*id) {
+                old_item_type = item_type.unwrap_or(old_item_type);
+                self.insert(&new_item, old_item_type);
+            } else {
+                tracing::debug!("Item {} not found", id);
             }
         }
     }

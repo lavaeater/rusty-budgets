@@ -1,8 +1,10 @@
-use crate::{BudgetingTypeTabs, Input};
+use crate::file_chooser::*;
+use crate::{BudgetTabs, Input, TransactionsView};
 use api::models::Budget;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use dioxus_primitives::label::Label;
+use std::future::Future;
 use uuid::Uuid;
 
 const HERO_CSS: Asset = asset!("assets/styling/budget-hero.css");
@@ -11,8 +13,10 @@ pub fn BudgetHero() -> Element {
     let budget_resource = use_server_future(api::get_default_budget)?;
 
     let mut budget_signal = use_signal(|| None::<Budget>);
+    let mut budget_id = use_signal(Uuid::default);
+
     use_context_provider(|| budget_signal);
-    
+
     let mut budget_name = use_signal(|| "".to_string());
 
     use_effect(move || {
@@ -22,21 +26,37 @@ pub fn BudgetHero() -> Element {
         }
     });
 
+    let import_file = move |file: FileChosen| {
+        let file_name = file.data.to_string();
+        spawn(async move {
+            if !file_name.is_empty() {
+                if let Ok(updated_budget) = api::import_transactions(budget_id(), file_name).await {
+                    budget_signal.set(Some(updated_budget));
+                }
+            }
+        });
+    };
+
     // Handle the resource state
     match budget_signal() {
         Some(budget) => {
             tracing::info!("The budget signal was updated: {}", budget.id);
+            budget_id.set(budget.id);
             rsx! {
                 document::Link { rel: "stylesheet", href: HERO_CSS }
                 div { class: "budget-hero-container",
                     // Header
                     div { class: "budget-header",
                         h1 { class: "budget-title", {budget.name.clone()} }
+                        h2 { {budget.get_current_period_id().to_string()} }
+                        FileDialog { on_chosen: import_file }
                     }
+                    div { class: "budget-hero-content", BudgetTabs {} }
                     div { class: "budget-hero-content",
-                        BudgetingTypeTabs {
+                        TransactionsView {
                             budget_id: budget.id,
-                            items_by_type: budget.items_by_type(),
+                            transactions: budget.list_transactions_for_connection(),
+                            items: budget.list_all_items(),
                         }
                     }
                 }

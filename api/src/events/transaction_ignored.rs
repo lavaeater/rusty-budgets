@@ -5,27 +5,26 @@ use cqrs_macros::DomainEvent;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-// TransactionConnected,
+// TransactionIgnored,
 #[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]
 #[domain_event(aggregate = "Budget")]
-pub struct TransactionConnected {
+pub struct TransactionIgnored {
     budget_id: Uuid,
-    tx_id: Uuid,
-    item_id: Uuid,
+    tx_id: Uuid
 }
 
-impl Display for TransactionConnected {
+impl Display for TransactionIgnored {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "TransactionConnected {{ budget_id: {}, tx_id: {}, item_id: {} }}",
-            self.budget_id, self.tx_id, self.item_id
+            "TransactionIgnored {{ budget_id: {}, tx_id: {} }}",
+            self.budget_id, self.tx_id
         )
     }
 }
 
-impl TransactionConnectedHandler for Budget {
-    fn apply_connect_transaction(&mut self, event: &TransactionConnected) -> Uuid {
+impl TransactionIgnoredHandler for Budget {
+    fn apply_ignore_transaction(&mut self, event: &TransactionIgnored) -> Uuid {
         let cost_types = Vec::from([BudgetingType::Expense, BudgetingType::Savings]);
 
         // First, extract all the data we need from the transaction (immutable borrow)
@@ -53,49 +52,25 @@ impl TransactionConnectedHandler for Budget {
         }
 
         // Now we can mutably borrow to update the transaction
-        let tx_mut = self.get_transaction_mut(&event.tx_id).unwrap();
-        tx_mut.budget_item_id = Some(event.item_id);
+        self.move_transaction_to_ignored(&event.tx_id);
         // End of mutable borrow
-
-        // Update the new item
-        let budgeting_type = self.type_for_item(&event.item_id).unwrap();
-
-        // Adjust amount for cost types (negate for Expense/Savings)
-        let adjusted_amount = if cost_types.contains(&budgeting_type) {
-            -tx_amount
-        } else {
-            tx_amount
-        };
-
-        // Update budget total (add to new item)
-        self.update_budget_actual_amount(&budgeting_type, &adjusted_amount);
-        self.add_actual_amount_to_item(&event.item_id, &adjusted_amount);
         self.recalc_overview();
 
         event.tx_id
     }
 
-    fn connect_transaction_impl(
+    fn ignore_transaction_impl(
         &self,
-        tx_id: Uuid,
-        item_id: Uuid,
-    ) -> Result<TransactionConnected, CommandError> {
-        if self.contains_transaction(&tx_id) && self.contains_budget_item(&item_id) {
-            if let Some(tx) = self.get_transaction(&tx_id) {
-                if tx.budget_item_id == Some(item_id) {
-                    return Err(CommandError::Validation(
-                        "Transaction is already connected to this item.",
-                    ));
-                }
-            }
-            Ok(TransactionConnected {
+        tx_id: Uuid
+    ) -> Result<TransactionIgnored, CommandError> {
+        if self.contains_transaction(&tx_id) {
+            Ok(TransactionIgnored {
                 budget_id: self.id,
                 tx_id,
-                item_id,
             })
         } else {
             Err(CommandError::Validation(
-                "Transaction or item does not exist.",
+                "Transaction does not exist.",
             ))
         }
     }

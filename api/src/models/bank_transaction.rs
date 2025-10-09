@@ -1,65 +1,10 @@
 use core::fmt;
 use core::fmt::{Display, Formatter};
-use std::collections::{HashMap, HashSet};
 use std::hash::{DefaultHasher, Hash, Hasher};
 use uuid::Uuid;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use crate::models::money::Money;
-
-#[derive(Default, Debug, Clone, Serialize, Deserialize)]
-pub struct BankTransactionStore {
-    all: HashSet<u64>,       // uniqueness check
-    by_id: HashMap<Uuid, BankTransaction> // fast lookup
-}
-
-impl BankTransactionStore {
-    pub fn len(&self) -> usize {
-        self.all.len()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.all.is_empty()
-    }
-
-    pub fn insert(&mut self, transaction: BankTransaction) -> bool {
-        let mut hasher = DefaultHasher::new();
-        transaction.hash(&mut hasher);
-
-        if self.all.insert(hasher.finish()) {
-            self.by_id.insert(transaction.id, transaction);
-            true
-        } else {
-            false
-        }
-    }
-
-    pub fn remove(&mut self, id: Uuid) -> bool {
-        if let Some(transaction) = self.by_id.remove(&id) {
-            let mut hasher = DefaultHasher::new();
-            transaction.hash(&mut hasher);
-            self.all.remove(&hasher.finish())
-        } else {
-            false
-        }
-    }
-
-    pub fn check_hash(&self,hash: &u64) -> bool {
-        self.all.contains(hash)
-    }
-
-    pub fn can_insert(&self, hash: &u64) -> bool {
-        !self.check_hash(hash)
-    }
-
-    pub fn get_mut(&mut self, id: &Uuid) -> Option<&mut BankTransaction> {
-        self.by_id.get_mut(id)
-    }
-
-    pub fn contains(&self, id: &Uuid) -> bool {
-        self.by_id.contains_key(id)
-    }
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct BankAccount {
@@ -70,7 +15,7 @@ pub struct BankAccount {
     pub balance: Money,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, Default)]
 pub struct BankTransaction {
     pub id: Uuid,
     pub account_number: String,
@@ -79,6 +24,8 @@ pub struct BankTransaction {
     pub date: DateTime<Utc>,
     pub budget_item_id: Option<Uuid>,
     pub balance: Money,
+    #[serde(default)]
+    pub ignored: bool,
 }
 
 impl PartialEq for BankTransaction {
@@ -121,7 +68,7 @@ pub fn get_transaction_hash(amount: &Money, balance: &Money, account_number: &st
 
 impl Display for BankTransaction {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{}, {}, {}", self.description, self.amount, self.date)
+        write!(f, "{}, {}, {}, {}", self.description, self.amount, self.date, self.ignored)
     }
 }
 
@@ -141,7 +88,8 @@ impl BankTransaction {
             balance,
             description: description.to_string(),
             date,
-            budget_item_id: None
+            budget_item_id: None,
+            ignored: false,
         }
     }
 }

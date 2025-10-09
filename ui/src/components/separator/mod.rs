@@ -25,7 +25,7 @@ pub fn Separator(props: SeparatorProps) -> Element {
     rsx! {
         document::Link {
             rel: "stylesheet",
-            href: asset!("/src/budget_components/separator/style.css"),
+            href: asset!("/src/components/separator/style.css"),
         }
         separator::Separator {
             class: "separator",

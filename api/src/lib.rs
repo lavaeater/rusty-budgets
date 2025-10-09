@@ -1,8 +1,6 @@
 //! This crate contains all shared fullstack server functions.
-
-extern crate alloc;
-extern crate core;
-
+#![allow(unused_imports)]
+#![allow(dead_code)]
 pub mod cqrs;
 pub mod events;
 pub mod import;
@@ -20,11 +18,14 @@ const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 
 #[cfg(feature = "server")]
 pub mod db {
-    use crate::cqrs::framework::Runtime;
+    use crate::cqrs::framework::{CommandError, Runtime};
     use crate::cqrs::runtime::{Db, JoyDbBudgetRuntime, UserBudgets};
+    use crate::events::TransactionConnected;
+    use crate::import::import_from_skandia_excel;
     use crate::models::*;
     use crate::models::*;
     use crate::DEFAULT_USER_EMAIL;
+    use anyhow::Error;
     use chrono::NaiveDate;
     use dioxus::logger::tracing;
     use joydb::JoydbError;
@@ -122,6 +123,16 @@ pub mod db {
         }
     }
 
+    pub fn get_budget(budget_id: &Uuid) -> anyhow::Result<Budget> {
+        match with_runtime(None).load(&budget_id) {
+            Ok(budget) => match budget {
+                None => Err(anyhow::anyhow!("Could not load budget")),
+                Some(budget) => Ok(budget),
+            },
+            Err(_) => Err(anyhow::anyhow!("Could not load budget")),
+        }
+    }
+
     pub fn add_budget_to_user(
         user_id: &Uuid,
         budget_id: &Uuid,
@@ -178,15 +189,107 @@ pub mod db {
         }
     }
 
+    pub fn import_transactions(
+        budget_id: &Uuid,
+        user_id: &Uuid,
+        file_name: &str,
+    ) -> anyhow::Result<Budget> {
+        let runtime = with_runtime(None);
+        let _ = import_from_skandia_excel(file_name, user_id, budget_id, runtime)?;
+        get_budget(budget_id)
+    }
+
     pub fn add_item(
         budget_id: &Uuid,
         user_id: &Uuid,
         name: &str,
         item_type: &BudgetingType,
         budgeted_amount: &Money,
+    ) -> anyhow::Result<(Budget, Uuid)> {
+        with_runtime(None).add_item(budget_id, name, item_type, budgeted_amount, user_id)
+    }
+
+    pub fn modify_item(
+        budget_id: &Uuid,
+        item_id: &Uuid,
+        user_id: &Uuid,
+        name: Option<String>,
+        item_type: Option<BudgetingType>,
+        budgeted_amount: Option<Money>,
+    ) -> anyhow::Result<Budget> {
+        with_runtime(None).modify_item(
+            budget_id,
+            item_id,
+            name,
+            item_type,
+            budgeted_amount,
+            None,
+            None,
+            user_id,
+        )
+        .map(|(b, _)| b)
+    }
+
+    pub fn connect_transaction(
+        budget_id: &Uuid,
+        user_id: &Uuid,
+        tx_id: &Uuid,
+        item_id: &Uuid,
+    ) -> anyhow::Result<Budget> {
+        match with_runtime(None).connect_transaction(budget_id, tx_id, item_id, user_id) {
+            Ok((budget, _)) => {
+                let budget = create_rule(&budget, user_id, tx_id, item_id).unwrap_or(budget);
+                let matches = budget.evaluate_rules();
+                let mut return_budget = budget.clone();
+                for (tx_id, item_id) in matches {
+                    match with_runtime(None)
+                        .connect_transaction(budget_id, &tx_id, &item_id, user_id)
+                    {
+                        Ok((b, _)) => {
+                            return_budget = b;
+                            tracing::info!("connceted some tranny");
+                        }
+                        Err(e) => {
+                            tracing::error!("failed to connect the tranny {}", e);
+                        }
+                    }
+                }
+                Ok(return_budget)
+            }
+            Err(err) => Err(err),
+        }
+    }
+
+    pub fn ignore_transaction(
+        budget_id: &Uuid,
+        user_id: &Uuid,
+        tx_id: &Uuid,
     ) -> anyhow::Result<Budget> {
         with_runtime(None)
-            .add_item(budget_id, name, item_type, budgeted_amount, user_id)
+            .ignore_transaction(budget_id, tx_id, user_id)
+            .map(|(b, _)| b)
+    }
+
+    pub fn create_rule(
+        budget: &Budget,
+        user_id: &Uuid,
+        tx_id: &Uuid,
+        item_id: &Uuid,
+    ) -> anyhow::Result<Budget> {
+        let transaction = budget.get_transaction(tx_id).unwrap();
+        let item = budget.get_item(item_id).unwrap();
+        let transaction_key = MatchRule::create_transaction_key(transaction);
+        let item_name = item.name.clone();
+        let always_apply = true;
+
+        with_runtime(None)
+            .add_rule(
+                &budget.id,
+                transaction_key,
+                item_name,
+                always_apply,
+                user_id,
+            )
             .map(|(budget, _)| budget)
     }
 
@@ -231,11 +334,31 @@ pub async fn add_item(
     name: String,
     item_type: BudgetingType,
     budgeted_amount: Money,
-) -> Result<Budget, ServerFnError> {
+) -> Result<(Budget, Uuid), ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
     match db::add_item(&budget_id, &user.id, &name, &item_type, &budgeted_amount) {
         Ok(b) => {
             // let items = b.budget_items.by_type(&item_type).expect("Could not get budgeting_type");
+            Ok(b)
+        }
+        Err(e) => {
+            tracing::error!(error = %e, "Could not get default budget");
+            Err(ServerFnError::ServerError(e.to_string()))
+        }
+    }
+}
+
+#[server]
+pub async fn modify_item(
+    budget_id: Uuid,
+    item_id: Uuid,
+    name: Option<String>,
+    item_type: Option<BudgetingType>,
+    budgeted_amount: Option<Money>,
+) -> Result<Budget, ServerFnError> {
+    let user = db::get_default_user(None).expect("Could not get default user");
+    match db::modify_item(&budget_id, &item_id, &user.id, name, item_type, budgeted_amount) {
+        Ok(b) => {
             Ok(b)
         }
         Err(e) => {
@@ -263,6 +386,49 @@ pub async fn get_default_budget() -> Result<Option<Budget>, ServerFnError> {
         Ok(b) => Ok(b),
         Err(e) => {
             tracing::error!(error = %e, "Could not get default budget");
+            Err(ServerFnError::ServerError(e.to_string()))
+        }
+    }
+}
+
+#[server]
+pub async fn import_transactions(
+    budget_id: Uuid,
+    file_name: String,
+) -> Result<Budget, ServerFnError> {
+    let user = db::get_default_user(None).expect("Could not get default user");
+    match db::import_transactions(&budget_id, &user.id, &file_name) {
+        Ok(b) => Ok(b),
+        Err(e) => {
+            tracing::error!(error = %e, "Could not get default budget");
+            Err(ServerFnError::ServerError(e.to_string()))
+        }
+    }
+}
+
+#[server]
+pub async fn connect_transaction(
+    budget_id: Uuid,
+    tx_id: Uuid,
+    item_id: Uuid,
+) -> Result<Budget, ServerFnError> {
+    let user = db::get_default_user(None).expect("Could not get default user");
+    match db::connect_transaction(&budget_id, &user.id, &tx_id, &item_id) {
+        Ok(b) => Ok(b),
+        Err(e) => {
+            tracing::error!(error = %e, "Could not connect transaction to item.");
+            Err(ServerFnError::ServerError(e.to_string()))
+        }
+    }
+}
+
+#[server]
+pub async fn ignore_transaction(budget_id: Uuid, tx_id: Uuid) -> Result<Budget, ServerFnError> {
+    let user = db::get_default_user(None).expect("Could not get default user");
+    match db::ignore_transaction(&budget_id, &user.id, &tx_id) {
+        Ok(b) => Ok(b),
+        Err(e) => {
+            tracing::error!(error = %e, "Could not ignore transaction to item.");
             Err(ServerFnError::ServerError(e.to_string()))
         }
     }

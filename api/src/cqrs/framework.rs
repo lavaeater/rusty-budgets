@@ -20,7 +20,7 @@ pub trait Aggregate: Sized + Debug + Clone {
     fn _default() -> Self;
 
     fn update_timestamp(&mut self, timestamp: i64, updated_at: DateTime<Utc>);
-    fn _version(&self) -> u64;
+    fn version(&self) -> u64;
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -57,8 +57,9 @@ impl<A: Aggregate, E: DomainEvent<A>> StoredEvent<A, E> {
     }
 
     pub fn apply(&self, state: &mut A) {
-        self.data.apply(state);
         state.update_timestamp(self.timestamp, self.created_at);
+        self.data.apply(state);
+        
     }
 }
 
