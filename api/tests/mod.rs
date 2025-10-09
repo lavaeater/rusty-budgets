@@ -258,7 +258,7 @@ pub fn test_import_from_skandia_excel() -> anyhow::Result<()> {
     let (_, budget_id) = rt.create_budget("Test Budget", true, Currency::SEK, user_id)?;
 
     let imported = import_from_skandia_excel(
-        "../test_data/91594824853_2025-08-25-2025-09-19.xlsx",
+        "../test_data/91594824853_2025-09-25-2025-10-07.xlsx",
         &user_id,
         &budget_id,
         &rt,
@@ -266,7 +266,7 @@ pub fn test_import_from_skandia_excel() -> anyhow::Result<()> {
 
     println!("Imported {} transactions", imported);
     let not_imported = import_from_skandia_excel(
-        "../test_data/91594824853_2025-08-25-2025-09-19.xlsx",
+        "../test_data/91594824853_2025-09-25-2025-10-07.xlsx",
         &user_id,
         &budget_id,
         &rt,
