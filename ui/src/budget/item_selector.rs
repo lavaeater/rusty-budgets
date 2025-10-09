@@ -5,13 +5,16 @@ use crate::*;
 
 #[component]
 pub fn ItemSelector(items: Vec<BudgetItem>, on_change: EventHandler<Option<BudgetItem>>) -> Element {
-    
+    let mut items = items;
+    items.sort_by_key(|it| it.name.clone());
     let items = items
         .into_iter()
         .enumerate()
         .map(|(ix, it)| {
         rsx! {
-            SelectOption::<BudgetItem> { index: ix, value: it.clone(), text_value: "{it.name}",
+            SelectOption::<BudgetItem> { index: ix, 
+                value: it.clone(), 
+                text_value: "{it.name}",
                 {it.name.clone()}
                 SelectItemIndicator {}
             }

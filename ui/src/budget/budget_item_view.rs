@@ -30,6 +30,7 @@ pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType) -> Element {
             if edit_item() {
                 div { class: "flex justify-between items-center p-2 border-b border-gray-200 text-sm",
                     Input {
+                        id: "item_name",
                         value: item_name(),
                         oninput: move |e: FormEvent| { item_name.set(e.value()) },
                     }
@@ -48,6 +49,7 @@ pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType) -> Element {
                             {
                                 budget_signal.set(Some(updated_budget));
                             }
+                            edit_item.set(false);
                         },
                         "Uppdatera"
                     }
@@ -57,21 +59,22 @@ pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType) -> Element {
                     div {
                         class: "font-large",
                         onclick: move |_| { edit_item.set(!edit_item()) },
+
+                        "{item_name()}"
                     }
-                    "{item_name()}"
-                }
 
-                div { onclick: move |_| { expanded.set(!expanded()) },
+                    div { onclick: move |_| { expanded.set(!expanded()) },
 
 
-                    // Right side: actual / budgeted
-                    div { class: "text-gray-700",
-                        "{item.actual_amount.to_string()} / {item.budgeted_amount.to_string()}"
-                    }
-                    for transaction in transactions() {
-                        div { display: "flex", flex_direction: "row",
-                            p { class: "text-gray-700", "{transaction.description}" }
-                            p { class: "text-gray-700", "{transaction.amount.to_string()}" }
+                        // Right side: actual / budgeted
+                        div { class: "text-gray-700",
+                            "{item.actual_amount.to_string()} / {item.budgeted_amount.to_string()}"
+                        }
+                        for transaction in transactions() {
+                            div { display: "flex", flex_direction: "row",
+                                p { class: "text-gray-700", "{transaction.description}" }
+                                p { class: "text-gray-700", "{transaction.amount.to_string()}" }
+                            }
                         }
                     }
                 }

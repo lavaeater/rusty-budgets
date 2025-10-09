@@ -52,7 +52,7 @@ pub fn import_from_skandia_excel(
                     *user_id,
                 ) {
                     Ok(_) => {
-                        // println!("Transaction added!")
+                        println!("Transaction added!");
                         imported += 1;
                     }
                     Err(_) => {

@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use cqrs_macros::DomainEvent;
 use uuid::Uuid;
 use chrono::{DateTime, Utc};
+use dioxus::logger::tracing;
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
 use crate::models::{get_transaction_hash, BankTransaction};
 use crate::models::Budget;
@@ -52,6 +53,8 @@ impl TransactionAddedHandler for Budget {
         date: DateTime<Utc>,
     ) -> Result<TransactionAdded, CommandError> {
         let hash = get_transaction_hash(&amount, &balance, &account_number, &description, &date);
+        let info = format!("{}|{}|{}|{}|{} - {}", account_number, amount, balance, description, date, hash);
+        tracing::debug!("Adding transaction: {}", info);
 
         if self.can_insert_transaction(&hash) {
             Ok(TransactionAdded {
