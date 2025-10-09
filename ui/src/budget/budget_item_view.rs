@@ -27,40 +27,41 @@ pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType) -> Element {
         }
 
         rsx! {
-            button { style: "none",
-                div {
-                    class: "flex justify-between items-center p-2 border-b border-gray-200 text-sm",
-                    onclick: move |_| { expanded.set(!expanded()) },
-                    if edit_item() {
-                        Input {
-                            value: item_name(),
-                            oninput: move |e: FormEvent| { item_name.set(e.value()) },
-                        }
-                        Button {
-                            r#type: "button",
-                            "data-style": "primary",
-                            onclick: move |_| async move {
-                                if let Ok(updated_budget) = api::modify_item(
-                                        budget_signal().unwrap().id,
-                                        item.id,
-                                        Some(item_name()),
-                                        None,
-                                        None,
-                                    )
-                                    .await
-                                {
-                                    budget_signal.set(Some(updated_budget));
-                                }
-                            },
-                            "Uppdatera"
-                        }
-                    } else {
-                        div {
-                            class: "font-large",
-                            onclick: move |_| { edit_item.set(!edit_item()) },
-                        }
-                        "{item_name()}"
+            if edit_item() {
+                div { class: "flex justify-between items-center p-2 border-b border-gray-200 text-sm",
+                    Input {
+                        value: item_name(),
+                        oninput: move |e: FormEvent| { item_name.set(e.value()) },
                     }
+                    Button {
+                        r#type: "button",
+                        "data-style": "primary",
+                        onclick: move |_| async move {
+                            if let Ok(updated_budget) = api::modify_item(
+                                    budget_signal().unwrap().id,
+                                    item.id,
+                                    Some(item_name()),
+                                    None,
+                                    None,
+                                )
+                                .await
+                            {
+                                budget_signal.set(Some(updated_budget));
+                            }
+                        },
+                        "Uppdatera"
+                    }
+                }
+            } else {
+                div { class: "flex justify-between items-center p-2 border-b border-gray-200 text-sm",
+                    div {
+                        class: "font-large",
+                        onclick: move |_| { edit_item.set(!edit_item()) },
+                    }
+                    "{item_name()}"
+                }
+
+                div { onclick: move |_| { expanded.set(!expanded()) },
 
 
                     // Right side: actual / budgeted
