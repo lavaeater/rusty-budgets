@@ -75,7 +75,7 @@ impl BankTransactionStore {
     }
 
     pub fn can_insert(&self, hash: &u64) -> bool {
-        !self.check_hash(hash)
+        !self.hashes.contains(hash)
     }
 
     pub fn get_mut(&mut self, id: &Uuid) -> Option<&mut BankTransaction> {

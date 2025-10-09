@@ -2,7 +2,7 @@ use api::cqrs::framework::Runtime;
 use api::cqrs::runtime::JoyDbBudgetRuntime;
 use api::import::import_from_skandia_excel;
 use api::models::*;
-use chrono::{Datelike, Utc};
+use chrono::{DateTime, Datelike, NaiveDate, Utc};
 use std::collections::HashSet;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use uuid::Uuid;
@@ -93,7 +93,14 @@ pub fn add_budget_item() -> anyhow::Result<()> {
 
 #[test]
 pub fn test_trans_hash() {
-    let now = Utc::now();
+    let date_str = "2025-10-09";
+    let naive_date = NaiveDate::parse_from_str(&date_str, "%Y-%m-%d").unwrap();
+
+    // Convert to midnight UTC
+    let now: DateTime<Utc> = naive_date
+        .and_hms_opt(0, 0, 0) // hours, minutes, seconds
+        .unwrap()
+        .and_utc();
     let bank_account_number = "1234567890".to_string();
     let t_a = BankTransaction::new(
         Uuid::new_v4(),
@@ -121,6 +128,29 @@ pub fn test_trans_hash() {
     let mut hash_set = HashSet::new();
     hash_set.insert(t_a);
     assert!(!hash_set.insert(t_b));
+
+    let hash_c = get_transaction_hash(
+        &Money::new_dollars(100, Currency::SEK),
+        &Money::new_dollars(100, Currency::SEK),
+        &bank_account_number,
+        "Test Transaction",
+        &now,
+    );
+    assert_eq!(hash_a, hash_c);
+    
+    let mut set = HashSet::new();
+    set.insert(hash_a);
+    assert!(!set.insert(hash_b));
+    assert!(set.contains(&hash_c));    
+    
+    let sets : Vec<HashSet<u64>>= vec![HashSet::new(), HashSet::new(), HashSet::new()];
+    
+    assert!(sets.iter().all(|s| !s.contains(&hash_a)));
+    
+    let sets : Vec<HashSet<u64>>= vec![HashSet::new(), HashSet::new(), set];
+
+    assert!(!sets.iter().all(|s| !s.contains(&hash_a)));
+    
 }
 
 #[test]
