@@ -47,12 +47,11 @@ pub fn NewBudgetItem(budgeting_type: BudgetingType,tx_id: Option<Uuid>, close_si
                                 .await
                             {
                                 budget_signal.set(Some(updated_budget));
-                                if let Some(mut closer) = close_signal {
-                                    closer.set(false);
-                                }
+
                             }
+                        } else {
+                            budget_signal.set(Some(updated_budget));
                         }
-                        budget_signal.set(Some(updated_budget));
                         if let Some(mut closer) = close_signal {
                             closer.set(false);
                         }

@@ -206,8 +206,28 @@ pub mod db {
         item_type: &BudgetingType,
         budgeted_amount: &Money,
     ) -> anyhow::Result<(Budget, Uuid)> {
-        with_runtime(None)
-            .add_item(budget_id, name, item_type, budgeted_amount, user_id)
+        with_runtime(None).add_item(budget_id, name, item_type, budgeted_amount, user_id)
+    }
+
+    pub fn modify_item(
+        budget_id: &Uuid,
+        item_id: &Uuid,
+        user_id: &Uuid,
+        name: Option<String>,
+        item_type: Option<BudgetingType>,
+        budgeted_amount: Option<Money>,
+    ) -> anyhow::Result<Budget> {
+        with_runtime(None).modify_item(
+            budget_id,
+            item_id,
+            name,
+            item_type,
+            budgeted_amount,
+            None,
+            None,
+            user_id,
+        )
+        .map(|(b, _)| b)
     }
 
     pub fn connect_transaction(
@@ -229,8 +249,8 @@ pub mod db {
                             return_budget = b;
                             tracing::info!("connceted some tranny");
                         }
-                        Err(_) => {
-                            tracing::error!("failed to connect the tranny");
+                        Err(e) => {
+                            tracing::error!("failed to connect the tranny {}", e);
                         }
                     }
                 }
@@ -329,6 +349,26 @@ pub async fn add_item(
 }
 
 #[server]
+pub async fn modify_item(
+    budget_id: Uuid,
+    item_id: Uuid,
+    name: Option<String>,
+    item_type: Option<BudgetingType>,
+    budgeted_amount: Option<Money>,
+) -> Result<Budget, ServerFnError> {
+    let user = db::get_default_user(None).expect("Could not get default user");
+    match db::modify_item(&budget_id, &item_id, &user.id, name, item_type, budgeted_amount) {
+        Ok(b) => {
+            Ok(b)
+        }
+        Err(e) => {
+            tracing::error!(error = %e, "Could not get default budget");
+            Err(ServerFnError::ServerError(e.to_string()))
+        }
+    }
+}
+
+#[server]
 pub async fn get_default_user() -> Result<User, ServerFnError> {
     match db::get_default_user(None) {
         Ok(b) => Ok(b),
@@ -383,10 +423,7 @@ pub async fn connect_transaction(
 }
 
 #[server]
-pub async fn ignore_transaction(
-    budget_id: Uuid,
-    tx_id: Uuid,
- ) -> Result<Budget, ServerFnError> {
+pub async fn ignore_transaction(budget_id: Uuid, tx_id: Uuid) -> Result<Budget, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
     match db::ignore_transaction(&budget_id, &user.id, &tx_id) {
         Ok(b) => Ok(b),

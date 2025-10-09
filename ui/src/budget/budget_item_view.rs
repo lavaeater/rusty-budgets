@@ -1,4 +1,4 @@
-use crate::Button;
+use crate::{Button, Input};
 use api::models::*;
 use dioxus::fullstack::server_fn::serde::{Deserialize, Serialize};
 use dioxus::logger::tracing;
@@ -7,11 +7,13 @@ use uuid::Uuid;
 
 #[component]
 pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType) -> Element {
-    let budget = use_context::<Signal<Option<Budget>>>();
+    let mut budget_signal = use_context::<Signal<Option<Budget>>>();
     let mut expanded = use_signal(|| false);
+    let mut edit_item = use_signal(||false);
+    let mut item_name = use_signal(|| item.name.clone());
     if expanded() {
         let mut transactions: Signal<Vec<BankTransaction>> = use_signal(|| vec![]);
-        match budget() {
+        match budget_signal() {
             None => {}
             Some(budget) => {
                 transactions.set(
@@ -29,9 +31,37 @@ pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType) -> Element {
                 div {
                     class: "flex justify-between items-center p-2 border-b border-gray-200 text-sm",
                     onclick: move |_| { expanded.set(!expanded()) },
+                    if edit_item() {
+                        Input {
+                            value: item_name(),
+                            oninput: move |e: FormEvent| { item_name.set(e.value()) },
+                        }
+                        Button {
+                            r#type: "button",
+                            "data-style": "primary",
+                            onclick: move |_| async move {
+                                if let Ok(updated_budget) = api::modify_item(
+                                        budget_signal().unwrap().id,
+                                        item.id,
+                                        Some(item_name()),
+                                        None,
+                                        None,
+                                    )
+                                    .await
+                                {
+                                    budget_signal.set(Some(updated_budget));
+                                }
+                            },
+                            "Uppdatera"
+                        }
+                    } else {
+                        div {
+                            class: "font-large",
+                            onclick: move |_| { edit_item.set(!edit_item()) },
+                        }
+                        "{item_name()}"
+                    }
 
-                    // Left side: name
-                    div { class: "font-medium", "EXPANDED ! {item.name}" }
 
                     // Right side: actual / budgeted
                     div { class: "text-gray-700",
@@ -48,18 +78,16 @@ pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType) -> Element {
         }
     } else {
         rsx! {
-            button { style: "none",
-                div {
-                    class: "flex justify-between items-center p-2 border-b border-gray-200 text-sm",
-                    onclick: move |_| { expanded.set(!expanded()) },
+            div {
+                class: "flex justify-between items-center p-2 border-b border-gray-200 text-sm",
+                onclick: move |_| { expanded.set(!expanded()) },
 
-                    // Left side: name
-                    div { class: "font-large", "{item.name}" }
+                // Left side: name
+                div { class: "font-large", "{item.name}" }
 
-                    // Right side: actual / budgeted
-                    div { class: "text-gray-700",
-                        "{item.actual_amount.to_string()} / {item.budgeted_amount.to_string()}"
-                    }
+                // Right side: actual / budgeted
+                div { class: "text-gray-700",
+                    "{item.actual_amount.to_string()} / {item.budgeted_amount.to_string()}"
                 }
             }
         }

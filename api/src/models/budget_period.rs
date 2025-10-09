@@ -562,9 +562,9 @@ impl BudgetPeriod {
 
     pub fn evaluate_rules(&self, rules: &HashSet<MatchRule>) -> Vec<(Uuid, Uuid)> {
         let mut matched_transactions = Vec::new();
-        for transaction in self.transactions.list_transactions(false) {
+        for transaction in self.transactions.list_transactions_for_connection() {
             for rule in rules {
-                if rule.matches_transaction(transaction) {
+                if rule.matches_transaction(&transaction) {
                     if let Some(item_id) = self.get_item_for_rule(rule) {
                         matched_transactions.push((transaction.id, item_id));
                         break;
