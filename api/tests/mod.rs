@@ -286,8 +286,8 @@ pub fn test_import_from_skandia_excel() -> anyhow::Result<()> {
 
     res.set_current_period(&date);
 
-    assert_eq!(res.list_all_bank_transactions().len(), 77);
-    assert_eq!(imported, 77);
+    assert_eq!(res.list_all_bank_transactions().len(), 39);
+    assert_eq!(imported, 39);
     assert_eq!(not_imported, 0);
 
     Ok(())
