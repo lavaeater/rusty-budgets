@@ -251,8 +251,8 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
             ev.apply(&mut budget);
         }
         let version = budget.version - version;
-        if version > 5 { // more than 5 events since last snapshot
-            tracing::info!("More than 5 events since last snapshot, snapshotting");
+        if version > 10 { // more than 5 events since last snapshot
+            tracing::info!("More than 10 events since last snapshot, snapshotting");
             self.snapshot(&budget)?;
         }
         Ok(Some(budget))
@@ -265,7 +265,6 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
 
     fn append(&self, user_id: &Uuid, ev: BudgetEvent) -> anyhow::Result<()> {
         let stored_event = StoredEvent::new(ev, *user_id);
-        tracing::debug!("We have event: {stored_event:?}");
         self.db.insert(&stored_event)?;
         Ok(())
     }

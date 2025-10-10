@@ -445,9 +445,7 @@ impl Display for BudgetPeriodId {
 
 impl BudgetPeriodId {
     pub fn from_date(date: DateTime<Utc>, month_begins_on: MonthBeginsOn) -> Self {
-        tracing::info!("From date: {}", date);
-
-        // Determine which period this date falls into
+                // Determine which period this date falls into
         // The period ID represents the END month of the period
         match month_begins_on {
             MonthBeginsOn::PreviousMonth(day) => {

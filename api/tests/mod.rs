@@ -213,7 +213,14 @@ pub fn add_bank_transaction() -> anyhow::Result<()> {
 
     let (_, budget_id) = rt.create_budget("Test Budget", true, Currency::SEK, user_id)?;
 
-    let now = Utc::now();
+    let date_str = "2025-10-26";
+    let naive_date = NaiveDate::parse_from_str(&date_str, "%Y-%m-%d")?;
+
+    // Convert to midnight UTC
+    let now: DateTime<Utc> = naive_date
+        .and_hms_opt(0, 0, 0) // hours, minutes, seconds
+        .unwrap()
+        .and_utc();
 
     let res = rt.add_transaction(
         budget_id,
@@ -226,17 +233,23 @@ pub fn add_bank_transaction() -> anyhow::Result<()> {
     );
 
     assert!(res.is_ok());
-    let res = res?.0;
+    let mut res = res?.0;
+    res.set_current_period(&now);
     assert_eq!(res.list_bank_transactions().len(), 1);
 
-    let res = rt
+
+    let also_now: DateTime<Utc> = naive_date
+        .and_hms_opt(0, 0, 0) // hours, minutes, seconds
+        .unwrap()
+        .and_utc();
+    let mut res = rt
         .add_transaction(
             budget_id,
             &bank_account_number,
             Money::new_dollars(100, Currency::SEK),
             Money::new_dollars(100, Currency::SEK),
             "Test Transaction",
-            now,
+            also_now,
             user_id,
         )
         .err();

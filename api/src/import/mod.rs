@@ -15,6 +15,8 @@ pub fn import_from_skandia_excel(
 ) -> anyhow::Result<u64> {
     let mut excel: Xlsx<_> = open_workbook(path)?;
     let mut imported = 0u64;
+    let mut not_imported = 0u64;
+    let mut total_rows= 0u64;
     if let Ok(r) = excel.worksheet_range("Kontoutdrag") {
         let mut account_number: Option<String> = None;
 
@@ -52,21 +54,22 @@ pub fn import_from_skandia_excel(
                     *user_id,
                 ) {
                     Ok(_) => {
-                        println!("Transaction added!");
                         imported += 1;
+                        total_rows += 1;
                     }
                     Err(_) => {
-                        println!("Transaction already exists!")
+                        not_imported += 1;
+                        total_rows += 1;
                     }
                 }
             }
         }
+        tracing::info!("Imported {} transactions, skipped {} transactions, total {} transactions", imported, not_imported, total_rows);
     }
 
     if let Ok(Some(budget)) = runtime.load(budget_id) {
         let matches = budget.evaluate_rules();
         for (tx_id, item_id) in matches {
-            tracing::debug!("Connect that tranny!");
             let _ = runtime.connect_transaction(budget_id, &tx_id, &item_id, user_id);
         }
     }
