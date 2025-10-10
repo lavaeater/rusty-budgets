@@ -118,15 +118,11 @@ where
             self.append(user_id, ev.clone())?;
             Ok((current, latest_id))
         } else {
-            tracing::info!("execute: {user_id:?}, {id:?}");
             let mut current = self.load(id)?.unwrap();
-            tracing::debug!("We have current: {current:?}");
 
             let ev = command(&current)?;
-            tracing::debug!("We have event: {ev:?}");
 
             let latest_id = ev.apply(&mut current);
-            tracing::debug!("We have current: {current:?}");
 
             self.append(user_id, ev.clone())?;
             Ok((current, latest_id))
