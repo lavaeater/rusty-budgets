@@ -47,7 +47,7 @@ pub fn BudgetHero() -> Element {
                 div { class: "budget-hero-container",
                     // Header
                     div { class: "budget-header",
-                        h1 { class: "budget-title", {budget.name.clone()} }
+                        h1 { {budget.name.clone()} }
                         h2 { {budget.get_current_period_id().to_string()} }
                         FileDialog { on_chosen: import_file }
                     }

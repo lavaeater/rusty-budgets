@@ -21,7 +21,7 @@ pub mod db {
     use crate::cqrs::framework::{CommandError, Runtime};
     use crate::cqrs::runtime::{Db, JoyDbBudgetRuntime, UserBudgets};
     use crate::events::TransactionConnected;
-    use crate::import::import_from_skandia_excel;
+    // use crate::import::import_from_skandia_excel;
     use crate::models::*;
     use crate::models::*;
     use crate::DEFAULT_USER_EMAIL;
@@ -195,7 +195,7 @@ pub mod db {
         file_name: &str,
     ) -> anyhow::Result<Budget> {
         let runtime = with_runtime(None);
-        let _ = import_from_skandia_excel(file_name, user_id, budget_id, runtime)?;
+        // let _ = import_from_skandia_excel(file_name, user_id, budget_id, runtime)?;
         get_budget(budget_id)
     }
 
