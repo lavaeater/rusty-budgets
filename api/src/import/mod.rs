@@ -1,81 +1,81 @@
 use crate::cqrs::framework::Runtime;
 use crate::cqrs::runtime::JoyDbBudgetRuntime;
 use crate::models::{Currency, Money};
-// use calamine::{open_workbook, DataType, Reader, Xlsx};
+use calamine::{open_workbook, DataType, Reader, Xlsx};
 use chrono::{DateTime, NaiveDate, Utc};
 use dioxus::logger;
 use dioxus::logger::tracing;
 use uuid::Uuid;
 
-// pub fn import_from_skandia_excel(
-//     path: &str,
-//     user_id: &Uuid,
-//     budget_id: &Uuid,
-//     runtime: &JoyDbBudgetRuntime,
-// ) -> anyhow::Result<u64> {
-//     let mut excel: Xlsx<_> = open_workbook(path)?;
-//     let mut imported = 0u64;
-//     let mut not_imported = 0u64;
-//     let mut total_rows= 0u64;
-//     if let Ok(r) = excel.worksheet_range("Kontoutdrag") {
-//         let mut account_number: Option<String> = None;
-// 
-//         for (row_num, row) in r.rows().enumerate() {
-//             if row_num == 0 {
-//                 account_number = Some(row[1].to_string());
-//             } else if row_num > 4 {
-//                 println!("row={:?}", row);
-//                 let amount =
-//                     Money::new_cents((row[2].as_f64().unwrap() * 100.0) as i64, Currency::SEK);
-//                 let balance =
-//                     Money::new_cents((row[3].as_f64().unwrap() * 100.0) as i64, Currency::SEK);
-//                 let date_str = row[0].to_string();
-//                 let naive_date = NaiveDate::parse_from_str(&date_str, "%Y-%m-%d")?;
-// 
-//                 // Convert to midnight UTC
-//                 let date: DateTime<Utc> = naive_date
-//                     .and_hms_opt(0, 0, 0) // hours, minutes, seconds
-//                     .unwrap()
-//                     .and_utc();
-// 
-//                 let description = row[1].to_string();
-//                 let acct_no = if account_number.is_some() {
-//                     account_number.clone().unwrap()
-//                 } else {
-//                     return Err(anyhow::anyhow!("Could not find account number"));
-//                 };
-//                 match runtime.add_transaction(
-//                     *budget_id,
-//                     &acct_no,
-//                     amount,
-//                     balance,
-//                     &description,
-//                     date,
-//                     *user_id,
-//                 ) {
-//                     Ok(_) => {
-//                         imported += 1;
-//                         total_rows += 1;
-//                     }
-//                     Err(_) => {
-//                         not_imported += 1;
-//                         total_rows += 1;
-//                     }
-//                 }
-//             }
-//         }
-//         tracing::info!("Imported {} transactions, skipped {} transactions, total {} transactions", imported, not_imported, total_rows);
-//     }
-// 
-//     if let Ok(Some(budget)) = runtime.load(budget_id) {
-//         let matches = budget.evaluate_rules();
-//         for (tx_id, item_id) in matches {
-//             let _ = runtime.connect_transaction(budget_id, &tx_id, &item_id, user_id);
-//         }
-//     }
-// 
-//     Ok(imported)
-// }
+pub fn import_from_skandia_excel(
+    path: &str,
+    user_id: &Uuid,
+    budget_id: &Uuid,
+    runtime: &JoyDbBudgetRuntime,
+) -> anyhow::Result<u64> {
+    let mut excel: Xlsx<_> = open_workbook(path)?;
+    let mut imported = 0u64;
+    let mut not_imported = 0u64;
+    let mut total_rows= 0u64;
+    if let Ok(r) = excel.worksheet_range("Kontoutdrag") {
+        let mut account_number: Option<String> = None;
+
+        for (row_num, row) in r.rows().enumerate() {
+            if row_num == 0 {
+                account_number = Some(row[1].to_string());
+            } else if row_num > 4 {
+                println!("row={:?}", row);
+                let amount =
+                    Money::new_cents((row[2].as_f64().unwrap() * 100.0) as i64, Currency::SEK);
+                let balance =
+                    Money::new_cents((row[3].as_f64().unwrap() * 100.0) as i64, Currency::SEK);
+                let date_str = row[0].to_string();
+                let naive_date = NaiveDate::parse_from_str(&date_str, "%Y-%m-%d")?;
+
+                // Convert to midnight UTC
+                let date: DateTime<Utc> = naive_date
+                    .and_hms_opt(0, 0, 0) // hours, minutes, seconds
+                    .unwrap()
+                    .and_utc();
+
+                let description = row[1].to_string();
+                let acct_no = if account_number.is_some() {
+                    account_number.clone().unwrap()
+                } else {
+                    return Err(anyhow::anyhow!("Could not find account number"));
+                };
+                match runtime.add_transaction(
+                    *budget_id,
+                    &acct_no,
+                    amount,
+                    balance,
+                    &description,
+                    date,
+                    *user_id,
+                ) {
+                    Ok(_) => {
+                        imported += 1;
+                        total_rows += 1;
+                    }
+                    Err(_) => {
+                        not_imported += 1;
+                        total_rows += 1;
+                    }
+                }
+            }
+        }
+        tracing::info!("Imported {} transactions, skipped {} transactions, total {} transactions", imported, not_imported, total_rows);
+    }
+
+    if let Ok(Some(budget)) = runtime.load(budget_id) {
+        let matches = budget.evaluate_rules();
+        for (tx_id, item_id) in matches {
+            let _ = runtime.connect_transaction(budget_id, &tx_id, &item_id, user_id);
+        }
+    }
+
+    Ok(imported)
+}
 
 // pub fn import_bank_transactions(_bytes: Vec<u8>) -> anyhow::Result<()> {
 // let mut csv_reader = csv::Reader::from_reader(bytes.as_slice());
