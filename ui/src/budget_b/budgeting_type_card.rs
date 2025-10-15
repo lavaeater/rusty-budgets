@@ -6,7 +6,7 @@ use crate::components::{Collapsible, CollapsibleContent, CollapsibleTrigger};
 use uuid::Uuid;
 use api::models::{Budget, BudgetItem, BudgetingType, Currency, Money};
 use crate::{Button, Separator};
-use crate::budget::{BudgetItemView, NewBudgetItem};
+use crate::budget_b::{BudgetItemView, NewBudgetItem};
 
 #[component]
 pub fn BudgetingTypeCard(budgeting_type: BudgetingType, items: Vec<BudgetItem>) -> Element {

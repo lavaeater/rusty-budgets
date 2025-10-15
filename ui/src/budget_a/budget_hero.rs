@@ -1,5 +1,5 @@
 use crate::file_chooser::*;
-use crate::budget::{BudgetTabs, TransactionsView};
+use crate::budget_a::{BudgetTabs, TransactionsView};
 use crate::Input;
 use api::models::Budget;
 use dioxus::logger::tracing;
@@ -8,7 +8,7 @@ use dioxus_primitives::label::Label;
 use std::future::Future;
 use uuid::Uuid;
 
-const HERO_CSS: Asset = asset!("assets/styling/budget-hero.css");
+const HERO_CSS: Asset = asset!("assets/styling/budget-hero-a.css");
 #[component]
 pub fn BudgetHero() -> Element {
     let budget_resource = use_server_future(api::get_default_budget)?;
@@ -43,21 +43,68 @@ pub fn BudgetHero() -> Element {
         Some(budget) => {
             tracing::info!("The budget signal was updated: {}", budget.id);
             budget_id.set(budget.id);
+            let unassigned_count = budget.list_transactions_for_connection().len();
+            let items_by_type = budget.items_by_type();
+            
             rsx! {
                 document::Link { rel: "stylesheet", href: HERO_CSS }
-                div { class: "budget-hero-container",
-                    // Header
-                    div { class: "budget-header",
-                        h1 { {budget.name.clone()} }
-                        h2 { {budget.get_current_period_id().to_string()} }
-                        FileDialog { on_chosen: import_file }
+                div { class: "budget-hero-a-container",
+                    // Header with quick stats
+                    div { class: "budget-header-a",
+                        div { class: "header-title",
+                            h1 { {budget.name.clone()} }
+                            h2 { {budget.get_current_period_id().to_string()} }
+                        }
+                        div { class: "header-actions",
+                            FileDialog { on_chosen: import_file }
+                            if unassigned_count > 0 {
+                                div { class: "unassigned-badge",
+                                    "{unassigned_count} transaktioner att hantera"
+                                }
+                            }
+                        }
                     }
-                    div { class: "budget-hero-content", BudgetTabs {} }
-                    div { class: "budget-hero-content",
-                        TransactionsView {
-                            budget_id: budget.id,
-                            transactions: budget.list_transactions_for_connection(),
-                            items: budget.list_all_items(),
+                    
+                    // Dashboard cards showing overview
+                    div { class: "dashboard-cards",
+                        for (_, budgeting_type, overview, _) in &items_by_type {
+                            div { class: "overview-card",
+                                h3 { {budgeting_type.to_string()} }
+                                div { class: "card-stats",
+                                    div { class: "stat",
+                                        span { class: "stat-label", "Budgeterat" }
+                                        span { class: "stat-value", {overview.budgeted_amount.to_string()} }
+                                    }
+                                    div { class: "stat",
+                                        span { class: "stat-label", "Faktiskt" }
+                                        span { class: "stat-value", {overview.actual_amount.to_string()} }
+                                    }
+                                    div { class: "stat",
+                                        span { class: "stat-label", "Återstår" }
+                                        span { class: "stat-value stat-remaining", {overview.remaining_budget.to_string()} }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Main content area with tabs
+                    div { class: "budget-main-content",
+                        BudgetTabs {}
+                    }
+                    
+                    // Transactions section - prominent if there are unassigned
+                    if unassigned_count > 0 {
+                        div { class: "transactions-section-prominent",
+                            TransactionsView {
+                                budget_id: budget.id,
+                                transactions: budget.list_transactions_for_connection(),
+                                items: budget.list_all_items(),
+                            }
+                        }
+                    } else {
+                        div { class: "transactions-section-minimal",
+                            p { class: "success-message", "✓ Alla transaktioner är hanterade!" }
                         }
                     }
                 }

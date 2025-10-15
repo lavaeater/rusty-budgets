@@ -21,7 +21,6 @@ pub mod db {
     use crate::cqrs::framework::{CommandError, Runtime};
     use crate::cqrs::runtime::{Db, JoyDbBudgetRuntime, UserBudgets};
     use crate::events::TransactionConnected;
-    use crate::import::import_from_skandia_excel;
     use crate::models::*;
     use crate::models::*;
     use crate::DEFAULT_USER_EMAIL;
@@ -31,6 +30,7 @@ pub mod db {
     use joydb::JoydbError;
     use once_cell::sync::Lazy;
     use uuid::Uuid;
+    use crate::import::import_from_skandia_excel;
 
     pub static CLIENT: Lazy<JoyDbBudgetRuntime> = Lazy::new(|| {
         tracing::info!("Init DB Client");

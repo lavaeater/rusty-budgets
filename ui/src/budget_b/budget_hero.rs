@@ -1,5 +1,5 @@
 use crate::file_chooser::*;
-use crate::budget::{BudgetTabs, TransactionsView};
+use crate::budget_b::{BudgetTabs, TransactionsView};
 use crate::Input;
 use api::models::Budget;
 use dioxus::logger::tracing;
@@ -8,7 +8,7 @@ use dioxus_primitives::label::Label;
 use std::future::Future;
 use uuid::Uuid;
 
-const HERO_CSS: Asset = asset!("assets/styling/budget-hero.css");
+const HERO_CSS: Asset = asset!("assets/styling/budget-hero-b.css");
 #[component]
 pub fn BudgetHero() -> Element {
     let budget_resource = use_server_future(api::get_default_budget)?;
@@ -43,21 +43,42 @@ pub fn BudgetHero() -> Element {
         Some(budget) => {
             tracing::info!("The budget signal was updated: {}", budget.id);
             budget_id.set(budget.id);
+            let unassigned_transactions = budget.list_transactions_for_connection();
+            let has_unassigned = !unassigned_transactions.is_empty();
+            
             rsx! {
                 document::Link { rel: "stylesheet", href: HERO_CSS }
-                div { class: "budget-hero-container",
-                    // Header
-                    div { class: "budget-header",
-                        h1 { {budget.name.clone()} }
-                        h2 { {budget.get_current_period_id().to_string()} }
+                div { class: "budget-hero-b-container",
+                    // Top header bar
+                    div { class: "budget-header-b",
+                        div { class: "header-content",
+                            h1 { {budget.name.clone()} }
+                            span { class: "period-badge", {budget.get_current_period_id().to_string()} }
+                        }
                         FileDialog { on_chosen: import_file }
                     }
-                    div { class: "budget-hero-content", BudgetTabs {} }
-                    div { class: "budget-hero-content",
-                        TransactionsView {
-                            budget_id: budget.id,
-                            transactions: budget.list_transactions_for_connection(),
-                            items: budget.list_all_items(),
+                    
+                    // Main layout: sidebar + content
+                    div { class: "budget-layout-b",
+                        // Left sidebar for transactions (workflow)
+                        if has_unassigned {
+                            div { class: "transactions-sidebar",
+                                div { class: "sidebar-header",
+                                    h2 { "Att hantera" }
+                                    span { class: "sidebar-count", "{unassigned_transactions.len()}" }
+                                }
+                                TransactionsView {
+                                    budget_id: budget.id,
+                                    transactions: unassigned_transactions,
+                                    items: budget.list_all_items(),
+                                }
+                            }
+                        }
+                        
+                        // Main content area
+                        div { 
+                            class: if has_unassigned { "budget-content-with-sidebar" } else { "budget-content-full" },
+                            BudgetTabs {}
                         }
                     }
                 }

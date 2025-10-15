@@ -1,12 +1,9 @@
-use crate::budget::BudgetingTypeCard;
-use crate::budget::BudgetingTypeOverviewView;
-use crate::components::{TabContent, TabList, TabTrigger, Tabs};
-use api::models::{BankTransaction, Budget, BudgetItem, BudgetingType, BudgetingTypeOverview};
-use crate::budget::ItemSelector;
+use crate::budget::{ItemSelector, NewBudgetItem};
+use api::models::{BankTransaction, Budget, BudgetItem, BudgetingType};
 use dioxus::prelude::*;
 use uuid::Uuid;
 use api::connect_transaction;
-use crate::{Button, NewBudgetItem, PopoverContent, PopoverRoot, PopoverTrigger};
+use crate::{Button, PopoverContent, PopoverRoot, PopoverTrigger};
 
 #[component]
 pub fn TransactionsView(budget_id: Uuid, transactions: Vec<BankTransaction>, items: Vec<BudgetItem>) -> Element {

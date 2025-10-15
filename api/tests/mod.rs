@@ -191,7 +191,7 @@ pub fn connect_bank_transaction() -> anyhow::Result<()> {
     );
     assert_eq!(
         res.get_actual_by_type(&BudgetingType::Expense).unwrap(),
-        &hundred_money
+        &-hundred_money
     );
 
     //Verify that the budget overview is updated
@@ -242,7 +242,7 @@ pub fn add_bank_transaction() -> anyhow::Result<()> {
         .and_hms_opt(0, 0, 0) // hours, minutes, seconds
         .unwrap()
         .and_utc();
-    let mut res = rt
+    let res = rt
         .add_transaction(
             budget_id,
             &bank_account_number,
@@ -355,7 +355,7 @@ pub fn reconnect_bank_transaction() -> anyhow::Result<()> {
     assert_eq!(
         res.get_actual_by_type(&BudgetingType::Expense)
             .expect("Expect the spent amount for Expenses"),
-        &expected_money
+        &-expected_money
     );
     assert_eq!(
         res.get_budgeted_by_type(&BudgetingType::Savings)
@@ -388,7 +388,7 @@ pub fn reconnect_bank_transaction() -> anyhow::Result<()> {
     assert_eq!(
         res.get_actual_by_type(&BudgetingType::Savings)
             .expect("Expect the correct spent amount for Savings"),
-        &expected_money
+        &-expected_money
     );
 
     Ok(())
@@ -623,19 +623,19 @@ pub fn test_budeting_overview() -> anyhow::Result<()> {
     assert_eq!(expense_overview.budgeted_amount, fivehundred_money);
     assert_eq!(
         expense_overview.actual_amount,
-        Money::new_dollars(450, Currency::SEK)
+        Money::new_dollars(-450, Currency::SEK)
     );
     assert_eq!(
         expense_overview.remaining_budget,
-        Money::new_dollars(50, Currency::SEK)
+        Money::new_dollars(950, Currency::SEK)
     );
 
     let savings_overview = budget
         .get_budgeting_overview(&BudgetingType::Savings)
         .unwrap();
     assert_eq!(savings_overview.budgeted_amount, hundred_money);
-    assert_eq!(savings_overview.actual_amount, hundred_money);
-    assert_eq!(savings_overview.remaining_budget, zero_money);
+    assert_eq!(savings_overview.actual_amount, -hundred_money);
+    assert_eq!(savings_overview.remaining_budget, hundred_money.multiply(2));
 
     Ok(())
 }
