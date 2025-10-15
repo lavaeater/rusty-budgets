@@ -9,55 +9,71 @@ use crate::{Button, PopoverContent, PopoverRoot, PopoverTrigger};
 pub fn TransactionsView(budget_id: Uuid, transactions: Vec<BankTransaction>, items: Vec<BudgetItem>) -> Element {
     let mut budget_signal = use_context::<Signal<Option<Budget>>>();
     rsx! {
-        h1 { "Transactions" }
-        h2 { {transactions.len().to_string()} }
-        for tx in transactions {
-            div {
-                display: "flex",
-                flex_direction: "row",
-                gap: "1rem",
-                height: "3rem",
-                p { {tx.description.to_string()} }
-                p { {tx.amount.to_string()} }
-                p { {tx.date.format("%Y-%m-%d").to_string()} }
-                ItemSelector {
-                    items: items.clone(),
-                    on_change: move |e: Option<BudgetItem>| async move {
-                        if let Some(item) = e {
-                            if let Ok(budget) = connect_transaction(budget_id, tx.id, item.id).await {
-                                budget_signal.set(Some(budget));
+        div { class: "transactions-view-a",
+            h2 { class: "transactions-title", 
+                "Ohanterade transaktioner "
+                span { class: "transaction-count", "({transactions.len()})" }
+            }
+            div { class: "transactions-list",
+                for tx in transactions {
+                    div { class: "transaction-card",
+                        div { class: "transaction-info",
+                            div { class: "transaction-description",
+                                strong { {tx.description.to_string()} }
+                            }
+                            div { class: "transaction-meta",
+                                span { class: "transaction-date", {tx.date.format("%Y-%m-%d").to_string()} }
+                                span { 
+                                    class: if tx.amount.is_pos() { "transaction-amount positive" } else { "transaction-amount negative" },
+                                    {tx.amount.to_string()}
+                                }
                             }
                         }
-                    },
-                }
-                if tx.amount.is_pos() {
-                    NewBudgetItemPopover {
-                        budgeting_type: BudgetingType::Income,
-                        tx_id: Some(tx.id),
-                    }
-                } else {
-                    NewBudgetItemPopover {
-                        budgeting_type: BudgetingType::Expense,
-                        tx_id: Some(tx.id),
-                    }
-                    NewBudgetItemPopover {
-                        budgeting_type: BudgetingType::Savings,
-                        tx_id: Some(tx.id),
-                    }
-                }
-                Button {
-                    r#type: "button",
-                    "data-style": "destructive",
-                    onclick: move |_| async move {
-                        if let Ok(updated_budget) = api::ignore_transaction(budget_id, tx.id).await {
-                            budget_signal.set(Some(updated_budget));
+                        div { class: "transaction-actions",
+                            div { class: "action-group",
+                                ItemSelector {
+                                    items: items.clone(),
+                                    on_change: move |e: Option<BudgetItem>| async move {
+                                        if let Some(item) = e {
+                                            if let Ok(budget) = connect_transaction(budget_id, tx.id, item.id).await {
+                                                budget_signal.set(Some(budget));
+                                            }
+                                        }
+                                    },
+                                }
+                            }
+                            div { class: "action-group",
+                                if tx.amount.is_pos() {
+                                    NewBudgetItemPopover {
+                                        budgeting_type: BudgetingType::Income,
+                                        tx_id: Some(tx.id),
+                                    }
+                                } else {
+                                    NewBudgetItemPopover {
+                                        budgeting_type: BudgetingType::Expense,
+                                        tx_id: Some(tx.id),
+                                    }
+                                    NewBudgetItemPopover {
+                                        budgeting_type: BudgetingType::Savings,
+                                        tx_id: Some(tx.id),
+                                    }
+                                }
+                            }
+                            Button {
+                                r#type: "button",
+                                "data-style": "destructive",
+                                onclick: move |_| async move {
+                                    if let Ok(updated_budget) = api::ignore_transaction(budget_id, tx.id).await {
+                                        budget_signal.set(Some(updated_budget));
+                                    }
+                                },
+                                "Ignorera"
+                            }
                         }
-                    },
-                    "Ignorera"
+                    }
                 }
             }
         }
-
     }
 }
 

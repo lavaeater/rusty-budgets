@@ -1,7 +1,5 @@
 mod budget_hero;
 mod budget_popover;
-// pub mod budget_groups;
-// mod budget_group_view;
 mod budget_item_view;
 mod budgeting_type_card;
 mod budget_tabs;
