@@ -63,8 +63,7 @@ pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType) -> Element {
             }
         } else {
             rsx! {
-                div {
-                    class: "flex flex-col p-2 border-b border-gray-200 text-sm",
+                div { class: "flex flex-col p-2 border-b border-gray-200 text-sm",
                     // Header with item name and amount
                     div {
                         class: "flex justify-between items-center",
@@ -75,40 +74,35 @@ pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType) -> Element {
                         }
                     }
                     // Transaction list with checkboxes
-                    // div { class: "mt-2",
-                    // 
-                    //     
-                    // }
-                        for transaction in transactions() {
-                            let tx_id = transaction.id;
-                            let is_selected = selected_transactions().contains(&tx_id);
-                        
-                            div {
-                                class: "flex items-center p-1 hover:bg-gray-50 rounded",
-                                input {
-                                    r#type: "checkbox",
-                                    checked: is_selected,
-                                    onchange: move |_| {
-                                        let mut selected = selected_transactions();
-                                        if is_selected {
-                                            selected.remove(&tx_id);
-                                        } else {
-                                            selected.insert(tx_id);
+                    div { class: "mt-2",
+                        {
+                            transactions()
+
+                                // ... rest of your transaction item
+                                .iter()
+                                .map(|transaction| {
+                                    let tx_id = transaction.id;
+                                    let is_selected = selected_transactions().contains(&tx_id);
+                                    rsx! {
+                                        div { class: "flex items-center p-1 hover:bg-gray-50 rounded",
+                                            input {
+                                                r#type: "checkbox",
+                                                checked: is_selected,
+                                                onchange: move |_| {
+                                                    let mut selected = selected_transactions();
+                                                    if is_selected {
+                                                        selected.remove(&tx_id);
+                                                    } else {
+                                                        selected.insert(tx_id);
+                                                    }
+                                                    selected_transactions.set(selected);
+                                                },
+                                            }
                                         }
-                                        selected_transactions.set(selected);
-                                    },
-                                    class: "mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                                }
-                                p {
-                                    class: "flex-1 text-gray-700",
-                                    "{transaction.description}"
-                                }
-                                p {
-                                    class: "text-gray-700 w-24 text-right",
-                                    "{transaction.amount.to_string()}"
-                                }
-                            }
+                                    }
+                                })
                         }
+                    }
                     // Action buttons (only show when transactions are selected)
                     if !selected_transactions().is_empty() {
                         div { class: "mt-2 flex items-center gap-2",
@@ -134,25 +128,27 @@ pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType) -> Element {
                                 div { class: "flex-1 flex items-center gap-2",
                                     span { "Flytta till:" }
                                     ItemSelector {
-                                        items: items
-                                            .iter()
-                                            .filter(|i| i.id != item.id) // Don't show current item
-                                            .cloned()
-                                            .collect(),
+                                        items: items.iter().filter(|i| i.id != item.id).cloned().collect(),
                                         on_change: move |target_item: Option<BudgetItem>| async move {
                                             if let Some(target_item) = target_item {
                                                 let mut success = true;
                                                 let selected_ids: Vec<Uuid> = selected_transactions().into_iter().collect();
 
                                                 for tx_id in selected_ids {
-                                                    if let Err(_) = api::connect_transaction(budget_id, tx_id, target_item.id).await {
+                                                    if let Err(_) = api::connect_transaction(
+
+                                                            // Refresh the budget data
+                                                            budget_id,
+                                                            tx_id,
+                                                            target_item.id,
+                                                        )
+                                                        .await
+                                                    {
                                                         success = false;
                                                         break;
                                                     }
                                                 }
-
                                                 if success {
-                                                    // Refresh the budget data
                                                     if let Ok(updated_budget) = api::get_budget(Some(budget_id)).await {
                                                         budget_signal.set(updated_budget);
                                                     }
