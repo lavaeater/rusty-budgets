@@ -64,35 +64,36 @@ pub fn BudgetHero() -> Element {
                             }
                         }
                     }
-                    
                     // Dashboard cards showing overview
                     div { class: "dashboard-cards",
-                        for (_, budgeting_type, overview, _) in &items_by_type {
+                        for (_ , budgeting_type , overview , _) in &items_by_type {
                             div { class: "overview-card",
                                 h3 { {budgeting_type.to_string()} }
                                 div { class: "card-stats",
                                     div { class: "stat",
                                         span { class: "stat-label", "Budgeterat" }
-                                        span { class: "stat-value", {overview.budgeted_amount.to_string()} }
+                                        span { class: "stat-value",
+                                            {overview.budgeted_amount.to_string()}
+                                        }
                                     }
                                     div { class: "stat",
                                         span { class: "stat-label", "Faktiskt" }
-                                        span { class: "stat-value", {overview.actual_amount.to_string()} }
+                                        span { class: "stat-value",
+                                            {overview.actual_amount.to_string()}
+                                        }
                                     }
                                     div { class: "stat",
                                         span { class: "stat-label", "Återstår" }
-                                        span { class: "stat-value stat-remaining", {overview.remaining_budget.to_string()} }
+                                        span { class: "stat-value stat-remaining",
+                                            {overview.remaining_budget.to_string()}
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                    
                     // Main content area with tabs
-                    div { class: "budget-main-content",
-                        BudgetTabs {}
-                    }
-                    
+                    div { class: "budget-main-content", BudgetTabs {} }
                     // Transactions section - prominent if there are unassigned
                     if unassigned_count > 0 {
                         div { class: "transactions-section-prominent",

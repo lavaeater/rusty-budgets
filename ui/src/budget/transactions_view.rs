@@ -10,7 +10,7 @@ pub fn TransactionsView(budget_id: Uuid, transactions: Vec<BankTransaction>, ite
     let mut budget_signal = use_context::<Signal<Option<Budget>>>();
     rsx! {
         div { class: "transactions-view-a",
-            h2 { class: "transactions-title", 
+            h2 { class: "transactions-title",
                 "Ohanterade transaktioner "
                 span { class: "transaction-count", "({transactions.len()})" }
             }
@@ -22,9 +22,10 @@ pub fn TransactionsView(budget_id: Uuid, transactions: Vec<BankTransaction>, ite
                                 strong { {tx.description.to_string()} }
                             }
                             div { class: "transaction-meta",
-                                span { class: "transaction-date", {tx.date.format("%Y-%m-%d").to_string()} }
-                                span { 
-                                    class: if tx.amount.is_pos() { "transaction-amount positive" } else { "transaction-amount negative" },
+                                span { class: "transaction-date",
+                                    {tx.date.format("%Y-%m-%d").to_string()}
+                                }
+                                span { class: if tx.amount.is_pos() { "transaction-amount positive" } else { "transaction-amount negative" },
                                     {tx.amount.to_string()}
                                 }
                             }

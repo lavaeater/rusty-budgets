@@ -4,6 +4,8 @@ use dioxus::fullstack::server_fn::serde::{Deserialize, Serialize};
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use uuid::Uuid;
+use api::connect_transaction;
+use crate::budget::ItemSelector;
 
 #[component]
 pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType) -> Element {
@@ -11,6 +13,8 @@ pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType) -> Element {
     let mut expanded = use_signal(|| false);
     let mut edit_item = use_signal(||false);
     let mut item_name = use_signal(|| item.name.clone());
+    let items = budget_signal().unwrap().list_all_items();
+    let budget_id = budget_signal().unwrap().id;
     if expanded() {
         let mut transactions: Signal<Vec<BankTransaction>> = use_signal(|| vec![]);
         match budget_signal() {
@@ -63,10 +67,8 @@ pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType) -> Element {
                         "{item_name()}"
                     }
 
-                    div { onclick: move |_| { expanded.set(!expanded()) },
-
-
-                        // Right side: actual / budgeted
+                    div {
+// onclick: move |_| { expanded.set(!expanded()) },                        // Right side: actual / budgeted
                         div { class: "text-gray-700",
                             "{item.actual_amount.to_string()} / {item.budgeted_amount.to_string()}"
                         }
@@ -74,6 +76,18 @@ pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType) -> Element {
                             div { display: "flex", flex_direction: "row",
                                 p { class: "text-gray-700", "{transaction.description}" }
                                 p { class: "text-gray-700", "{transaction.amount.to_string()}" }
+                                div { class: "action-group",
+                                    ItemSelector {
+                                        items: items.clone(),
+                                        on_change: move |e: Option<BudgetItem>| async move {
+                                            if let Some(item) = e {
+                                                if let Ok(budget) = connect_transaction(budget_id, transaction.id, item.id).await {
+                                                    budget_signal.set(Some(budget));
+                                                }
+                                            }
+                                        },
+                                    }
+                                }
                             }
                         }
                     }
