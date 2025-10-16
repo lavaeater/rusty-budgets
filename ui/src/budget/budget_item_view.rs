@@ -122,9 +122,7 @@ pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType) -> Element {
                                     for tx_id in selected_ids {
 
                                         // Refresh the budget data
-                                        if let Err(_) = ignore_transaction(budget_id, tx_id)
-                                            .await
-                                        {
+                                        if let Err(_) = ignore_transaction(budget_id, tx_id).await {
                                             success = false;
                                             break;
                                         }
