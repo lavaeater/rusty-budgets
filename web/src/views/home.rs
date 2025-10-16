@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use ui::budget_a::BudgetHero;
+use ui::budget::BudgetHero;
 
 #[component]
 pub fn Home() -> Element {

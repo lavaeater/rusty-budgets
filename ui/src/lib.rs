@@ -7,12 +7,6 @@ pub use hero::Hero;
 // Original budget module (one-page layout)
 pub mod budget;
 
-// Budget variant A: Dashboard-focused with overview cards
-pub mod budget_a;
-
-// Budget variant B: Workflow-oriented with sidebar
-pub mod budget_b;
-
 mod components;
 mod file_chooser;
 
