@@ -381,12 +381,27 @@ pub async fn get_default_user() -> Result<User, ServerFnError> {
 
 #[server]
 pub async fn get_default_budget() -> Result<Option<Budget>, ServerFnError> {
+    get_budget(None)
+}
+
+#[server]
+pub async fn get_budget(budget_id: Option<Uuid>) -> Result<Option<Budget>, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
-    match db::get_default_budget(&user.id) {
-        Ok(b) => Ok(b),
-        Err(e) => {
-            tracing::error!(error = %e, "Could not get default budget");
-            Err(ServerFnError::ServerError(e.to_string()))
+    if let Some(budget_id) = budget_id {
+        match db::get_budget(&budget_id) {
+            Ok(b) => Ok(b),
+            Err(e) => {
+                tracing::error!(error = %e, "Could not get budget");
+                Err(ServerFnError::ServerError(e.to_string()))
+            }
+        }
+    } else {
+        match db::get_default_budget(&user.id) {
+            Ok(b) => Ok(b),
+            Err(e) => {
+                tracing::error!(error = %e, "Could not get default budget");
+                Err(ServerFnError::ServerError(e.to_string()))
+            }
         }
     }
 }
