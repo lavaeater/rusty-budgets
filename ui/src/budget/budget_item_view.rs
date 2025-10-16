@@ -3,7 +3,7 @@ use api::models::*;
 use dioxus::prelude::*;
 use std::collections::HashSet;
 use uuid::Uuid;
-use api::connect_transaction;
+use api::{connect_transaction, ignore_transaction};
 use crate::budget::ItemSelector;
 
 #[component]
@@ -21,7 +21,7 @@ pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType) -> Element {
     let mut show_move_selector = use_signal(|| false);
     
     if expanded() {
-        let transactions = use_signal(|| {
+        let transactions = 
             budget_signal()
                 .as_ref()
                 .map(|b| b.
@@ -29,8 +29,7 @@ pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType) -> Element {
                     .into_iter()
                     .cloned()
                     .collect::<Vec<BankTransaction>>())
-                .unwrap_or_default()
-        });
+                .unwrap_or_default();
         
         // if edit_item() {
         //     rsx! {
@@ -65,8 +64,7 @@ pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType) -> Element {
             rsx! {
                 div { class: "flex flex-col p-2 border-b border-gray-200 text-sm",
                     // Header with item name and amount
-                    div {
-                        class: "flex justify-between items-center",
+                    div { class: "flex justify-between items-center",
                         // onclick: move |_| { edit_item.set(!edit_item()) },
                         div { class: "font-large", "{item_name()}" }
                         div { class: "text-gray-700",
@@ -76,7 +74,7 @@ pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType) -> Element {
                     // Transaction list with checkboxes
                     div { class: "mt-2",
                         {
-                            transactions()
+                            transactions
                                 .iter()
                                 .map(|transaction| {
                                     let tx_id = transaction.id;
@@ -113,6 +111,33 @@ pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType) -> Element {
                                     selected_transactions.set(HashSet::new());
                                 },
                                 "Avmarkera alla"
+                            }
+                            Button {
+                                r#type: "button",
+                                "data-style": "destructive",
+                                onclick: move |_| async move {
+                                    let mut success = true;
+                                    let selected_ids: Vec<Uuid> = selected_transactions().into_iter().collect();
+
+                                    for tx_id in selected_ids {
+
+                                        // Refresh the budget data
+                                        if let Err(_) = ignore_transaction(budget_id, tx_id)
+                                            .await
+                                        {
+                                            success = false;
+                                            break;
+                                        }
+                                    }
+                                    if success {
+                                        if let Ok(updated_budget) = api::get_budget(Some(budget_id)).await {
+                                            budget_signal.set(updated_budget);
+                                        }
+                                        selected_transactions.set(HashSet::new());
+                                        show_move_selector.set(false);
+                                    }
+                                },
+                                "Ignorera alla"
                             }
 
                             if !show_move_selector() {
