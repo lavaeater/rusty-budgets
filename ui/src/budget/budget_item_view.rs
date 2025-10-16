@@ -10,7 +10,7 @@ use crate::budget::ItemSelector;
 pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType) -> Element {
     let mut budget_signal = use_context::<Signal<Option<Budget>>>();
     let mut expanded = use_signal(|| false);
-    let mut edit_item = use_signal(|| false);
+    // let mut edit_item = use_signal(|| false);
     let mut item_name = use_signal(|| item.name.clone());
     let budget = budget_signal().unwrap();
     let items = budget.list_all_items();
@@ -32,42 +32,42 @@ pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType) -> Element {
                 .unwrap_or_default()
         });
         
-        if edit_item() {
-            rsx! {
-                div { class: "flex justify-between items-center p-2 border-b border-gray-200 text-sm",
-                    Input {
-                        id: "item_name",
-                        value: item_name(),
-                        oninput: move |e: FormEvent| { item_name.set(e.value()) },
-                    }
-                    Button {
-                        r#type: "button",
-                        "data-style": "primary",
-                        onclick: move |_| async move {
-                            if let Ok(updated_budget) = api::modify_item(
-                                    budget_id,
-                                    item.id,
-                                    Some(item_name()),
-                                    None,
-                                    None,
-                                )
-                                .await
-                            {
-                                budget_signal.set(Some(updated_budget));
-                            }
-                            edit_item.set(false);
-                        },
-                        "Uppdatera"
-                    }
-                }
-            }
-        } else {
+        // if edit_item() {
+        //     rsx! {
+        //         div { class: "flex justify-between items-center p-2 border-b border-gray-200 text-sm",
+        //             Input {
+        //                 id: "item_name",
+        //                 value: item_name(),
+        //                 oninput: move |e: FormEvent| { item_name.set(e.value()) },
+        //             }
+        //             Button {
+        //                 r#type: "button",
+        //                 "data-style": "primary",
+        //                 onclick: move |_| async move {
+        //                     if let Ok(updated_budget) = api::modify_item(
+        //                             budget_id,
+        //                             item.id,
+        //                             Some(item_name()),
+        //                             None,
+        //                             None,
+        //                         )
+        //                         .await
+        //                     {
+        //                         budget_signal.set(Some(updated_budget));
+        //                     }
+        //                     edit_item.set(false);
+        //                 },
+        //                 "Uppdatera"
+        //             }
+        //         }
+        //     }
+        // } else {
             rsx! {
                 div { class: "flex flex-col p-2 border-b border-gray-200 text-sm",
                     // Header with item name and amount
                     div {
                         class: "flex justify-between items-center",
-                        onclick: move |_| { edit_item.set(!edit_item()) },
+                        // onclick: move |_| { edit_item.set(!edit_item()) },
                         div { class: "font-large", "{item_name()}" }
                         div { class: "text-gray-700",
                             "{item.actual_amount.to_string()} / {item.budgeted_amount.to_string()}"
@@ -77,8 +77,6 @@ pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType) -> Element {
                     div { class: "mt-2",
                         {
                             transactions()
-
-                                // ... rest of your transaction item
                                 .iter()
                                 .map(|transaction| {
                                     let tx_id = transaction.id;
@@ -98,6 +96,8 @@ pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType) -> Element {
                                                     selected_transactions.set(selected);
                                                 },
                                             }
+                                            {transaction.description.clone()}
+                                            {transaction.amount.to_string()}
                                         }
                                     }
                                 })
@@ -166,15 +166,16 @@ pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType) -> Element {
                     }
                 }
             }
-        }
+        // }
     } else {
         rsx! {
-            div {
-                class: "flex justify-between items-center p-2 border-b border-gray-200 text-sm",
-                onclick: move |_| { expanded.set(!expanded()) },
-
+            div { class: "flex justify-between items-center p-2 border-b border-gray-200 text-sm",
                 // Left side: name
-                div { class: "font-large", "{item_name()}" }
+                div {
+                    class: "font-large",
+                    onclick: move |_| { expanded.set(!expanded()) },
+                    "{item_name()}"
+                }
 
                 // Right side: actual / budgeted
                 div { class: "text-gray-700",
