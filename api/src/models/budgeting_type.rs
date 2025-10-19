@@ -18,8 +18,11 @@ pub enum BudgetingType {
 pub struct BudgetingTypeOverview {
     pub budgeted_amount: Money,
     pub actual_amount: Money,
-    pub remaining_budget: Money
+    pub remaining_budget: Money,
+    #[serde(default)]
+    pub is_ok: bool,
 }
+
 
 impl Display for BudgetingType {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {

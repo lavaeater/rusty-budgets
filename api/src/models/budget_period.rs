@@ -233,6 +233,7 @@ impl BudgetPeriodStore {
             budgeted_amount: budgeted_income,
             actual_amount: spent_income,
             remaining_budget: remaining_income,
+            is_ok: remaining_income > Money::zero(remaining_income.currency())
         };
 
         self.current_period_mut()
@@ -257,6 +258,7 @@ impl BudgetPeriodStore {
             budgeted_amount: budgeted_expenses,
             actual_amount: spent_expenses,
             remaining_budget: self_diff,
+            is_ok: self_diff < Money::zero(self_diff.currency())
         };
 
         self.current_period_mut()
@@ -281,6 +283,7 @@ impl BudgetPeriodStore {
             budgeted_amount: budgeted_savings,
             actual_amount: spent_savings,
             remaining_budget: self_diff,
+            is_ok: self_diff < Money::zero(self_diff.currency())
         };
 
         self.current_period_mut()
