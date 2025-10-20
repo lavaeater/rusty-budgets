@@ -44,7 +44,7 @@ pub fn BudgetHero() -> Element {
             tracing::info!("The budget signal was updated: {}", budget.id);
             budget_id.set(budget.id);
             let transactions_for_connection = budget.list_transactions_for_connection();
-            let ignored_transactions = budget.list_all_bank_transactions().into_iter().filter(|tx| tx.ignored).cloned().collect::<Vec<_>>();
+            let ignored_transactions = budget.list_bank_transactions().into_iter().filter(|tx| tx.ignored).cloned().collect::<Vec<_>>();
             let items_by_type = budget.items_by_type();
             
             rsx! {
@@ -101,7 +101,11 @@ pub fn BudgetHero() -> Element {
                     // Main content area with tabs
                     div { class: "budget-main-content", BudgetTabs {} }
                     // Transactions section - prominent if there are unassigned
-                    if !transactions_for_connection.is_empty() {
+                    if transactions_for_connection.is_empty() {
+                        div { class: "transactions-section-minimal",
+                            p { class: "success-message", "✓ Alla transaktioner är hanterade!" }
+                        }
+                    } else {
                         div { class: "transactions-section-prominent",
                             TransactionsView {
                                 budget_id: budget.id,
@@ -109,23 +113,20 @@ pub fn BudgetHero() -> Element {
                                 items: budget.list_all_items(),
                             }
                         }
-                    } else {
-                        div { class: "transactions-section-minimal",
-                            p { class: "success-message", "✓ Alla transaktioner är hanterade!" }
-                        }
                     }
-                    if !ignored_transactions.is_empty() {
-                        div { class: "transactions-section-prominent",
+                    if ignored_transactions.is_empty() {
+                        div { class: "transactions-section-minimal",
+                            p { class: "success-message", "✓ Inga ignorerade transaktioner!" }
+                        }                       
+                    } else {
+                         div { class: "transactions-section-prominent",
                             TransactionsView {
                                 budget_id: budget.id,
                                 transactions: ignored_transactions,
                                 items: budget.list_all_items(),
                             }
                         }
-                    } else {
-                        div { class: "transactions-section-minimal",
-                            p { class: "success-message", "✓ Inga ignorerade transaktioner!" }
-                        }
+
                     }
                 }
             }

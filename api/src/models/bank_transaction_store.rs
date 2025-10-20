@@ -107,7 +107,7 @@ impl BankTransactionStore {
             self.by_id.values().collect()
         }
     }
-    
+
     pub fn list_transactions_for_connection(&self) -> Vec<BankTransaction> {
         let mut transactions = self
             .by_id
@@ -115,7 +115,22 @@ impl BankTransactionStore {
             .filter(|tx| tx.budget_item_id.is_none())
             .cloned()
             .collect::<Vec<_>>();
-        transactions.sort_by(|a, b| a.date.cmp(&b.date).then_with(|| a.description.cmp(&b.description)));
+
+        // Sort transactions by date, then by absolute amount (descending), then by amount (ascending)
+        // This groups transactions with opposite amounts together
+        transactions.sort_by(|a, b| {
+            a.date.cmp(&b.date)
+                .then_with(|| {
+                    // Compare absolute amounts in reverse order (largest absolute amounts first)
+                    b.amount.abs().partial_cmp(&a.amount.abs()).unwrap()
+                })
+                .then_with(|| {
+                    // Then by actual amount (this will group positive and negative amounts together)
+                    a.amount.partial_cmp(&b.amount).unwrap()
+                })
+                .then_with(|| a.description.cmp(&b.description))
+        });
+
         transactions
     }
 }

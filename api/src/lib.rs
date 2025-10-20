@@ -30,7 +30,7 @@ pub mod db {
     use joydb::JoydbError;
     use once_cell::sync::Lazy;
     use uuid::Uuid;
-    use crate::import::import_from_skandia_excel;
+    use crate::import::{import_from_path, import_from_skandia_excel};
 
     pub static CLIENT: Lazy<JoyDbBudgetRuntime> = Lazy::new(|| {
         tracing::info!("Init DB Client");
@@ -195,7 +195,7 @@ pub mod db {
         file_name: &str,
     ) -> anyhow::Result<Budget> {
         let runtime = with_runtime(None);
-        let _ = import_from_skandia_excel(file_name, user_id, budget_id, runtime)?;
+        let _ = import_from_path(file_name, user_id, budget_id, runtime)?;
         get_budget(budget_id)
     }
 
@@ -399,7 +399,7 @@ pub async fn get_budget(budget_id: Option<Uuid>) -> Result<Option<Budget>, Serve
         match db::get_default_budget(&user.id) {
             Ok(b) => Ok(b),
             Err(e) => {
-                tracing::error!(error = %e, "Could not get default budget");
+                error!(error = %e, "Could not get default budget");
                 Err(ServerFnError::new(e.to_string()))
             }
         }

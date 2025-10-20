@@ -99,7 +99,11 @@ impl Money {
     pub fn currency(&self) -> Currency {
         self.currency
     }
+    pub fn abs(&self) -> Money {
+        Money::new_cents(self.cents.abs(), self.currency)
+    }
 }
+
 
 impl Add for Money {
     type Output = Money;
