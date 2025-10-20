@@ -317,13 +317,13 @@ pub mod db {
 pub async fn create_budget(
     name: String,
     default_budget: Option<bool>,
-) -> Result<Budget, ServerFnError> {
+) ->  ServerFnResult<Budget> {
     let user = db::get_default_user(None).expect("Could not get default user");
     match db::create_budget(&name, &user.id, default_budget.unwrap_or(true)) {
         Ok(b) => Ok(b),
         Err(e) => {
             tracing::error!(error = %e, "Could not get default budget");
-            Err(ServerFnError::ServerError(e.to_string()))
+            Err(ServerFnError::new("Could not get default budget".to_string()))
         }
     }
 }
