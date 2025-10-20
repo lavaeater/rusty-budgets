@@ -16,23 +16,23 @@ pub struct AccordionProps {
     ///
     /// Defaults to false.
     #[props(default)]
-    pub allow_multiple_open: ReadOnlySignal<bool>,
+    pub allow_multiple_open: ReadSignal<bool>,
 
     /// Set whether the accordion is disabled.
     #[props(default)]
-    pub disabled: ReadOnlySignal<bool>,
+    pub disabled: ReadSignal<bool>,
 
     /// Whether the accordion can be fully collapsed.
     ///
     /// Setting this to true will allow all accordion items to close. Defaults to true.
-    #[props(default = ReadOnlySignal::new(Signal::new(true)))]
-    pub collapsible: ReadOnlySignal<bool>,
+    #[props(default = ReadSignal::new(Signal::new(true)))]
+    pub collapsible: ReadSignal<bool>,
 
     /// Whether the accordion is horizontal.
     ///
     /// Settings this to true will use left/right keybinds for navigation instead of up/down. Defaults to false.
     #[props(default)]
-    pub horizontal: ReadOnlySignal<bool>,
+    pub horizontal: ReadSignal<bool>,
 
     /// Attributes to extend the root element.
     #[props(extends = GlobalAttributes)]
@@ -67,7 +67,7 @@ pub fn Accordion(props: AccordionProps) -> Element {
 pub struct AccordionItemProps {
     /// Whether the accordion item is disabled.
     #[props(default)]
-    pub disabled: ReadOnlySignal<bool>,
+    pub disabled: ReadSignal<bool>,
 
     /// Whether this accordion item should be opened by default.
     #[props(default)]
@@ -145,7 +145,7 @@ pub fn AccordionTrigger(props: AccordionTriggerProps) -> Element {
 #[derive(Props, Clone, PartialEq)]
 pub struct AccordionContentProps {
     /// The id of the accordion content element.
-    pub id: ReadOnlySignal<Option<String>>,
+    pub id: ReadSignal<Option<String>>,
     /// Additional attributes to extend the content element.
     #[props(extends = GlobalAttributes)]
     pub attributes: Vec<Attribute>,

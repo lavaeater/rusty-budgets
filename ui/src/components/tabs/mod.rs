@@ -7,11 +7,11 @@ pub struct TabTriggerProps {
     /// must match the `value` prop of the corresponding [`dioxus_primitives::tabs::TabContent`].
     pub value: String,
     /// The index of the tab trigger. This is used to define the focus order for keyboard navigation.
-    pub index: ReadOnlySignal<usize>,
+    pub index: ReadSignal<usize>,
 
     /// Whether the tab trigger is disabled.
     #[props(default)]
-    pub disabled: ReadOnlySignal<bool>,
+    pub disabled: ReadSignal<bool>,
 
     /// The ID of the tab trigger element.
     pub id: Option<String>,
@@ -32,12 +32,12 @@ pub struct TabContentProps {
     pub value: String,
 
     /// The ID of the tab content element.
-    pub id: ReadOnlySignal<Option<String>>,
+    pub id: ReadSignal<Option<String>>,
     /// The class of the tab content element.
     pub class: Option<String>,
 
     /// The index of the tab content. This is used to define the focus order for keyboard navigation.
-    pub index: ReadOnlySignal<usize>,
+    pub index: ReadSignal<usize>,
 
     /// Additional attributes to apply to the tab content element.
     #[props(extends = GlobalAttributes)]
