@@ -343,7 +343,7 @@ pub async fn add_item(
         }
         Err(e) => {
             tracing::error!(error = %e, "Could not get default budget");
-            Err(ServerFnError::ServerError(e.to_string()))
+            Err(ServerFnError::new(e.to_string()))
         }
     }
 }
@@ -363,7 +363,7 @@ pub async fn modify_item(
         }
         Err(e) => {
             tracing::error!(error = %e, "Could not get default budget");
-            Err(ServerFnError::ServerError(e.to_string()))
+            Err(ServerFnError::new(e.to_string()))
         }
     }
 }
@@ -374,7 +374,7 @@ pub async fn get_default_user() -> Result<User, ServerFnError> {
         Ok(b) => Ok(b),
         Err(e) => {
             tracing::error!(error = %e, "Could not get default User");
-            Err(ServerFnError::ServerError(e.to_string()))
+            Err(ServerFnError::new(e.to_string()))
         }
     }
 }
@@ -392,7 +392,7 @@ pub async fn get_budget(budget_id: Option<Uuid>) -> Result<Option<Budget>, Serve
             Ok(b) => Ok(Some(b)),
             Err(e) => {
                 tracing::error!(error = %e, "Could not get budget");
-                Err(ServerFnError::ServerError(e.to_string()))
+                Err(ServerFnError::new(e.to_string()))
             }
         }
     } else {
@@ -400,7 +400,7 @@ pub async fn get_budget(budget_id: Option<Uuid>) -> Result<Option<Budget>, Serve
             Ok(b) => Ok(b),
             Err(e) => {
                 tracing::error!(error = %e, "Could not get default budget");
-                Err(ServerFnError::ServerError(e.to_string()))
+                Err(ServerFnError::new(e.to_string()))
             }
         }
     }
@@ -416,7 +416,7 @@ pub async fn import_transactions(
         Ok(b) => Ok(b),
         Err(e) => {
             tracing::error!(error = %e, "Could not get default budget");
-            Err(ServerFnError::ServerError(e.to_string()))
+            Err(ServerFnError::new(e.to_string()))
         }
     }
 }
@@ -432,7 +432,7 @@ pub async fn connect_transaction(
         Ok(b) => Ok(b),
         Err(e) => {
             tracing::error!(error = %e, "Could not connect transaction to item.");
-            Err(ServerFnError::ServerError(e.to_string()))
+            Err(ServerFnError::new(e.to_string()))
         }
     }
 }
@@ -444,7 +444,7 @@ pub async fn ignore_transaction(budget_id: Uuid, tx_id: Uuid) -> Result<Budget, 
         Ok(b) => Ok(b),
         Err(e) => {
             tracing::error!(error = %e, "Could not ignore transaction to item.");
-            Err(ServerFnError::ServerError(e.to_string()))
+            Err(ServerFnError::new(e.to_string()))
         }
     }
 }
