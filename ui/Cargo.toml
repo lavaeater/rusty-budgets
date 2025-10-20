@@ -7,6 +7,6 @@ edition = "2021"
 dioxus = { features= ["router", "fullstack"], workspace = true }
 dioxus-primitives = { workspace = true }
 api = { workspace = true }
-uuid = { version = "1.17.0", features = ["v4"] }
+uuid = { version = "1.18.1", features = ["v4"] }
 strum = { workspace = true }
 #open = "5.3.2"
