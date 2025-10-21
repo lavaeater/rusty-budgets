@@ -71,6 +71,12 @@ pub struct BudgetPeriodStore {
     budget_periods: HashMap<BudgetPeriodId, BudgetPeriod>,
 }
 
+impl BudgetPeriodStore {
+    pub fn list_ignored_transactions(&self) -> Vec<BankTransaction> {
+       self.current_period().transactions.list_ignored_transactions() 
+    }
+}
+
 impl Default for BudgetPeriodStore {
     fn default() -> Self {
         let month_begins_on = MonthBeginsOn::default();

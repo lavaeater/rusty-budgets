@@ -22,6 +22,12 @@ pub struct BankTransactionStore {
 }
 
 impl BankTransactionStore {
+    pub fn list_ignored_transactions(&self) -> Vec<BankTransaction> {
+        self.ignored.values().cloned().collect()
+    }
+}
+
+impl BankTransactionStore {
     pub fn list_transactions_for_item(&self, item_id: &Uuid, sorted: bool) -> Vec<&BankTransaction> {
         let mut transactions = self.by_id.values().filter(|tx| tx.budget_item_id == Some(*item_id)).collect::<Vec<_>>();
         if sorted {

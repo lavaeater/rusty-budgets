@@ -44,7 +44,7 @@ pub fn BudgetHero() -> Element {
             tracing::info!("The budget signal was updated: {}", budget.id);
             budget_id.set(budget.id);
             let transactions_for_connection = budget.list_transactions_for_connection();
-            let ignored_transactions = budget.list_bank_transactions().into_iter().filter(|tx| tx.ignored).cloned().collect::<Vec<_>>();
+            let ignored_transactions = budget.list_ignored_transactions();
             let items_by_type = budget.items_by_type();
             
             rsx! {
