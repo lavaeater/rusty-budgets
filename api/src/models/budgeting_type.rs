@@ -19,7 +19,6 @@ pub struct BudgetingTypeOverview {
     pub budgeted_amount: Money,
     pub actual_amount: Money,
     pub remaining_budget: Money,
-    #[serde(default)]
     pub is_ok: bool,
 }
 
