@@ -24,6 +24,7 @@ pub struct BankTransaction {
     pub date: DateTime<Utc>,
     pub budget_item_id: Option<Uuid>,
     pub balance: Money,
+    #[serde(default)]
     pub ignored: bool,
 }
 

@@ -7,7 +7,7 @@ use api::{connect_transaction, ignore_transaction};
 use crate::budget::ItemSelector;
 
 #[component]
-pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType) -> Element {
+pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType, is_over_budget: bool) -> Element {
     let mut budget_signal = use_context::<Signal<Option<Budget>>>();
     let mut expanded = use_signal(|| false);
     // let mut edit_item = use_signal(|| false);
@@ -192,17 +192,19 @@ pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType) -> Element {
         // }
     } else {
         rsx! {
-            div { class: "flex justify-between items-center p-2 border-b border-gray-200 text-sm",
+            div { class: format!("budget-item {}", if is_over_budget { "over-budget" } else { "" }),
                 // Left side: name
                 div {
                     class: "font-large",
                     onclick: move |_| { expanded.set(!expanded()) },
                     "{item_name()}"
                 }
-
                 // Right side: actual / budgeted
                 div { class: "text-gray-700",
                     "{item.actual_amount.to_string()} / {item.budgeted_amount.to_string()}"
+                }
+                if is_over_budget {
+                    span { class: "over-budget-indicator", "Over Budget" }
                 }
             }
         }

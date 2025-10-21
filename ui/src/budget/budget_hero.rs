@@ -73,8 +73,10 @@ pub fn BudgetHero() -> Element {
                     // Dashboard cards showing overview
                     div { class: "dashboard-cards",
                         for (_ , budgeting_type , overview , _) in &items_by_type {
-                            div { class: "overview-card",
-                                h3 { {budgeting_type.to_string()} }
+                            div { class: format!("overview-card {}", if !overview.is_ok { "over-budget" } else { "" }),
+                                h3 { class: if !overview.is_ok { "warning" } else { "" },
+                                    {budgeting_type.to_string()}
+                                }
                                 div { class: "card-stats",
                                     div { class: "stat",
                                         span { class: "stat-label", "Budgeterat" }
@@ -117,16 +119,15 @@ pub fn BudgetHero() -> Element {
                     if ignored_transactions.is_empty() {
                         div { class: "transactions-section-minimal",
                             p { class: "success-message", "✓ Inga ignorerade transaktioner!" }
-                        }                       
+                        }
                     } else {
-                         div { class: "transactions-section-prominent",
+                        div { class: "transactions-section-prominent",
                             TransactionsView {
                                 budget_id: budget.id,
                                 transactions: ignored_transactions,
                                 items: budget.list_all_items(),
                             }
                         }
-
                     }
                 }
             }

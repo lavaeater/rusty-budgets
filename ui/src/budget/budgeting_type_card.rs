@@ -31,8 +31,19 @@ pub fn BudgetingTypeCard(budgeting_type: BudgetingType, items: Vec<BudgetItem>) 
                 }
             }
         }
-        for item in items {
-            BudgetItemView { item: item.clone(), item_type: budgeting_type }
+        for (item , is_over_budget) in items
+            .iter()
+            .map(|item| {
+                let is_over_budget = item.actual_amount > item.budgeted_amount
+                    && item.budgeted_amount > Money::zero(item.actual_amount.currency());
+                (item, is_over_budget)
+            })
+        {
+            BudgetItemView {
+                item: item.clone(),
+                item_type: budgeting_type,
+                is_over_budget,
+            }
             Separator {
                 style: "margin: 15px 0; width: 50%;",
                 horizontal: true,
