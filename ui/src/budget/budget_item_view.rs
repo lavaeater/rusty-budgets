@@ -1,10 +1,8 @@
-use crate::{Button, Input};
+use crate::Button;
 use api::models::*;
 use dioxus::prelude::*;
 use std::collections::HashSet;
 use uuid::Uuid;
-use api::{connect_transaction, ignore_transaction};
-use crate::budget::ItemSelector;
 
 #[component]
 pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType, is_over_budget: bool) -> Element {
@@ -30,37 +28,6 @@ pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType, is_over_budget
                     .cloned()
                     .collect::<Vec<BankTransaction>>())
                 .unwrap_or_default();
-        
-        // if edit_item() {
-        //     rsx! {
-        //         div { class: "flex justify-between items-center p-2 border-b border-gray-200 text-sm",
-        //             Input {
-        //                 id: "item_name",
-        //                 value: item_name(),
-        //                 oninput: move |e: FormEvent| { item_name.set(e.value()) },
-        //             }
-        //             Button {
-        //                 r#type: "button",
-        //                 "data-style": "primary",
-        //                 onclick: move |_| async move {
-        //                     if let Ok(updated_budget) = api::modify_item(
-        //                             budget_id,
-        //                             item.id,
-        //                             Some(item_name()),
-        //                             None,
-        //                             None,
-        //                         )
-        //                         .await
-        //                     {
-        //                         budget_signal.set(Some(updated_budget));
-        //                     }
-        //                     edit_item.set(false);
-        //                 },
-        //                 "Uppdatera"
-        //             }
-        //         }
-        //     }
-        // } else {
             rsx! {
                 div { class: "flex flex-col p-2 border-b border-gray-200 text-sm",
                     // Header with item name and amount
@@ -205,6 +172,43 @@ pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType, is_over_budget
                 }
                 if is_over_budget {
                     span { class: "over-budget-indicator", "Over Budget" }
+                    
+                    // Auto-adjust button if there's available income
+                    {
+                        let shortage = item.actual_amount - item.budgeted_amount;
+                        let income_overview = budget_signal()
+                            .as_ref()
+                            .and_then(|b| b.get_budgeting_overview(&BudgetingType::Income));
+                        
+                        let can_auto_adjust = income_overview
+                            .map(|o| o.remaining_budget >= shortage)
+                            .unwrap_or(false);
+                        
+                        if can_auto_adjust {
+                            rsx! {
+                                button {
+                                    class: "auto-adjust-button",
+                                    onclick: move |_| {
+                                        let item_id = item.id;
+                                        let shortage = shortage;
+                                        spawn(async move {
+                                            match api::adjust_item_funds(budget_id, item_id, shortage).await {
+                                                Ok(updated_budget) => {
+                                                    budget_signal.set(Some(updated_budget));
+                                                }
+                                                Err(e) => {
+                                                    dioxus::logger::tracing::error!("Failed to adjust item funds: {}", e);
+                                                }
+                                            }
+                                        });
+                                    },
+                                    "Auto-Adjust (+{shortage})"
+                                }
+                            }
+                        } else {
+                            rsx! {}
+                        }
+                    }
                 }
             }
         }

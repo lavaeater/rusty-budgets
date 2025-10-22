@@ -270,6 +270,17 @@ pub mod db {
             .map(|(b, _)| b)
     }
 
+    pub fn adjust_item_funds(
+        budget_id: &Uuid,
+        item_id: &Uuid,
+        amount: &Money,
+        user_id: &Uuid,
+    ) -> anyhow::Result<Budget> {
+        with_runtime(None)
+            .adjust_item_funds(*budget_id, *item_id, *amount, *user_id)
+            .map(|(b, _)| b)
+    }
+
     pub fn create_rule(
         budget: &Budget,
         user_id: &Uuid,
@@ -444,6 +455,22 @@ pub async fn ignore_transaction(budget_id: Uuid, tx_id: Uuid) -> Result<Budget, 
         Ok(b) => Ok(b),
         Err(e) => {
             tracing::error!(error = %e, "Could not ignore transaction to item.");
+            Err(ServerFnError::new(e.to_string()))
+        }
+    }
+}
+
+#[server]
+pub async fn adjust_item_funds(
+    budget_id: Uuid,
+    item_id: Uuid,
+    amount: Money,
+) -> Result<Budget, ServerFnError> {
+    let user = db::get_default_user(None).expect("Could not get default user");
+    match db::adjust_item_funds(&budget_id, &item_id, &amount, &user.id) {
+        Ok(b) => Ok(b),
+        Err(e) => {
+            tracing::error!(error = %e, "Could not adjust item funds");
             Err(ServerFnError::new(e.to_string()))
         }
     }

@@ -1,9 +1,6 @@
 //! This crate contains all shared UI for the workspace.
 #![allow(unused_imports)]
 #![allow(dead_code)]
-mod hero;
-pub use hero::Hero;
-
 // Original budget module (one-page layout)
 pub mod budget;
 
