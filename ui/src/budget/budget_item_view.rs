@@ -3,6 +3,8 @@ use api::models::*;
 use dioxus::prelude::*;
 use std::collections::HashSet;
 use uuid::Uuid;
+use api::ignore_transaction;
+use crate::budget::ItemSelector;
 
 #[component]
 pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType, is_over_budget: bool) -> Element {
@@ -172,18 +174,15 @@ pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType, is_over_budget
                 }
                 if is_over_budget {
                     span { class: "over-budget-indicator", "Over Budget" }
-                    
                     // Auto-adjust button if there's available income
                     {
                         let shortage = item.actual_amount - item.budgeted_amount;
-                        let income_overview = budget_signal()
+                        let can_auto_adjust = budget_signal()
                             .as_ref()
-                            .and_then(|b| b.get_budgeting_overview(&BudgetingType::Income));
-                        
-                        let can_auto_adjust = income_overview
+                            .and_then(|b| b.get_budgeting_overview(&BudgetingType::Income))
                             .map(|o| o.remaining_budget >= shortage)
                             .unwrap_or(false);
-                        
+
                         if can_auto_adjust {
                             rsx! {
                                 button {
@@ -197,7 +196,9 @@ pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType, is_over_budget
                                                     budget_signal.set(Some(updated_budget));
                                                 }
                                                 Err(e) => {
-                                                    dioxus::logger::tracing::error!("Failed to adjust item funds: {}", e);
+                                                    dioxus::logger::tracing::error!(
+                                                        "Failed to adjust item funds: {}", e
+                                                    );
                                                 }
                                             }
                                         });
