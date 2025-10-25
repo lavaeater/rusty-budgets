@@ -1,3 +1,6 @@
+use crate::holidays::{is_workday, previous_workday};
+use chrono::{DateTime, Datelike, Days, Months, TimeZone, Utc};
+use core::fmt::Display;
 use crate::models::bank_transaction_store::BankTransactionStore;
 use crate::models::BudgetingType::{Expense, Income, Savings};
 use crate::models::Rule::{Difference, SelfDiff, Sum};
@@ -5,8 +8,6 @@ use crate::models::{
     BankTransaction, BudgetItem, BudgetItemStore, BudgetingType, BudgetingTypeOverview, MatchRule,
     Money, MonthBeginsOn, ValueKind,
 };
-use chrono::{DateTime, Datelike, Days, Months, TimeZone, Utc};
-use core::fmt::Display;
 use dioxus::logger::tracing;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::{HashMap, HashSet};
@@ -512,6 +513,72 @@ impl BudgetPeriodId {
                 Self {
                     year: date.year(),
                     month: date.month(),
+                }
+            }
+            MonthBeginsOn::PreviousMonthWorkDayBefore(day) => {
+                if day == 1 {
+                    panic!("Cannot start on day 1, use PreviousMonth1stDayOfMonth")
+                }
+
+                // Get the target day in the previous month
+                let prev_month = date.checked_sub_months(Months::new(1)).unwrap();
+                let target_day = day.min(prev_month.day());
+                let target_date = Utc
+                    .with_ymd_and_hms(prev_month.year(), prev_month.month(), target_day, 0, 0, 0)
+                    .unwrap();
+
+                // Find the workday on or before the target date
+                let period_start = if is_workday(&target_date) {
+                    target_date
+                } else {
+                    previous_workday(target_date)
+                };
+
+                // If current date is on or after the period start, it belongs to next month's period
+                if date >= period_start {
+                    let next_month = date.checked_add_months(Months::new(1)).unwrap();
+                    Self {
+                        year: next_month.year(),
+                        month: next_month.month(),
+                    }
+                } else {
+                    // Otherwise it belongs to current month's period
+                    Self {
+                        year: date.year(),
+                        month: date.month(),
+                    }
+                }
+            }
+            MonthBeginsOn::CurrentMonthWorkDayBefore(day) => {
+                if day == 1 {
+                    panic!("Cannot start on day 1, use PreviousMonth1stDayOfMonth")
+                }
+
+                // Get the target day in the current month
+                let target_day = day.min(date.day());
+                let target_date = Utc
+                    .with_ymd_and_hms(date.year(), date.month(), target_day, 0, 0, 0)
+                    .unwrap();
+
+                // Find the workday on or before the target date
+                let period_start = if is_workday(&target_date) {
+                    target_date
+                } else {
+                    previous_workday(target_date)
+                };
+
+                // If current date is on or after the period start, it belongs to next month's period
+                if date >= period_start {
+                    Self {
+                        year: date.year(),
+                        month: date.month(),
+                    }
+                } else {
+                    // Otherwise it belongs to current month's period
+                    Self {
+                        year: date.year(),
+                        month: date.month(),
+                    }
                 }
             }
         }

@@ -5,6 +5,8 @@ pub mod cqrs;
 pub mod events;
 pub mod import;
 pub mod models;
+pub mod holidays;
+pub mod time_delta;
 
 use crate::models::*;
 #[cfg(feature = "server")]

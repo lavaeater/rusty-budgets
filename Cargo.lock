@@ -48,6 +48,7 @@ dependencies = [
  "cqrs_macros",
  "csv",
  "dioxus",
+ "duration-extender",
  "joydb",
  "once_cell",
  "serde",
@@ -1759,6 +1760,12 @@ name = "dunce"
 version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "92773504d58c093f6de2459af4af33faa518c13451eb8f2b5698ed3d36e7c813"
+
+[[package]]
+name = "duration-extender"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1a2c524db105dc30f04ad1fa7cbfa9278baa29465f0c6b2058e4a3709254ea56"
 
 [[package]]
 name = "encoding_rs"
