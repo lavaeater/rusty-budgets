@@ -238,6 +238,17 @@ impl Budget {
     pub fn set_current_period(&mut self, date: &DateTime<Utc>) {
         self.budget_periods.set_current_period(date);
     }
+    
+    pub fn set_previous_period(&mut self) -> Self {
+        self.budget_periods.set_previous_period();
+        self.clone()
+    }
+
+    pub fn set_next_period(&mut self) -> Self {
+        self.budget_periods.set_next_period();
+        self.clone()
+    }
+    
     fn ensure_time_period(&mut self, updated_at: &DateTime<Utc>) {
         self.budget_periods.set_current_period(updated_at);
     }

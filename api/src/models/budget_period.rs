@@ -136,9 +136,19 @@ impl BudgetPeriodStore {
             .max()
             .map(|key| self.budget_periods.get(key).unwrap().clone())
     }
+    
+    pub fn set_previous_period(&mut self) {
+        let previous_id = self.current_period_id.month_before();
+        self.set_current_period_id(&previous_id);
+    }
+
+    pub fn set_next_period(&mut self) {
+        let next_id = self.current_period_id.month_after();
+        self.set_current_period_id(&next_id);
+    }
 
     pub fn get_period_for_date_mut(&mut self, date: &DateTime<Utc>) -> &mut BudgetPeriod {
-        self.get_period_mut(&BudgetPeriodId::from_date(*date, self.month_begins_on))
+        self.get_or_create_period(&BudgetPeriodId::from_date(*date, self.month_begins_on))
     }
 
     pub fn get_period_for_date(&mut self, date: &DateTime<Utc>) -> &BudgetPeriod {
@@ -149,8 +159,13 @@ impl BudgetPeriodStore {
         let period = self.get_period_for_date_mut(date);
         self.current_period_id = period.id;
     }
+    
+    pub fn set_current_period_id(&mut self, id: &BudgetPeriodId) {
+        let _ = self.get_or_create_period(id);
+        self.current_period_id = *id;
+    }
 
-    pub fn get_period_mut(&mut self, id: &BudgetPeriodId) -> &mut BudgetPeriod {
+    pub fn get_or_create_period(&mut self, id: &BudgetPeriodId) -> &mut BudgetPeriod {
         let previous_period = self.get_period_before(id);
         self.budget_periods.entry(*id).or_insert_with(|| {
             if let Some(previous_period) = previous_period {
@@ -164,7 +179,7 @@ impl BudgetPeriodStore {
     }
 
     pub fn get_period(&mut self, id: &BudgetPeriodId) -> &BudgetPeriod {
-        self.get_period_mut(id)
+        self.get_or_create_period(id)
     }
 
     pub fn current_period(&self) -> &BudgetPeriod {
@@ -321,7 +336,7 @@ impl BudgetPeriodStore {
     }
 
     pub fn insert_transaction(&mut self, tx: BankTransaction) {
-        self.get_period_mut(&BudgetPeriodId::from_date(tx.date, self.month_begins_on))
+        self.get_or_create_period(&BudgetPeriodId::from_date(tx.date, self.month_begins_on))
             .transactions
             .insert(tx);
     }
@@ -580,6 +595,34 @@ impl BudgetPeriodId {
                         month: date.month(),
                     }
                 }
+            }
+        }
+    }
+    
+    fn month_before(&self) -> Self {
+        if self.month == 1 {
+            Self {
+                year: self.year - 1,
+                month: 12,
+            }
+        } else {
+            Self {
+                year: self.year,
+                month: self.month - 1,
+            }
+        }
+    }
+    
+    fn month_after(&self) -> Self {
+        if self.month == 12 {
+            Self {
+                year: self.year + 1,
+                month: 1,
+            }
+        } else {
+            Self {
+                year: self.year,
+                month: self.month + 1,
             }
         }
     }

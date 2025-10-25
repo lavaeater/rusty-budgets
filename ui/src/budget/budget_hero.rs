@@ -1,6 +1,6 @@
 use crate::file_chooser::*;
 use crate::budget::{BudgetTabs, TransactionsView};
-use crate::Input;
+use crate::{Button, Input};
 use api::models::Budget;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
@@ -40,7 +40,7 @@ pub fn BudgetHero() -> Element {
 
     // Handle the resource state
     match budget_signal() {
-        Some(budget) => {
+        Some(mut budget) => {
             tracing::info!("The budget signal was updated: {}", budget.id);
             budget_id.set(budget.id);
             let transactions_for_connection = budget.list_transactions_for_connection();
@@ -55,6 +55,18 @@ pub fn BudgetHero() -> Element {
                         div { class: "header-title",
                             h1 { {budget.name.clone()} }
                             h2 { {budget.get_current_period_id().to_string()} }
+                            Button {
+                                onclick: move |_| {
+                                    budget_signal.set(Some(budget_signal().unwrap().set_previous_period()));
+                                },
+                                "Previous period"
+                            }
+                            Button {
+                                onclick: move |_| {
+                                    budget_signal.set(Some(budget_signal().unwrap().set_next_period()));
+                                },
+                                "Next period"
+                            }
                         }
                         div { class: "header-actions",
                             FileDialog { on_chosen: import_file }
@@ -110,9 +122,9 @@ pub fn BudgetHero() -> Element {
                     } else {
                         div { class: "transactions-section-prominent",
                             TransactionsView {
-                                budget_id: budget.id,
+                                budget_id: budget_id(),
                                 transactions: transactions_for_connection,
-                                items: budget.list_all_items(),
+                                items: budget_signal().unwrap().list_all_items(),
                             }
                         }
                     }
