@@ -348,7 +348,9 @@ impl BudgetPeriodStore {
     }
 
     pub fn contains_transaction(&self, tx_id: &Uuid) -> bool {
-        self.current_period().transactions.contains(tx_id)
+        self.budget_periods
+            .values()
+            .any(|p| p.transactions.contains(tx_id))
     }
 
     pub fn contains_budget_item(&self, item_id: &Uuid) -> bool {

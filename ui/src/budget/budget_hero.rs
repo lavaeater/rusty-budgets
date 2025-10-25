@@ -40,7 +40,7 @@ pub fn BudgetHero() -> Element {
 
     // Handle the resource state
     match budget_signal() {
-        Some(mut budget) => {
+        Some(budget) => {
             tracing::info!("The budget signal was updated: {}", budget.id);
             budget_id.set(budget.id);
             let transactions_for_connection = budget.list_transactions_for_connection();
