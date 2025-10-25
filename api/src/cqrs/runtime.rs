@@ -2,11 +2,12 @@ use crate::cqrs::framework::{Runtime, StoredEvent};
 use crate::models::*;
 use chrono::{DateTime, Utc};
 use dioxus::logger::tracing;
-use joydb::adapters::JsonAdapter;
-use joydb::Joydb;
+use joydb::adapters::{FromPath, JsonAdapter};
+use joydb::{Joydb, JoydbConfig, JoydbMode, SyncPolicy};
 use joydb::Model;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
+use std::time::Duration;
 use uuid::Uuid;
 
 impl JoyDbBudgetRuntime {
@@ -196,8 +197,15 @@ pub struct JoyDbBudgetRuntime {
 
 impl JoyDbBudgetRuntime {
     pub fn new<P: AsRef<Path>>(path: P) -> Self {
+        let adapter = JsonAdapter::from_path(path);
+        let config = JoydbConfig {
+            mode: JoydbMode::Persistent {
+                adapter,
+                sync_policy: SyncPolicy::Periodic(Duration::from_secs(5)),
+            },
+        };
         Self {
-            db: Db::open(path).unwrap(),
+            db: Db::open_with_config(config).unwrap(),
         }
     }
 
