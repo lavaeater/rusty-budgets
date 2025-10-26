@@ -1,20 +1,18 @@
 use crate::cqrs::framework::Aggregate;
 use crate::cqrs::framework::DomainEvent;
 use crate::events::*;
-use crate::models::bank_transaction_store::BankTransactionStore;
-use crate::models::budget_item::{BudgetItem, BudgetItemStore};
-use crate::models::budget_period::{BudgetPeriodId, BudgetPeriodStore};
+use crate::models::budget_item::BudgetItem;
+use crate::models::budget_period_id::BudgetPeriodId;
 use crate::models::budgeting_type::BudgetingType;
 use crate::models::money::{Currency, Money};
-use crate::models::BudgetingType::{Expense, Income, Savings};
-use crate::models::Rule::{Difference, SelfDiff, Sum};
-use crate::models::{BankTransaction, BudgetingTypeOverview, MatchRule, ValueKind};
+use crate::models::{BankTransaction, BudgetingTypeOverview, MatchRule};
 use crate::pub_events_enum;
-use chrono::{DateTime, Datelike, Utc};
+use chrono::{DateTime, Utc};
 use joydb::Model;
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use uuid::Uuid;
+use crate::models::budget_period_store::BudgetPeriodStore;
 
 pub_events_enum! {
     #[derive(Debug, Clone, Serialize, Deserialize)]

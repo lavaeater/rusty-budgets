@@ -639,3 +639,18 @@ pub fn test_budeting_overview() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[test]
+pub fn the_budget_periods() -> anyhow::Result<()> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let bank_account_number = "1234567890".to_string();
+    let zero_money = Money::new_dollars(0, Currency::SEK);
+    let hundred_money = Money::new_dollars(100, Currency::SEK);
+    let thousand_money = hundred_money.multiply(10);
+    let fivehundred_money = hundred_money.multiply(5);
+
+    let (mut budget, budget_id) = rt.create_budget("Test Budget", true, Currency::SEK, user_id)?;
+    
+    Ok(())
+}
