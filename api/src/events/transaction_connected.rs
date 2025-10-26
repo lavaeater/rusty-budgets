@@ -38,6 +38,17 @@ impl TransactionConnectedHandler for Budget {
         };
         // End of immutable borrow - tx goes out of scope here
 
+        //TODO: Needs to be aware of budget_periods!
+        /*
+        Operations that are time-sensitive should probably be scoped like this:
+        
+        self.for_period(date).update_budget_actual_amount(&previous_budgeting_type, &-adjusted_amount);
+        self.for_period(date).add_actual_amount_to_item(&previous_budget_item_id, &-adjusted_amount);
+        self.for_period(date).add_actual_amount_to_item(&event.item_id, &adjusted_amount);
+        self.for_period(date).recalc_overview();
+        
+        This makes it more obvious what is happening.
+         */
         // Handle previous connection if it exists
         if let Some(previous_budget_item_id) = previous_item_id {
             let previous_budgeting_type = previous_item_type.unwrap();
