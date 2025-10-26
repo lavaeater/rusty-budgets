@@ -68,12 +68,6 @@ pub struct BudgetPeriodStore {
     budget_periods: HashMap<BudgetPeriodId, BudgetPeriod>,
 }
 
-impl BudgetPeriodStore {
-    pub fn list_ignored_transactions(&self) -> Vec<BankTransaction> {
-       self.current_period().transactions.list_ignored_transactions() 
-    }
-}
-
 impl Default for BudgetPeriodStore {
     fn default() -> Self {
         let month_begins_on = MonthBeginsOn::default();
@@ -98,14 +92,28 @@ impl BudgetPeriodStore {
             current_period_id: id,
         }
     }
+    
+    pub fn with_period<T>(&mut self, id: &BudgetPeriodId, func: impl FnOnce(&BudgetPeriod) -> T) -> T {
+        let bp = self.get_or_create_period(id);
+        func(bp)
+    }
+    
+    pub fn with_period_mut<T>(&mut self, id: &BudgetPeriodId, func: impl FnOnce(&mut BudgetPeriod) -> T) -> T {
+        let bp = self.get_or_create_period(id);
+        func(bp)
+    }
+    
+    pub fn list_ignored_transactions(&self) -> Vec<BankTransaction> {
+        self.with_current_period().transactions.list_ignored_transactions()
+    }
 
     pub(crate) fn list_transactions_for_connection(&self) -> Vec<BankTransaction> {
-        self.current_period()
+        self.with_current_period()
             .transactions
             .list_transactions_for_connection()
     }
     pub(crate) fn list_all_items(&self) -> Vec<BudgetItem> {
-        self.current_period().budget_items.list_all_items()
+        self.with_current_period().budget_items.list_all_items()
     }
     pub(crate) fn current_period_id(&self) -> &BudgetPeriodId {
         &self.current_period_id
@@ -119,7 +127,7 @@ impl BudgetPeriodStore {
     }
 
     pub(crate) fn move_transaction_to_ignored(&mut self, tx_id: &Uuid) -> bool {
-        self.current_period_mut().transactions.ignore_transaction(tx_id)
+        self.with_current_period_mut().transactions.ignore_transaction(tx_id)
     }
 
     pub fn get_period_before(&self, id: &BudgetPeriodId) -> Option<BudgetPeriod> {
@@ -148,7 +156,7 @@ impl BudgetPeriodStore {
     }
 
     pub fn get_period_for_date(&mut self, date: &DateTime<Utc>) -> &BudgetPeriod {
-        self.get_period(&BudgetPeriodId::from_date(*date, self.month_begins_on))
+        self.get_or_create_period(&BudgetPeriodId::from_date(*date, self.month_begins_on))
     }
 
     pub fn set_current_period(&mut self, date: &DateTime<Utc>) {
@@ -161,7 +169,7 @@ impl BudgetPeriodStore {
         self.current_period_id = *id;
     }
 
-    pub fn get_or_create_period(&mut self, id: &BudgetPeriodId) -> &mut BudgetPeriod {
+    fn get_or_create_period(&mut self, id: &BudgetPeriodId) -> &mut BudgetPeriod {
         let previous_period = self.get_period_before(id);
         self.budget_periods.entry(*id).or_insert_with(|| {
             if let Some(previous_period) = previous_period {
@@ -173,46 +181,42 @@ impl BudgetPeriodStore {
             }
         })
     }
-
-    pub fn get_period(&mut self, id: &BudgetPeriodId) -> &BudgetPeriod {
-        self.get_or_create_period(id)
-    }
-
-    pub fn current_period(&self) -> &BudgetPeriod {
+    
+    pub fn with_current_period(&self) -> &BudgetPeriod {
         tracing::debug!("Current period: {}", self.current_period_id);
         self.budget_periods.get(&self.current_period_id).unwrap()
     }
 
-    pub fn current_period_mut(&mut self) -> &mut BudgetPeriod {
+    pub fn with_current_period_mut(&mut self) -> &mut BudgetPeriod {
         self.budget_periods
             .get_mut(&self.current_period_id)
             .unwrap()
     }
 
     pub fn get_item(&self, item_id: &Uuid) -> Option<&BudgetItem> {
-        self.current_period().budget_items.get(item_id)
+        self.with_current_period().budget_items.get(item_id)
     }
 
     pub fn get_type_for_item(&self, item_id: &Uuid) -> Option<&BudgetingType> {
-        self.current_period().budget_items.type_for(item_id)
+        self.with_current_period().budget_items.type_for(item_id)
     }
 
     pub fn items_by_type(
         &self,
     ) -> Vec<(usize, BudgetingType, BudgetingTypeOverview, Vec<BudgetItem>)> {
-        self.current_period()
+        self.with_current_period()
             .budget_items
             .items_by_type()
             .iter()
             .map(|(index, t, items)| {
-                let overview = self.current_period().budgeting_overview.get(t).unwrap();
+                let overview = self.with_current_period().budgeting_overview.get(t).unwrap();
                 (*index, *t, *overview, items.clone())
             })
             .collect::<Vec<_>>()
     }
 
     pub fn budgeted_for_type(&self, budgeting_type: &BudgetingType) -> Money {
-        self.current_period()
+        self.with_current_period()
             .budget_items
             .by_type(budgeting_type)
             .unwrap_or_default()
@@ -222,7 +226,7 @@ impl BudgetPeriodStore {
     }
 
     pub fn spent_for_type(&self, budgeting_type: &BudgetingType) -> Money {
-        self.current_period()
+        self.with_current_period()
             .budget_items
             .by_type(budgeting_type)
             .unwrap_or_default()
@@ -234,16 +238,16 @@ impl BudgetPeriodStore {
     pub fn recalc_overview(&mut self) {
         let income_sum = Sum(vec![Income]);
         let budgeted_income = income_sum.evaluate(
-            &self.current_period().budget_items.hash_by_type(),
+            &self.with_current_period().budget_items.hash_by_type(),
             Some(ValueKind::Budgeted),
         );
         let spent_income = income_sum.evaluate(
-            &self.current_period().budget_items.hash_by_type(),
+            &self.with_current_period().budget_items.hash_by_type(),
             Some(ValueKind::Spent),
         );
         let remaining_rule = Difference(Income, vec![Expense, Savings]);
         let remaining_income = remaining_rule.evaluate(
-            &self.current_period().budget_items.hash_by_type(),
+            &self.with_current_period().budget_items.hash_by_type(),
             Some(ValueKind::Budgeted),
         );
 
@@ -254,23 +258,23 @@ impl BudgetPeriodStore {
             is_ok: remaining_income > Money::zero(remaining_income.currency())
         };
 
-        self.current_period_mut()
+        self.with_current_period_mut()
             .budgeting_overview
             .insert(Income, income_overview);
 
         let expense_sum = Sum(vec![Expense]);
         let budgeted_expenses = expense_sum.evaluate(
-            &self.current_period().budget_items.hash_by_type(),
+            &self.with_current_period().budget_items.hash_by_type(),
             Some(ValueKind::Budgeted),
         );
         let spent_expenses = expense_sum.evaluate(
-            &self.current_period().budget_items.hash_by_type(),
+            &self.with_current_period().budget_items.hash_by_type(),
             Some(ValueKind::Spent),
         );
 
         let self_difference_rule = SelfDiff(Expense);
         let self_diff =
-            self_difference_rule.evaluate(&self.current_period().budget_items.hash_by_type(), None);
+            self_difference_rule.evaluate(&self.with_current_period().budget_items.hash_by_type(), None);
 
         let expense_overview = BudgetingTypeOverview {
             budgeted_amount: budgeted_expenses,
@@ -279,23 +283,23 @@ impl BudgetPeriodStore {
             is_ok: self_diff < Money::zero(self_diff.currency())
         };
 
-        self.current_period_mut()
+        self.with_current_period_mut()
             .budgeting_overview
             .insert(Expense, expense_overview);
 
         let savings_sum = Sum(vec![Savings]);
         let budgeted_savings = savings_sum.evaluate(
-            &self.current_period().budget_items.hash_by_type(),
+            &self.with_current_period().budget_items.hash_by_type(),
             Some(ValueKind::Budgeted),
         );
         let spent_savings = savings_sum.evaluate(
-            &self.current_period().budget_items.hash_by_type(),
+            &self.with_current_period().budget_items.hash_by_type(),
             Some(ValueKind::Spent),
         );
 
         let self_difference_rule = SelfDiff(Savings);
         let self_diff =
-            self_difference_rule.evaluate(&self.current_period().budget_items.hash_by_type(), None);
+            self_difference_rule.evaluate(&self.with_current_period().budget_items.hash_by_type(), None);
 
         let savings_overview = BudgetingTypeOverview {
             budgeted_amount: budgeted_savings,
@@ -304,16 +308,16 @@ impl BudgetPeriodStore {
             is_ok: self_diff < Money::zero(self_diff.currency())
         };
 
-        self.current_period_mut()
+        self.with_current_period_mut()
             .budgeting_overview
             .insert(Savings, savings_overview);
     }
 
     pub fn insert_item(&mut self, item: &BudgetItem, item_type: BudgetingType) {
-        self.current_period_mut()
+        self.with_current_period_mut()
             .budget_items
             .insert(item, item_type);
-        self.current_period_mut()
+        self.with_current_period_mut()
             .budgeted_by_type
             .entry(item_type)
             .and_modify(|v| *v += item.budgeted_amount)
@@ -322,8 +326,8 @@ impl BudgetPeriodStore {
     }
 
     pub fn remove_item(&mut self, item_id: &Uuid) {
-        if let Some((item, item_type)) = self.current_period_mut().budget_items.remove(*item_id) {
-            self.current_period_mut()
+        if let Some((item, item_type)) = self.with_current_period_mut().budget_items.remove(*item_id) {
+            self.with_current_period_mut()
                 .budgeted_by_type
                 .entry(item_type)
                 .and_modify(|v| *v -= item.budgeted_amount);
@@ -350,26 +354,26 @@ impl BudgetPeriodStore {
     }
 
     pub fn contains_budget_item(&self, item_id: &Uuid) -> bool {
-        self.current_period().budget_items.contains(item_id)
+        self.with_current_period().budget_items.contains(item_id)
     }
 
     pub fn get_transaction_mut(&mut self, tx_id: &Uuid) -> Option<&mut BankTransaction> {
-        self.current_period_mut().transactions.get_mut(tx_id)
+        self.with_current_period_mut().transactions.get_mut(tx_id)
     }
 
     pub fn get_transaction(&self, tx_id: &Uuid) -> Option<&BankTransaction> {
-        self.current_period().transactions.get(tx_id)
+        self.with_current_period().transactions.get(tx_id)
     }
 
     pub fn type_for_item(&self, item_id: &Uuid) -> Option<BudgetingType> {
-        self.current_period()
+        self.with_current_period()
             .budget_items
             .type_for(item_id)
             .cloned()
     }
 
     pub fn update_budget_actual_amount(&mut self, budgeting_type: &BudgetingType, amount: &Money) {
-        self.current_period_mut()
+        self.with_current_period_mut()
             .actual_by_type
             .entry(*budgeting_type)
             .and_modify(|v| {
@@ -382,7 +386,7 @@ impl BudgetPeriodStore {
         budgeting_type: &BudgetingType,
         amount: &Money,
     ) {
-        self.current_period_mut()
+        self.with_current_period_mut()
             .budgeted_by_type
             .entry(*budgeting_type)
             .and_modify(|v| {
@@ -391,13 +395,13 @@ impl BudgetPeriodStore {
     }
 
     pub fn add_actual_amount_to_item(&mut self, item_id: &Uuid, amount: &Money) {
-        self.current_period_mut()
+        self.with_current_period_mut()
             .budget_items
             .add_actual_amount(item_id, amount);
     }
 
     pub fn add_budgeted_amount_to_item(&mut self, item_id: &Uuid, amount: &Money) {
-        self.current_period_mut()
+        self.with_current_period_mut()
             .budget_items
             .add_budgeted_amount(item_id, amount);
     }
@@ -413,7 +417,7 @@ impl BudgetPeriodStore {
         notes: Option<String>,
         tags: Option<Vec<String>>,
     ) {
-        self.current_period_mut().budget_items.modify_item(
+        self.with_current_period_mut().budget_items.modify_item(
             id,
             name,
             item_type,
@@ -425,25 +429,25 @@ impl BudgetPeriodStore {
     }
 
     pub fn get_budgeted_by_type(&self, budgeting_type: &BudgetingType) -> Option<&Money> {
-        self.current_period().budgeted_by_type.get(budgeting_type)
+        self.with_current_period().budgeted_by_type.get(budgeting_type)
     }
 
     pub fn get_actual_by_type(&self, budgeting_type: &BudgetingType) -> Option<&Money> {
-        self.current_period().actual_by_type.get(budgeting_type)
+        self.with_current_period().actual_by_type.get(budgeting_type)
     }
 
     pub fn get_budgeting_overview(
         &self,
         budgeting_type: &BudgetingType,
     ) -> Option<&BudgetingTypeOverview> {
-        self.current_period().budgeting_overview.get(budgeting_type)
+        self.with_current_period().budgeting_overview.get(budgeting_type)
     }
 
     pub fn list_bank_transactions(&self) -> Vec<&BankTransaction> {
-        self.current_period().transactions.list_transactions(true)
+        self.with_current_period().transactions.list_transactions(true)
     }
     pub fn list_transactions_for_item(&self, item_id: &Uuid, sorted: bool) -> Vec<&BankTransaction> {
-        self.current_period().transactions.list_transactions_for_item(item_id, sorted)
+        self.with_current_period().transactions.list_transactions_for_item(item_id, sorted)
     }
 
     pub fn list_all_bank_transactions(&self) -> Vec<&BankTransaction> {
