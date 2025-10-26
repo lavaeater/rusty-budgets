@@ -15,6 +15,6 @@ pub use month_begins_on::*;
 pub use budget::*;
 pub use money::*;
 pub use budget_item::*;
-pub use bank_transaction::*;
 pub use budgeting_type::*;
 pub use bank_transaction_store::*;
+pub use bank_transaction::*;

@@ -456,5 +456,391 @@ impl BudgetPeriodStore {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use chrono::TimeZone;
+    use crate::models::{Currency, Money};
     
+    #[test]
+    fn test_new_creates_store_with_correct_period() {
+        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
+        let store = BudgetPeriodStore::new(date, Some(MonthBeginsOn::CurrentMonth1stDayOfMonth));
+        
+        assert_eq!(store.current_period_id().year, 2025);
+        assert_eq!(store.current_period_id().month, 3);
+    }
+    
+    #[test]
+    fn test_new_with_custom_month_begins_on() {
+        let date = Utc.with_ymd_and_hms(2025, 3, 26, 12, 0, 0).unwrap();
+        let store = BudgetPeriodStore::new(date, Some(MonthBeginsOn::PreviousMonth(25)));
+        
+        // Date March 26 with PreviousMonth(25) should belong to April period
+        assert_eq!(store.current_period_id().year, 2025);
+        assert_eq!(store.current_period_id().month, 4);
+    }
+    
+    #[test]
+    fn test_set_previous_period() {
+        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
+        let mut store = BudgetPeriodStore::new(date, Some(MonthBeginsOn::CurrentMonth1stDayOfMonth));
+        
+        store.set_previous_period();
+        
+        assert_eq!(store.current_period_id().year, 2025);
+        assert_eq!(store.current_period_id().month, 2);
+    }
+    
+    #[test]
+    fn test_set_next_period() {
+        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
+        let mut store = BudgetPeriodStore::new(date, Some(MonthBeginsOn::CurrentMonth1stDayOfMonth));
+        
+        store.set_next_period();
+        
+        assert_eq!(store.current_period_id().year, 2025);
+        assert_eq!(store.current_period_id().month, 4);
+    }
+    
+    #[test]
+    fn test_set_previous_period_crosses_year_boundary() {
+        let date = Utc.with_ymd_and_hms(2025, 1, 15, 12, 0, 0).unwrap();
+        let mut store = BudgetPeriodStore::new(date, Some(MonthBeginsOn::CurrentMonth1stDayOfMonth));
+        
+        store.set_previous_period();
+        
+        assert_eq!(store.current_period_id().year, 2024);
+        assert_eq!(store.current_period_id().month, 12);
+    }
+    
+    #[test]
+    fn test_set_next_period_crosses_year_boundary() {
+        let date = Utc.with_ymd_and_hms(2025, 12, 15, 12, 0, 0).unwrap();
+        let mut store = BudgetPeriodStore::new(date, Some(MonthBeginsOn::CurrentMonth1stDayOfMonth));
+        
+        store.set_next_period();
+        
+        assert_eq!(store.current_period_id().year, 2026);
+        assert_eq!(store.current_period_id().month, 1);
+    }
+    
+    #[test]
+    fn test_get_or_create_period_creates_new_period() {
+        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
+        let mut store = BudgetPeriodStore::new(date, None);
+        
+        let new_id = BudgetPeriodId { year: 2025, month: 6 };
+        let period = store.get_or_create_period(&new_id);
+        
+        assert_eq!(period.id.year, 2025);
+        assert_eq!(period.id.month, 6);
+    }
+    
+    #[test]
+    fn test_get_or_create_period_returns_existing_period() {
+        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
+        let mut store = BudgetPeriodStore::new(date, None);
+        
+        let current_id = *store.current_period_id();
+        let period = store.get_or_create_period(&current_id);
+        
+        assert_eq!(period.id, current_id);
+    }
+    
+    #[test]
+    fn test_get_period_before_returns_none_when_no_previous() {
+        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
+        let store = BudgetPeriodStore::new(date, None);
+        
+        let id = BudgetPeriodId { year: 2025, month: 1 };
+        let result = store.get_period_before(&id);
+        
+        assert!(result.is_none());
+    }
+    
+    #[test]
+    fn test_get_period_before_returns_previous_period() {
+        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
+        let mut store = BudgetPeriodStore::new(date, None);
+        
+        // Create a few periods
+        store.set_previous_period();
+        store.set_next_period();
+        store.set_next_period();
+        
+        let id = BudgetPeriodId { year: 2025, month: 4 };
+        let result = store.get_period_before(&id);
+        
+        assert!(result.is_some());
+        let prev = result.unwrap();
+        assert_eq!(prev.id.year, 2025);
+        assert_eq!(prev.id.month, 3);
+    }
+    
+    #[test]
+    fn test_set_current_period_by_date() {
+        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
+        let mut store = BudgetPeriodStore::new(date, Some(MonthBeginsOn::CurrentMonth1stDayOfMonth));
+        
+        let new_date = Utc.with_ymd_and_hms(2025, 6, 20, 12, 0, 0).unwrap();
+        store.set_current_period(&new_date);
+        
+        assert_eq!(store.current_period_id().year, 2025);
+        assert_eq!(store.current_period_id().month, 6);
+    }
+    
+    #[test]
+    fn test_set_current_period_id() {
+        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
+        let mut store = BudgetPeriodStore::new(date, None);
+        
+        let new_id = BudgetPeriodId { year: 2025, month: 9 };
+        store.set_current_period_id(&new_id);
+        
+        assert_eq!(store.current_period_id().year, 2025);
+        assert_eq!(store.current_period_id().month, 9);
+    }
+    
+    #[test]
+    fn test_insert_item_adds_to_current_period() {
+        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
+        let mut store = BudgetPeriodStore::new(date, None);
+        
+        let item = BudgetItem {
+            id: Uuid::new_v4(),
+            name: "Test Item".to_string(),
+            budgeted_amount: Money::new_dollars(100, Currency::SEK),
+            actual_amount: Money::new_dollars(0, Currency::SEK),
+            notes: None,
+            tags: vec![],
+        };
+        
+        let item_id = item.id;
+        store.insert_item(&item, BudgetingType::Expense);
+        
+        assert!(store.contains_budget_item(&item_id));
+        assert_eq!(store.get_item(&item_id).unwrap().name, "Test Item");
+    }
+    
+    #[test]
+    fn test_remove_item_removes_from_current_period() {
+        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
+        let mut store = BudgetPeriodStore::new(date, None);
+        
+        let item = BudgetItem {
+            id: Uuid::new_v4(),
+            name: "Test Item".to_string(),
+            budgeted_amount: Money::new_dollars(100, Currency::SEK),
+            actual_amount: Money::new_dollars(0, Currency::SEK),
+            notes: None,
+            tags: vec![],
+        };
+        
+        let item_id = item.id;
+        store.insert_item(&item, BudgetingType::Expense);
+        assert!(store.contains_budget_item(&item_id));
+        
+        store.remove_item(&item_id);
+        assert!(!store.contains_budget_item(&item_id));
+    }
+    
+    #[test]
+    fn test_insert_transaction_creates_period_for_transaction_date() {
+        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
+        let mut store = BudgetPeriodStore::new(date, None);
+        
+        let tx_date = Utc.with_ymd_and_hms(2025, 6, 20, 12, 0, 0).unwrap();
+        let tx = BankTransaction::new(
+            Uuid::new_v4(),
+            "123456",
+            Money::new_dollars(50, Currency::SEK),
+            Money::new_dollars(1000, Currency::SEK),
+            "Test Transaction",
+            tx_date,
+        );
+        
+        let tx_id = tx.id;
+        store.insert_transaction(tx);
+        
+        assert!(store.contains_transaction(&tx_id));
+    }
+    
+    #[test]
+    fn test_can_insert_transaction_checks_hash_uniqueness() {
+        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
+        let mut store = BudgetPeriodStore::new(date, None);
+        
+        let tx = BankTransaction::new(
+            Uuid::new_v4(),
+            "123456",
+            Money::new_dollars(50, Currency::SEK),
+            Money::new_dollars(1000, Currency::SEK),
+            "Test Transaction",
+            date,
+        );
+        
+        let tx_hash = tx.get_hash();
+        assert!(store.can_insert_transaction(&tx_hash));
+        
+        store.insert_transaction(tx);
+        
+        assert!(!store.can_insert_transaction(&tx_hash));
+    }
+    
+    #[test]
+    fn test_budgeted_for_type_sums_correctly() {
+        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
+        let mut store = BudgetPeriodStore::new(date, None);
+        
+        let item1 = BudgetItem {
+            id: Uuid::new_v4(),
+            name: "Item 1".to_string(),
+            budgeted_amount: Money::new_dollars(100, Currency::SEK),
+            actual_amount: Money::new_dollars(0, Currency::SEK),
+            notes: None,
+            tags: vec![],
+        };
+        
+        let item2 = BudgetItem {
+            id: Uuid::new_v4(),
+            name: "Item 2".to_string(),
+            budgeted_amount: Money::new_dollars(200, Currency::SEK),
+            actual_amount: Money::new_dollars(0, Currency::SEK),
+            notes: None,
+            tags: vec![],
+        };
+        
+        store.insert_item(&item1, BudgetingType::Expense);
+        store.insert_item(&item2, BudgetingType::Expense);
+        
+        let total = store.budgeted_for_type(&BudgetingType::Expense);
+        assert_eq!(total, Money::new_dollars(300, Currency::SEK));
+    }
+    
+    #[test]
+    fn test_spent_for_type_sums_correctly() {
+        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
+        let mut store = BudgetPeriodStore::new(date, None);
+        
+        let item1 = BudgetItem {
+            id: Uuid::new_v4(),
+            name: "Item 1".to_string(),
+            budgeted_amount: Money::new_dollars(100, Currency::SEK),
+            actual_amount: Money::new_dollars(50, Currency::SEK),
+            notes: None,
+            tags: vec![],
+        };
+        
+        let item2 = BudgetItem {
+            id: Uuid::new_v4(),
+            name: "Item 2".to_string(),
+            budgeted_amount: Money::new_dollars(200, Currency::SEK),
+            actual_amount: Money::new_dollars(75, Currency::SEK),
+            notes: None,
+            tags: vec![],
+        };
+        
+        store.insert_item(&item1, BudgetingType::Expense);
+        store.insert_item(&item2, BudgetingType::Expense);
+        
+        let total = store.spent_for_type(&BudgetingType::Expense);
+        assert_eq!(total, Money::new_dollars(125, Currency::SEK));
+    }
+    
+    #[test]
+    fn test_list_all_items_returns_current_period_items() {
+        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
+        let mut store = BudgetPeriodStore::new(date, None);
+        
+        let item = BudgetItem {
+            id: Uuid::new_v4(),
+            name: "Test Item".to_string(),
+            budgeted_amount: Money::new_dollars(100, Currency::SEK),
+            actual_amount: Money::new_dollars(0, Currency::SEK),
+            notes: None,
+            tags: vec![],
+        };
+        
+        store.insert_item(&item, BudgetingType::Income);
+        
+        let items = store.list_all_items();
+        assert_eq!(items.len(), 1);
+        assert_eq!(items[0].name, "Test Item");
+    }
+    
+    #[test]
+    fn test_modify_budget_item_updates_item() {
+        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
+        let mut store = BudgetPeriodStore::new(date, None);
+        
+        let item = BudgetItem {
+            id: Uuid::new_v4(),
+            name: "Original Name".to_string(),
+            budgeted_amount: Money::new_dollars(100, Currency::SEK),
+            actual_amount: Money::new_dollars(0, Currency::SEK),
+            notes: None,
+            tags: vec![],
+        };
+        
+        let item_id = item.id;
+        store.insert_item(&item, BudgetingType::Expense);
+        
+        store.modify_budget_item(
+            &item_id,
+            Some("Updated Name".to_string()),
+            None,
+            Some(Money::new_dollars(200, Currency::SEK)),
+            None,
+            None,
+            None,
+        );
+        
+        let updated_item = store.get_item(&item_id).unwrap();
+        assert_eq!(updated_item.name, "Updated Name");
+        assert_eq!(updated_item.budgeted_amount, Money::new_dollars(200, Currency::SEK));
+    }
+    
+    #[test]
+    fn test_serialization_deserialization() {
+        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
+        let mut store = BudgetPeriodStore::new(date, None);
+        
+        let item = BudgetItem {
+            id: Uuid::new_v4(),
+            name: "Test Item".to_string(),
+            budgeted_amount: Money::new_dollars(100, Currency::SEK),
+            actual_amount: Money::new_dollars(50, Currency::SEK),
+            notes: None,
+            tags: vec![],
+        };
+        
+        store.insert_item(&item, BudgetingType::Expense);
+        
+        // Serialize
+        let serialized = serde_json::to_string(&store).unwrap();
+        
+        // Deserialize
+        let deserialized: BudgetPeriodStore = serde_json::from_str(&serialized).unwrap();
+        
+        assert_eq!(deserialized.current_period_id(), store.current_period_id());
+        assert_eq!(deserialized.list_all_items().len(), 1);
+    }
+    
+    #[test]
+    fn test_multiple_periods_navigation() {
+        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
+        let mut store = BudgetPeriodStore::new(date, Some(MonthBeginsOn::CurrentMonth1stDayOfMonth));
+        
+        // Navigate forward and backward
+        store.set_next_period();
+        assert_eq!(store.current_period_id().month, 4);
+        
+        store.set_next_period();
+        assert_eq!(store.current_period_id().month, 5);
+        
+        store.set_previous_period();
+        assert_eq!(store.current_period_id().month, 4);
+        
+        store.set_previous_period();
+        assert_eq!(store.current_period_id().month, 3);
+    }
 }

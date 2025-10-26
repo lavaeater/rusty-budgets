@@ -6,14 +6,6 @@ use std::hash::{DefaultHasher, Hash, Hasher};
 use once_cell::sync::Lazy;
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default, Hash, PartialEq, Eq)]
-pub struct BankAccount {
-    pub account_number: String,
-    pub name: String,
-    pub currency: Currency,
-    pub balance: Money,
-}
-
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct BankTransactionStore {
     hashes: HashSet<u64>,                  // uniqueness check
