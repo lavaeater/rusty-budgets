@@ -140,6 +140,10 @@ impl Budget {
         self.budget_periods.contains_budget_item(item_id)
     }
 
+    pub fn contains_item_with_name(&self, name: &str) -> bool {
+        self.budget_periods.contains_item_with_name(name)
+    }
+
     pub fn get_transaction_mut(&mut self, tx_id: &Uuid) -> Option<&mut BankTransaction> {
         self.budget_periods.get_transaction_mut(tx_id)
     }
