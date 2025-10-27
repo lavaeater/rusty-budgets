@@ -1,5 +1,12 @@
 # Development
 
+## Running from RustRover
+cargo rustc --profile server-dev --target x86_64-pc-windows-msvc --verbose --no-default-features --features server -p desktop --bin desktop --
+
+cargo run --verbose --no-default-features --features server -p desktop --bin desktop
+
+run --verbose --no-default-features --features server -p desktop --bin desktop
+## Structure
 Your new workspace contains a member crate for each of the web, desktop and mobile platforms, a `ui` crate for shared components and a `api` crate for shared backend logic:
 
 ```
