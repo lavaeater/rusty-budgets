@@ -28,7 +28,7 @@ mod budget_period_map_serde {
             map.iter()
                 .map(|(k, v)| 
                     (
-                        serde_json::to_string(k).unwrap(), v)
+                        k.to_string(), v)
                 )
                 .collect();
         string_map.serialize(serializer)
@@ -45,7 +45,7 @@ mod budget_period_map_serde {
             .into_iter()
             .map(|(k, v)| {
                 let parts: Vec<&str> = k.split('-').collect();
-                if parts.len() != 3 {
+                if parts.len() != 2 {
                     return Err(serde::de::Error::custom(format!(
                         "Invalid BudgetPeriodId format: {}",
                         k

@@ -94,9 +94,8 @@ impl BudgetPeriodId {
 
                 // Get the target day in the previous month
                 let prev_month = date.checked_sub_months(Months::new(1)).unwrap();
-                let target_day = day.min(prev_month.day());
                 let target_date = Utc
-                    .with_ymd_and_hms(prev_month.year(), prev_month.month(), target_day, 0, 0, 0)
+                    .with_ymd_and_hms(prev_month.year(), prev_month.month(), day, 0, 0, 0)
                     .unwrap();
 
                 // Find the workday on or before the target date
@@ -107,7 +106,7 @@ impl BudgetPeriodId {
                 };
 
                 // If current date is on or after the period start, it belongs to next month's period
-                if date >= period_start {
+                if date.day() >= period_start.day() {
                     let next_month = date.checked_add_months(Months::new(1)).unwrap();
                     Self {
                         year: next_month.year(),
@@ -127,7 +126,7 @@ impl BudgetPeriodId {
                 }
 
                 // Get the target day in the current month
-                let target_day = day.min(date.day());
+                let target_day = day;
                 let target_date = Utc
                     .with_ymd_and_hms(date.year(), date.month(), target_day, 0, 0, 0)
                     .unwrap();
@@ -140,7 +139,7 @@ impl BudgetPeriodId {
                 };
 
                 // If current date is on or after the period start, it belongs to next month's period
-                if date >= period_start {
+                if date.day() >= period_start.day() {
                     Self {
                         year: date.year(),
                         month: date.month(),
