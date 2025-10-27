@@ -22,7 +22,7 @@ pub struct BudgetPeriodId {
 
 impl Display for BudgetPeriodId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}-{}", self.year, self.month)
+        write!(f, "{}-{}-{}", self.year, self.month, self.month_begins_on)
     }
 }
 

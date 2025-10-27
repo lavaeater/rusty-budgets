@@ -52,7 +52,7 @@ mod budget_period_map_serde {
                 let month = parts[1]
                     .parse::<u32>()
                     .map_err(|e| serde::de::Error::custom(format!("Invalid month: {}", e)))?;
-                let month_begins_on = serde_json::from_str(parts[2])
+                let month_begins_on = parts[2].parse::<MonthBeginsOn>()
                     .map_err(|e| serde::de::Error::custom(format!("Invalid month_begins_on: {}", e)))?;
                 Ok((BudgetPeriodId { year, month, month_begins_on }, v))
             })
@@ -468,7 +468,7 @@ impl BudgetPeriodStore {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::TimeZone;
+    use chrono::{Month, TimeZone};
     use crate::models::{Currency, Money};
     
     #[test]
@@ -824,10 +824,19 @@ mod tests {
             tags: vec![],
         };
         
-        store.insert_item(&item, BudgetingType::Expense);
+        store.insert_item(&item, Expense);
+        
+        let month_begins = MonthBeginsOn::PreviousMonthWorkDayBefore(25);
+        let serialized = serde_json::to_string(&month_begins).unwrap();
+        println!("Serialized: {}", serialized);
+        
+        let deserialized: MonthBeginsOn = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(deserialized, MonthBeginsOn::PreviousMonthWorkDayBefore(25));
+        
         
         // Serialize
         let serialized = serde_json::to_string(&store).unwrap();
+        println!("Serialized Store: {}", serialized);
         
         // Deserialize
         let deserialized: BudgetPeriodStore = serde_json::from_str(&serialized).unwrap();

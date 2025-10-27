@@ -257,7 +257,6 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
        We stop using snapshots for a while
        */
         let mut budget = Budget::new(*id);
-        let version = budget.version;
         let events = self.fetch_events(id, budget.last_event)?;
         for ev in events {
             ev.apply(&mut budget);
