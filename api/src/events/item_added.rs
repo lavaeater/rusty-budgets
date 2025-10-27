@@ -2,6 +2,7 @@ use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
 use crate::models::Budget;
 use crate::models::BudgetItem;
 use crate::models::BudgetingType;
+use crate::models::BudgetPeriodId;
 use crate::models::Money;
 use cqrs_macros::DomainEvent;
 use serde::{Deserialize, Serialize};
@@ -16,6 +17,7 @@ pub struct ItemAdded {
     pub name: String,
     pub item_type: BudgetingType,
     pub budgeted_amount: Money,
+    pub tx_id: Option<Uuid>
 }
 
 impl ItemAddedHandler for Budget {
@@ -27,8 +29,17 @@ impl ItemAddedHandler for Budget {
             None,
             None,
         );
+        let period = if let Some(tx_id) = event.tx_id {
+            self.get_transaction(&tx_id).map(|transaction| BudgetPeriodId::from_date(transaction.date, self.month_begins_on()))         
+        } else {
+            None
+        };
         let new_item_id = new_item.id;
-        self.insert_item(&new_item, event.item_type);
+        if let Some(period) = period {
+            self.with_period_mut(&period, |bp| bp.budget_items.insert(&new_item, event.item_type));
+        } else {
+            self.with_current_period_mut().budget_items.insert(&new_item, event.item_type);
+        }
         new_item_id
     }
 
@@ -37,6 +48,7 @@ impl ItemAddedHandler for Budget {
         name: String,
         item_type: BudgetingType,
         budgeted_amount: Money,
+        tx_id: Option<Uuid>
     ) -> Result<ItemAdded, CommandError> {
         if self.contains_item_with_name(&name) {
             return Err(CommandError::Validation("Item already exists."));
@@ -47,6 +59,7 @@ impl ItemAddedHandler for Budget {
             name,
             item_type,
             budgeted_amount,
+            tx_id
         })
     }
 }

@@ -39,9 +39,10 @@ pub fn add_budget_item() -> anyhow::Result<()> {
 
     let (res, item_id) = rt.add_item(
         &budget_id,
-        "Utgifter",
-        &BudgetingType::Expense,
-        &Money::new_dollars(100, Currency::SEK),
+        "Utgifter".to_string(),
+        BudgetingType::Expense,
+        Money::new_dollars(100, Currency::SEK),
+        None,
         &user_id,
     )?;
 
@@ -165,9 +166,10 @@ pub fn connect_bank_transaction() -> anyhow::Result<()> {
 
     let (_res, item_id) = rt.add_item(
         &budget_id,
-        "Utgifter",
-        &BudgetingType::Expense,
-        &hundred_money,
+        "Utgifter".to_string(),
+        BudgetingType::Expense,
+        hundred_money,
+        None,
         &user_id,
     )?;
 
@@ -316,17 +318,19 @@ pub fn reconnect_bank_transaction() -> anyhow::Result<()> {
 
     let (_res, original_item_id) = rt.add_item(
         &budget_id,
-        "Utgifter",
-        &BudgetingType::Expense,
-        &Money::new_dollars(100, Currency::SEK),
+        "Utgifter".to_string(),
+        BudgetingType::Expense,
+        Money::new_dollars(100, Currency::SEK),
+        None,
         &user_id,
     )?;
 
     let (_res, new_item_id) = rt.add_item(
         &budget_id,
-        "Savings",
-        &BudgetingType::Savings,
-        &Money::new_dollars(100, Currency::SEK),
+        "Savings".to_string(),
+        BudgetingType::Savings,
+        Money::new_dollars(100, Currency::SEK),
+        None,
         &user_id,
     )?;
 
@@ -403,17 +407,19 @@ pub fn reallocate_item_funds() -> anyhow::Result<()> {
 
     let (_res, from_item_id) = rt.add_item(
         &budget_id,
-        "Hyra",
-        &BudgetingType::Expense,
-        &Money::new_dollars(100, Currency::SEK),
+        "Hyra".to_string(),
+        BudgetingType::Expense,
+        Money::new_dollars(100, Currency::SEK),
+        None,
         &user_id,
     )?;
 
     let (_res, to_item_id) = rt.add_item(
         &budget_id,
-        "Livsmedel",
-        &BudgetingType::Expense,
-        &Money::new_dollars(50, Currency::SEK),
+        "Livsmedel".to_string(),
+        BudgetingType::Expense,
+        Money::new_dollars(50, Currency::SEK),
+        None,
         &user_id,
     )?;
 
@@ -447,9 +453,10 @@ pub fn adjust_item_funds() -> anyhow::Result<()> {
 
     let (_res, item_id) = rt.add_item(
         &budget_id,
-        "Hyra",
-        &BudgetingType::Expense,
-        &Money::new_dollars(100, Currency::SEK),
+        "Hyra".to_string(),
+        BudgetingType::Expense,
+        Money::new_dollars(100, Currency::SEK),
+        None,
         &user_id,
     )?;
 
@@ -527,25 +534,28 @@ pub fn test_budeting_overview() -> anyhow::Result<()> {
 
     let (_, income_id) = rt.add_item(
         &budget_id,
-        "Lön T",
-        &BudgetingType::Income,
-        &thousand_money,
+        "Lön T".to_string(),
+        BudgetingType::Income,
+        thousand_money,
+        None,
         &user_id,
     )?;
 
     let (_, rent_id) = rt.add_item(
         &budget_id,
-        "Hyra",
-        &BudgetingType::Expense,
-        &fivehundred_money,
+        "Hyra".to_string(),
+        BudgetingType::Expense,
+        fivehundred_money,
+        None,
         &user_id,
     )?;
 
     let (_, savings_id) = rt.add_item(
         &budget_id,
-        "Spara",
-        &BudgetingType::Savings,
-        &hundred_money,
+        "Spara".to_string(),
+        BudgetingType::Savings,
+        hundred_money,
+        None,
         &user_id,
     )?;
 

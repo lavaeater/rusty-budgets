@@ -26,13 +26,14 @@ impl JoyDbBudgetRuntime {
     pub fn add_item(
         &self,
         budget_id: &Uuid,
-        item_name: &str,
-        item_type: &BudgetingType,
-        amount: &Money,
+        item_name: String,
+        item_type: BudgetingType,
+        amount: Money,
+        tx_id: Option<Uuid>,
         user_id: &Uuid,
     ) -> anyhow::Result<(Budget, Uuid)> {
         self.cmd(user_id, budget_id, |budget| {
-            budget.add_item(item_name.to_string(), *item_type, *amount)
+            budget.add_item(item_name.to_string(), item_type, amount, tx_id)
         })
     }
 

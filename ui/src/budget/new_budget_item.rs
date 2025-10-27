@@ -4,7 +4,7 @@ use api::models::{Budget, BudgetingType, Currency, Money};
 use crate::components::{Input, Button};
 
 #[component]
-pub fn NewBudgetItem(budgeting_type: BudgetingType,tx_id: Option<Uuid>, close_signal: Option<Signal<bool>>) -> Element {
+pub fn NewBudgetItem(budgeting_type: BudgetingType, tx_id: Option<Uuid>, close_signal: Option<Signal<bool>>) -> Element {
     let mut budget_signal = use_context::<Signal<Option<Budget>>>();
     let budget_id = budget_signal().unwrap().id;
     let mut new_item_name = use_signal(|| "".to_string());
@@ -30,11 +30,13 @@ pub fn NewBudgetItem(budgeting_type: BudgetingType,tx_id: Option<Uuid>, close_si
                 r#type: "button",
                 "data-style": "primary",
                 onclick: move |_| async move {
+                    //Here we need some date-aware magic - if we have a transaction!
                     if let Ok((updated_budget, item_id)) = api::add_item(
                             budget_id,
                             new_item_name(),
                             budgeting_type,
                             new_item_amount(),
+                        tx_id
                         )
                         .await
                     {

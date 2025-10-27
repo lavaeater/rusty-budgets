@@ -204,11 +204,12 @@ pub mod db {
     pub fn add_item(
         budget_id: &Uuid,
         user_id: &Uuid,
-        name: &str,
-        item_type: &BudgetingType,
-        budgeted_amount: &Money,
+        name: String,
+        item_type: BudgetingType,
+        budgeted_amount: Money,
+        tx_id: Option<Uuid>
     ) -> anyhow::Result<(Budget, Uuid)> {
-        with_runtime(None).add_item(budget_id, name, item_type, budgeted_amount, user_id)
+        with_runtime(None).add_item(budget_id, name, item_type, budgeted_amount, tx_id, user_id)
     }
 
     pub fn modify_item(
@@ -347,9 +348,11 @@ pub async fn add_item(
     name: String,
     item_type: BudgetingType,
     budgeted_amount: Money,
+    tx_id: Option<Uuid>
 ) -> Result<(Budget, Uuid), ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
-    match db::add_item(&budget_id, &user.id, &name, &item_type, &budgeted_amount) {
+    
+    match db::add_item(&budget_id, &user.id, name, item_type, budgeted_amount, tx_id) {
         Ok(b) => {
             // let items = b.budget_items.by_type(&item_type).expect("Could not get budgeting_type");
             Ok(b)

@@ -5,7 +5,7 @@ use crate::models::budget_item::BudgetItem;
 use crate::models::budget_period_id::BudgetPeriodId;
 use crate::models::budgeting_type::BudgetingType;
 use crate::models::money::{Currency, Money};
-use crate::models::{BankTransaction, BudgetingTypeOverview, MatchRule};
+use crate::models::{BankTransaction, BudgetPeriod, BudgetingTypeOverview, MatchRule, MonthBeginsOn};
 use crate::pub_events_enum;
 use chrono::{DateTime, Utc};
 use joydb::Model;
@@ -45,17 +45,6 @@ pub struct Budget {
     pub currency: Currency,
 }
 
-
-impl Budget {
-    pub fn get_current_period_id(&self) -> &BudgetPeriodId {
-        self.budget_periods.current_period_id()
-    }
-
-    pub fn list_ignored_transactions(&self) -> Vec<BankTransaction> {
-        self.budget_periods.list_ignored_transactions()
-    }
-}
-
 impl Default for Budget {
     fn default() -> Self {
         Self {
@@ -87,6 +76,18 @@ impl Budget {
     pub fn get_item(&self, item_id: &Uuid) -> Option<&BudgetItem> {
         self.budget_periods.get_item(item_id)
     }
+
+    pub fn get_current_period_id(&self) -> &BudgetPeriodId {
+        self.budget_periods.current_period_id()
+    }
+
+    pub fn list_ignored_transactions(&self) -> Vec<BankTransaction> {
+        self.budget_periods.list_ignored_transactions()
+    }
+    
+    pub fn month_begins_on(&self)-> MonthBeginsOn {
+        self.budget_periods.current_period_id().month_begins_on
+    } 
 
     pub fn get_type_for_item(&self, item_id: &Uuid) -> Option<&BudgetingType> {
         self.budget_periods.get_type_for_item(item_id)
@@ -257,6 +258,14 @@ impl Budget {
     
     pub fn evaluate_rules(&self) -> Vec<(Uuid, Uuid)> {
         self.budget_periods.evaluate_rules(&self.match_rules)
+    }
+    
+    pub fn with_period_mut<T>(&mut self, period_id: &BudgetPeriodId, func: impl FnOnce(&mut BudgetPeriod) -> T) -> T {
+        self.budget_periods.with_period_mut(period_id, func)
+    }
+    
+    pub fn with_current_period_mut(&mut self) -> &mut BudgetPeriod {
+        self.budget_periods.with_current_period_mut()
     }
 }
 

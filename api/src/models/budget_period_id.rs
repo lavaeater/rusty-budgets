@@ -16,7 +16,8 @@ pub fn last_day_of_month(dt: DateTime<Utc>) -> DateTime<Utc> {
 #[derive(Copy, Debug, Clone, Serialize, Deserialize, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub struct BudgetPeriodId {
     pub year: i32,
-    pub month: u32,
+    pub month: u32, 
+    pub month_begins_on: MonthBeginsOn
 }
 
 impl Display for BudgetPeriodId {
@@ -43,12 +44,14 @@ impl BudgetPeriodId {
                     Self {
                         year: next_month.year(),
                         month: next_month.month(),
+                        month_begins_on
                     }
                 } else {
                     // Date is before the start day, so it belongs to current month's period
                     Self {
                         year: date.year(),
-                        month: date.month(),
+                        month: date.month(),month_begins_on
+
                     }
                 }
             }
@@ -63,12 +66,14 @@ impl BudgetPeriodId {
                     let next_month = date.checked_add_months(Months::new(1)).unwrap();
                     Self {
                         year: next_month.year(),
-                        month: next_month.month(),
+                        month: next_month.month(),month_begins_on
+
                     }
                 } else {
                     Self {
                         year: date.year(),
-                        month: date.month(),
+                        month: date.month(),month_begins_on
+
                     }
                 }
             }
@@ -77,14 +82,16 @@ impl BudgetPeriodId {
                 // This means current month's dates belong to current month
                 Self {
                     year: date.year(),
-                    month: date.month(),
+                    month: date.month(),month_begins_on
+
                 }
             }
             MonthBeginsOn::CurrentMonth1stDayOfMonth => {
                 // Period is 1st of current month to last day of current month
                 Self {
                     year: date.year(),
-                    month: date.month(),
+                    month: date.month(),month_begins_on
+
                 }
             }
             MonthBeginsOn::PreviousMonthWorkDayBefore(day) => {
@@ -111,13 +118,15 @@ impl BudgetPeriodId {
                     let next_month = date.checked_add_months(Months::new(1)).unwrap();
                     Self {
                         year: next_month.year(),
-                        month: next_month.month(),
+                        month: next_month.month(),month_begins_on
+
                     }
                 } else {
                     // Otherwise it belongs to current month's period
                     Self {
                         year: date.year(),
-                        month: date.month(),
+                        month: date.month(),month_begins_on
+
                     }
                 }
             }
@@ -143,13 +152,15 @@ impl BudgetPeriodId {
                 if date >= period_start {
                     Self {
                         year: date.year(),
-                        month: date.month(),
+                        month: date.month(),month_begins_on
+
                     }
                 } else {
                     // Otherwise it belongs to current month's period
                     Self {
                         year: date.year(),
-                        month: date.month(),
+                        month: date.month(),month_begins_on
+
                     }
                 }
             }
@@ -161,11 +172,13 @@ impl BudgetPeriodId {
             Self {
                 year: self.year - 1,
                 month: 12,
+                month_begins_on: self.month_begins_on,
             }
         } else {
             Self {
                 year: self.year,
                 month: self.month - 1,
+                month_begins_on: self.month_begins_on,
             }
         }
     }
@@ -175,11 +188,13 @@ impl BudgetPeriodId {
             Self {
                 year: self.year + 1,
                 month: 1,
+                month_begins_on: self.month_begins_on,
             }
         } else {
             Self {
                 year: self.year,
                 month: self.month + 1,
+                month_begins_on: self.month_begins_on,
             }
         }
     }

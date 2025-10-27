@@ -15,6 +15,7 @@ mod budget_period_map_serde {
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
     use std::collections::HashMap;
     use crate::models::budget_period_id::BudgetPeriodId;
+    use crate::models::MonthBeginsOn;
 
     pub fn serialize<S>(
         map: &HashMap<BudgetPeriodId, BudgetPeriod>,
@@ -39,7 +40,7 @@ mod budget_period_map_serde {
             .into_iter()
             .map(|(k, v)| {
                 let parts: Vec<&str> = k.split('-').collect();
-                if parts.len() != 2 {
+                if parts.len() != 3 {
                     return Err(serde::de::Error::custom(format!(
                         "Invalid BudgetPeriodId format: {}",
                         k
@@ -51,7 +52,9 @@ mod budget_period_map_serde {
                 let month = parts[1]
                     .parse::<u32>()
                     .map_err(|e| serde::de::Error::custom(format!("Invalid month: {}", e)))?;
-                Ok((BudgetPeriodId { year, month }, v))
+                let month_begins_on = serde_json::from_str(parts[2])
+                    .map_err(|e| serde::de::Error::custom(format!("Invalid month_begins_on: {}", e)))?;
+                Ok((BudgetPeriodId { year, month, month_begins_on }, v))
             })
             .collect()
     }
@@ -536,7 +539,7 @@ mod tests {
         let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
         let mut store = BudgetPeriodStore::new(date, None);
         
-        let new_id = BudgetPeriodId { year: 2025, month: 6 };
+        let new_id = BudgetPeriodId { year: 2025, month: 6, month_begins_on: MonthBeginsOn::CurrentMonth1stDayOfMonth };
         let period = store.get_or_create_period(&new_id);
         
         assert_eq!(period.id.year, 2025);
@@ -559,7 +562,7 @@ mod tests {
         let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
         let store = BudgetPeriodStore::new(date, None);
         
-        let id = BudgetPeriodId { year: 2025, month: 1 };
+        let id = BudgetPeriodId { year: 2025, month: 1, month_begins_on: MonthBeginsOn::CurrentMonth1stDayOfMonth };
         let result = store.get_period_before(&id);
         
         assert!(result.is_none());
@@ -575,7 +578,7 @@ mod tests {
         store.set_next_period();
         store.set_next_period();
         
-        let id = BudgetPeriodId { year: 2025, month: 4 };
+        let id = BudgetPeriodId { year: 2025, month: 4, month_begins_on: MonthBeginsOn::CurrentMonth1stDayOfMonth };
         let result = store.get_period_before(&id);
         
         assert!(result.is_some());
@@ -601,7 +604,7 @@ mod tests {
         let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
         let mut store = BudgetPeriodStore::new(date, None);
         
-        let new_id = BudgetPeriodId { year: 2025, month: 9 };
+        let new_id = BudgetPeriodId { year: 2025, month: 9, month_begins_on: MonthBeginsOn::CurrentMonth1stDayOfMonth };
         store.set_current_period_id(&new_id);
         
         assert_eq!(store.current_period_id().year, 2025);
