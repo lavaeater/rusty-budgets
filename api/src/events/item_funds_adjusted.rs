@@ -17,7 +17,7 @@ impl ItemFundsAdjustedHandler for Budget {
     fn apply_adjust_item_funds(&mut self, event: &ItemFundsAdjusted) -> Uuid {
         self.add_budgeted_amount_to_item(&event.item_id, &event.amount);
         let item_type = self.type_for_item(&event.item_id).unwrap();
-        self.update_budget_budgeted_amount(&item_type, &event.amount);
+        self.update_budget_budgeted_amount(None, &item_type, &event.amount);
         self.recalc_overview();
         event.item_id
     }
