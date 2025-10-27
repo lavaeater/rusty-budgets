@@ -39,18 +39,6 @@ impl TransactionConnectedHandler for Budget {
 
         let budget_period_id = BudgetPeriodId::from_date(tx.date, *self.month_begins_on());
         // End of immutable borrow - tx goes out of scope here
-
-        //TODO: Needs to be aware of budget_periods!
-        /*
-        Operations that are time-sensitive should probably be scoped like this:
-
-        self.for_period(date).update_budget_actual_amount(&previous_budgeting_type, &-adjusted_amount);
-        self.for_period(date).add_actual_amount_to_item(&previous_budget_item_id, &-adjusted_amount);
-        self.for_period(date).add_actual_amount_to_item(&event.item_id, &adjusted_amount);
-        self.for_period(date).recalc_overview();
-
-        This makes it more obvious what is happening.
-         */
         // Handle previous connection if it exists
         if let Some(previous_budget_item_id) = previous_item_id {
             let previous_budgeting_type = previous_item_type.unwrap();
@@ -72,6 +60,14 @@ impl TransactionConnectedHandler for Budget {
 
         // Now we can mutably borrow to update the transaction
         let tx_mut = self.get_transaction_mut(&event.tx_id).unwrap();
+        /*
+        If the budget item does not exist in this period, we need to fix that. 
+        But that is insane. 
+        We should split up budget items and their budget amounts, 
+        making budget items practically global, but their amounts temporal.
+         */
+        
+        
         tx_mut.budget_item_id = Some(event.item_id);
         // End of mutable borrow
 
