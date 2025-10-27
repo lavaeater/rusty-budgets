@@ -1,5 +1,7 @@
+use crate::models::budget_period_id::BudgetPeriodId;
 use crate::models::budgeting_type::BudgetingType;
 use crate::models::money::Money;
+use crate::models::MatchRule;
 use dioxus::logger::tracing;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::hash_map::Entry;
@@ -7,8 +9,6 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use strum::IntoEnumIterator;
 use uuid::Uuid;
-use crate::models::budget_period_id::BudgetPeriodId;
-use crate::models::MatchRule;
 
 /// The store
 #[derive(Default, Debug, Clone)]
@@ -20,7 +20,10 @@ pub struct BudgetItemStore {
 
 impl BudgetItemStore {
     pub(crate) fn get_item_for_rule(&self, rule: &MatchRule) -> Option<Uuid> {
-        self.items.values().find(|i| rule.matches_item(i.as_ref())).map(|arc| arc.id)
+        self.items
+            .values()
+            .find(|i| rule.matches_item(i.as_ref()))
+            .map(|arc| arc.id)
     }
 }
 
@@ -291,7 +294,7 @@ impl BudgetItemStore {
     pub fn contains(&self, id: &Uuid) -> bool {
         self.items.contains_key(id)
     }
-    
+
     pub fn contains_item_with_name(&self, name: &str) -> bool {
         self.items.values().any(|i| i.name == name)
     }

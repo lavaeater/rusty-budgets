@@ -57,17 +57,22 @@ impl TransactionConnectedHandler for Budget {
             self.with_period_mut(&budget_period_id).budget_items
                     .add_actual_amount(&previous_budget_item_id, &-adjusted_amount);
         }
+        if !self.with_period(&budget_period_id).budget_items.contains(&event.item_id) {
+            let item = self.budget_items.get(&event.item_id).unwrap().clone();
+            let type_for = self.budget_items.type_for(&event.item_id).unwrap().clone();
+            self.with_period_mut(&budget_period_id).budget_items.insert(&item, type_for);
+        }
 
         // Now we can mutably borrow to update the transaction
         let tx_mut = self.get_transaction_mut(&event.tx_id).unwrap();
         /*
         If the budget item does not exist in this period, we need to fix that. 
-        But that is insane. 
-        We should split up budget items and their budget amounts, 
-        making budget items practically global, but their amounts temporal.
+it's not THAT insane. 
+
+
          */
-        
-        
+
+
         tx_mut.budget_item_id = Some(event.item_id);
         // End of mutable borrow
 

@@ -5,7 +5,7 @@ use crate::models::budget_item::BudgetItem;
 use crate::models::budget_period_id::BudgetPeriodId;
 use crate::models::budgeting_type::BudgetingType;
 use crate::models::money::{Currency, Money};
-use crate::models::{BankTransaction, BudgetPeriod, BudgetingTypeOverview, MatchRule, MonthBeginsOn};
+use crate::models::{BankTransaction, BudgetItemStore, BudgetPeriod, BudgetingTypeOverview, MatchRule, MonthBeginsOn};
 use crate::pub_events_enum;
 use chrono::{DateTime, Utc};
 use joydb::Model;
@@ -36,6 +36,7 @@ pub struct Budget {
     pub name: String,
     pub user_id: Uuid,
     budget_periods: BudgetPeriodStore,
+    pub budget_items: BudgetItemStore,
     pub match_rules: HashSet<MatchRule>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
@@ -52,6 +53,7 @@ impl Default for Budget {
             name: "".to_string(),
             user_id: Default::default(),
             budget_periods: Default::default(),
+            budget_items: Default::default(),
             match_rules: HashSet::default(),
             created_at: Default::default(),
             updated_at: Default::default(),
@@ -138,11 +140,11 @@ impl Budget {
     }
 
     pub fn contains_budget_item(&self, item_id: &Uuid) -> bool {
-        self.budget_periods.contains_budget_item(item_id)
+        self.budget_items.contains(item_id)
     }
 
     pub fn contains_item_with_name(&self, name: &str) -> bool {
-        self.budget_periods.contains_item_with_name(name)
+        self.budget_items.contains_item_with_name(name)
     }
 
     pub fn get_transaction_mut(&mut self, tx_id: &Uuid) -> Option<&mut BankTransaction> {
