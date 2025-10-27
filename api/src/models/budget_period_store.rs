@@ -15,7 +15,6 @@ mod budget_period_map_serde {
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
     use std::collections::HashMap;
     use crate::models::budget_period_id::BudgetPeriodId;
-    use crate::models::MonthBeginsOn;
 
     pub fn serialize<S>(
         map: &HashMap<BudgetPeriodId, BudgetPeriod>,
@@ -25,12 +24,7 @@ mod budget_period_map_serde {
         S: Serializer,
     {
         let string_map: HashMap<String, &BudgetPeriod> =
-            map.iter()
-                .map(|(k, v)| 
-                    (
-                        serde_json::to_string(k).unwrap(), v)
-                )
-                .collect();
+            map.iter().map(|(k, v)| (k.to_string(), v)).collect();
         string_map.serialize(serializer)
     }
 
@@ -44,7 +38,20 @@ mod budget_period_map_serde {
         string_map
             .into_iter()
             .map(|(k, v)| {
-                Ok((serde_json::from_str(&k).unwrap(), v))
+                let parts: Vec<&str> = k.split('-').collect();
+                if parts.len() != 2 {
+                    return Err(serde::de::Error::custom(format!(
+                        "Invalid BudgetPeriodId format: {}",
+                        k
+                    )));
+                }
+                let year = parts[0]
+                    .parse::<i32>()
+                    .map_err(|e| serde::de::Error::custom(format!("Invalid year: {}", e)))?;
+                let month = parts[1]
+                    .parse::<u32>()
+                    .map_err(|e| serde::de::Error::custom(format!("Invalid month: {}", e)))?;
+                Ok((BudgetPeriodId { year, month }, v))
             })
             .collect()
     }
