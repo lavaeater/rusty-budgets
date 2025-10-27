@@ -13,7 +13,7 @@ pub fn last_day_of_month(dt: DateTime<Utc>) -> DateTime<Utc> {
     first_next_month.checked_sub_days(Days::new(1)).unwrap()
 }
 
-#[derive(Copy, Debug, Clone, Serialize, Deserialize, Ord, PartialOrd, Eq, PartialEq, Hash)]
+#[derive(Copy, Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct BudgetPeriodId {
     pub year: i32,
     pub month: u32,

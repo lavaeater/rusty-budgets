@@ -254,7 +254,6 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
     fn load(&self, id: &Uuid) -> Result<Option<Budget>, anyhow::Error> {
        /*
        We stop using snapshots for a while
-       We stop using snapshots for a while
        */
         let mut budget = Budget::new(*id);
         let events = self.fetch_events(id, budget.last_event)?;
