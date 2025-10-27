@@ -18,7 +18,7 @@ impl ItemFundsAdjustedHandler for Budget {
         self.add_budgeted_amount_to_item(&event.item_id, &event.amount);
         let item_type = self.type_for_item(&event.item_id).unwrap();
         self.update_budget_budgeted_amount(None, &item_type, &event.amount);
-        self.recalc_overview();
+        self.recalc_overview(None);
         event.item_id
     }
 

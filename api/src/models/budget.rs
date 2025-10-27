@@ -113,8 +113,8 @@ impl Budget {
         self.budget_periods.spent_for_type(budgeting_type)
     }
 
-    pub fn recalc_overview(&mut self) {
-        self.budget_periods.recalc_overview(None);
+    pub fn recalc_overview(&mut self, period_id: Option<&BudgetPeriodId>) {
+        self.budget_periods.recalc_overview(period_id);
     }
 
     pub fn insert_item(&mut self, item: &BudgetItem, item_type: BudgetingType) {

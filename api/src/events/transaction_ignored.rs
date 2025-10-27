@@ -1,5 +1,5 @@
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
-use crate::models::{Budget, BudgetingType};
+use crate::models::{Budget, BudgetPeriodId, BudgetingType};
 use core::fmt::Display;
 use cqrs_macros::DomainEvent;
 use serde::{Deserialize, Serialize};
@@ -35,6 +35,7 @@ impl TransactionIgnoredHandler for Budget {
             Some(id) => self.type_for_item(&id),
             None => None,
         };
+        let budget_period_id = BudgetPeriodId::from_date(tx.date, *self.month_begins_on());
         // End of immutable borrow - tx goes out of scope here
 
         // Handle previous connection if it exists
@@ -47,14 +48,14 @@ impl TransactionIgnoredHandler for Budget {
                 tx_amount
             };
             // Update budget total (remove from previous item)
-            self.update_budget_actual_amount(&previous_budgeting_type, &-adjusted_amount);
-            self.add_actual_amount_to_item(&previous_budget_item_id, &-adjusted_amount);
+            self.update_budget_actual_amount(&budget_period_id, &previous_budgeting_type, &-adjusted_amount);
+            self.add_actual_amount_to_item(&budget_period_id, &previous_budget_item_id, &-adjusted_amount);
         }
 
         // Now we can mutably borrow to update the transaction
-        self.move_transaction_to_ignored(&event.tx_id);
+        self.with_period_mut(&budget_period_id).transactions.ignore_transaction(&event.tx_id);
         // End of mutable borrow
-        self.recalc_overview();
+        self.recalc_overview(Some(&budget_period_id));
 
         event.tx_id
     }
