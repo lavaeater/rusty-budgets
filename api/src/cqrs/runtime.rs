@@ -3,7 +3,7 @@ use crate::models::*;
 use chrono::{DateTime, Utc};
 use dioxus::logger::tracing;
 use joydb::adapters::{FromPath, JsonAdapter};
-use joydb::{Joydb, JoydbConfig, JoydbMode, SyncPolicy};
+use joydb::{Joydb, JoydbConfig, JoydbError, JoydbMode, SyncPolicy};
 use joydb::Model;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
@@ -251,7 +251,17 @@ impl JoyDbBudgetRuntime {
 
 impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
     fn load(&self, id: &Uuid) -> Result<Option<Budget>, anyhow::Error> {
-        let budget = self.get_budget(id)?;
+        let budget: Result<Option<Budget>, anyhow::Error> = match self.db.get::<Budget>(id) {
+            Err(err) => {
+                match err {
+                    JoydbError::Deserialize(_) => Ok(None),
+                    _ => Err(err.into()),
+                }
+            },
+            Ok(budget) => Ok(budget),
+        };
+        
+        let budget = budget?;
         let mut  budget = budget.unwrap_or(Budget::new(*id));
         let version = budget.version;
         let events = self.fetch_events(id, budget.last_event)?;
@@ -259,7 +269,7 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
             ev.apply(&mut budget);
         }
         let version = budget.version - version;
-        if version > 10 { // more than 5 events since last snapshot
+        if version > 10 { // more than 10 events since last snapshot
             tracing::info!("More than 10 events since last snapshot, snapshotting");
             self.snapshot(&budget)?;
         }
