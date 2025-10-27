@@ -1,5 +1,5 @@
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
-use crate::models::{Budget, BudgetingType};
+use crate::models::{Budget, BudgetPeriodId, BudgetingType};
 use core::fmt::Display;
 use cqrs_macros::DomainEvent;
 use serde::{Deserialize, Serialize};
@@ -36,17 +36,19 @@ impl TransactionConnectedHandler for Budget {
             Some(id) => self.type_for_item(&id),
             None => None,
         };
+
+        let budget_period_id = BudgetPeriodId::from_date(tx.date, *self.month_begins_on());
         // End of immutable borrow - tx goes out of scope here
 
         //TODO: Needs to be aware of budget_periods!
         /*
         Operations that are time-sensitive should probably be scoped like this:
-        
+
         self.for_period(date).update_budget_actual_amount(&previous_budgeting_type, &-adjusted_amount);
         self.for_period(date).add_actual_amount_to_item(&previous_budget_item_id, &-adjusted_amount);
         self.for_period(date).add_actual_amount_to_item(&event.item_id, &adjusted_amount);
         self.for_period(date).recalc_overview();
-        
+
         This makes it more obvious what is happening.
          */
         // Handle previous connection if it exists
@@ -59,8 +61,15 @@ impl TransactionConnectedHandler for Budget {
                 tx_amount
             };
             // Update budget total (remove from previous item)
-            self.update_budget_actual_amount(&previous_budgeting_type, &-adjusted_amount);
-            self.add_actual_amount_to_item(&previous_budget_item_id, &-adjusted_amount);
+            self.with_period_mut(&budget_period_id, |p| {
+                p.actual_by_type
+                    .entry(previous_budgeting_type)
+                    .and_modify(|v| {
+                        *v -= adjusted_amount;
+                    });
+                p.budget_items
+                    .add_actual_amount(&previous_budget_item_id, &-adjusted_amount);
+            });
         }
 
         // Now we can mutably borrow to update the transaction
@@ -69,7 +78,11 @@ impl TransactionConnectedHandler for Budget {
         // End of mutable borrow
 
         // Update the new item
-        let budgeting_type = self.type_for_item(&event.item_id).unwrap();
+        let budgeting_type = self
+            .with_period(&budget_period_id, |p| {
+                p.budget_items.type_for(&event.item_id).cloned()
+            })
+            .unwrap();
 
         // Adjust amount for cost types (negate for Expense/Savings)
         let adjusted_amount = if cost_types.contains(&budgeting_type) {

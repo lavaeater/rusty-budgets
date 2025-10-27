@@ -364,19 +364,28 @@ impl BudgetPeriodStore {
     }
 
     pub fn contains_budget_item(&self, item_id: &Uuid) -> bool {
-        self.with_current_period().budget_items.contains(item_id)
+        self.budget_periods.values().any(|p| p.budget_items.contains(item_id))
     }
-    
     pub fn contains_item_with_name(&self, name: &str) -> bool {
         self.budget_periods.values().any(|p| p.budget_items.contains_item_with_name(name))
     }
 
     pub fn get_transaction_mut(&mut self, tx_id: &Uuid) -> Option<&mut BankTransaction> {
-        self.with_current_period_mut().transactions.get_mut(tx_id)
+        for period in self.budget_periods.values_mut() {
+            if let Some(tx) = period.transactions.get_mut(tx_id) {
+                return Some(tx);
+            }
+        }
+        None
     }
 
     pub fn get_transaction(&self, tx_id: &Uuid) -> Option<&BankTransaction> {
-        self.with_current_period().transactions.get(tx_id)
+        for period in self.budget_periods.values() {
+            if let Some(tx) = period.transactions.get(tx_id) {
+                return Some(tx);
+            }
+        }
+        None
     }
 
     pub fn type_for_item(&self, item_id: &Uuid) -> Option<BudgetingType> {

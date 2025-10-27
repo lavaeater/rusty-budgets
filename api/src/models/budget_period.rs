@@ -78,5 +78,25 @@ impl BudgetPeriod {
     pub fn get_item_for_rule(&self, rule: &MatchRule) -> Option<Uuid> {
         self.budget_items.get_item_for_rule(&rule)
     }
+    
+    pub fn update_actual_amount(&mut self, budgeting_type: &BudgetingType, amount: &Money) {
+        self.actual_by_type
+            .entry(*budgeting_type)
+            .and_modify(|v| *v += *amount);
+    }
+    
+    pub fn update_budgeted_amount(&mut self, budgeting_type: &BudgetingType, amount: &Money) {
+        self.budgeted_by_type
+            .entry(*budgeting_type)
+            .and_modify(|v| *v += *amount);
+    }
+    
+    pub fn add_actual_amount_to_item(&mut self, item_id: &Uuid, amount: &Money) {
+        self.budget_items.add_actual_amount(item_id, amount);
+    }
+    
+    pub fn add_budgeted_amount_to_item(&mut self, item_id: &Uuid, amount: &Money) {
+        self.budget_items.add_budgeted_amount(item_id, amount);
+    }
 }
 
