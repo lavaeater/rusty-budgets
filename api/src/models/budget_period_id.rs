@@ -1,8 +1,8 @@
-use std::fmt::Display;
-use chrono::{DateTime, Datelike, Days, Months, TimeZone, Utc};
-use serde::{Deserialize, Serialize};
 use crate::holidays::{is_workday, previous_workday};
 use crate::models::MonthBeginsOn;
+use chrono::{DateTime, Datelike, Days, Months, TimeZone, Utc};
+use serde::{Deserialize, Serialize};
+use std::fmt::Display;
 
 pub fn last_day_of_month(dt: DateTime<Utc>) -> DateTime<Utc> {
     let first_next_month = dt
@@ -16,19 +16,18 @@ pub fn last_day_of_month(dt: DateTime<Utc>) -> DateTime<Utc> {
 #[derive(Copy, Debug, Clone, Serialize, Deserialize, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub struct BudgetPeriodId {
     pub year: i32,
-    pub month: u32, 
-    pub month_begins_on: MonthBeginsOn
+    pub month: u32,
 }
 
 impl Display for BudgetPeriodId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}-{}-{}", self.year, self.month, self.month_begins_on)
+        write!(f, "{}-{}", self.year, self.month)
     }
 }
 
 impl BudgetPeriodId {
     pub fn from_date(date: DateTime<Utc>, month_begins_on: MonthBeginsOn) -> Self {
-                // Determine which period this date falls into
+        // Determine which period this date falls into
         // The period ID represents the END month of the period
         match month_begins_on {
             MonthBeginsOn::PreviousMonth(day) => {
@@ -44,14 +43,12 @@ impl BudgetPeriodId {
                     Self {
                         year: next_month.year(),
                         month: next_month.month(),
-                        month_begins_on
                     }
                 } else {
                     // Date is before the start day, so it belongs to current month's period
                     Self {
                         year: date.year(),
-                        month: date.month(),month_begins_on
-
+                        month: date.month(),
                     }
                 }
             }
@@ -66,14 +63,12 @@ impl BudgetPeriodId {
                     let next_month = date.checked_add_months(Months::new(1)).unwrap();
                     Self {
                         year: next_month.year(),
-                        month: next_month.month(),month_begins_on
-
+                        month: next_month.month(),
                     }
                 } else {
                     Self {
                         year: date.year(),
-                        month: date.month(),month_begins_on
-
+                        month: date.month(),
                     }
                 }
             }
@@ -82,16 +77,14 @@ impl BudgetPeriodId {
                 // This means current month's dates belong to current month
                 Self {
                     year: date.year(),
-                    month: date.month(),month_begins_on
-
+                    month: date.month(),
                 }
             }
             MonthBeginsOn::CurrentMonth1stDayOfMonth => {
                 // Period is 1st of current month to last day of current month
                 Self {
                     year: date.year(),
-                    month: date.month(),month_begins_on
-
+                    month: date.month(),
                 }
             }
             MonthBeginsOn::PreviousMonthWorkDayBefore(day) => {
@@ -118,15 +111,13 @@ impl BudgetPeriodId {
                     let next_month = date.checked_add_months(Months::new(1)).unwrap();
                     Self {
                         year: next_month.year(),
-                        month: next_month.month(),month_begins_on
-
+                        month: next_month.month(),
                     }
                 } else {
                     // Otherwise it belongs to current month's period
                     Self {
                         year: date.year(),
-                        month: date.month(),month_begins_on
-
+                        month: date.month(),
                     }
                 }
             }
@@ -152,49 +143,43 @@ impl BudgetPeriodId {
                 if date >= period_start {
                     Self {
                         year: date.year(),
-                        month: date.month(),month_begins_on
-
+                        month: date.month(),
                     }
                 } else {
                     // Otherwise it belongs to current month's period
                     Self {
                         year: date.year(),
-                        month: date.month(),month_begins_on
-
+                        month: date.month(),
                     }
                 }
             }
         }
     }
-    
+
     pub(crate) fn month_before(&self) -> Self {
         if self.month == 1 {
             Self {
                 year: self.year - 1,
                 month: 12,
-                month_begins_on: self.month_begins_on,
             }
         } else {
             Self {
                 year: self.year,
                 month: self.month - 1,
-                month_begins_on: self.month_begins_on,
             }
         }
     }
-    
+
     pub(crate) fn month_after(&self) -> Self {
         if self.month == 12 {
             Self {
                 year: self.year + 1,
                 month: 1,
-                month_begins_on: self.month_begins_on,
             }
         } else {
             Self {
                 year: self.year,
                 month: self.month + 1,
-                month_begins_on: self.month_begins_on,
             }
         }
     }
@@ -202,10 +187,10 @@ impl BudgetPeriodId {
 
 #[cfg(test)]
 mod tests {
-    use chrono::{Datelike, TimeZone, Utc};
     use crate::models::budget_period_id::{last_day_of_month, BudgetPeriodId};
     use crate::models::MonthBeginsOn;
-    
+    use chrono::{Datelike, TimeZone, Utc};
+
     #[test]
     fn test_from_date_current_month_1st_day() {
         // Test with CurrentMonth1stDayOfMonth - period is 1st to last day of month

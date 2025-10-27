@@ -85,8 +85,8 @@ impl Budget {
         self.budget_periods.list_ignored_transactions()
     }
     
-    pub fn month_begins_on(&self)-> MonthBeginsOn {
-        self.budget_periods.current_period_id().month_begins_on
+    pub fn month_begins_on(&self)-> &MonthBeginsOn {
+        self.budget_periods.month_begins_on()
     } 
 
     pub fn get_type_for_item(&self, item_id: &Uuid) -> Option<&BudgetingType> {

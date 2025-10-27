@@ -30,7 +30,7 @@ impl ItemAddedHandler for Budget {
             None,
         );
         let period = if let Some(tx_id) = event.tx_id {
-            self.get_transaction(&tx_id).map(|transaction| BudgetPeriodId::from_date(transaction.date, self.month_begins_on()))         
+            self.get_transaction(&tx_id).map(|transaction| BudgetPeriodId::from_date(transaction.date, *self.month_begins_on()))         
         } else {
             None
         };
