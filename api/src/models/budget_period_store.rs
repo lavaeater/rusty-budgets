@@ -99,14 +99,16 @@ impl BudgetPeriodStore {
         }
     }
     
-    pub fn with_period<T>(&mut self, id: &BudgetPeriodId, func: impl FnOnce(&BudgetPeriod) -> T) -> T {
-        let bp = self.get_or_create_period(id);
-        func(bp)
+    pub fn ensure_period(&mut self, id: &BudgetPeriodId) {
+        self.get_or_create_period(id);
     }
     
-    pub fn with_period_mut<T>(&mut self, id: &BudgetPeriodId, func: impl FnOnce(&mut BudgetPeriod) -> T) -> T {
-        let bp = self.get_or_create_period(id);
-        func(bp)
+    pub fn with_period(&self, id: &BudgetPeriodId) -> &BudgetPeriod {
+        self.budget_periods.get(id).unwrap() //Not very nice.
+    }
+    
+    pub fn with_period_mut(&mut self, id: &BudgetPeriodId) -> &mut BudgetPeriod {
+        self.get_or_create_period(id)
     }
     
     pub fn list_ignored_transactions(&self) -> Vec<BankTransaction> {
@@ -245,19 +247,22 @@ impl BudgetPeriodStore {
             .sum()
     }
 
-    pub fn recalc_overview(&mut self) {
+    pub fn recalc_overview(&mut self, period_id: Option<&BudgetPeriodId>) {
+        let period_id = &period_id.unwrap_or(&self.current_period_id).clone();
+         self.ensure_period(period_id); 
+
         let income_sum = Sum(vec![Income]);
         let budgeted_income = income_sum.evaluate(
-            &self.with_current_period().budget_items.hash_by_type(),
+            &self.with_period(period_id).budget_items.hash_by_type(),
             Some(ValueKind::Budgeted),
         );
         let spent_income = income_sum.evaluate(
-            &self.with_current_period().budget_items.hash_by_type(),
+            &self.with_period(period_id).budget_items.hash_by_type(),
             Some(ValueKind::Spent),
         );
         let remaining_rule = Difference(Income, vec![Expense, Savings]);
         let remaining_income = remaining_rule.evaluate(
-            &self.with_current_period().budget_items.hash_by_type(),
+            &self.with_period(period_id).budget_items.hash_by_type(),
             Some(ValueKind::Budgeted),
         );
 
@@ -268,23 +273,23 @@ impl BudgetPeriodStore {
             is_ok: remaining_income > Money::zero(remaining_income.currency())
         };
 
-        self.with_current_period_mut()
+        self.with_period_mut(period_id)
             .budgeting_overview
             .insert(Income, income_overview);
 
         let expense_sum = Sum(vec![Expense]);
         let budgeted_expenses = expense_sum.evaluate(
-            &self.with_current_period().budget_items.hash_by_type(),
+            &self.with_period(period_id).budget_items.hash_by_type(),
             Some(ValueKind::Budgeted),
         );
         let spent_expenses = expense_sum.evaluate(
-            &self.with_current_period().budget_items.hash_by_type(),
+            &self.with_period(period_id).budget_items.hash_by_type(),
             Some(ValueKind::Spent),
         );
 
         let self_difference_rule = SelfDiff(Expense);
         let self_diff =
-            self_difference_rule.evaluate(&self.with_current_period().budget_items.hash_by_type(), None);
+            self_difference_rule.evaluate(&self.with_period(period_id).budget_items.hash_by_type(), None);
 
         let expense_overview = BudgetingTypeOverview {
             budgeted_amount: budgeted_expenses,
@@ -293,23 +298,23 @@ impl BudgetPeriodStore {
             is_ok: self_diff < Money::zero(self_diff.currency())
         };
 
-        self.with_current_period_mut()
+        self.with_period_mut(period_id)
             .budgeting_overview
             .insert(Expense, expense_overview);
 
         let savings_sum = Sum(vec![Savings]);
         let budgeted_savings = savings_sum.evaluate(
-            &self.with_current_period().budget_items.hash_by_type(),
+            &self.with_period(period_id).budget_items.hash_by_type(),
             Some(ValueKind::Budgeted),
         );
         let spent_savings = savings_sum.evaluate(
-            &self.with_current_period().budget_items.hash_by_type(),
+            &self.with_period(period_id).budget_items.hash_by_type(),
             Some(ValueKind::Spent),
         );
 
         let self_difference_rule = SelfDiff(Savings);
         let self_diff =
-            self_difference_rule.evaluate(&self.with_current_period().budget_items.hash_by_type(), None);
+            self_difference_rule.evaluate(&self.with_period(period_id).budget_items.hash_by_type(), None);
 
         let savings_overview = BudgetingTypeOverview {
             budgeted_amount: budgeted_savings,
@@ -318,7 +323,7 @@ impl BudgetPeriodStore {
             is_ok: self_diff < Money::zero(self_diff.currency())
         };
 
-        self.with_current_period_mut()
+        self.with_period_mut(period_id)
             .budgeting_overview
             .insert(Savings, savings_overview);
     }
@@ -332,7 +337,7 @@ impl BudgetPeriodStore {
             .entry(item_type)
             .and_modify(|v| *v += item.budgeted_amount)
             .or_insert(item.budgeted_amount);
-        self.recalc_overview();
+        self.recalc_overview(None);
     }
 
     pub fn remove_item(&mut self, item_id: &Uuid) {
@@ -341,7 +346,7 @@ impl BudgetPeriodStore {
                 .budgeted_by_type
                 .entry(item_type)
                 .and_modify(|v| *v -= item.budgeted_amount);
-            self.recalc_overview();
+            self.recalc_overview(None);
         }
     }
 

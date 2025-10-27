@@ -92,8 +92,8 @@ impl TransactionConnectedHandler for Budget {
         };
 
         // Update budget total (add to new item)
-        self.update_budget_actual_amount(&budgeting_type, &adjusted_amount);
-        self.add_actual_amount_to_item(&event.item_id, &adjusted_amount);
+        self.update_budget_actual_amount(&budget_period_id, &budgeting_type, &adjusted_amount);
+        self.add_actual_amount_to_item(&budget_period_id, &event.item_id, &adjusted_amount);
         self.recalc_overview();
 
         event.tx_id
