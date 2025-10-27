@@ -21,13 +21,13 @@ impl ItemFundsReallocatedHandler for Budget {
         self.add_budgeted_amount_to_item(&event.from_item_id, &-event.amount);
         
         let from_type = self.type_for_item(&event.from_item_id).unwrap();
-        self.update_budget_budgeted_amount(&from_type, &-event.amount);
+        self.update_budget_budgeted_amount(None, &from_type, &-event.amount);
 
         
         self.add_budgeted_amount_to_item(&event.to_item_id, &event.amount);
         
         let to_type = self.type_for_item(&event.to_item_id).unwrap();
-        self.update_budget_budgeted_amount(&to_type, &event.amount);
+        self.update_budget_budgeted_amount(None, &to_type, &event.amount);
         
         self.recalc_overview();
         event.from_item_id
