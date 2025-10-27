@@ -291,6 +291,10 @@ impl BudgetItemStore {
     pub fn contains(&self, id: &Uuid) -> bool {
         self.items.contains_key(id)
     }
+    
+    pub fn contains_item_with_name(&self, name: &str) -> bool {
+        self.items.values().any(|i| i.name == name)
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
