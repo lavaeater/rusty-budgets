@@ -36,9 +36,9 @@ impl ItemAddedHandler for Budget {
         };
         let new_item_id = new_item.id;
         if let Some(period) = period {
-            self.with_period_mut(&period, |bp| bp.budget_items.insert(&new_item, event.item_type));
+            self.with_period_mut(&period).budget_items.insert(&new_item, event.item_type);
         } else {
-            self.with_current_period_mut(|bp| bp.budget_items.insert(&new_item, event.item_type));
+            self.with_current_period_mut().budget_items.insert(&new_item, event.item_type);
         }
         new_item_id
     }

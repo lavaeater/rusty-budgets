@@ -61,15 +61,13 @@ impl TransactionConnectedHandler for Budget {
                 tx_amount
             };
             // Update budget total (remove from previous item)
-            self.with_period_mut(&budget_period_id, |p| {
-                p.actual_by_type
+            self.with_period_mut(&budget_period_id).actual_by_type
                     .entry(previous_budgeting_type)
                     .and_modify(|v| {
                         *v -= adjusted_amount;
                     });
-                p.budget_items
+            self.with_period_mut(&budget_period_id).budget_items
                     .add_actual_amount(&previous_budget_item_id, &-adjusted_amount);
-            });
         }
 
         // Now we can mutably borrow to update the transaction
@@ -78,11 +76,10 @@ impl TransactionConnectedHandler for Budget {
         // End of mutable borrow
 
         // Update the new item
-        let budgeting_type = self
-            .with_period(&budget_period_id, |p| {
-                p.budget_items.type_for(&event.item_id).cloned()
-            })
-            .unwrap();
+        let budgeting_type = &self
+            .with_period(&budget_period_id)
+            .budget_items.type_for(&event.item_id)
+            .unwrap().clone();
 
         // Adjust amount for cost types (negate for Expense/Savings)
         let adjusted_amount = if cost_types.contains(&budgeting_type) {

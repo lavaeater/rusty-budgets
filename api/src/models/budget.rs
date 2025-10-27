@@ -114,7 +114,7 @@ impl Budget {
     }
 
     pub fn recalc_overview(&mut self) {
-        self.budget_periods.recalc_overview();
+        self.budget_periods.recalc_overview(None);
     }
 
     pub fn insert_item(&mut self, item: &BudgetItem, item_type: BudgetingType) {
@@ -158,7 +158,7 @@ impl Budget {
     }
 
     pub fn update_budget_actual_amount(&mut self, period_id: &BudgetPeriodId, budgeting_type: &BudgetingType, amount: &Money) {
-        self.with_period_mut(period_id, |p| p.update_actual_amount(budgeting_type, amount));
+        self.with_period_mut(period_id).update_actual_amount(budgeting_type, amount);
     }
 
     pub fn update_budget_budgeted_amount(
@@ -168,14 +168,14 @@ impl Budget {
         amount: &Money,
     ) {
         if let Some(period_id) = period_id {
-            self.with_period_mut(period_id, |p| p.update_budgeted_amount(budgeting_type, amount));
+            self.with_period_mut(period_id).update_budgeted_amount(budgeting_type, amount);
         } else {
-            self.with_current_period_mut(|p| p.update_budgeted_amount(budgeting_type, amount));
+            self.with_current_period_mut().update_budgeted_amount(budgeting_type, amount);
         }
     }
 
     pub fn add_actual_amount_to_item(&mut self, period_id: &BudgetPeriodId, item_id: &Uuid, amount: &Money) {
-        self.with_period_mut(period_id, |p| p.add_actual_amount_to_item(item_id, amount));
+        self.with_period_mut(period_id).add_actual_amount_to_item(item_id, amount);
     }
 
     pub fn add_budgeted_amount_to_item(&mut self, item_id: &Uuid, amount: &Money) {
@@ -262,22 +262,22 @@ impl Budget {
         self.budget_periods.evaluate_rules(&self.match_rules)
     }
     
-    pub fn with_period_mut<T>(&mut self, period_id: &BudgetPeriodId, func: impl FnOnce(&mut BudgetPeriod) -> T) -> T {
-        self.budget_periods.with_period_mut(period_id, func)
+    pub fn with_period_mut(&mut self, period_id: &BudgetPeriodId) -> &mut BudgetPeriod {
+        self.budget_periods.with_period_mut(period_id)
     }
 
-    pub fn with_period<T>(&mut self, period_id: &BudgetPeriodId, func: impl FnOnce(&BudgetPeriod) -> T) -> T {
-        self.budget_periods.with_period(period_id, func)
+    pub fn with_period(&self, period_id: &BudgetPeriodId) -> &BudgetPeriod {
+        self.budget_periods.with_period(period_id)
     }
     
-    pub fn with_current_period_mut<T>(&mut self, func: impl FnOnce(&mut BudgetPeriod) -> T) -> T {
+    pub fn with_current_period_mut(&mut self) -> &mut BudgetPeriod {
         let period_id = self.get_current_period_id().clone();
-        self.with_period_mut(&period_id, func)
+        self.with_period_mut(&period_id)
     }
 
-    pub fn with_current_period<T>(&mut self, func: impl FnOnce(&BudgetPeriod) -> T) -> T {
+    pub fn with_current_period(&self) -> &BudgetPeriod {
         let period_id = self.get_current_period_id().clone();
-        self.with_period(&period_id, func)
+        self.with_period(&period_id)
     }
 }
 
