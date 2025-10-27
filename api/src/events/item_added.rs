@@ -40,6 +40,7 @@ impl ItemAddedHandler for Budget {
         } else {
             self.with_current_period_mut().budget_items.insert(&new_item, event.item_type);
         }
+        self.budget_items.insert(&new_item, event.item_type);
         new_item_id
     }
 
