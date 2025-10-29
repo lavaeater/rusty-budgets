@@ -92,21 +92,20 @@ impl BudgetPeriodId {
                     panic!("Cannot start on day 1, use PreviousMonth1stDayOfMonth")
                 }
 
-                // Get the target day in the previous month
-                let prev_month = date.checked_sub_months(Months::new(1)).unwrap();
+                // Get the target day in the current month
                 let target_date = Utc
-                    .with_ymd_and_hms(prev_month.year(), prev_month.month(), day, 0, 0, 0)
+                    .with_ymd_and_hms(date.year(), date.month(), day, 0, 0, 0)
                     .unwrap();
 
                 // Find the workday on or before the target date
-                let period_start = if is_workday(&target_date) {
-                    target_date
+                let period_start_day = if is_workday(&target_date) {
+                    target_date.day()
                 } else {
-                    previous_workday(target_date)
+                    previous_workday(target_date).day()
                 };
 
-                // If current date is on or after the period start, it belongs to next month's period
-                if date.day() >= period_start.day() {
+                // If current date is on or after the period start day, it belongs to next month's period
+                if date.day() >= period_start_day {
                     let next_month = date.checked_add_months(Months::new(1)).unwrap();
                     Self {
                         year: next_month.year(),
@@ -233,11 +232,34 @@ mod tests {
     fn test_from_date_previous_month_custom_day_within_period() {
         // Test with PreviousMonth(25) - period is 25th of prev month to 24th of current month
         // Date March 20 is within period (Feb 25 - March 24)
-        let date = Utc.with_ymd_and_hms(2025, 3, 20, 12, 0, 0).unwrap();
+        let date = Utc.with_ymd_and_hms(2025, 10, 23, 12, 0, 0).unwrap();
         let id = BudgetPeriodId::from_date(date, MonthBeginsOn::PreviousMonth(25));
 
         assert_eq!(id.year, 2025);
-        assert_eq!(id.month, 3);
+        assert_eq!(id.month, 10);
+
+        let date = Utc.with_ymd_and_hms(2025, 10, 24, 12, 0, 0).unwrap();
+        let id = BudgetPeriodId::from_date(date, MonthBeginsOn::PreviousMonth(25));
+
+        assert_eq!(id.year, 2025);
+        assert_eq!(id.month, 10);
+    }
+
+    #[test]
+    fn test_from_date_previous_month_work_day_before() {
+        // Test with PreviousMonth(25) - period is 25th of prev month to 24th of current month
+        // Date March 20 is within period (Feb 25 - March 24)
+        let date = Utc.with_ymd_and_hms(2025, 10, 24, 12, 0, 0).unwrap();
+        let id = BudgetPeriodId::from_date(date, MonthBeginsOn::PreviousMonthWorkDayBefore(25));
+
+        assert_eq!(id.year, 2025);
+        assert_eq!(id.month, 11);
+
+        let date = Utc.with_ymd_and_hms(2025, 10, 23, 12, 0, 0).unwrap();
+        let id = BudgetPeriodId::from_date(date, MonthBeginsOn::PreviousMonthWorkDayBefore(25));
+
+        assert_eq!(id.year, 2025);
+        assert_eq!(id.month, 10);
     }
 
     #[test]

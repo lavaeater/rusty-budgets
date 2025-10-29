@@ -36,7 +36,7 @@ pub fn NewBudgetItem(budgeting_type: BudgetingType, tx_id: Option<Uuid>, close_s
                             new_item_name(),
                             budgeting_type,
                             new_item_amount(),
-                        tx_id
+                              tx_id
                         )
                         .await
                     {

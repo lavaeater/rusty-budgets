@@ -65,14 +65,7 @@ impl TransactionConnectedHandler for Budget {
 
         // Now we can mutably borrow to update the transaction
         let tx_mut = self.get_transaction_mut(&event.tx_id).unwrap();
-        /*
-        If the budget item does not exist in this period, we need to fix that. 
-it's not THAT insane. 
-
-
-         */
-
-
+        
         tx_mut.budget_item_id = Some(event.item_id);
         // End of mutable borrow
 

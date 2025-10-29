@@ -104,7 +104,7 @@ impl Budget {
     pub fn list_all_items(
         &self,
     ) -> Vec<BudgetItem> {
-        self.budget_periods.list_all_items()
+        self.budget_items.list_all_items()
     }
 
     pub fn budgeted_for_type(&self, budgeting_type: &BudgetingType) -> Money {
