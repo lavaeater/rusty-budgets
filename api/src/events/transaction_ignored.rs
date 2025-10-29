@@ -48,14 +48,14 @@ impl TransactionIgnoredHandler for Budget {
                 tx_amount
             };
             // Update budget total (remove from previous item)
-            self.update_budget_actual_amount(&budget_period_id, &previous_budgeting_type, &-adjusted_amount);
-            self.add_actual_amount_to_item(&budget_period_id, &previous_budget_item_id, &-adjusted_amount);
+            self.update_budget_actual_amount(budget_period_id, &previous_budgeting_type, &-adjusted_amount);
+            self.add_actual_amount_to_item(budget_period_id, &previous_budget_item_id, &-adjusted_amount);
         }
 
         // Now we can mutably borrow to update the transaction
-        self.with_period_mut(&budget_period_id).transactions.ignore_transaction(&event.tx_id);
+        self.with_period_mut(budget_period_id).transactions.ignore_transaction(&event.tx_id);
         // End of mutable borrow
-        self.recalc_overview(Some(&budget_period_id));
+        self.recalc_overview(Some(budget_period_id));
 
         event.tx_id
     }

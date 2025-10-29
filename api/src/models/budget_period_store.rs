@@ -76,7 +76,7 @@ impl Default for BudgetPeriodStore {
         Self {
             month_begins_on,
             current_period_id: id,
-            budget_periods: HashMap::from([(id, BudgetPeriod::new_for(&id))]),
+            budget_periods: HashMap::from([(id, BudgetPeriod::new_for(id))]),
         }
     }
 }
@@ -85,7 +85,7 @@ impl BudgetPeriodStore {
     pub fn new(date: DateTime<Utc>, month_begins_on: Option<MonthBeginsOn>) -> Self {
         let month_begins_on = month_begins_on.unwrap_or_default();
         let id = BudgetPeriodId::from_date(date, month_begins_on);
-        let period = BudgetPeriod::new_for(&id);
+        let period = BudgetPeriod::new_for(id);
         Self {
             month_begins_on,
             budget_periods: HashMap::from([(id, period.clone())]),
@@ -93,15 +93,15 @@ impl BudgetPeriodStore {
         }
     }
     
-    pub fn ensure_period(&mut self, id: &BudgetPeriodId) {
+    pub fn ensure_period(&mut self, id: BudgetPeriodId) {
         self.get_or_create_period(id);
     }
     
-    pub fn with_period(&self, id: &BudgetPeriodId) -> &BudgetPeriod {
-        self.budget_periods.get(id).unwrap() //Not very nice.
+    pub fn with_period(&self, id: BudgetPeriodId) -> &BudgetPeriod {
+        self.budget_periods.get(&id).unwrap() //Not very nice.
     }
     
-    pub fn with_period_mut(&mut self, id: &BudgetPeriodId) -> &mut BudgetPeriod {
+    pub fn with_period_mut(&mut self, id: BudgetPeriodId) -> &mut BudgetPeriod {
         self.get_or_create_period(id)
     }
     
@@ -117,18 +117,18 @@ impl BudgetPeriodStore {
     pub(crate) fn list_all_items(&self) -> Vec<BudgetItem> {
         self.with_current_period().budget_items.list_all_items()
     }
-    pub(crate) fn current_period_id(&self) -> &BudgetPeriodId {
-        &self.current_period_id
+    pub(crate) fn current_period_id(&self) -> BudgetPeriodId {
+        self.current_period_id
     }
 
     pub(crate) fn month_begins_on(&self) -> &MonthBeginsOn {
         &self.month_begins_on
     }
 
-    pub fn evaluate_rules(&self, rules: &HashSet<MatchRule>) -> Vec<(Uuid, Uuid)> {
+    pub fn evaluate_rules(&self, rules: &HashSet<MatchRule>, items: &Vec<BudgetItem>) -> Vec<(Uuid, Uuid)> {
         self.budget_periods
             .iter()
-            .flat_map(|(_, period)| period.evaluate_rules(rules))
+            .flat_map(|(_, period)| period.evaluate_rules(rules, items))
             .collect::<Vec<_>>()
     }
 
@@ -136,7 +136,7 @@ impl BudgetPeriodStore {
         self.with_current_period_mut().transactions.ignore_transaction(tx_id)
     }
 
-    pub fn get_period_before(&self, id: &BudgetPeriodId) -> Option<BudgetPeriod> {
+    pub fn get_period_before(&self, id: BudgetPeriodId) -> Option<BudgetPeriod> {
         if self.budget_periods.is_empty() {
             return None;
         }
@@ -149,20 +149,20 @@ impl BudgetPeriodStore {
     
     pub fn set_previous_period(&mut self) {
         let previous_id = self.current_period_id.month_before();
-        self.set_current_period_id(&previous_id);
+        self.set_current_period_id(previous_id);
     }
 
     pub fn set_next_period(&mut self) {
         let next_id = self.current_period_id.month_after();
-        self.set_current_period_id(&next_id);
+        self.set_current_period_id(next_id);
     }
 
     pub fn get_period_for_date_mut(&mut self, date: &DateTime<Utc>) -> &mut BudgetPeriod {
-        self.get_or_create_period(&BudgetPeriodId::from_date(*date, self.month_begins_on))
+        self.get_or_create_period(BudgetPeriodId::from_date(*date, self.month_begins_on))
     }
 
     pub fn get_period_for_date(&mut self, date: &DateTime<Utc>) -> &BudgetPeriod {
-        self.get_or_create_period(&BudgetPeriodId::from_date(*date, self.month_begins_on))
+        self.get_or_create_period(BudgetPeriodId::from_date(*date, self.month_begins_on))
     }
 
     pub fn set_current_period(&mut self, date: &DateTime<Utc>) {
@@ -170,14 +170,14 @@ impl BudgetPeriodStore {
         self.current_period_id = period.id;
     }
     
-    pub fn set_current_period_id(&mut self, id: &BudgetPeriodId) {
+    pub fn set_current_period_id(&mut self, id: BudgetPeriodId) {
         let _ = self.get_or_create_period(id);
-        self.current_period_id = *id;
+        self.current_period_id = id;
     }
 
-    fn get_or_create_period(&mut self, id: &BudgetPeriodId) -> &mut BudgetPeriod {
+    fn get_or_create_period(&mut self, id: BudgetPeriodId) -> &mut BudgetPeriod {
         let previous_period = self.get_period_before(id);
-        self.budget_periods.entry(*id).or_insert_with(|| {
+        self.budget_periods.entry(id).or_insert_with(|| {
             if let Some(previous_period) = previous_period {
                 let period = previous_period.clone_to(id);
                 period.clone()
@@ -241,8 +241,8 @@ impl BudgetPeriodStore {
             .sum()
     }
 
-    pub fn recalc_overview(&mut self, period_id: Option<&BudgetPeriodId>) {
-        let period_id = &period_id.unwrap_or(&self.current_period_id).clone();
+    pub fn recalc_overview(&mut self, period_id: Option<BudgetPeriodId>) {
+        let period_id = period_id.unwrap_or(self.current_period_id);
          self.ensure_period(period_id); 
 
         let income_sum = Sum(vec![Income]);
@@ -345,7 +345,7 @@ impl BudgetPeriodStore {
     }
 
     pub fn insert_transaction(&mut self, tx: BankTransaction) {
-        self.get_or_create_period(&BudgetPeriodId::from_date(tx.date, self.month_begins_on))
+        self.get_or_create_period(BudgetPeriodId::from_date(tx.date, self.month_begins_on))
             .transactions
             .insert(tx);
     }
@@ -555,7 +555,7 @@ mod tests {
         let mut store = BudgetPeriodStore::new(date, None);
         
         let new_id = BudgetPeriodId { year: 2025, month: 6 };
-        let period = store.get_or_create_period(&new_id);
+        let period = store.get_or_create_period(new_id);
         
         assert_eq!(period.id.year, 2025);
         assert_eq!(period.id.month, 6);
@@ -566,8 +566,8 @@ mod tests {
         let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
         let mut store = BudgetPeriodStore::new(date, None);
         
-        let current_id = *store.current_period_id();
-        let period = store.get_or_create_period(&current_id);
+        let current_id = store.current_period_id();
+        let period = store.get_or_create_period(current_id);
         
         assert_eq!(period.id, current_id);
     }
@@ -578,7 +578,7 @@ mod tests {
         let store = BudgetPeriodStore::new(date, None);
         
         let id = BudgetPeriodId { year: 2025, month: 1 };
-        let result = store.get_period_before(&id);
+        let result = store.get_period_before(id);
         
         assert!(result.is_none());
     }
@@ -594,7 +594,7 @@ mod tests {
         store.set_next_period();
         
         let id = BudgetPeriodId { year: 2025, month: 4 };
-        let result = store.get_period_before(&id);
+        let result = store.get_period_before(id);
         
         assert!(result.is_some());
         let prev = result.unwrap();
@@ -620,7 +620,7 @@ mod tests {
         let mut store = BudgetPeriodStore::new(date, None);
         
         let new_id = BudgetPeriodId { year: 2025, month: 9 };
-        store.set_current_period_id(&new_id);
+        store.set_current_period_id(new_id);
         
         assert_eq!(store.current_period_id().year, 2025);
         assert_eq!(store.current_period_id().month, 9);

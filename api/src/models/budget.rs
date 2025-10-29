@@ -79,7 +79,7 @@ impl Budget {
         self.budget_periods.get_item(item_id)
     }
 
-    pub fn get_current_period_id(&self) -> &BudgetPeriodId {
+    pub fn get_current_period_id(&self) -> BudgetPeriodId {
         self.budget_periods.current_period_id()
     }
 
@@ -115,7 +115,7 @@ impl Budget {
         self.budget_periods.spent_for_type(budgeting_type)
     }
 
-    pub fn recalc_overview(&mut self, period_id: Option<&BudgetPeriodId>) {
+    pub fn recalc_overview(&mut self, period_id: Option<BudgetPeriodId>) {
         self.budget_periods.recalc_overview(period_id);
     }
 
@@ -159,13 +159,13 @@ impl Budget {
         self.budget_periods.type_for_item(item_id)
     }
 
-    pub fn update_budget_actual_amount(&mut self, period_id: &BudgetPeriodId, budgeting_type: &BudgetingType, amount: &Money) {
+    pub fn update_budget_actual_amount(&mut self, period_id: BudgetPeriodId, budgeting_type: &BudgetingType, amount: &Money) {
         self.with_period_mut(period_id).update_actual_amount(budgeting_type, amount);
     }
 
     pub fn update_budget_budgeted_amount(
         &mut self,
-        period_id: Option<&BudgetPeriodId>,
+        period_id: Option<BudgetPeriodId>,
         budgeting_type: &BudgetingType,
         amount: &Money,
     ) {
@@ -176,7 +176,7 @@ impl Budget {
         }
     }
 
-    pub fn add_actual_amount_to_item(&mut self, period_id: &BudgetPeriodId, item_id: &Uuid, amount: &Money) {
+    pub fn add_actual_amount_to_item(&mut self, period_id: BudgetPeriodId, item_id: &Uuid, amount: &Money) {
         self.with_period_mut(period_id).add_actual_amount_to_item(item_id, amount);
     }
 
@@ -261,25 +261,28 @@ impl Budget {
     }
     
     pub fn evaluate_rules(&self) -> Vec<(Uuid, Uuid)> {
-        self.budget_periods.evaluate_rules(&self.match_rules)
+        /* we must evaluate all transactions against all items for the BUDGET, not for 
+        a specific period.
+         */
+        self.budget_periods.evaluate_rules(&self.match_rules, &self.budget_items.list_all_items())
     }
     
-    pub fn with_period_mut(&mut self, period_id: &BudgetPeriodId) -> &mut BudgetPeriod {
+    pub fn with_period_mut(&mut self, period_id: BudgetPeriodId) -> &mut BudgetPeriod {
         self.budget_periods.with_period_mut(period_id)
     }
 
-    pub fn with_period(&self, period_id: &BudgetPeriodId) -> &BudgetPeriod {
+    pub fn with_period(&self, period_id: BudgetPeriodId) -> &BudgetPeriod {
         self.budget_periods.with_period(period_id)
     }
     
     pub fn with_current_period_mut(&mut self) -> &mut BudgetPeriod {
-        let period_id = self.get_current_period_id().clone();
-        self.with_period_mut(&period_id)
+        let period_id = self.get_current_period_id();
+        self.with_period_mut(period_id)
     }
 
     pub fn with_current_period(&self) -> &BudgetPeriod {
-        let period_id = self.get_current_period_id().clone();
-        self.with_period(&period_id)
+        let period_id = self.get_current_period_id();
+        self.with_period(period_id)
     }
 }
 

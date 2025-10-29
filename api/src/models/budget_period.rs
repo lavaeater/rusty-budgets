@@ -2,10 +2,7 @@ use chrono::{DateTime, Datelike, Days, Months, Utc};
 use core::fmt::Display;
 use crate::models::bank_transaction_store::BankTransactionStore;
 use crate::models::BudgetingType::{Expense, Income, Savings};
-use crate::models::{
-    BudgetItemStore, BudgetingType, BudgetingTypeOverview, MatchRule,
-    Money,
-};
+use crate::models::{BudgetItem, BudgetItemStore, BudgetingType, BudgetingTypeOverview, MatchRule, Money};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::{HashMap, HashSet};
 use uuid::Uuid;
@@ -41,15 +38,15 @@ impl BudgetPeriod {
             (Income, Money::default()),
         ]);
     }
-    pub(crate) fn clone_to(&self, id: &BudgetPeriodId) -> Self {
+    pub(crate) fn clone_to(&self, id: BudgetPeriodId) -> Self {
         let mut period = self.clone();
-        period.id = *id;
+        period.id = id;
         period.clear_hashmaps_and_transactions();
         period
     }
-    pub(crate) fn new_for(id: &BudgetPeriodId) -> Self {
+    pub(crate) fn new_for(id: BudgetPeriodId) -> Self {
         let mut period = Self {
-            id: *id,
+            id: id,
             budget_items: BudgetItemStore::default(),
             transactions: BankTransactionStore::default(),
             budgeted_by_type: Default::default(),
@@ -60,12 +57,12 @@ impl BudgetPeriod {
         period
     }
 
-    pub fn evaluate_rules(&self, rules: &HashSet<MatchRule>) -> Vec<(Uuid, Uuid)> {
+    pub fn evaluate_rules(&self, rules: &HashSet<MatchRule>, items: &Vec<BudgetItem>) -> Vec<(Uuid, Uuid)> {
         let mut matched_transactions = Vec::new();
         for transaction in self.transactions.list_transactions_for_connection() {
             for rule in rules {
                 if rule.matches_transaction(&transaction) {
-                    if let Some(item_id) = self.get_item_for_rule(rule) {
+                    if let Some(item_id) = self.get_item_for_rule(rule, items) {
                         matched_transactions.push((transaction.id, item_id));
                         break;
                     }
@@ -75,8 +72,8 @@ impl BudgetPeriod {
         matched_transactions
     }
 
-    pub fn get_item_for_rule(&self, rule: &MatchRule) -> Option<Uuid> {
-        self.budget_items.get_item_for_rule(&rule)
+    pub fn get_item_for_rule(&self, rule: &MatchRule, items: &Vec<BudgetItem>) -> Option<Uuid> {
+        items.iter().find(|i| rule.matches_item(i)).map(|i| i.id)
     }
     
     pub fn update_actual_amount(&mut self, budgeting_type: &BudgetingType, amount: &Money) {
