@@ -24,8 +24,9 @@ pub fn BudgetHero() -> Element {
     use_effect(move || {
         if let Some(Ok(Some(budget))) = budget_resource.read().as_ref() {
             tracing::info!("We have budget: {}", budget.id);
-            budget_signal.set(Some(budget.clone()));
             current_period_id.set(Some(budget.get_current_period_id()));
+            budget_signal.set(Some(budget.clone()));
+
         }
     });
 
@@ -60,18 +61,16 @@ pub fn BudgetHero() -> Element {
                             h2 { {current_period_id().unwrap().to_string()} }
                             Button {
                                 onclick: move |_| {
-                                    if let Some(mut budget) = budget_signal() {
-                                        current_period_id.set(Some(current_period_id().unwrap().month_before()));
-                                        budget_signal.set(Some(budget.clone()));
+                                    if let Some(period_id) = current_period_id() {
+                                        current_period_id.set(Some(period_id.month_before()));
                                     }
                                 },
                                 "Previous period"
                             }
                             Button {
                                 onclick: move |_| {
-                                    if let Some(mut budget) = budget_signal() {
-                                        current_period_id.set(Some(current_period_id().unwrap().month_after()));
-                                        budget_signal.set(Some(budget.clone()));
+                                    if let Some(period_id) = current_period_id() {
+                                        current_period_id.set(Some(period_id.month_after()));
                                     }
                                 },
                                 "Next period"
@@ -133,7 +132,7 @@ pub fn BudgetHero() -> Element {
                             TransactionsView {
                                 budget_id: budget_id(),
                                 transactions: transactions_for_connection,
-                                items: budget_signal().unwrap().list_all_items(),
+                                items: budget.list_all_items(),
                             }
                         }
                     }
