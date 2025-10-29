@@ -463,6 +463,7 @@ pub fn adjust_item_funds() -> anyhow::Result<()> {
     let (res, _) = rt.adjust_item_funds(
         budget_id,
         item_id,
+        None,
         Money::new_dollars(-50, Currency::SEK),
         user_id,
     )?;

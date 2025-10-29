@@ -276,11 +276,12 @@ pub mod db {
     pub fn adjust_item_funds(
         budget_id: &Uuid,
         item_id: &Uuid,
+        budget_period_id: Option<BudgetPeriodId>,
         amount: &Money,
         user_id: &Uuid,
     ) -> anyhow::Result<Budget> {
         with_runtime(None)
-            .adjust_item_funds(*budget_id, *item_id, *amount, *user_id)
+            .adjust_item_funds(*budget_id, *item_id, budget_period_id, *amount, *user_id)
             .map(|(b, _)| b)
     }
 
@@ -470,9 +471,10 @@ pub async fn adjust_item_funds(
     budget_id: Uuid,
     item_id: Uuid,
     amount: Money,
+    budget_period_id: Option<BudgetPeriodId>,
 ) -> Result<Budget, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
-    match db::adjust_item_funds(&budget_id, &item_id, &amount, &user.id) {
+    match db::adjust_item_funds(&budget_id, &item_id, budget_period_id, &amount, &user.id) {
         Ok(b) => Ok(b),
         Err(e) => {
             tracing::error!(error = %e, "Could not adjust item funds");

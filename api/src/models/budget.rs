@@ -76,7 +76,7 @@ impl Budget {
     }
 
     pub fn get_item(&self, item_id: &Uuid) -> Option<&BudgetItem> {
-        self.budget_periods.get_item(item_id)
+        self.budget_items.get(item_id)
     }
 
     pub fn get_current_period_id(&self) -> BudgetPeriodId {
@@ -255,8 +255,9 @@ impl Budget {
         self.budget_periods.set_previous_period();
     }
 
-    pub fn set_next_period(&mut self) {
+    pub fn set_next_period(&mut self) -> Self {
         self.budget_periods.set_next_period();
+        self.clone()
     }
     
     fn ensure_time_period(&mut self, updated_at: &DateTime<Utc>) {
@@ -276,6 +277,14 @@ impl Budget {
 
     pub fn with_period(&self, period_id: BudgetPeriodId) -> &BudgetPeriod {
         self.budget_periods.with_period(period_id)
+    }
+
+    pub fn with_period_or_now(&self, period_id: Option<BudgetPeriodId>) -> &BudgetPeriod {
+        self.budget_periods.with_period_or_now(period_id)
+    }
+    
+    pub fn with_period_or_now_mut(&mut self, period_id: Option<BudgetPeriodId>) -> &mut BudgetPeriod {
+        self.budget_periods.with_period_or_now_mut(period_id)
     }
     
     pub fn with_current_period_mut(&mut self) -> &mut BudgetPeriod {

@@ -9,6 +9,7 @@ use crate::budget::ItemSelector;
 #[component]
 pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType, is_over_budget: bool) -> Element {
     let mut budget_signal = use_context::<Signal<Option<Budget>>>();
+    let mut budget_period_id = use_context::<Signal<Option<BudgetPeriodId>>>();
     let mut expanded = use_signal(|| false);
     // let mut edit_item = use_signal(|| false);
     let mut item_name = use_signal(|| item.name.clone());
@@ -191,7 +192,7 @@ pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType, is_over_budget
                                         let item_id = item.id;
                                         let shortage = shortage;
                                         spawn(async move {
-                                            match api::adjust_item_funds(budget_id, item_id, shortage).await {
+                                            match api::adjust_item_funds(budget_id, item_id, shortage, budget_period_id()).await {
                                                 Ok(updated_budget) => {
                                                     budget_signal.set(Some(updated_budget));
                                                 }

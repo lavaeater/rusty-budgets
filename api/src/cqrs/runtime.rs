@@ -143,11 +143,12 @@ impl JoyDbBudgetRuntime {
         &self,
         budget_id: Uuid,
         item_id: Uuid,
+        budget_period_id: Option<BudgetPeriodId>,
         amount: Money,
         user_id: Uuid,
     ) -> anyhow::Result<(Budget, Uuid)> {
         self.cmd(&user_id, &budget_id, |budget| {
-            budget.adjust_item_funds(item_id, amount)
+            budget.adjust_item_funds(item_id, budget_period_id, amount)
         })
     }
 

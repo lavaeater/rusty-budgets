@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use cqrs_macros::DomainEvent;
 use uuid::Uuid;
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
-use crate::models::Budget;
+use crate::models::{Budget, BudgetPeriodId};
 use crate::models::Money;
 
 #[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]
@@ -10,24 +10,26 @@ use crate::models::Money;
 pub struct ItemFundsAdjusted {
     budget_id: Uuid,
     item_id: Uuid,
+    budget_period_id: Option<BudgetPeriodId>,
     amount: Money,
 }
 
 impl ItemFundsAdjustedHandler for Budget {
     fn apply_adjust_item_funds(&mut self, event: &ItemFundsAdjusted) -> Uuid {
-        self.add_budgeted_amount_to_item(&event.item_id, &event.amount);
+        self.with_period_or_now_mut(event.budget_period_id).budget_items.add_budgeted_amount(&event.item_id, &event.amount);
         let item_type = self.type_for_item(&event.item_id).unwrap();
-        self.update_budget_budgeted_amount(None, &item_type, &event.amount);
-        self.recalc_overview(None);
+        self.update_budget_budgeted_amount(event.budget_period_id, &item_type, &event.amount);
+        self.recalc_overview(event.budget_period_id);
         event.item_id
     }
 
     fn adjust_item_funds_impl(
         &self,
         item_id: Uuid,
+        budget_period_id: Option<BudgetPeriodId>,
         amount: Money,
     ) -> Result<ItemFundsAdjusted, CommandError> {
-        let item = self.get_item(&item_id);
+        let item = self.with_period_or_now(budget_period_id).budget_items.get(&item_id);
 
         if item.is_none() {
             return Err(CommandError::Validation("Item does not exist"));
@@ -43,6 +45,7 @@ impl ItemFundsAdjustedHandler for Budget {
         Ok(ItemFundsAdjusted {
             budget_id: self.id,
             item_id,
+            budget_period_id,
             amount,
         })
     }

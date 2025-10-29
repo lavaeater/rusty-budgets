@@ -18,6 +18,7 @@ pub fn BudgetHero() -> Element {
     let mut current_period_id = use_signal(|| None::<BudgetPeriodId>);
 
     use_context_provider(|| budget_signal);
+    use_context_provider(|| current_period_id);
 
     let mut budget_name = use_signal(|| "".to_string());
 

@@ -100,6 +100,14 @@ impl BudgetPeriodStore {
     pub fn with_period(&self, id: BudgetPeriodId) -> &BudgetPeriod {
         self.budget_periods.get(&id).unwrap() //Not very nice.
     }
+    pub fn with_period_or_now(&self, id: Option<BudgetPeriodId>) -> &BudgetPeriod {
+        let period = self.period_or_now(id);
+        self.with_period(period)
+    }
+    pub fn with_period_or_now_mut(&mut self, id: Option<BudgetPeriodId>) -> &mut BudgetPeriod {
+        let period = self.period_or_now(id);
+        self.with_period_mut(period)
+    }
     
     pub fn with_period_mut(&mut self, id: BudgetPeriodId) -> &mut BudgetPeriod {
         self.get_or_create_period(id)
