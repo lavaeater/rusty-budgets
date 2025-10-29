@@ -1,7 +1,7 @@
 use crate::file_chooser::*;
 use crate::budget::{BudgetTabs, TransactionsView};
 use crate::{Button, Input};
-use api::models::Budget;
+use api::models::{Budget, BudgetPeriodId};
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use dioxus_primitives::label::Label;
@@ -15,6 +15,7 @@ pub fn BudgetHero() -> Element {
 
     let mut budget_signal = use_signal(|| None::<Budget>);
     let mut budget_id = use_signal(Uuid::default);
+    let mut current_period_id = use_signal(|| None::<BudgetPeriodId>);
 
     use_context_provider(|| budget_signal);
 
@@ -24,6 +25,7 @@ pub fn BudgetHero() -> Element {
         if let Some(Ok(Some(budget))) = budget_resource.read().as_ref() {
             tracing::info!("We have budget: {}", budget.id);
             budget_signal.set(Some(budget.clone()));
+            current_period_id.set(Some(budget.get_current_period_id()));
         }
     });
 
@@ -37,15 +39,16 @@ pub fn BudgetHero() -> Element {
             }
         });
     };
-
+    
     // Handle the resource state
     match budget_signal() {
         Some(budget) => {
-            tracing::info!("The budget signal was updated: {}", budget.id);
+            
+            info!("The budget signal was updated: {}", budget.id);
             budget_id.set(budget.id);
-            let transactions_for_connection = budget.list_transactions_for_connection();
-            let ignored_transactions = budget.list_ignored_transactions();
-            let items_by_type = budget.items_by_type();
+            let transactions_for_connection = budget.list_transactions_for_connection(current_period_id());
+            let ignored_transactions = budget.list_ignored_transactions(current_period_id());
+            let items_by_type = budget.items_by_type(current_period_id());
             
             rsx! {
                 document::Link { rel: "stylesheet", href: HERO_CSS }
@@ -54,16 +57,22 @@ pub fn BudgetHero() -> Element {
                     div { class: "budget-header-a",
                         div { class: "header-title",
                             h1 { {budget.name.clone()} }
-                            h2 { {budget.get_current_period_id().to_string()} }
+                            h2 { {current_period_id().unwrap().to_string()} }
                             Button {
                                 onclick: move |_| {
-                                    budget_signal.set(Some(budget_signal().unwrap().set_previous_period()));
+                                    if let Some(mut budget) = budget_signal() {
+                                        current_period_id.set(Some(current_period_id().unwrap().month_before()));
+                                        budget_signal.set(Some(budget.clone()));
+                                    }
                                 },
                                 "Previous period"
                             }
                             Button {
                                 onclick: move |_| {
-                                    budget_signal.set(Some(budget_signal().unwrap().set_next_period()));
+                                    if let Some(mut budget) = budget_signal() {
+                                        current_period_id.set(Some(current_period_id().unwrap().month_after()));
+                                        budget_signal.set(Some(budget.clone()));
+                                    }
                                 },
                                 "Next period"
                             }

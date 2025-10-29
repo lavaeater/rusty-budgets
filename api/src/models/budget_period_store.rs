@@ -105,14 +105,11 @@ impl BudgetPeriodStore {
         self.get_or_create_period(id)
     }
     
-    pub fn list_ignored_transactions(&self) -> Vec<BankTransaction> {
-        self.with_current_period().transactions.list_ignored_transactions()
-    }
-
-    pub(crate) fn list_transactions_for_connection(&self) -> Vec<BankTransaction> {
-        self.with_current_period()
+    pub fn list_ignored_transactions(&self, budget_period_id: Option<BudgetPeriodId>) -> Vec<BankTransaction> {
+        let period = self.period_or_now(budget_period_id);
+        self.with_period(period)
             .transactions
-            .list_transactions_for_connection()
+            .list_ignored_transactions()
     }
     pub(crate) fn list_all_items(&self) -> Vec<BudgetItem> {
         self.with_current_period().budget_items.list_all_items()
@@ -206,16 +203,22 @@ impl BudgetPeriodStore {
     pub fn get_type_for_item(&self, item_id: &Uuid) -> Option<&BudgetingType> {
         self.with_current_period().budget_items.type_for(item_id)
     }
+    
+    pub fn period_or_now(&self, budget_period_id: Option<BudgetPeriodId>) -> BudgetPeriodId {
+        budget_period_id.unwrap_or(BudgetPeriodId::from_date(Utc::now(), self.month_begins_on))
+    }
 
     pub fn items_by_type(
         &self,
+        budget_period_id: Option<BudgetPeriodId>
     ) -> Vec<(usize, BudgetingType, BudgetingTypeOverview, Vec<BudgetItem>)> {
-        self.with_current_period()
+        let period = self.period_or_now(budget_period_id);
+        self.with_period(period)
             .budget_items
             .items_by_type()
             .iter()
             .map(|(index, t, items)| {
-                let overview = self.with_current_period().budgeting_overview.get(t).unwrap();
+                let overview = self.with_period(period).budgeting_overview.get(t).unwrap();
                 (*index, *t, *overview, items.clone())
             })
             .collect::<Vec<_>>()
@@ -242,7 +245,7 @@ impl BudgetPeriodStore {
     }
 
     pub fn recalc_overview(&mut self, period_id: Option<BudgetPeriodId>) {
-        let period_id = period_id.unwrap_or(self.current_period_id);
+        let period_id = self.period_or_now(period_id);
          self.ensure_period(period_id); 
 
         let income_sum = Sum(vec![Income]);
@@ -470,6 +473,13 @@ impl BudgetPeriodStore {
     }
     pub fn list_transactions_for_item(&self, item_id: &Uuid, sorted: bool) -> Vec<&BankTransaction> {
         self.with_current_period().transactions.list_transactions_for_item(item_id, sorted)
+    }
+
+    pub fn list_transactions_for_connection(&self, budget_period_id: Option<BudgetPeriodId>) -> Vec<BankTransaction> {
+        let period = self.period_or_now(budget_period_id);
+        self.with_period(period)
+            .transactions
+            .list_transactions_for_connection()
     }
 
     pub fn list_all_bank_transactions(&self) -> Vec<&BankTransaction> {

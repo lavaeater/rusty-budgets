@@ -154,7 +154,7 @@ impl BudgetPeriodId {
         }
     }
 
-    pub(crate) fn month_before(&self) -> Self {
+    pub fn month_before(&self) -> Self {
         if self.month == 1 {
             Self {
                 year: self.year - 1,
@@ -168,7 +168,7 @@ impl BudgetPeriodId {
         }
     }
 
-    pub(crate) fn month_after(&self) -> Self {
+    pub fn month_after(&self) -> Self {
         if self.month == 12 {
             Self {
                 year: self.year + 1,

@@ -83,8 +83,8 @@ impl Budget {
         self.budget_periods.current_period_id()
     }
 
-    pub fn list_ignored_transactions(&self) -> Vec<BankTransaction> {
-        self.budget_periods.list_ignored_transactions()
+    pub fn list_ignored_transactions(&self, budget_period_id: Option<BudgetPeriodId>) -> Vec<BankTransaction> {
+        self.budget_periods.list_ignored_transactions(budget_period_id)
     }
     
     pub fn month_begins_on(&self)-> &MonthBeginsOn {
@@ -97,8 +97,9 @@ impl Budget {
 
     pub fn items_by_type(
         &self,
+        budget_period_id: Option<BudgetPeriodId>
     ) -> Vec<(usize, BudgetingType, BudgetingTypeOverview, Vec<BudgetItem>)> {
-        self.budget_periods.items_by_type()
+        self.budget_periods.items_by_type(budget_period_id)
     }
 
     pub fn list_all_items(
@@ -234,8 +235,8 @@ impl Budget {
         self.budget_periods.list_transactions_for_item(item_id, sorted)
     }
     
-    pub fn list_transactions_for_connection(&self) -> Vec<BankTransaction> {
-        self.budget_periods.list_transactions_for_connection()
+    pub fn list_transactions_for_connection(&self, budget_period_id: Option<BudgetPeriodId>) -> Vec<BankTransaction> {
+        self.budget_periods.list_transactions_for_connection(budget_period_id)
     }
     
     pub fn list_all_bank_transactions(&self) -> Vec<&BankTransaction> {
@@ -246,14 +247,16 @@ impl Budget {
         self.budget_periods.set_current_period(date);
     }
     
-    pub fn set_previous_period(&mut self) -> Self {
+    pub fn set_current_period_id(&mut self, period_id: BudgetPeriodId) {
+        self.budget_periods.set_current_period_id(period_id);
+    }
+    
+    pub fn set_previous_period(&mut self)  {
         self.budget_periods.set_previous_period();
-        self.clone()
     }
 
-    pub fn set_next_period(&mut self) -> Self {
+    pub fn set_next_period(&mut self) {
         self.budget_periods.set_next_period();
-        self.clone()
     }
     
     fn ensure_time_period(&mut self, updated_at: &DateTime<Utc>) {
