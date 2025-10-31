@@ -59,7 +59,7 @@ pub fn BudgetHero() -> Element {
                     div { class: "budget-header-a",
                         div { class: "header-title",
                             h1 { {budget.name.clone()} }
-                            h2 { {current_period_id().unwrap().to_string()} }
+                            h2 { {current_period_id().unwrap_or(BudgetPeriodId::default()).to_string()} }
                             Button {
                                 onclick: move |_| {
                                     if let Some(period_id) = current_period_id() {
