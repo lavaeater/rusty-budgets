@@ -95,5 +95,9 @@ impl BudgetPeriod {
     pub fn add_budgeted_amount_to_item(&mut self, item_id: &Uuid, amount: &Money) {
         self.budget_items.add_budgeted_amount(item_id, amount);
     }
+    
+    pub fn insert_item(&mut self, item: &BudgetItem, budgeting_type: BudgetingType) -> bool {
+        self.budget_items.insert(item, budgeting_type)
+    }
 }
 

@@ -374,7 +374,8 @@ impl BudgetPeriodStore {
     }
 
     pub fn contains_budget_item(&self, item_id: &Uuid) -> bool {
-        self.budget_periods.values().any(|p| p.budget_items.contains(item_id))
+        let mut periods = self.budget_periods.values();
+        periods.any(|p| p.budget_items.contains(item_id))
     }
     pub fn contains_item_with_name(&self, name: &str) -> bool {
         self.budget_periods.values().any(|p| p.budget_items.contains_item_with_name(name))
@@ -669,6 +670,7 @@ mod tests {
     fn test_remove_item_removes_from_current_period() {
         let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
         let mut store = BudgetPeriodStore::new(date, None);
+        let period_id = BudgetPeriodId::from_date(date, MonthBeginsOn::PreviousMonthWorkDayBefore(25));
         
         let item = BudgetItem {
             id: Uuid::new_v4(),
@@ -680,7 +682,7 @@ mod tests {
         };
         
         let item_id = item.id;
-        store.insert_item(&item, BudgetingType::Expense);
+        store.with_period_mut(period_id).insert_item(&item, Expense);
         assert!(store.contains_budget_item(&item_id));
         
         store.remove_item(&item_id);
