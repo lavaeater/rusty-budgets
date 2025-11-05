@@ -252,7 +252,7 @@ impl Budget {
     }
     
     pub fn set_previous_period(&mut self)  {
-        self.budget_periods.set_previous_period();
+        self.budget_periods.create_previous_period();
     }
 
     pub fn set_next_period(&mut self) -> Self {
