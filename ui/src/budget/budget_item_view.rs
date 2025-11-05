@@ -9,10 +9,10 @@ use crate::budget::ItemSelector;
 #[component]
 pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType, is_over_budget: bool) -> Element {
     let mut budget_signal = use_context::<Signal<Option<Budget>>>();
-    let mut budget_period_id = use_context::<Signal<Option<BudgetPeriodId>>>();
+    let budget_period_id = use_context::<Signal<Option<BudgetPeriodId>>>();
     let mut expanded = use_signal(|| false);
     // let mut edit_item = use_signal(|| false);
-    let mut item_name = use_signal(|| item.name.clone());
+    let item_name = use_signal(|| item.name.clone());
     let budget = budget_signal().unwrap();
     let items = budget.list_all_items();
     let budget_id = budget.id;
