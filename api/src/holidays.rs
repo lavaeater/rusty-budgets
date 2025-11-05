@@ -174,8 +174,8 @@ mod tests {
         assert_eq!(previous_workday(friday), thursday);
 
         // Monday after a weekend
-        let monday = Utc.with_ymd_and_hms(2023, 4, 10, 0, 0, 0).unwrap();
-        let friday_before = Utc.with_ymd_and_hms(2023, 4, 7, 0, 0, 0).unwrap();
+        let monday = Utc.with_ymd_and_hms(2025, 11, 10, 0, 0, 0).unwrap();
+        let friday_before = Utc.with_ymd_and_hms(2025, 11, 7, 0, 0, 0).unwrap();
         assert_eq!(previous_workday(monday), friday_before);
     }
 
