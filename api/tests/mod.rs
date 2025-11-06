@@ -474,6 +474,7 @@ pub fn adjust_item_funds() -> anyhow::Result<()> {
 
 #[test]
 fn test_calculate_rules() {
+    use api::models::budget_item_store::BudgetItemStore;
     use BudgetingType::*;
     use Rule::*;
     let mut store = BudgetItemStore::default();

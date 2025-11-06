@@ -4,7 +4,8 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use strum_macros::EnumIter;
 use uuid::Uuid;
-use crate::models::{BudgetItem, BudgetItemStore, Currency, Money};
+use crate::models::{BudgetItem, Currency, Money};
+use crate::models::budget_item_store::BudgetItemStore;
 
 #[derive(Default,Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, EnumIter)]
 pub enum BudgetingType {
@@ -98,9 +99,9 @@ fn test_calculate_rules() {
     use BudgetingType::*;
     use Rule::*;
     let mut store = BudgetItemStore::default();
-    store.insert(&BudgetItem::new(Uuid::new_v4(), "Lön", Money::new_dollars(5000, Currency::SEK),None, None), Income);
-    store.insert(&BudgetItem::new(Uuid::new_v4(), "Lön", Money::new_dollars(3000, Currency::SEK),None, None), Expense);
-    store.insert(&BudgetItem::new(Uuid::new_v4(), "Lön", Money::new_dollars(1000, Currency::SEK),None, None), Savings);
+    store.insert(&BudgetItem::new(Uuid::new_v4(), "Lön", Money::new_dollars(5000, Currency::SEK), None, None), Income);
+    store.insert(&BudgetItem::new(Uuid::new_v4(), "Lön", Money::new_dollars(3000, Currency::SEK), None, None), Expense);
+    store.insert(&BudgetItem::new(Uuid::new_v4(), "Lön", Money::new_dollars(1000, Currency::SEK), None, None), Savings);
 
     let income_rule = Sum(vec![Income]);
     let remaining_rule = Difference(Income, vec![Expense, Savings]);

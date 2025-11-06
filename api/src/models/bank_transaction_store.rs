@@ -1,5 +1,5 @@
 use core::fmt::Display;
-use crate::models::{BankTransaction, BudgetItem, Currency, Money};
+use crate::models::{ActualBudgetItem, BankTransaction, BudgetItem, Currency, Money};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::hash::{DefaultHasher, Hash, Hasher};
@@ -265,8 +265,8 @@ impl MatchRule {
         self.transaction_key == tokenized_transaction_description
     }
 
-    pub fn matches_item(&self, item: &BudgetItem) -> bool {
-        item.name.contains(&self.item_name)
+    pub fn matches_item(&self, item: &ActualBudgetItem) -> bool {
+        item.budget_item.as_ref().name.contains(&self.item_name)
     }
     
     pub fn create_rule_for_transaction_and_item(transaction: &BankTransaction, item: &BudgetItem) -> MatchRule {

@@ -5,13 +5,15 @@ use crate::models::budget_item::BudgetItem;
 use crate::models::budget_period_id::BudgetPeriodId;
 use crate::models::budgeting_type::BudgetingType;
 use crate::models::money::{Currency, Money};
-use crate::models::{BankTransaction, BudgetItemStore, BudgetPeriod, BudgetingTypeOverview, MatchRule, MonthBeginsOn};
+use crate::models::{BankTransaction, BudgetPeriod, BudgetingTypeOverview, MatchRule, MonthBeginsOn};
 use crate::pub_events_enum;
 use chrono::{DateTime, Utc};
 use joydb::Model;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
+use std::sync::{Arc, Mutex};
 use uuid::Uuid;
+use crate::models::budget_item_store::BudgetItemStore;
 use crate::models::budget_period_store::BudgetPeriodStore;
 
 pub_events_enum! {
@@ -36,7 +38,7 @@ pub struct Budget {
     pub name: String,
     pub user_id: Uuid,
     budget_periods: BudgetPeriodStore,
-    pub budget_items: BudgetItemStore,
+    pub budget_items: HashSet<Arc<Mutex<BudgetItem>>>,
     pub match_rules: HashSet<MatchRule>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
@@ -79,10 +81,6 @@ impl Budget {
         self.budget_items.get(item_id)
     }
 
-    pub fn get_current_period_id(&self) -> BudgetPeriodId {
-        self.budget_periods.    current_period_id()
-    }
-
     pub fn list_ignored_transactions(&self, budget_period_id: Option<BudgetPeriodId>) -> Vec<BankTransaction> {
         self.budget_periods.list_ignored_transactions(budget_period_id)
     }
@@ -92,7 +90,7 @@ impl Budget {
     } 
 
     pub fn get_type_for_item(&self, item_id: &Uuid) -> Option<&BudgetingType> {
-        self.budget_periods.get_type_for_item(item_id)
+        self.budget_periods.get_type_for_item(item_id, None)
     }
 
     pub fn items_by_type(
