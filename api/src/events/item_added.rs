@@ -3,7 +3,7 @@ use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
 use cqrs_macros::DomainEvent;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use crate::models::{Budget, BudgetItem, BudgetingType, Money, BudgetPeriodId};
+use crate::models::{Budget, BudgetItem, BudgetingType};
 
 #[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]
 #[domain_event(aggregate = "Budget")]
@@ -26,25 +26,7 @@ impl ItemAddedHandler for Budget {
         let the_arc_mutex = Arc::new(Mutex::new(new_item));
         self.budget_items.insert(event.item_id, the_arc_mutex.clone());
         
-        
-        /*
-                    event.budgeted_amount,
-            None,
-            None,
-         */
-        let period = if let Some(tx_id) = event.tx_id {
-            self.get_transaction(&tx_id).map(|transaction| BudgetPeriodId::from_date(transaction.date, *self.month_begins_on()))         
-        } else {
-            None
-        };
-        let new_item_id = new_item.id;
-        if let Some(period) = period {
-            self.with_period_mut(period).budget_items.insert(&new_item, event.item_type);
-        } else {
-            self.with_current_period_mut().budget_items.insert(&new_item, event.item_type);
-        }
-        self.budget_items.insert(&new_item, event.item_type);
-        new_item_id
+        event.item_id
     }
 
     fn add_item_impl(
