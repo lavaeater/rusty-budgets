@@ -10,7 +10,7 @@ use crate::pub_events_enum;
 use chrono::{DateTime, Utc};
 use joydb::Model;
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex};
 use uuid::Uuid;
 use crate::models::budget_item_store::BudgetItemStore;
@@ -38,7 +38,7 @@ pub struct Budget {
     pub name: String,
     pub user_id: Uuid,
     budget_periods: BudgetPeriodStore,
-    pub budget_items: HashSet<Arc<Mutex<BudgetItem>>>,
+    pub budget_items: HashMap<Uuid,Arc<Mutex<BudgetItem>>>,
     pub match_rules: HashSet<MatchRule>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,

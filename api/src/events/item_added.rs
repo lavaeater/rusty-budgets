@@ -1,5 +1,6 @@
+use std::sync::{Arc, Mutex};
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
-use crate::models::Budget;
+use crate::models::{ActualBudgetItem, Budget};
 use crate::models::BudgetItem;
 use crate::models::BudgetingType;
 use crate::models::BudgetPeriodId;
@@ -25,10 +26,22 @@ impl ItemAddedHandler for Budget {
         let new_item = BudgetItem::new(
             event.item_id,
             &event.name,
-            event.budgeted_amount,
-            None,
-            None,
+            event.item_type,
         );
+        
+        let the_arc_mutex = Arc::new(Mutex::new(new_item));
+        self.budget_items.insert(event.item_id, the_arc_mutex.clone());
+        
+        let actual_item = ActualBudgetItem {
+            
+        }
+        
+        
+        /*
+                    event.budgeted_amount,
+            None,
+            None,
+         */
         let period = if let Some(tx_id) = event.tx_id {
             self.get_transaction(&tx_id).map(|transaction| BudgetPeriodId::from_date(transaction.date, *self.month_begins_on()))         
         } else {
