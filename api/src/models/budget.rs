@@ -80,7 +80,7 @@ impl Budget {
     }
 
     pub fn get_current_period_id(&self) -> BudgetPeriodId {
-        self.budget_periods.current_period_id()
+        self.budget_periods.    current_period_id()
     }
 
     pub fn list_ignored_transactions(&self, budget_period_id: Option<BudgetPeriodId>) -> Vec<BankTransaction> {
