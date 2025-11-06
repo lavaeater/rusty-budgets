@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use crate::cqrs::framework::Aggregate;
 use crate::cqrs::framework::DomainEvent;
 use crate::events::*;
@@ -11,6 +12,7 @@ use chrono::{DateTime, Utc};
 use joydb::Model;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
+use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 use uuid::Uuid;
 use crate::models::budget_item_store::BudgetItemStore;
@@ -21,6 +23,7 @@ pub_events_enum! {
     pub enum BudgetEvent {
         BudgetCreated,
         ItemAdded,
+        ActualAdded,
         TransactionAdded,
         TransactionConnected,
         TransactionIgnored,
@@ -38,7 +41,7 @@ pub struct Budget {
     pub name: String,
     pub user_id: Uuid,
     budget_periods: BudgetPeriodStore,
-    pub budget_items: HashMap<Uuid,Arc<Mutex<BudgetItem>>>,
+    pub budget_items: HashMap<Uuid,Rc<RefCell<BudgetItem>>>,
     pub match_rules: HashSet<MatchRule>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,

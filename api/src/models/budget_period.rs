@@ -1,7 +1,7 @@
 use core::fmt::Display;
 use crate::models::bank_transaction_store::BankTransactionStore;
 use crate::models::BudgetingType::{Expense, Income, Savings};
-use crate::models::{BudgetItem, BudgetingType, BudgetingTypeOverview, MatchRule, Money};
+use crate::models::{ActualItem, BudgetItem, BudgetingType, BudgetingTypeOverview, MatchRule, Money};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::{HashMap, HashSet};
 use uuid::Uuid;
@@ -12,7 +12,7 @@ use crate::models::budget_period_id::BudgetPeriodId;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BudgetPeriod {
     pub id: BudgetPeriodId,
-    pub budget_items: BudgetItemStore,
+    pub items: HashMap<Uuid, ActualItem>,
     pub transactions: BankTransactionStore,
     pub budgeted_by_type: HashMap<BudgetingType, Money>,
     pub actual_by_type: HashMap<BudgetingType, Money>,
@@ -20,6 +20,12 @@ pub struct BudgetPeriod {
 }
 
 impl BudgetPeriod {
+    pub fn add_actual(&mut self, actual_item: ActualItem) {
+        self.items.insert(actual_item.id, actual_item);
+    }
+    pub fn contains_actual_for_item(&self, item_id: Uuid) -> bool {
+       self.items.values().any(|i| i.budget_item.borrow().id == item_id)
+    }
     fn clear_hashmaps_and_transactions(&mut self) {
         self.transactions.clear();
         self.budgeting_overview = HashMap::from([

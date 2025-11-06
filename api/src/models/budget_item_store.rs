@@ -5,12 +5,13 @@ use dioxus::logger::tracing;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use uuid::Uuid;
 use strum::IntoEnumIterator;
-use crate::models::{ActualBudgetItem, BudgetItem, BudgetingType, MatchRule, Money};
+use crate::models::{BudgetItem, BudgetingType, MatchRule, Money};
+use crate::models::actual_item::ActualItem;
 
 /// The store
 #[derive(Default, Debug, Clone)]
 pub struct BudgetItemStore {
-    items: HashMap<Uuid, ActualBudgetItem>
+    items: HashMap<Uuid, ActualItem>
 }
 
 impl BudgetItemStore {

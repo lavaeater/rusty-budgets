@@ -1,10 +1,11 @@
 use core::fmt::Display;
-use crate::models::{ActualBudgetItem, BankTransaction, BudgetItem, Currency, Money};
+use crate::models::{BankTransaction, BudgetItem};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::hash::{DefaultHasher, Hash, Hasher};
 use once_cell::sync::Lazy;
 use uuid::Uuid;
+use crate::models::actual_item::ActualItem;
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct BankTransactionStore {
@@ -265,7 +266,7 @@ impl MatchRule {
         self.transaction_key == tokenized_transaction_description
     }
 
-    pub fn matches_item(&self, item: &ActualBudgetItem) -> bool {
+    pub fn matches_item(&self, item: &ActualItem) -> bool {
         item.budget_item.as_ref().name.contains(&self.item_name)
     }
     
