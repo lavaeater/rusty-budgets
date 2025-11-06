@@ -13,8 +13,6 @@ pub struct ItemAdded {
     pub item_id: Uuid,
     pub name: String,
     pub item_type: BudgetingType,
-    pub budgeted_amount: Money,
-    pub tx_id: Option<Uuid>
 }
 
 impl ItemAddedHandler for Budget {
@@ -53,8 +51,6 @@ impl ItemAddedHandler for Budget {
         &self,
         name: String,
         item_type: BudgetingType,
-        budgeted_amount: Money,
-        tx_id: Option<Uuid>
     ) -> Result<ItemAdded, CommandError> {
         if self.contains_item_with_name(&name) {
             return Err(CommandError::Validation("Item already exists."));
@@ -63,9 +59,7 @@ impl ItemAddedHandler for Budget {
             budget_id: self.id,
             item_id: Uuid::new_v4(),
             name,
-            item_type,
-            budgeted_amount,
-            tx_id
+            item_type
         })
     }
 }
