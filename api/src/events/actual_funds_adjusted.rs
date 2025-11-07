@@ -17,16 +17,10 @@ pub struct ActualFundsAdjusted {
 
 impl ActualFundsAdjustedHandler for Budget {
     fn apply_adjust_actual_funds(&mut self, event: &ActualFundsAdjusted) -> Uuid {
-        let mut bt = None;
         if let Some(period) = self.with_period_mut(event.period_id) {
             if let Some(actual) = period.get_actual_mut(event.actual_id) {
-                bt = Some(actual.budget_item.borrow().budgeting_type);
                 actual.actual_amount += event.budgeted_amount;
             }
-            period.actual_by_type
-        }
-        if let Some(bt) = bt {
-            self.update_budget_budgeted_amount(event.period_id, &bt, &event.budgeted_amount);
         }
         event.actual_id
     }
