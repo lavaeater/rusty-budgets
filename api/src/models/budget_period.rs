@@ -17,6 +17,11 @@ pub struct BudgetPeriod {
 }
 
 impl BudgetPeriod {
+    pub fn mutate_actual(&mut self, actual_id: Uuid, mut mutator: impl FnMut(&mut ActualItem)) {
+        if let Some(actual) = self.get_actual_mut(actual_id) {
+            mutator(actual);
+        }
+    }
     pub fn get_actual(&self, id: Uuid) -> Option<&ActualItem> {
         self.actual_items.get(&id)
     }

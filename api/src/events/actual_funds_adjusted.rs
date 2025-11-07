@@ -17,11 +17,9 @@ pub struct ActualFundsAdjusted {
 
 impl ActualFundsAdjustedHandler for Budget {
     fn apply_adjust_actual_funds(&mut self, event: &ActualFundsAdjusted) -> Uuid {
-        if let Some(period) = self.with_period_mut(event.period_id) {
-            if let Some(actual) = period.get_actual_mut(event.actual_id) {
-                actual.actual_amount += event.budgeted_amount;
-            }
-        }
+        self.mutate_actual(event.period_id, event.actual_id, |actual| {
+            actual.actual_amount += event.budgeted_amount;
+        });
         event.actual_id
     }
 
@@ -31,11 +29,11 @@ impl ActualFundsAdjustedHandler for Budget {
         period_id: PeriodId,
         budgeted_amount: Money,
     ) -> Result<ActualFundsAdjusted, CommandError> {
-        if let Some(period) = self.with_period(period_id) {
+        if let Some(period) = self.get_period(period_id) {
             if let Some(actual) = period.get_actual(actual_id) {
                 if (actual.budgeted_amount + budgeted_amount) < Money::default() {
                     Err(CommandError::Validation(
-                        "Items are not allowed to be less than zero.",
+                        "Items are not allowed to be less than zero.".to_string(),
                     ))
                 } else {
                     Ok(ActualFundsAdjusted {
@@ -46,10 +44,10 @@ impl ActualFundsAdjustedHandler for Budget {
                     })
                 }
             } else {
-                Err(CommandError::NotFound("Actual not found."))
+                Err(CommandError::NotFound("Actual not found.".to_string()))
             }
         } else {
-            Err(CommandError::NotFound("Period not found."))
+            Err(CommandError::NotFound("Period not found.".to_string()))
         }
     }
 }

@@ -54,7 +54,7 @@ impl ItemModifiedHandler for Budget {
             })
         } else {
             tracing::error!("Budget Item not found");
-            Err(CommandError::NotFound("Budget Item not found"))
+            Err(CommandError::NotFound("Budget Item not found".to_string()))
         }
     }
 }

@@ -42,7 +42,7 @@ impl BudgetCreatedHandler for Budget {
                 currency,
             })
         } else {
-            Err(CommandError::Validation("Budget already exists"))
+            Err(CommandError::Validation("Budget already exists".to_string()))
         }
     }
 }

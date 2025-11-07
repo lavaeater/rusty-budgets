@@ -49,18 +49,18 @@ impl TransactionConnectedHandler for Budget {
                 tx_amount
             };
             // Update budget total (remove from previous item)
-            self.with_period_mut(budget_period_id).actual_by_type
+            self.get_period_mut(budget_period_id).actual_by_type
                     .entry(previous_budgeting_type)
                     .and_modify(|v| {
                         *v -= adjusted_amount;
                     });
-            self.with_period_mut(budget_period_id).budget_items
+            self.get_period_mut(budget_period_id).budget_items
                     .add_actual_amount(&previous_budget_item_id, &-adjusted_amount);
         }
-        if !self.with_period(budget_period_id).budget_items.contains(&event.item_id) {
+        if !self.get_period(budget_period_id).budget_items.contains(&event.item_id) {
             let item = self.budget_items.get(&event.item_id).unwrap().clone();
             let type_for = self.budget_items.type_for(&event.item_id).unwrap().clone();
-            self.with_period_mut(budget_period_id).budget_items.insert(&item, type_for);
+            self.get_period_mut(budget_period_id).budget_items.insert(&item, type_for);
         }
 
         // Now we can mutably borrow to update the transaction
@@ -71,7 +71,7 @@ impl TransactionConnectedHandler for Budget {
 
         // Update the new item
         let budgeting_type = &self
-            .with_period(budget_period_id)
+            .get_period(budget_period_id)
             .budget_items.type_for(&event.item_id)
             .unwrap().clone();
 
@@ -99,7 +99,7 @@ impl TransactionConnectedHandler for Budget {
             if let Some(tx) = self.get_transaction(&tx_id) {
                 if tx.budget_item_id == Some(item_id) {
                     return Err(CommandError::Validation(
-                        "Transaction is already connected to this item.",
+                        "Transaction is already connected to this item.".to_string(),
                     ));
                 }
             }
@@ -110,7 +110,7 @@ impl TransactionConnectedHandler for Budget {
             })
         } else {
             Err(CommandError::Validation(
-                "Transaction or item does not exist.",
+                "Transaction or item does not exist.".to_string(),
             ))
         }
     }

@@ -53,7 +53,7 @@ impl TransactionIgnoredHandler for Budget {
         }
 
         // Now we can mutably borrow to update the transaction
-        self.with_period_mut(budget_period_id).transactions.ignore_transaction(&event.tx_id);
+        self.get_period_mut(budget_period_id).transactions.ignore_transaction(&event.tx_id);
         // End of mutable borrow
         self.recalc_overview(Some(budget_period_id));
 
@@ -71,7 +71,7 @@ impl TransactionIgnoredHandler for Budget {
             })
         } else {
             Err(CommandError::Validation(
-                "Transaction does not exist.",
+                "Transaction does not exist.".to_string(),
             ))
         }
     }

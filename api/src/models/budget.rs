@@ -7,9 +7,7 @@ use crate::models::budget_period_id::PeriodId;
 use crate::models::budget_period_store::BudgetPeriodStore;
 use crate::models::budgeting_type::BudgetingType;
 use crate::models::money::{Currency, Money};
-use crate::models::{
-    BankTransaction, BudgetPeriod, BudgetingTypeOverview, MatchRule, MonthBeginsOn,
-};
+use crate::models::{ActualItem, BankTransaction, BudgetPeriod, BudgetingTypeOverview, MatchRule, MonthBeginsOn};
 use crate::pub_events_enum;
 use chrono::{DateTime, Utc};
 use joydb::Model;
@@ -171,7 +169,7 @@ impl Budget {
         budgeting_type: &BudgetingType,
         amount: &Money,
     ) {
-        self.with_period_mut(period_id)
+        self.get_period_mut(period_id)
             .update_actual_amount(budgeting_type, amount);
     }
 
@@ -181,7 +179,7 @@ impl Budget {
         budgeting_type: &BudgetingType,
         amount: &Money,
     ) {
-        self.with_period_mut(period_id)
+        self.get_period_mut(period_id)
             .update_budgeted_amount(budgeting_type, amount);
     }
 
@@ -191,7 +189,7 @@ impl Budget {
         item_id: &Uuid,
         amount: &Money,
     ) {
-        self.with_period_mut(period_id)
+        self.get_period_mut(period_id)
             .add_actual_amount_to_item(item_id, amount);
     }
 
@@ -282,12 +280,27 @@ impl Budget {
             .evaluate_rules(&self.match_rules, &self.budget_items.list_all_items())
     }
 
-    pub fn with_period_mut(&mut self, period_id: PeriodId) -> Option<&mut BudgetPeriod> {
+    pub fn get_period_mut(&mut self, period_id: PeriodId) -> Option<&mut BudgetPeriod> {
         self.budget_periods.with_period_mut(period_id)
     }
 
-    pub fn with_period(&self, period_id: PeriodId) -> Option<&BudgetPeriod> {
+    pub fn get_period(&self, period_id: PeriodId) -> Option<&BudgetPeriod> {
         self.budget_periods.with_period(period_id)
+    }
+
+    pub fn with_period_mut(&mut self, period_id: PeriodId) -> &mut BudgetPeriod {
+        //This can panic because we only use this in contexts where we KNOW we have a period!
+        
+        self.get_period_mut(period_id).unwrap()
+    }
+    
+    pub fn with_period(&self, period_id: PeriodId) -> &BudgetPeriod {
+        self.get_period(period_id).unwrap()
+    }
+    
+    pub fn mutate_actual(&mut self, period_id: PeriodId, actual_id: Uuid, mutator: impl FnMut(&mut ActualItem)) {
+        self.with_period_mut(period_id)
+            .mutate_actual(actual_id, mutator);
     }
     
 }

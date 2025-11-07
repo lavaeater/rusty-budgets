@@ -40,7 +40,7 @@ impl RuleAddedHandler for Budget {
             always_apply
         };
         if self.match_rules.contains(&rule) {
-            return Err(CommandError::Validation("Rule already exists."));
+            return Err(CommandError::Validation("Rule already exists.".to_string()));
         }
         Ok(RuleAdded {
             budget_id: self.id,

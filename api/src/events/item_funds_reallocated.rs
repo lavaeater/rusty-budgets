@@ -48,7 +48,7 @@ impl ItemFundsReallocatedHandler for Budget {
 
         if from_item.is_none() || to_item.is_none() {
             return Err(CommandError::Validation(
-                "Either Item to take funds from or Item to deliver funds to does not exist.",
+                "Either Item to take funds from or Item to deliver funds to does not exist.".to_string(),
             ));
         }
         let from_type = self.type_for_item(&from_item_id).unwrap();
@@ -57,14 +57,14 @@ impl ItemFundsReallocatedHandler for Budget {
         if from_type == BudgetingType::Income
             || to_type == BudgetingType::Income
         {
-            return Err(CommandError::Validation("Re-allocations of funds are only allowed if both items are of budget item type expense OR savings - income cannot be reallocated, only modified."));
+            return Err(CommandError::Validation("Re-allocations of funds are only allowed if both items are of budget item type expense OR savings - income cannot be reallocated, only modified.".to_string()));
         }
 
         let from_item = from_item.unwrap();
 
         if from_item.budgeted_amount < amount {
             return Err(CommandError::Validation(
-                "Item to take funds from does not have enough budgeted amount.",
+                "Item to take funds from does not have enough budgeted amount.".to_string(),
             ));
         }
 

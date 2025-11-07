@@ -67,7 +67,7 @@ impl TransactionAddedHandler for Budget {
                 date,
             })
         } else {
-            Err(CommandError::Validation("Transaction already exists."))
+            Err(CommandError::Validation("Transaction already exists.".to_string()))
         }
     }
 }

@@ -74,9 +74,9 @@ pub trait DomainEvent<A: Aggregate>: Clone + Debug + Sized {
 
 #[derive(Debug)]
 pub enum CommandError {
-    Validation(&'static str),
-    Conflict(&'static str),
-    NotFound(&'static str),
+    Validation(String),
+    Conflict(String),
+    NotFound(String),
 }
 
 impl Display for CommandError {

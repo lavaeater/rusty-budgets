@@ -36,7 +36,7 @@ impl ItemAddedHandler for Budget {
         item_type: BudgetingType,
     ) -> Result<ItemAdded, CommandError> {
         if self.contains_item_with_name(&name) {
-            return Err(CommandError::Validation("Item already exists."));
+            return Err(CommandError::Validation("Item already exists.".to_string()));
         }
         Ok(ItemAdded {
             budget_id: self.id,
