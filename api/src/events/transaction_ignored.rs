@@ -31,32 +31,21 @@ impl TransactionIgnoredHandler for Budget {
         let tx = self.get_transaction(&event.tx_id).unwrap();
         let tx_amount = tx.amount;
         let previous_item_id = tx.actual_item_id;
-        let previous_item_type = match previous_item_id {
-            Some(id) => self.type_for_item(&id),
-            None => None,
-        };
-        let budget_period_id = PeriodId::from_date(tx.date, *self.month_begins_on());
-        // End of immutable borrow - tx goes out of scope here
-
-        // Handle previous connection if it exists
+        let period_id = PeriodId::from_date(tx.date, *self.month_begins_on());
+        
         if let Some(previous_budget_item_id) = previous_item_id {
-            let previous_budgeting_type = previous_item_type.unwrap();
-            // Adjust amount for cost types (negate for Expense/Savings)
-            let adjusted_amount = if cost_types.contains(&previous_budgeting_type) {
-                -tx_amount
-            } else {
-                tx_amount
-            };
-            // Update budget total (remove from previous item)
-            self.update_budget_actual_amount(budget_period_id, &previous_budgeting_type, &-adjusted_amount);
-            self.add_actual_amount_to_item(budget_period_id, &previous_budget_item_id, &-adjusted_amount);
+            self.with_period_mut(period_id).mutate_actual(previous_budget_item_id, |a| {
+                let bt = a.budget_item.lock().unwrap().budgeting_type;
+                let adjusted_amount = if cost_types.contains(&bt) {
+                    -tx_amount
+                } else {
+                    tx_amount
+                };
+                a.actual_amount -= adjusted_amount;
+            });
         }
 
-        // Now we can mutably borrow to update the transaction
-        self.get_period_mut(budget_period_id).transactions.ignore_transaction(&event.tx_id);
-        // End of mutable borrow
-        self.recalc_overview(Some(budget_period_id));
-
+        self.with_period_mut(period_id).transactions.ignore_transaction(&event.tx_id);
         event.tx_id
     }
 
