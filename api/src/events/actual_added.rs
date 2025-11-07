@@ -17,11 +17,9 @@ pub struct ActualAdded {
 
 impl ActualAddedHandler for Budget {
     fn apply_add_actual(&mut self, event: &ActualAdded) -> Uuid {
-        let budget_item = self.budget_items.get(&event.item_id).unwrap();
-
         let new_actual = ActualItem::new(
             event.actual_id,
-            budget_item.clone(),
+            event.item_id,
             event.period_id,
             event.budgeted_amount,
             Money::default(),
@@ -41,9 +39,9 @@ impl ActualAddedHandler for Budget {
         budgeted_amount: Money,
     ) -> Result<ActualAdded, CommandError> {
         if let Some(period) = self.get_period(period_id) {
-            if !period.contains_actual_for_item(item_id) {
+            if period.contains_actual_for_item(item_id){
                 Err(CommandError::Validation(format!(
-                    "Item does not exist for period: {}",
+                    "Item already exists for period: {}",
                     period_id
                 )))
             } else {

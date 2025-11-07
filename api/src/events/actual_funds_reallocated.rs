@@ -51,8 +51,8 @@ impl ActualFundsReallocatedHandler for Budget {
             let from_item = from_item.unwrap();
             let to_item = to_item.unwrap();
             
-            let from_type = from_item.budget_item.lock().unwrap().budgeting_type;
-            let to_type = to_item.budget_item.lock().unwrap().budgeting_type;
+            let from_type = from_item.budget_item_id.lock().unwrap().budgeting_type;
+            let to_type = to_item.budget_item_id.lock().unwrap().budgeting_type;
             
             if from_type == BudgetingType::Income
                 || to_type == BudgetingType::Income

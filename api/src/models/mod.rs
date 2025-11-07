@@ -9,7 +9,6 @@ mod budget_period;
 mod bank_transaction_store;
 mod budget_period_store;
 mod budget_period_id;
-mod budget_item_store;
 mod actual_item;
 
 pub use user::*;
@@ -23,6 +22,5 @@ pub use bank_transaction::*;
 pub use budget_period_id::*;
 pub use budget_period::*;
 pub use budget_period_store::*;
-pub use budget_item_store::*;
 pub use actual_item::*;
 

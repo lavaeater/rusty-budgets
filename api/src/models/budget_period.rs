@@ -34,7 +34,7 @@ impl BudgetPeriod {
         self.actual_items.insert(actual_item.id, actual_item);
     }
     pub fn contains_actual_for_item(&self, item_id: Uuid) -> bool {
-       self.actual_items.values().any(|i| i.budget_item.borrow().id == item_id)
+       self.actual_items.values().any(|i| i.budget_item_id.borrow().id == item_id)
     }
     fn clear_hashmaps_and_transactions(&mut self) {
         self.transactions.clear();

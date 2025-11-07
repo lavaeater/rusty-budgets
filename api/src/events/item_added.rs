@@ -1,10 +1,8 @@
-
-use std::sync::{Arc, Mutex};
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
+use crate::models::{Budget, BudgetItem, BudgetingType};
 use cqrs_macros::DomainEvent;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use crate::models::{Budget, BudgetItem, BudgetingType};
 
 #[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]
 #[domain_event(aggregate = "Budget")]
@@ -18,15 +16,10 @@ pub struct ItemAdded {
 
 impl ItemAddedHandler for Budget {
     fn apply_add_item(&mut self, event: &ItemAdded) -> Uuid {
-        let new_item = BudgetItem::new(
-            event.item_id,
-            &event.name,
-            event.item_type,
-        );
-        
-        let the_arc = Arc::new(Mutex::new(new_item));
-        self.budget_items.insert(event.item_id, the_arc.clone());
-        
+        let new_item = BudgetItem::new(event.item_id, &event.name, event.item_type);
+
+        self.budget_items.insert(event.item_id, new_item);
+
         event.item_id
     }
 
@@ -42,7 +35,7 @@ impl ItemAddedHandler for Budget {
             budget_id: self.id,
             item_id: Uuid::new_v4(),
             name,
-            item_type
+            item_type,
         })
     }
 }

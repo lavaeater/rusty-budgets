@@ -267,7 +267,7 @@ impl MatchRule {
     }
 
     pub fn matches_item(&self, item: &ActualItem) -> bool {
-        item.budget_item.borrow().name.contains(&self.item_name)
+        item.budget_item_id.borrow().name.contains(&self.item_name)
     }
     
     pub fn create_rule_for_transaction_and_item(transaction: &BankTransaction, item: &BudgetItem) -> MatchRule {

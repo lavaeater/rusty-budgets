@@ -32,7 +32,7 @@ impl TransactionConnectedHandler for Budget {
         let tx_amount = tx.amount;
         if let Some(previous_id) = tx.actual_item_id {
             self.with_period_mut(period_id).mutate_actual(previous_id, |a| {
-                let bt = a.budget_item.lock().unwrap().budgeting_type;
+                let bt = a.budget_item_id.lock().unwrap().budgeting_type;
                 let adjusted_amount = if cost_types.contains(&bt) {
                     -tx_amount
                 } else {
@@ -46,7 +46,7 @@ impl TransactionConnectedHandler for Budget {
         tx_mut.actual_item_id = Some(event.actual_id);
         
         self.with_period_mut(period_id).mutate_actual(event.actual_id, |a| {
-            let bt = a.budget_item.lock().unwrap().budgeting_type;
+            let bt = a.budget_item_id.lock().unwrap().budgeting_type;
             let adjusted_amount = if cost_types.contains(&bt) {
                 -tx_amount
             } else {

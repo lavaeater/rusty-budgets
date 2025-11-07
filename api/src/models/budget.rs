@@ -39,13 +39,13 @@ pub_events_enum! {
 }
 
 // --- Budget Domain ---
-#[derive(Debug, Clone, Model)]
+#[derive(Debug, Clone, Model, Serialize, Deserialize)]
 pub struct Budget {
     pub id: Uuid,
     pub name: String,
     pub user_id: Uuid,
     budget_periods: BudgetPeriodStore,
-    pub budget_items: HashMap<Uuid, Arc<Mutex<BudgetItem>>>,
+    pub budget_items: HashMap<Uuid, BudgetItem>,
     pub match_rules: HashSet<MatchRule>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
@@ -53,44 +53,6 @@ pub struct Budget {
     pub last_event: i64,
     pub version: u64,
     pub currency: Currency,
-}
-
-impl Serialize for Budget {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let budget_items = self
-            .budget_items
-            .values()
-            .map(|v| v.lock().unwrap().clone())
-            .collect::<Vec<_>>();
-        let mut state = serializer.serialize_struct("Budget", 11)?;
-        state.serialize_field("id", &self.id)?;
-        state.serialize_field("name", &self.name)?;
-        state.serialize_field("user_id", &self.user_id)?;
-        state.serialize_field("budget_periods", &self.budget_periods)?;
-        state.serialize_field("budget_items", &budget_items)?;
-        state.serialize_field("match_rules", &self.match_rules)?;
-        state.serialize_field("created_at", &self.created_at)?;
-        state.serialize_field("updated_at", &self.updated_at)?;
-        state.serialize_field("default_budget", &self.default_budget)?;
-        state.serialize_field("last_event", &self.last_event)?;
-        state.serialize_field("version", &self.version)?;
-        state.serialize_field("currency", &self.currency)?;
-        state.end()
-    }
-}
-
-impl<'de> Deserialize<'de> for Budget {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let mut budget = Budget::default();
-        deserializer.deserialize_struct("Budget", 11, budget)?;
-        Ok(budget)
-    }
 }
 
 impl Default for Budget {

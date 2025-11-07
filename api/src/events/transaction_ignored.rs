@@ -35,7 +35,7 @@ impl TransactionIgnoredHandler for Budget {
         
         if let Some(previous_budget_item_id) = previous_item_id {
             self.with_period_mut(period_id).mutate_actual(previous_budget_item_id, |a| {
-                let bt = a.budget_item.lock().unwrap().budgeting_type;
+                let bt = a.budget_item_id.lock().unwrap().budgeting_type;
                 let adjusted_amount = if cost_types.contains(&bt) {
                     -tx_amount
                 } else {
