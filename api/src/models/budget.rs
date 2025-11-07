@@ -27,7 +27,7 @@ pub_events_enum! {
         TransactionAdded,
         TransactionConnected,
         TransactionIgnored,
-        ItemFundsReallocated,
+        ActualFundsReallocated,
         ActualFundsAdjusted,
         ItemModified,
         RuleAdded,
@@ -157,10 +157,6 @@ impl Budget {
 
     pub fn get_transaction(&self, tx_id: &Uuid) -> Option<&BankTransaction> {
         self.budget_periods.get_transaction(tx_id)
-    }
-
-    pub fn type_for_item(&self, item_id: &Uuid) -> Option<BudgetingType> {
-        self.budget_periods.type_for_item(item_id)
     }
 
     pub fn update_budget_actual_amount(
