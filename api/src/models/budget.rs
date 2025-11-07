@@ -30,6 +30,7 @@ pub_events_enum! {
         ActualFundsReallocated,
         ActualFundsAdjusted,
         ItemModified,
+        ActualModified,
         RuleAdded,
     }
 }
@@ -144,7 +145,7 @@ impl Budget {
     }
 
     pub fn contains_budget_item(&self, item_id: &Uuid) -> bool {
-        self.budget_items.contains(item_id)
+        self.budget_items.contains_key(item_id)
     }
 
     pub fn contains_item_with_name(&self, name: &str) -> bool {
@@ -194,26 +195,22 @@ impl Budget {
             .add_budgeted_amount_to_item(item_id, amount);
     }
 
-    #[allow(clippy::too_many_arguments)]
     pub fn modify_budget_item(
         &mut self,
         id: &Uuid,
         name: Option<String>,
-        item_type: Option<BudgetingType>,
-        budgeted_amount: Option<Money>,
-        actual_amount: Option<Money>,
-        notes: Option<String>,
-        tags: Option<Vec<String>>,
+        item_type: Option<BudgetingType>
     ) {
-        self.budget_periods.modify_budget_item(
-            id,
-            name,
-            item_type,
-            budgeted_amount,
-            actual_amount,
-            notes,
-            tags,
-        );
+        self.budget_items.entry(*id).and_modify(|item| {
+            if let Some(mut item) = item.borrow_mut() {
+                if let Some(name) = name {
+                    item.name = name;
+                }
+                if let Some(item_type) = item_type {
+                    item.item_type = item_type;
+                }
+            }
+        });
     }
 
     pub fn get_budgeted_by_type(&self, budgeting_type: &BudgetingType) -> Option<&Money> {

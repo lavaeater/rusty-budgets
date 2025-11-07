@@ -8,6 +8,7 @@ mod item_modified;
 mod rule_added;
 mod transaction_ignored;
 pub mod actual_added;
+pub mod actual_modified;
 
 pub use budget_created::BudgetCreated;
 pub use item_added::ItemAdded;
@@ -19,6 +20,7 @@ pub use item_modified::ItemModified;
 pub use rule_added::RuleAdded;
 pub use transaction_ignored::TransactionIgnored;
 pub use actual_added::ActualAdded;
+pub use actual_modified::ActualModified;
 
 
 
