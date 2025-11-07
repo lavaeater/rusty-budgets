@@ -143,6 +143,10 @@ impl Budget {
     pub fn contains_transaction(&self, tx_id: &Uuid) -> bool {
         self.budget_periods.contains_transaction(tx_id)
     }
+    
+    pub fn get_period_for_transaction(&self, tx_id: &Uuid) -> Option<&BudgetPeriod> {
+        self.budget_periods.get_period_for_transaction(tx_id)
+    }
 
     pub fn contains_budget_item(&self, item_id: &Uuid) -> bool {
         self.budget_items.contains_key(item_id)

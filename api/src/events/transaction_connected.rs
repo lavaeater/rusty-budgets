@@ -1,17 +1,16 @@
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
-use crate::models::{Budget, PeriodId, BudgetingType};
+use crate::models::{Budget, BudgetingType, PeriodId};
 use core::fmt::Display;
 use cqrs_macros::DomainEvent;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-// TransactionConnected,
 #[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]
 #[domain_event(aggregate = "Budget")]
 pub struct TransactionConnected {
     budget_id: Uuid,
     tx_id: Uuid,
-    item_id: Uuid,
+    actual_id: Uuid,
 }
 
 impl Display for TransactionConnected {
@@ -31,7 +30,7 @@ impl TransactionConnectedHandler for Budget {
         // First, extract all the data we need from the transaction (immutable borrow)
         let tx = self.get_transaction(&event.tx_id).unwrap();
         let tx_amount = tx.amount;
-        let previous_item_id = tx.budget_item_id;
+        let previous_item_id = tx.actual_item_id;
         let previous_item_type = match previous_item_id {
             Some(id) => self.type_for_item(&id),
             None => None,
@@ -49,31 +48,41 @@ impl TransactionConnectedHandler for Budget {
                 tx_amount
             };
             // Update budget total (remove from previous item)
-            self.get_period_mut(budget_period_id).actual_by_type
-                    .entry(previous_budgeting_type)
-                    .and_modify(|v| {
-                        *v -= adjusted_amount;
-                    });
-            self.get_period_mut(budget_period_id).budget_items
-                    .add_actual_amount(&previous_budget_item_id, &-adjusted_amount);
+            self.get_period_mut(budget_period_id)
+                .actual_by_type
+                .entry(previous_budgeting_type)
+                .and_modify(|v| {
+                    *v -= adjusted_amount;
+                });
+            self.get_period_mut(budget_period_id)
+                .budget_items
+                .add_actual_amount(&previous_budget_item_id, &-adjusted_amount);
         }
-        if !self.get_period(budget_period_id).budget_items.contains(&event.item_id) {
+        if !self
+            .get_period(budget_period_id)
+            .budget_items
+            .contains(&event.item_id)
+        {
             let item = self.budget_items.get(&event.item_id).unwrap().clone();
             let type_for = self.budget_items.type_for(&event.item_id).unwrap().clone();
-            self.get_period_mut(budget_period_id).budget_items.insert(&item, type_for);
+            self.get_period_mut(budget_period_id)
+                .budget_items
+                .insert(&item, type_for);
         }
 
         // Now we can mutably borrow to update the transaction
         let tx_mut = self.get_transaction_mut(&event.tx_id).unwrap();
-        
-        tx_mut.budget_item_id = Some(event.item_id);
+
+        tx_mut.actual_item_id = Some(event.item_id);
         // End of mutable borrow
 
         // Update the new item
         let budgeting_type = &self
             .get_period(budget_period_id)
-            .budget_items.type_for(&event.item_id)
-            .unwrap().clone();
+            .budget_items
+            .type_for(&event.item_id)
+            .unwrap()
+            .clone();
 
         // Adjust amount for cost types (negate for Expense/Savings)
         let adjusted_amount = if cost_types.contains(&budgeting_type) {
@@ -93,24 +102,23 @@ impl TransactionConnectedHandler for Budget {
     fn connect_transaction_impl(
         &self,
         tx_id: Uuid,
-        item_id: Uuid,
+        actual_id: Uuid,
     ) -> Result<TransactionConnected, CommandError> {
-        if self.contains_transaction(&tx_id) && self.contains_budget_item(&item_id) {
-            if let Some(tx) = self.get_transaction(&tx_id) {
-                if tx.budget_item_id == Some(item_id) {
-                    return Err(CommandError::Validation(
-                        "Transaction is already connected to this item.".to_string(),
-                    ));
-                }
+        if let Some(period) = self.get_period_for_transaction(&tx_id) {
+            if period.contains_actual_for_item(actual_id) {
+                Ok(TransactionConnected {
+                    budget_id: self.id,
+                    tx_id,
+                    actual_id,
+                })
+            } else {
+                Err(CommandError::Validation(
+                    "Actual does not exist for period.".to_string(),
+                ))
             }
-            Ok(TransactionConnected {
-                budget_id: self.id,
-                tx_id,
-                item_id,
-            })
         } else {
             Err(CommandError::Validation(
-                "Transaction or item does not exist.".to_string(),
+                "Transaction does not exist.".to_string(),
             ))
         }
     }

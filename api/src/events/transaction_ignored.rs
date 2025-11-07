@@ -30,7 +30,7 @@ impl TransactionIgnoredHandler for Budget {
         // First, extract all the data we need from the transaction (immutable borrow)
         let tx = self.get_transaction(&event.tx_id).unwrap();
         let tx_amount = tx.amount;
-        let previous_item_id = tx.budget_item_id;
+        let previous_item_id = tx.actual_item_id;
         let previous_item_type = match previous_item_id {
             Some(id) => self.type_for_item(&id),
             None => None,

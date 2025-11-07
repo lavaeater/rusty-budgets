@@ -22,7 +22,7 @@ impl BankTransactionStore {
 
 impl BankTransactionStore {
     pub fn list_transactions_for_item(&self, item_id: &Uuid, sorted: bool) -> Vec<&BankTransaction> {
-        let mut transactions = self.by_id.values().filter(|tx| tx.budget_item_id == Some(*item_id)).collect::<Vec<_>>();
+        let mut transactions = self.by_id.values().filter(|tx| tx.actual_item_id == Some(*item_id)).collect::<Vec<_>>();
         if sorted {
             transactions.sort_by_key(|tx| tx.date);
         }
@@ -68,7 +68,7 @@ impl BankTransactionStore {
     pub fn ignore_transaction(&mut self, tx_id: &Uuid) -> bool {
         if let Some(mut transaction) = self.by_id.remove(tx_id) {
             transaction.ignored = true;
-            transaction.budget_item_id = None;
+            transaction.actual_item_id = None;
             
             self.ignored.insert(*tx_id, transaction);
             true
@@ -111,7 +111,7 @@ impl BankTransactionStore {
         let mut transactions = self
             .by_id
             .values()
-            .filter(|tx| tx.budget_item_id.is_none())
+            .filter(|tx| tx.actual_item_id.is_none())
             .cloned()
             .collect::<Vec<_>>();
 

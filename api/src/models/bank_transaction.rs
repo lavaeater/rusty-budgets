@@ -22,7 +22,7 @@ pub struct BankTransaction {
     pub amount: Money,
     pub description: String,
     pub date: DateTime<Utc>,
-    pub budget_item_id: Option<Uuid>,
+    pub actual_item_id: Option<Uuid>,
     pub balance: Money,
     #[serde(default)]
     pub ignored: bool,
@@ -88,7 +88,7 @@ impl BankTransaction {
             balance,
             description: description.to_string(),
             date,
-            budget_item_id: None,
+            actual_item_id: None,
             ignored: false,
         }
     }

@@ -31,9 +31,7 @@ mod budget_period_map_serde {
         string_map.serialize(serializer)
     }
 
-    pub fn deserialize<'de, D>(
-        deserializer: D,
-    ) -> Result<HashMap<PeriodId, BudgetPeriod>, D::Error>
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<HashMap<PeriodId, BudgetPeriod>, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -83,6 +81,11 @@ impl Default for BudgetPeriodStore {
 }
 
 impl BudgetPeriodStore {
+    pub fn get_period_for_transaction(&self, tx_id: &Uuid) -> Option<&BudgetPeriod> {
+        self.budget_periods
+            .values()
+            .find(|p| p.transactions.contains(tx_id))
+    }
     pub fn new(date: DateTime<Utc>, month_begins_on: Option<MonthBeginsOn>) -> Self {
         let month_begins_on = month_begins_on.unwrap_or_default();
         let id = PeriodId::from_date(date, month_begins_on);
@@ -105,10 +108,7 @@ impl BudgetPeriodStore {
         self.budget_periods.get_mut(&id)
     }
 
-    pub fn list_ignored_transactions(
-        &self,
-        period_id: PeriodId,
-    ) -> Vec<BankTransaction> {
+    pub fn list_ignored_transactions(&self, period_id: PeriodId) -> Vec<BankTransaction> {
         self.with_period(period_id)
             .map(|p| p.transactions.list_ignored_transactions())
             .unwrap_or_default()
@@ -135,11 +135,7 @@ impl BudgetPeriodStore {
             .collect::<Vec<_>>()
     }
 
-    pub fn move_transaction_to_ignored(
-        &mut self,
-        tx_id: &Uuid,
-        period_id: PeriodId,
-    ) -> bool {
+    pub fn move_transaction_to_ignored(&mut self, tx_id: &Uuid, period_id: PeriodId) -> bool {
         self.with_period_mut(period_id)
             .map(|p| p.transactions.ignore_transaction(tx_id))
             .unwrap_or_default()
@@ -197,21 +193,13 @@ impl BudgetPeriodStore {
         })
     }
 
-    pub fn get_item(
-        &self,
-        item_id: &Uuid,
-        period_id: PeriodId,
-    ) -> Option<&BudgetItem> {
+    pub fn get_item(&self, item_id: &Uuid, period_id: PeriodId) -> Option<&BudgetItem> {
         self.with_period(period_id)
             .map(|p| p.budget_items.get(item_id))
             .unwrap_or_default()
     }
 
-    pub fn get_type_for_item(
-        &self,
-        item_id: &Uuid,
-        period_id: PeriodId,
-    ) -> Option<&BudgetingType> {
+    pub fn get_type_for_item(&self, item_id: &Uuid, period_id: PeriodId) -> Option<&BudgetingType> {
         self.with_period(period_id)
             .map(|p| p.budget_items.type_for(item_id))
             .unwrap_or_default()
@@ -239,11 +227,7 @@ impl BudgetPeriodStore {
             .unwrap_or_default()
     }
 
-    pub fn budgeted_for_type(
-        &self,
-        budgeting_type: &BudgetingType,
-        period_id: PeriodId,
-    ) -> Money {
+    pub fn budgeted_for_type(&self, budgeting_type: &BudgetingType, period_id: PeriodId) -> Money {
         self.with_period(period_id)
             .map(|p| p.budget_items.by_type(budgeting_type).unwrap_or_default())
             .unwrap_or_default()
@@ -252,11 +236,7 @@ impl BudgetPeriodStore {
             .sum()
     }
 
-    pub fn spent_for_type(
-        &self,
-        budgeting_type: &BudgetingType,
-        period_id: PeriodId,
-    ) -> Money {
+    pub fn spent_for_type(&self, budgeting_type: &BudgetingType, period_id: PeriodId) -> Money {
         self.with_period(period_id)
             .map(|p| {
                 p.budget_items
@@ -309,17 +289,26 @@ impl BudgetPeriodStore {
 
         let expense_sum = Sum(vec![Expense]);
         let budgeted_expenses = expense_sum.evaluate(
-            &self.with_period(period_id).map(|p| p.budget_items.hash_by_type()).unwrap_or_default(),
+            &self
+                .with_period(period_id)
+                .map(|p| p.budget_items.hash_by_type())
+                .unwrap_or_default(),
             Some(ValueKind::Budgeted),
         );
         let spent_expenses = expense_sum.evaluate(
-            &self.with_period(period_id).map(|p| p.budget_items.hash_by_type()).unwrap_or_default(),
+            &self
+                .with_period(period_id)
+                .map(|p| p.budget_items.hash_by_type())
+                .unwrap_or_default(),
             Some(ValueKind::Spent),
         );
 
         let self_difference_rule = SelfDiff(Expense);
         let self_diff = self_difference_rule.evaluate(
-            &self.with_period(period_id).map(|p| p.budget_items.hash_by_type()).unwrap_or_default(),
+            &self
+                .with_period(period_id)
+                .map(|p| p.budget_items.hash_by_type())
+                .unwrap_or_default(),
             None,
         );
 
@@ -330,7 +319,8 @@ impl BudgetPeriodStore {
             is_ok: self_diff < Money::zero(self_diff.currency()),
         };
 
-        self.with_period_mut(period_id).map(|p| p.budgeting_overview.insert(Expense, expense_overview));
+        self.with_period_mut(period_id)
+            .map(|p| p.budgeting_overview.insert(Expense, expense_overview));
 
         let savings_sum = Sum(vec![Savings]);
         let budgeted_savings = savings_sum.evaluate(
@@ -338,13 +328,19 @@ impl BudgetPeriodStore {
             Some(ValueKind::Budgeted),
         );
         let spent_savings = savings_sum.evaluate(
-            &self.with_period(period_id).map(|p| p.budget_items.hash_by_type()).unwrap_or_default(),
+            &self
+                .with_period(period_id)
+                .map(|p| p.budget_items.hash_by_type())
+                .unwrap_or_default(),
             Some(ValueKind::Spent),
         );
 
         let self_difference_rule = SelfDiff(Savings);
         let self_diff = self_difference_rule.evaluate(
-            &self.with_period(period_id).map(|p| p.budget_items.hash_by_type()).unwrap_or_default(),
+            &self
+                .with_period(period_id)
+                .map(|p| p.budget_items.hash_by_type())
+                .unwrap_or_default(),
             None,
         );
 
@@ -355,7 +351,8 @@ impl BudgetPeriodStore {
             is_ok: self_diff < Money::zero(self_diff.currency()),
         };
 
-        self.with_period_mut(period_id).map(|p| p.budgeting_overview.insert(Savings,savings_overview));
+        self.with_period_mut(period_id)
+            .map(|p| p.budgeting_overview.insert(Savings, savings_overview));
     }
 
     pub fn insert_item(&mut self, item: &BudgetItem, item_type: BudgetingType) {
@@ -733,8 +730,7 @@ mod tests {
     fn test_remove_item_removes_from_current_period() {
         let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
         let mut store = BudgetPeriodStore::new(date, None);
-        let period_id =
-            PeriodId::from_date(date, MonthBeginsOn::PreviousMonthWorkDayBefore(25));
+        let period_id = PeriodId::from_date(date, MonthBeginsOn::PreviousMonthWorkDayBefore(25));
 
         let item = BudgetItem {
             id: Uuid::new_v4(),
