@@ -28,7 +28,7 @@ pub_events_enum! {
         TransactionConnected,
         TransactionIgnored,
         ItemFundsReallocated,
-        ItemFundsAdjusted,
+        ActualFundsAdjusted,
         ItemModified,
         RuleAdded,
     }

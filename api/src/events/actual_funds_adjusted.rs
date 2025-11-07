@@ -7,28 +7,28 @@ use crate::models::Money;
 
 #[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]
 #[domain_event(aggregate = "Budget")]
-pub struct ItemFundsAdjusted {
+pub struct ActualFundsAdjusted {
     budget_id: Uuid,
-    item_id: Uuid,
-    budget_period_id: Option<BudgetPeriodId>,
+    actual_id: Uuid,
+    budget_period_id: BudgetPeriodId,
     amount: Money,
 }
 
-impl ItemFundsAdjustedHandler for Budget {
-    fn apply_adjust_item_funds(&mut self, event: &ItemFundsAdjusted) -> Uuid {
-        self.with_period_or_now_mut(event.budget_period_id).budget_items.add_budgeted_amount(&event.item_id, &event.amount);
+impl ActualFundsAdjustedHandler for Budget {
+    fn apply_adjust_actual_funds(&mut self, event: &ActualFundsAdjusted) -> Uuid {
+        self.with_period_mut(event.budget_period_id).add_actual_amount_to_item(&event.actual_id, &event.amount);
         let item_type = self.type_for_item(&event.item_id).unwrap();
         self.update_budget_budgeted_amount(event.budget_period_id, &item_type, &event.amount);
         self.recalc_overview(event.budget_period_id);
         event.item_id
     }
 
-    fn adjust_item_funds_impl(
+    fn adjust_actual_funds_impl(
         &self,
-        item_id: Uuid,
-        budget_period_id: Option<BudgetPeriodId>,
+        actual_id: Uuid,
+        budget_period_id: BudgetPeriodId,
         amount: Money,
-    ) -> Result<ItemFundsAdjusted, CommandError> {
+    ) -> Result<ActualFundsAdjusted, CommandError> {
         let item = self.with_period_or_now(budget_period_id).budget_items.get(&item_id);
 
         if item.is_none() {
@@ -42,7 +42,7 @@ impl ItemFundsAdjustedHandler for Budget {
             ));
         }
 
-        Ok(ItemFundsAdjusted {
+        Ok(ActualFundsAdjusted {
             budget_id: self.id,
             item_id,
             budget_period_id,

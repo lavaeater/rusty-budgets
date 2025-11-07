@@ -4,11 +4,11 @@ use crate::models::BudgetingType::{Expense, Income, Savings};
 use crate::models::{ActualItem, BudgetItem, BudgetingType, BudgetingTypeOverview, MatchRule, Money};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::{HashMap, HashSet};
+use dioxus::logger::tracing;
 use uuid::Uuid;
 use crate::models::budget_item_store::BudgetItemStore;
 use crate::models::budget_period_id::BudgetPeriodId;
 
-// --- Budget Domain ---
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BudgetPeriod {
     pub id: BudgetPeriodId,
@@ -16,7 +16,7 @@ pub struct BudgetPeriod {
     pub transactions: BankTransactionStore,
     pub budgeted_by_type: HashMap<BudgetingType, Money>,
     pub actual_by_type: HashMap<BudgetingType, Money>,
-    pub budgeting_overview: HashMap<BudgetingType, BudgetingTypeOverview>,
+    // pub budgeting_overview: HashMap<BudgetingType, BudgetingTypeOverview>,
 }
 
 impl BudgetPeriod {
@@ -28,11 +28,11 @@ impl BudgetPeriod {
     }
     fn clear_hashmaps_and_transactions(&mut self) {
         self.transactions.clear();
-        self.budgeting_overview = HashMap::from([
-            (Expense, BudgetingTypeOverview::default()),
-            (Savings, BudgetingTypeOverview::default()),
-            (Income, BudgetingTypeOverview::default()),
-        ]);
+        // self.budgeting_overview = HashMap::from([
+        //     (Expense, BudgetingTypeOverview::default()),
+        //     (Savings, BudgetingTypeOverview::default()),
+        //     (Income, BudgetingTypeOverview::default()),
+        // ]);
         self.budgeted_by_type = HashMap::from([
             (Expense, Money::default()),
             (Savings, Money::default()),
@@ -44,20 +44,20 @@ impl BudgetPeriod {
             (Income, Money::default()),
         ]);
     }
-    pub(crate) fn clone_to(&self, id: BudgetPeriodId) -> Self {
+    pub fn clone_to(&self, id: BudgetPeriodId) -> Self {
         let mut period = self.clone();
         period.id = id;
         period.clear_hashmaps_and_transactions();
         period
     }
-    pub(crate) fn new_for(id: BudgetPeriodId) -> Self {
+    pub fn new_for(id: BudgetPeriodId) -> Self {
         let mut period = Self {
             id: id,
-            budget_items: BudgetItemStore::default(),
+            items: HashMap::new(),
             transactions: BankTransactionStore::default(),
             budgeted_by_type: Default::default(),
             actual_by_type: Default::default(),
-            budgeting_overview: Default::default(),
+            // budgeting_overview: Default::default(),
         };
         period.clear_hashmaps_and_transactions();
         period
@@ -78,7 +78,7 @@ impl BudgetPeriod {
         matched_transactions
     }
 
-    pub fn get_item_for_rule(&self, rule: &MatchRule, items: &Vec<BudgetItem>) -> Option<Uuid> {
+    pub fn get_item_for_rule(&self, rule: &MatchRule, items: &Vec<ActualItem>) -> Option<Uuid> {
         items.iter().find(|i| rule.matches_item(i)).map(|i| i.id)
     }
     
@@ -95,15 +95,17 @@ impl BudgetPeriod {
     }
     
     pub fn add_actual_amount_to_item(&mut self, item_id: &Uuid, amount: &Money) {
-        self.budget_items.add_actual_amount(item_id, amount);
+        if let Some(item) = self.items.get_mut(item_id) {
+            item.actual_amount += *amount;
+            self.update_actual_amount(&item.budget_item.borrow().budgeting_type, amount);
+        }
     }
     
     pub fn add_budgeted_amount_to_item(&mut self, item_id: &Uuid, amount: &Money) {
-        self.budget_items.add_budgeted_amount(item_id, amount);
-    }
-    
-    pub fn insert_item(&mut self, item: &BudgetItem, budgeting_type: BudgetingType) -> bool {
-        self.budget_items.insert(item, budgeting_type)
+        if let Some(item) = self.items.get_mut(item_id) {
+            item.budgeted_amount += *amount;
+            self.update_budgeted_amount(&item.budget_item.borrow().budgeting_type, amount);
+        }
     }
 }
 
