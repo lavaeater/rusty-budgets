@@ -26,35 +26,45 @@ impl Display for TransactionConnected {
 impl TransactionConnectedHandler for Budget {
     fn apply_connect_transaction(&mut self, event: &TransactionConnected) -> Uuid {
         let cost_types = Vec::from([BudgetingType::Expense, BudgetingType::Savings]);
-        
+
         let tx = self.get_transaction(&event.tx_id).unwrap();
         let period_id = PeriodId::from_date(tx.date, *self.month_begins_on());
         let tx_amount = tx.amount;
         if let Some(previous_id) = tx.actual_item_id {
-            self.with_period_mut(period_id).mutate_actual(previous_id, |a| {
-                let bt = a.budget_item_id.lock().unwrap().budgeting_type;
+            self.with_period_mut(period_id)
+                .mutate_actual(previous_id, |a| {
+                    let bt = self
+                        .budget_items
+                        .get(&a.budget_item_id)
+                        .unwrap()
+                        .budgeting_type;
+                    let adjusted_amount = if cost_types.contains(&bt) {
+                        -tx_amount
+                    } else {
+                        tx_amount
+                    };
+                    a.actual_amount -= adjusted_amount;
+                });
+        }
+
+        let tx_mut = self.get_transaction_mut(&event.tx_id).unwrap();
+        tx_mut.actual_item_id = Some(event.actual_id);
+
+        self.with_period_mut(period_id)
+            .mutate_actual(event.actual_id, |a| {
+                let bt = self
+                    .budget_items
+                    .get(&a.budget_item_id)
+                    .unwrap()
+                    .budgeting_type;
                 let adjusted_amount = if cost_types.contains(&bt) {
                     -tx_amount
                 } else {
                     tx_amount
                 };
-                a.actual_amount -= adjusted_amount;
+                a.actual_amount += adjusted_amount;
             });
-        }
-        
-        let tx_mut = self.get_transaction_mut(&event.tx_id).unwrap();
-        tx_mut.actual_item_id = Some(event.actual_id);
-        
-        self.with_period_mut(period_id).mutate_actual(event.actual_id, |a| {
-            let bt = a.budget_item_id.lock().unwrap().budgeting_type;
-            let adjusted_amount = if cost_types.contains(&bt) {
-                -tx_amount
-            } else {
-                tx_amount
-            };
-            a.actual_amount += adjusted_amount;
-        });
-        
+
         event.tx_id
     }
 
