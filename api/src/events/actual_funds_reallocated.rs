@@ -6,7 +6,6 @@ use crate::models::{Budget, PeriodId};
 use crate::models::BudgetingType;
 use crate::models::Money;
 
-// FundsReallocated
 #[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]
 #[domain_event(aggregate = "Budget")]
 pub struct ActualFundsReallocated {
