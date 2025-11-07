@@ -7,11 +7,14 @@ use crate::models::budget_period_id::PeriodId;
 use crate::models::budget_period_store::BudgetPeriodStore;
 use crate::models::budgeting_type::BudgetingType;
 use crate::models::money::{Currency, Money};
-use crate::models::{ActualItem, BankTransaction, BudgetPeriod, BudgetingTypeOverview, MatchRule, MonthBeginsOn};
+use crate::models::{
+    ActualItem, BankTransaction, BudgetPeriod, BudgetingTypeOverview, MatchRule, MonthBeginsOn,
+};
 use crate::pub_events_enum;
 use chrono::{DateTime, Utc};
 use joydb::Model;
-use serde::{Deserialize, Serialize};
+use serde::ser::SerializeStruct;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
@@ -36,7 +39,7 @@ pub_events_enum! {
 }
 
 // --- Budget Domain ---
-#[derive(Debug, Clone, Serialize, Deserialize, Model)]
+#[derive(Debug, Clone, Model)]
 pub struct Budget {
     pub id: Uuid,
     pub name: String,
@@ -50,6 +53,44 @@ pub struct Budget {
     pub last_event: i64,
     pub version: u64,
     pub currency: Currency,
+}
+
+impl Serialize for Budget {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let budget_items = self
+            .budget_items
+            .values()
+            .map(|v| v.lock().unwrap().clone())
+            .collect::<Vec<_>>();
+        let mut state = serializer.serialize_struct("Budget", 11)?;
+        state.serialize_field("id", &self.id)?;
+        state.serialize_field("name", &self.name)?;
+        state.serialize_field("user_id", &self.user_id)?;
+        state.serialize_field("budget_periods", &self.budget_periods)?;
+        state.serialize_field("budget_items", &budget_items)?;
+        state.serialize_field("match_rules", &self.match_rules)?;
+        state.serialize_field("created_at", &self.created_at)?;
+        state.serialize_field("updated_at", &self.updated_at)?;
+        state.serialize_field("default_budget", &self.default_budget)?;
+        state.serialize_field("last_event", &self.last_event)?;
+        state.serialize_field("version", &self.version)?;
+        state.serialize_field("currency", &self.currency)?;
+        state.end()
+    }
+}
+
+impl<'de> Deserialize<'de> for Budget {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let mut budget = Budget::default();
+        deserializer.deserialize_struct("Budget", 11, budget)?;
+        Ok(budget)
+    }
 }
 
 impl Default for Budget {
@@ -143,7 +184,7 @@ impl Budget {
     pub fn contains_transaction(&self, tx_id: &Uuid) -> bool {
         self.budget_periods.contains_transaction(tx_id)
     }
-    
+
     pub fn get_period_for_transaction(&self, tx_id: &Uuid) -> Option<&BudgetPeriod> {
         self.budget_periods.get_period_for_transaction(tx_id)
     }
@@ -203,7 +244,7 @@ impl Budget {
         &mut self,
         id: &Uuid,
         name: Option<String>,
-        item_type: Option<BudgetingType>
+        item_type: Option<BudgetingType>,
     ) {
         self.budget_items.entry(*id).and_modify(|item| {
             if let Some(mut item) = item.borrow_mut() {
@@ -287,15 +328,20 @@ impl Budget {
 
     pub fn with_period_mut(&mut self, period_id: PeriodId) -> &mut BudgetPeriod {
         //This can panic because we only use this in contexts where we KNOW we have a period!
-        
+
         self.get_period_mut(period_id).unwrap()
     }
-    
+
     pub fn with_period(&self, period_id: PeriodId) -> &BudgetPeriod {
         self.get_period(period_id).unwrap()
     }
-    
-    pub fn mutate_actual(&mut self, period_id: PeriodId, actual_id: Uuid, mutator: impl FnMut(&mut ActualItem)) {
+
+    pub fn mutate_actual(
+        &mut self,
+        period_id: PeriodId,
+        actual_id: Uuid,
+        mutator: impl FnMut(&mut ActualItem),
+    ) {
         self.with_period_mut(period_id)
             .mutate_actual(actual_id, mutator);
     }
