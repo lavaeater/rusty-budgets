@@ -14,18 +14,18 @@ pub fn last_day_of_month(dt: DateTime<Utc>) -> DateTime<Utc> {
 }
 
 #[derive(Default, Copy, Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
-pub struct BudgetPeriodId {
+pub struct PeriodId {
     pub year: i32,
     pub month: u32,
 }
 
-impl Display for BudgetPeriodId {
+impl Display for PeriodId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}-{}", self.year, self.month)
     }
 }
 
-impl BudgetPeriodId {
+impl PeriodId {
     pub fn from_date(date: DateTime<Utc>, month_begins_on: MonthBeginsOn) -> Self {
         // Determine which period this date falls into
         // The period ID represents the END month of the period
@@ -185,7 +185,7 @@ impl BudgetPeriodId {
 
 #[cfg(test)]
 mod tests {
-    use crate::models::budget_period_id::{last_day_of_month, BudgetPeriodId};
+    use crate::models::budget_period_id::{last_day_of_month, PeriodId};
     use crate::models::MonthBeginsOn;
     use chrono::{Datelike, TimeZone, Utc};
 
@@ -193,7 +193,7 @@ mod tests {
     fn test_from_date_current_month_1st_day() {
         // Test with CurrentMonth1stDayOfMonth - period is 1st to last day of month
         let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
-        let id = BudgetPeriodId::from_date(date, MonthBeginsOn::CurrentMonth1stDayOfMonth);
+        let id = PeriodId::from_date(date, MonthBeginsOn::CurrentMonth1stDayOfMonth);
 
         assert_eq!(id.year, 2025);
         assert_eq!(id.month, 3);
@@ -203,14 +203,14 @@ mod tests {
     fn test_from_date_std() {
         // Test with PreviousMonth1stDayOfMonth - period is 1st of prev month to last day of prev month
         let date = Utc.with_ymd_and_hms(2025, 3, 12, 12, 0, 0).unwrap();
-        let id = BudgetPeriodId::from_date(date, MonthBeginsOn::PreviousMonth(25));
+        let id = PeriodId::from_date(date, MonthBeginsOn::PreviousMonth(25));
 
         // Date is March 15, period starts Feb 1, so date is clamped to Feb 28 (end of period)
         assert_eq!(id.year, 2025);
         assert_eq!(id.month, 3);
 
         let date = Utc.with_ymd_and_hms(2025, 2, 26, 12, 0, 0).unwrap();
-        let id = BudgetPeriodId::from_date(date, MonthBeginsOn::PreviousMonth(25));
+        let id = PeriodId::from_date(date, MonthBeginsOn::PreviousMonth(25));
 
         // Date is March 15, period starts Feb 1, so date is clamped to Feb 28 (end of period)
         assert_eq!(id.year, 2025);
@@ -222,7 +222,7 @@ mod tests {
         // Test with CurrentMonth(15) when date is before the 15th
         // Date March 10 is before period start (March 15), so clamped to March 15
         let date = Utc.with_ymd_and_hms(2025, 3, 10, 12, 0, 0).unwrap();
-        let id = BudgetPeriodId::from_date(date, MonthBeginsOn::CurrentMonth(15));
+        let id = PeriodId::from_date(date, MonthBeginsOn::CurrentMonth(15));
 
         assert_eq!(id.year, 2025);
         assert_eq!(id.month, 3);
@@ -233,13 +233,13 @@ mod tests {
         // Test with PreviousMonth(25) - period is 25th of prev month to 24th of current month
         // Date March 20 is within period (Feb 25 - March 24)
         let date = Utc.with_ymd_and_hms(2025, 10, 23, 12, 0, 0).unwrap();
-        let id = BudgetPeriodId::from_date(date, MonthBeginsOn::PreviousMonth(25));
+        let id = PeriodId::from_date(date, MonthBeginsOn::PreviousMonth(25));
 
         assert_eq!(id.year, 2025);
         assert_eq!(id.month, 10);
 
         let date = Utc.with_ymd_and_hms(2025, 10, 24, 12, 0, 0).unwrap();
-        let id = BudgetPeriodId::from_date(date, MonthBeginsOn::PreviousMonth(25));
+        let id = PeriodId::from_date(date, MonthBeginsOn::PreviousMonth(25));
 
         assert_eq!(id.year, 2025);
         assert_eq!(id.month, 10);
@@ -250,13 +250,13 @@ mod tests {
         // Test with PreviousMonth(25) - period is 25th of prev month to 24th of current month
         // Date March 20 is within period (Feb 25 - March 24)
         let date = Utc.with_ymd_and_hms(2025, 10, 24, 12, 0, 0).unwrap();
-        let id = BudgetPeriodId::from_date(date, MonthBeginsOn::PreviousMonthWorkDayBefore(25));
+        let id = PeriodId::from_date(date, MonthBeginsOn::PreviousMonthWorkDayBefore(25));
 
         assert_eq!(id.year, 2025);
         assert_eq!(id.month, 11);
 
         let date = Utc.with_ymd_and_hms(2025, 10, 23, 12, 0, 0).unwrap();
-        let id = BudgetPeriodId::from_date(date, MonthBeginsOn::PreviousMonthWorkDayBefore(25));
+        let id = PeriodId::from_date(date, MonthBeginsOn::PreviousMonthWorkDayBefore(25));
 
         assert_eq!(id.year, 2025);
         assert_eq!(id.month, 10);
@@ -267,7 +267,7 @@ mod tests {
         // Test with PreviousMonth(25) when date is before period start
         // Date March 10 is before period start (Feb 25), so clamped to Feb 25
         let date = Utc.with_ymd_and_hms(2025, 3, 10, 12, 0, 0).unwrap();
-        let id = BudgetPeriodId::from_date(date, MonthBeginsOn::PreviousMonth(25));
+        let id = PeriodId::from_date(date, MonthBeginsOn::PreviousMonth(25));
 
         assert_eq!(id.year, 2025);
         assert_eq!(id.month, 3);
@@ -278,7 +278,7 @@ mod tests {
         // Test year boundary with PreviousMonth(25)
         // Period: Dec 25, 2024 - Jan 24, 2025
         let date = Utc.with_ymd_and_hms(2025, 1, 15, 12, 0, 0).unwrap();
-        let id = BudgetPeriodId::from_date(date, MonthBeginsOn::PreviousMonth(25));
+        let id = PeriodId::from_date(date, MonthBeginsOn::PreviousMonth(25));
 
         assert_eq!(id.year, 2025);
         assert_eq!(id.month, 1);
@@ -289,7 +289,7 @@ mod tests {
         // Test with date exactly on period end
         // Period: March 15 - April 14
         let date = Utc.with_ymd_and_hms(2025, 4, 14, 23, 59, 59).unwrap();
-        let id = BudgetPeriodId::from_date(date, MonthBeginsOn::CurrentMonth(15));
+        let id = PeriodId::from_date(date, MonthBeginsOn::CurrentMonth(15));
 
         assert_eq!(id.year, 2025);
         assert_eq!(id.month, 4);
@@ -299,7 +299,7 @@ mod tests {
     fn test_from_date_february_leap_year() {
         // Test February in a leap year with CurrentMonth1stDayOfMonth
         let date = Utc.with_ymd_and_hms(2024, 2, 29, 12, 0, 0).unwrap();
-        let id = BudgetPeriodId::from_date(date, MonthBeginsOn::CurrentMonth1stDayOfMonth);
+        let id = PeriodId::from_date(date, MonthBeginsOn::CurrentMonth1stDayOfMonth);
 
         assert_eq!(id.year, 2024);
         assert_eq!(id.month, 2);
@@ -309,7 +309,7 @@ mod tests {
     fn test_from_date_february_non_leap_year() {
         // Test February in a non-leap year
         let date = Utc.with_ymd_and_hms(2025, 2, 28, 12, 0, 0).unwrap();
-        let id = BudgetPeriodId::from_date(date, MonthBeginsOn::CurrentMonth1stDayOfMonth);
+        let id = PeriodId::from_date(date, MonthBeginsOn::CurrentMonth1stDayOfMonth);
 
         assert_eq!(id.year, 2025);
         assert_eq!(id.month, 2);
@@ -320,7 +320,7 @@ mod tests {
         // Test with default MonthBeginsOn (PreviousMonth(25))
         // Period: Feb 25 - March 24
         let date = Utc.with_ymd_and_hms(2025, 3, 20, 12, 0, 0).unwrap();
-        let id = BudgetPeriodId::from_date(date, MonthBeginsOn::default());
+        let id = PeriodId::from_date(date, MonthBeginsOn::default());
 
         assert_eq!(id.year, 2025);
         assert_eq!(id.month, 3);
@@ -332,7 +332,7 @@ mod tests {
         // Period: Dec 25, 2024 - Jan 24, 2025
         // Date Jan 10 is within period
         let date = Utc.with_ymd_and_hms(2025, 1, 10, 12, 0, 0).unwrap();
-        let id = BudgetPeriodId::from_date(date, MonthBeginsOn::PreviousMonth(25));
+        let id = PeriodId::from_date(date, MonthBeginsOn::PreviousMonth(25));
 
         assert_eq!(id.year, 2025);
         assert_eq!(id.month, 1);
@@ -343,7 +343,7 @@ mod tests {
         // Test PreviousMonth(28) with March date
         // Period: Feb 28 - March 27
         let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
-        let id = BudgetPeriodId::from_date(date, MonthBeginsOn::PreviousMonth(28));
+        let id = PeriodId::from_date(date, MonthBeginsOn::PreviousMonth(28));
 
         assert_eq!(id.year, 2025);
         assert_eq!(id.month, 3);
@@ -355,8 +355,8 @@ mod tests {
         let date = Utc.with_ymd_and_hms(2025, 6, 15, 12, 0, 0).unwrap();
         let month_begins = MonthBeginsOn::CurrentMonth(10);
 
-        let id1 = BudgetPeriodId::from_date(date, month_begins);
-        let id2 = BudgetPeriodId::from_date(date, month_begins);
+        let id1 = PeriodId::from_date(date, month_begins);
+        let id2 = PeriodId::from_date(date, month_begins);
 
         assert_eq!(id1, id2);
     }
@@ -365,7 +365,7 @@ mod tests {
     fn test_from_date_first_day_of_year() {
         // Test first day of the year with CurrentMonth1stDayOfMonth
         let date = Utc.with_ymd_and_hms(2025, 1, 1, 0, 0, 0).unwrap();
-        let id = BudgetPeriodId::from_date(date, MonthBeginsOn::CurrentMonth1stDayOfMonth);
+        let id = PeriodId::from_date(date, MonthBeginsOn::CurrentMonth1stDayOfMonth);
 
         assert_eq!(id.year, 2025);
         assert_eq!(id.month, 1);
@@ -375,7 +375,7 @@ mod tests {
     fn test_from_date_last_day_of_year() {
         // Test last day of the year with CurrentMonth1stDayOfMonth
         let date = Utc.with_ymd_and_hms(2025, 12, 31, 23, 59, 59).unwrap();
-        let id = BudgetPeriodId::from_date(date, MonthBeginsOn::CurrentMonth1stDayOfMonth);
+        let id = PeriodId::from_date(date, MonthBeginsOn::CurrentMonth1stDayOfMonth);
 
         assert_eq!(id.year, 2025);
         assert_eq!(id.month, 12);
@@ -386,7 +386,7 @@ mod tests {
     fn test_from_date_previous_month_day_1_panics() {
         // Test that PreviousMonth(1) panics
         let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
-        let _ = BudgetPeriodId::from_date(date, MonthBeginsOn::PreviousMonth(1));
+        let _ = PeriodId::from_date(date, MonthBeginsOn::PreviousMonth(1));
     }
 
     #[test]
@@ -394,7 +394,7 @@ mod tests {
     fn test_from_date_current_month_day_1_panics() {
         // Test that CurrentMonth(1) panics
         let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
-        let _ = BudgetPeriodId::from_date(date, MonthBeginsOn::CurrentMonth(1));
+        let _ = PeriodId::from_date(date, MonthBeginsOn::CurrentMonth(1));
     }
 
     #[test]
@@ -404,9 +404,9 @@ mod tests {
         let date2 = Utc.with_ymd_and_hms(2025, 6, 15, 12, 0, 0).unwrap();
         let date3 = Utc.with_ymd_and_hms(2026, 1, 15, 12, 0, 0).unwrap();
 
-        let id1 = BudgetPeriodId::from_date(date1, MonthBeginsOn::CurrentMonth1stDayOfMonth);
-        let id2 = BudgetPeriodId::from_date(date2, MonthBeginsOn::CurrentMonth1stDayOfMonth);
-        let id3 = BudgetPeriodId::from_date(date3, MonthBeginsOn::CurrentMonth1stDayOfMonth);
+        let id1 = PeriodId::from_date(date1, MonthBeginsOn::CurrentMonth1stDayOfMonth);
+        let id2 = PeriodId::from_date(date2, MonthBeginsOn::CurrentMonth1stDayOfMonth);
+        let id3 = PeriodId::from_date(date3, MonthBeginsOn::CurrentMonth1stDayOfMonth);
 
         assert!(id1 < id2);
         assert!(id2 < id3);

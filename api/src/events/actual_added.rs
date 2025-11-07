@@ -2,7 +2,7 @@ use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
 use cqrs_macros::DomainEvent;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use crate::models::{Budget, BudgetItem, BudgetingType, ActualItem, Money, BudgetPeriodId};
+use crate::models::{Budget, BudgetItem, BudgetingType, ActualItem, Money, PeriodId};
 
 #[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]
 #[domain_event(aggregate = "Budget")]
@@ -11,7 +11,7 @@ pub struct ActualAdded {
     #[event_id]
     pub actual_id: Uuid,
     pub item_id: Uuid,
-    pub period_id: BudgetPeriodId,
+    pub period_id: PeriodId,
     pub budgeted_amount: Money,
 }
 
@@ -37,7 +37,7 @@ impl ActualAddedHandler for Budget {
     fn add_actual_impl(
         &self,
         item_id: Uuid,
-        period_id: BudgetPeriodId,
+        period_id: PeriodId,
         budgeted_amount: Money,
     ) -> Result<ActualAdded, CommandError> {
         if self.with_period(period_id).contains_actual_for_item(item_id) {

@@ -2,13 +2,13 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use crate::models::{BudgetItem, BudgetPeriodId, Money};
+use crate::models::{BudgetItem, PeriodId, Money};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ActualItem {
     pub id: Uuid,
     pub budget_item: Rc<RefCell<BudgetItem>>,
-    pub period_id: BudgetPeriodId,
+    pub period_id: PeriodId,
     pub budgeted_amount: Money,
     pub actual_amount: Money,
     pub notes: Option<String>,
@@ -19,7 +19,7 @@ impl ActualItem {
     pub fn new(
         id: Uuid,
         budget_item: Rc<RefCell<BudgetItem>>,
-        period_id: BudgetPeriodId,
+        period_id: PeriodId,
         budgeted_amount: Money,
         actual_amount: Money,
         notes: Option<String>,

@@ -276,7 +276,7 @@ pub mod db {
     pub fn adjust_item_funds(
         budget_id: &Uuid,
         item_id: &Uuid,
-        budget_period_id: Option<BudgetPeriodId>,
+        budget_period_id: Option<PeriodId>,
         amount: &Money,
         user_id: &Uuid,
     ) -> anyhow::Result<Budget> {
@@ -471,7 +471,7 @@ pub async fn adjust_item_funds(
     budget_id: Uuid,
     item_id: Uuid,
     amount: Money,
-    budget_period_id: Option<BudgetPeriodId>,
+    budget_period_id: Option<PeriodId>,
 ) -> Result<Budget, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
     match db::adjust_item_funds(&budget_id, &item_id, budget_period_id, &amount, &user.id) {

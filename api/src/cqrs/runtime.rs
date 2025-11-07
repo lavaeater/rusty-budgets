@@ -143,7 +143,7 @@ impl JoyDbBudgetRuntime {
         &self,
         budget_id: Uuid,
         item_id: Uuid,
-        budget_period_id: Option<BudgetPeriodId>,
+        budget_period_id: Option<PeriodId>,
         amount: Money,
         user_id: Uuid,
     ) -> anyhow::Result<(Budget, Uuid)> {

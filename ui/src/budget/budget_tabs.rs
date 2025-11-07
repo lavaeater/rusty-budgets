@@ -1,6 +1,6 @@
 use crate::budget::BudgetingTypeCard;
 use crate::components::{TabContent, TabList, TabTrigger, Tabs};
-use api::models::{Budget, BudgetItem, BudgetPeriodId, BudgetingType, BudgetingTypeOverview};
+use api::models::{Budget, BudgetItem, PeriodId, BudgetingType, BudgetingTypeOverview};
 use dioxus::prelude::*;
 use uuid::Uuid;
 use crate::budget::BudgetingTypeOverviewView;
@@ -9,7 +9,7 @@ use crate::budget::BudgetingTypeOverviewView;
 pub fn BudgetTabs(
 ) -> Element {
     let budget_signal = use_context::<Signal<Option<Budget>>>();
-    let current_period_id = use_context::<Signal<Option<BudgetPeriodId>>>();
+    let current_period_id = use_context::<Signal<Option<PeriodId>>>();
      match budget_signal() {
         Some(budget) => {
             let items_by_type = budget.items_by_type(current_period_id());

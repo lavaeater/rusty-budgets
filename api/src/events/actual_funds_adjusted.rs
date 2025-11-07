@@ -1,52 +1,61 @@
-use serde::{Deserialize, Serialize};
-use cqrs_macros::DomainEvent;
-use uuid::Uuid;
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
-use crate::models::{Budget, BudgetPeriodId};
+use crate::events::ActualAdded;
 use crate::models::Money;
+use crate::models::{Budget, PeriodId};
+use cqrs_macros::DomainEvent;
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]
 #[domain_event(aggregate = "Budget")]
 pub struct ActualFundsAdjusted {
     budget_id: Uuid,
     actual_id: Uuid,
-    budget_period_id: BudgetPeriodId,
-    amount: Money,
+    period_id: PeriodId,
+    budgeted_amount: Money,
 }
 
 impl ActualFundsAdjustedHandler for Budget {
     fn apply_adjust_actual_funds(&mut self, event: &ActualFundsAdjusted) -> Uuid {
-        self.with_period_mut(event.budget_period_id).add_actual_amount_to_item(&event.actual_id, &event.amount);
-        let item_type = self.type_for_item(&event.item_id).unwrap();
-        self.update_budget_budgeted_amount(event.budget_period_id, &item_type, &event.amount);
-        self.recalc_overview(event.budget_period_id);
-        event.item_id
+        let mut bt = None;
+        if let Some(period) = self.with_period_mut(event.period_id) {
+            if let Some(actual) = period.get_actual_mut(event.actual_id) {
+                bt = Some(actual.budget_item.borrow().budgeting_type);
+                actual.actual_amount += event.budgeted_amount;
+            }
+            period.actual_by_type
+        }
+        if let Some(bt) = bt {
+            self.update_budget_budgeted_amount(event.period_id, &bt, &event.budgeted_amount);
+        }
+        event.actual_id
     }
 
     fn adjust_actual_funds_impl(
         &self,
         actual_id: Uuid,
-        budget_period_id: BudgetPeriodId,
-        amount: Money,
+        period_id: PeriodId,
+        budgeted_amount: Money,
     ) -> Result<ActualFundsAdjusted, CommandError> {
-        let item = self.with_period_or_now(budget_period_id).budget_items.get(&item_id);
-
-        if item.is_none() {
-            return Err(CommandError::Validation("Item does not exist"));
+        if let Some(period) = self.with_period(period_id) {
+            if let Some(actual) = period.get_actual(actual_id) {
+                if (actual.budgeted_amount + budgeted_amount) < Money::default() {
+                    Err(CommandError::Validation(
+                        "Items are not allowed to be less than zero.",
+                    ))
+                } else {
+                    Ok(ActualFundsAdjusted {
+                        budget_id: self.id,
+                        actual_id,
+                        period_id,
+                        budgeted_amount,
+                    })
+                }
+            } else {
+                Err(CommandError::NotFound("Actual not found."))
+            }
+        } else {
+            Err(CommandError::NotFound("Period not found."))
         }
-        let item = item.unwrap();
-
-        if (item.budgeted_amount + amount) < Money::default() {
-            return Err(CommandError::Validation(
-                "Items are not allowed to be less than zero.",
-            ));
-        }
-
-        Ok(ActualFundsAdjusted {
-            budget_id: self.id,
-            item_id,
-            budget_period_id,
-            amount,
-        })
     }
 }

@@ -1,7 +1,7 @@
 use crate::file_chooser::*;
 use crate::budget::{BudgetTabs, TransactionsView};
 use crate::{Button, Input};
-use api::models::{Budget, BudgetPeriodId};
+use api::models::{Budget, PeriodId};
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use dioxus_primitives::label::Label;
@@ -15,7 +15,7 @@ pub fn BudgetHero() -> Element {
 
     let mut budget_signal = use_signal(|| None::<Budget>);
     let mut budget_id = use_signal(Uuid::default);
-    let mut current_period_id = use_signal(|| None::<BudgetPeriodId>);
+    let mut current_period_id = use_signal(|| None::<PeriodId>);
 
     use_context_provider(|| budget_signal);
     use_context_provider(|| current_period_id);
@@ -59,7 +59,7 @@ pub fn BudgetHero() -> Element {
                     div { class: "budget-header-a",
                         div { class: "header-title",
                             h1 { {budget.name.clone()} }
-                            h2 { {current_period_id().unwrap_or(BudgetPeriodId::default()).to_string()} }
+                            h2 { {current_period_id().unwrap_or(PeriodId::default()).to_string()} }
                             Button {
                                 onclick: move |_| {
                                     if let Some(period_id) = current_period_id() {

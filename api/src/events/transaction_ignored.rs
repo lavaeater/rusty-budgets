@@ -1,5 +1,5 @@
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
-use crate::models::{Budget, BudgetPeriodId, BudgetingType};
+use crate::models::{Budget, PeriodId, BudgetingType};
 use core::fmt::Display;
 use cqrs_macros::DomainEvent;
 use serde::{Deserialize, Serialize};
@@ -35,7 +35,7 @@ impl TransactionIgnoredHandler for Budget {
             Some(id) => self.type_for_item(&id),
             None => None,
         };
-        let budget_period_id = BudgetPeriodId::from_date(tx.date, *self.month_begins_on());
+        let budget_period_id = PeriodId::from_date(tx.date, *self.month_begins_on());
         // End of immutable borrow - tx goes out of scope here
 
         // Handle previous connection if it exists
