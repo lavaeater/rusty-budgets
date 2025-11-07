@@ -31,13 +31,10 @@ impl TransactionConnectedHandler for Budget {
         let period_id = PeriodId::from_date(tx.date, *self.month_begins_on());
         let tx_amount = tx.amount;
         if let Some(previous_id) = tx.actual_item_id {
+            let bt = self.with_period(period_id).get_actual(previous_id).unwrap().budget_item_id;
+            let bt = self.budget_items.get(&bt).unwrap().budgeting_type;
             self.with_period_mut(period_id)
                 .mutate_actual(previous_id, |a| {
-                    let bt = self
-                        .budget_items
-                        .get(&a.budget_item_id)
-                        .unwrap()
-                        .budgeting_type;
                     let adjusted_amount = if cost_types.contains(&bt) {
                         -tx_amount
                     } else {
@@ -46,17 +43,13 @@ impl TransactionConnectedHandler for Budget {
                     a.actual_amount -= adjusted_amount;
                 });
         }
-
+        let bt = self.with_period(period_id).get_actual(event.actual_id).unwrap().budget_item_id;
+        let bt = self.budget_items.get(&bt).unwrap().budgeting_type;
         let tx_mut = self.get_transaction_mut(&event.tx_id).unwrap();
         tx_mut.actual_item_id = Some(event.actual_id);
 
         self.with_period_mut(period_id)
             .mutate_actual(event.actual_id, |a| {
-                let bt = self
-                    .budget_items
-                    .get(&a.budget_item_id)
-                    .unwrap()
-                    .budgeting_type;
                 let adjusted_amount = if cost_types.contains(&bt) {
                     -tx_amount
                 } else {
