@@ -94,9 +94,30 @@ impl BudgetPeriod {
             .and_modify(|v| *v += *amount);
     }
     
+/* <<<<<<<<<<<<<<  ✨ Windsurf Command ⭐ >>>>>>>>>>>>>>>> */
+    /// Adds the given amount to the actual amount of the item with the given ID.
+    ///
+    /// If the item with the given ID does not exist, this function does nothing.
+    ///
+    /// # Parameters
+    ///
+    /// * `item_id`: The ID of the item to update.
+    /// * `amount`: The amount to add to the item's actual amount.
+    ///
+    /// # Return value
+    ///
+    /// This function does not return a value.
+    ///
+    /// # Examples
+    ///
+    /// 
+/* <<<<<<<<<<  fa5f07c7-b578-42e5-8eb7-f3c613f98a55  >>>>>>>>>>> */
     pub fn add_actual_amount_to_item(&mut self, item_id: &Uuid, amount: &Money) {
-        if let Some(item) = self.items.get_mut(item_id) {
-            item.actual_amount += *amount;
+        let bork = self.items.get_mut(item_id);
+        match bork {
+            
+        }
+        if let Some(item) = self.items.get(item_id) {
             self.update_actual_amount(&item.budget_item.borrow().budgeting_type, amount);
         }
     }
