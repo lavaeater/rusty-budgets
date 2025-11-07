@@ -1,5 +1,5 @@
-use std::cell::RefCell;
-use std::rc::Rc;
+
+use std::sync::{Arc, Mutex};
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
 use cqrs_macros::DomainEvent;
 use serde::{Deserialize, Serialize};
@@ -24,8 +24,8 @@ impl ItemAddedHandler for Budget {
             event.item_type,
         );
         
-        let the_cell = Rc::new(RefCell::new(new_item));
-        self.budget_items.insert(event.item_id, the_cell.clone());
+        let the_arc = Arc::new(Mutex::new(new_item));
+        self.budget_items.insert(event.item_id, the_arc.clone());
         
         event.item_id
     }

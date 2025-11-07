@@ -42,7 +42,7 @@ pub struct Budget {
     pub name: String,
     pub user_id: Uuid,
     budget_periods: BudgetPeriodStore,
-    pub budget_items: HashMap<Uuid, Rc<RefCell<BudgetItem>>>,
+    pub budget_items: HashMap<Uuid, Arc<Mutex<BudgetItem>>>,
     pub match_rules: HashSet<MatchRule>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
@@ -295,7 +295,6 @@ impl Budget {
         self.with_period_mut(period_id)
             .mutate_actual(actual_id, mutator);
     }
-    
 }
 
 // --- Aggregate implementation ---

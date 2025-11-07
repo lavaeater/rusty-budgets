@@ -22,11 +22,11 @@ pub struct ActualModified {
 impl ActualModifiedHandler for Budget {
     fn apply_modify_actual(&mut self, event: &ActualModified) -> Uuid {
         self.with_period_mut(event.period_id)
-            .mutate_actual(event.actual_id, |actual| {
+            .mutate_actual(event.actual_id, | actual| {
                 event.budgeted_amount.map(|budgeted_amount| actual.budgeted_amount = budgeted_amount);
                 event.actual_amount.map(|actual_amount| actual.actual_amount = actual_amount);
-                actual.notes = event.notes;
-                event.tags.map(|tags| actual.tags = tags);
+                actual.notes = event.notes.clone();
+                event.tags.clone().map(|t| actual.tags = t);
             });
         event.actual_id
     }
@@ -40,7 +40,7 @@ impl ActualModifiedHandler for Budget {
         notes: Option<String>,
         tags: Option<Vec<String>>,
     ) -> Result<ActualModified, CommandError> {
-        if !self.with_period(period_id).contains_actual(actual_id) {
+        if !self.with_period(period_id).actual_items.contains_key(&actual_id) {
             tracing::error!("Actual not found");
             Err(CommandError::NotFound("Actual not found".to_string()))
         } else {

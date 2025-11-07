@@ -1,5 +1,4 @@
-use std::cell::RefCell;
-use std::rc::Rc;
+use std::sync::{Arc, Mutex};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use crate::models::{BudgetItem, PeriodId, Money};
@@ -7,7 +6,7 @@ use crate::models::{BudgetItem, PeriodId, Money};
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ActualItem {
     pub id: Uuid,
-    pub budget_item: Rc<RefCell<BudgetItem>>,
+    pub budget_item: Arc<Mutex<BudgetItem>>,
     pub period_id: PeriodId,
     pub budgeted_amount: Money,
     pub actual_amount: Money,
@@ -18,7 +17,7 @@ pub struct ActualItem {
 impl ActualItem {
     pub fn new(
         id: Uuid,
-        budget_item: Rc<RefCell<BudgetItem>>,
+        budget_item: Arc<Mutex<BudgetItem>>,
         period_id: PeriodId,
         budgeted_amount: Money,
         actual_amount: Money,
