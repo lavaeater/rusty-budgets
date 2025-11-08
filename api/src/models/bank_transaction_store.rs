@@ -266,8 +266,8 @@ impl MatchRule {
         self.transaction_key == tokenized_transaction_description
     }
 
-    pub fn matches_item(&self, item: &ActualItem) -> bool {
-        item.budget_item_id.borrow().name.contains(&self.item_name)
+    pub fn matches_item(&self, item: &BudgetItem) -> bool {
+        item.name.contains(&self.item_name)
     }
     
     pub fn create_rule_for_transaction_and_item(transaction: &BankTransaction, item: &BudgetItem) -> MatchRule {
