@@ -153,6 +153,10 @@ impl PeriodId {
             }
         }
     }
+    
+    pub fn new(year: i32, month: u32) -> Self {
+        Self { year, month }
+    }
 
     pub fn month_before(&self) -> Self {
         if self.month == 1 {

@@ -2,7 +2,6 @@ use crate::cqrs::framework::Aggregate;
 use crate::cqrs::framework::DomainEvent;
 use crate::events::*;
 use crate::models::budget_item::BudgetItem;
-use crate::models::budget_item_store::BudgetItemStore;
 use crate::models::budget_period_id::PeriodId;
 use crate::models::budget_period_store::BudgetPeriodStore;
 use crate::models::budgeting_type::BudgetingType;
@@ -13,12 +12,8 @@ use crate::models::{
 use crate::pub_events_enum;
 use chrono::{DateTime, Utc};
 use joydb::Model;
-use serde::ser::SerializeStruct;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::cell::RefCell;
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-use std::rc::Rc;
-use std::sync::{Arc, Mutex};
 use uuid::Uuid;
 
 pub_events_enum! {
@@ -90,49 +85,45 @@ impl Budget {
 
     pub fn list_ignored_transactions(
         &self,
-        budget_period_id: Option<PeriodId>,
+        period_id: PeriodId,
     ) -> Vec<BankTransaction> {
         self.budget_periods
-            .list_ignored_transactions(budget_period_id)
+            .list_ignored_transactions(period_id)
     }
 
     pub fn month_begins_on(&self) -> &MonthBeginsOn {
         self.budget_periods.month_begins_on()
     }
-
-    pub fn get_type_for_item(&self, item_id: &Uuid) -> Option<&BudgetingType> {
-        self.budget_periods.get_type_for_item(item_id, None)
-    }
-
+    
     pub fn items_by_type(
         &self,
-        budget_period_id: Option<PeriodId>,
+        budget_period_id: PeriodId,
     ) -> Vec<(usize, BudgetingType, BudgetingTypeOverview, Vec<BudgetItem>)> {
         self.budget_periods.items_by_type(budget_period_id)
     }
 
     pub fn list_all_items(&self) -> Vec<BudgetItem> {
-        self.budget_items.list_all_items()
+        self.budget_items.values().cloned().collect()
     }
 
-    pub fn budgeted_for_type(&self, budgeting_type: &BudgetingType) -> Money {
-        self.budget_periods.budgeted_for_type(budgeting_type)
+    pub fn budgeted_for_type(&self, budgeting_type: &BudgetingType, period_id: PeriodId) -> Money {
+        self.budget_periods.budgeted_for_type(budgeting_type, period_id)
     }
 
-    pub fn spent_for_type(&self, budgeting_type: &BudgetingType) -> Money {
-        self.budget_periods.spent_for_type(budgeting_type)
+    pub fn spent_for_type(&self, budgeting_type: &BudgetingType, period_id: PeriodId) -> Money {
+        self.budget_periods.spent_for_type(budgeting_type, period_id)
     }
 
-    pub fn recalc_overview(&mut self, period_id: Option<PeriodId>) {
+    pub fn recalc_overview(&mut self, period_id: PeriodId) {
         self.budget_periods.recalc_overview(period_id);
     }
 
-    pub fn insert_item(&mut self, item: &BudgetItem, item_type: BudgetingType) {
-        self.budget_periods.insert_item(item, item_type);
+    pub fn insert_item(&mut self, item: &BudgetItem) {
+        self.budget_items.insert(item.id, item.clone());
     }
 
     pub fn remove_item(&mut self, item_id: &Uuid) {
-        self.budget_periods.remove_item(item_id);
+        self.budget_items.remove(item_id);
     }
 
     pub fn insert_transaction(&mut self, tx: BankTransaction) {
@@ -156,7 +147,7 @@ impl Budget {
     }
 
     pub fn contains_item_with_name(&self, name: &str) -> bool {
-        self.budget_items.contains_item_with_name(name)
+        self.budget_items.values().any(|i| i.name == name)
     }
 
     pub fn get_transaction_mut(&mut self, tx_id: &Uuid) -> Option<&mut BankTransaction> {
@@ -166,42 +157,7 @@ impl Budget {
     pub fn get_transaction(&self, tx_id: &Uuid) -> Option<&BankTransaction> {
         self.budget_periods.get_transaction(tx_id)
     }
-
-    pub fn update_budget_actual_amount(
-        &mut self,
-        period_id: PeriodId,
-        budgeting_type: &BudgetingType,
-        amount: &Money,
-    ) {
-        self.get_period_mut(period_id)
-            .update_actual_amount(budgeting_type, amount);
-    }
-
-    pub fn update_budget_budgeted_amount(
-        &mut self,
-        period_id: PeriodId,
-        budgeting_type: &BudgetingType,
-        amount: &Money,
-    ) {
-        self.get_period_mut(period_id)
-            .update_budgeted_amount(budgeting_type, amount);
-    }
-
-    pub fn add_actual_amount_to_item(
-        &mut self,
-        period_id: PeriodId,
-        item_id: &Uuid,
-        amount: &Money,
-    ) {
-        self.get_period_mut(period_id)
-            .add_actual_amount_to_item(item_id, amount);
-    }
-
-    pub fn add_budgeted_amount_to_item(&mut self, item_id: &Uuid, amount: &Money) {
-        self.budget_periods
-            .add_budgeted_amount_to_item(item_id, amount);
-    }
-
+    
     pub fn modify_budget_item(
         &mut self,
         id: &Uuid,
@@ -220,12 +176,12 @@ impl Budget {
         });
     }
 
-    pub fn get_budgeted_by_type(&self, budgeting_type: &BudgetingType) -> Option<&Money> {
-        self.budget_periods.get_budgeted_by_type(budgeting_type)
+    pub fn get_budgeted_by_type(&self, budgeting_type: &BudgetingType, period_id: PeriodId) -> Option<&Money> {
+        self.budget_periods.get_budgeted_by_type(budgeting_type, period_id)
     }
 
-    pub fn get_actual_by_type(&self, budgeting_type: &BudgetingType) -> Option<&Money> {
-        self.budget_periods.get_actual_by_type(budgeting_type)
+    pub fn get_actual_by_type(&self, budgeting_type: &BudgetingType, period_id: PeriodId) -> Option<&Money> {
+        self.budget_periods.get_actual_by_type(budgeting_type, period_id)
     }
 
     pub fn get_budgeting_overview(

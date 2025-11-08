@@ -10,6 +10,7 @@ use chrono::{DateTime, Utc};
 use dioxus::logger::tracing;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
+use anyhow::__private::NotBothDebug;
 use uuid::Uuid;
 
 // Custom serialization for HashMap<BudgetPeriodId, BudgetPeriod>
@@ -86,6 +87,7 @@ impl BudgetPeriodStore {
             .values()
             .find(|p| p.transactions.contains(tx_id))
     }
+    
     pub fn new(date: DateTime<Utc>, month_begins_on: Option<MonthBeginsOn>) -> Self {
         let month_begins_on = month_begins_on.unwrap_or_default();
         let id = PeriodId::from_date(date, month_begins_on);
@@ -204,10 +206,7 @@ impl BudgetPeriodStore {
             .map(|p| p.budget_items.type_for(item_id))
             .unwrap_or_default()
     }
-
-    pub fn period_or_now(&self, budget_period_id: PeriodId) -> PeriodId {
-        budget_period_id.unwrap_or(PeriodId::from_date(Utc::now(), self.month_begins_on))
-    }
+    
 
     pub fn items_by_type(
         &self,
@@ -488,13 +487,12 @@ impl BudgetPeriodStore {
         );
     }
 
-    pub fn get_budgeted_by_type(&self, budgeting_type: &BudgetingType) -> Option<&Money> {
-        self.with_current_period()
-            .budgeted_by_type
-            .get(budgeting_type)
+    pub fn get_budgeted_by_type(&self, budgeting_type: &BudgetingType, period_id: PeriodId) -> Option<&Money> {
+        self.with_period(period_id)
+            .map(|p| p.actual_items.iter().filter(|a|a.item_type == budgeting_type).map(|a|a.actual_amount).sum()))
     }
 
-    pub fn get_actual_by_type(&self, budgeting_type: &BudgetingType) -> Option<&Money> {
+    pub fn get_actual_by_type(&self, budgeting_type: &BudgetingType, period_id: PeriodId) -> Option<&Money> {
         self.with_current_period()
             .actual_by_type
             .get(budgeting_type)
