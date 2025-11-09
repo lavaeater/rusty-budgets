@@ -17,9 +17,10 @@ pub struct ActualAdded {
 
 impl ActualAddedHandler for Budget {
     fn apply_add_actual(&mut self, event: &ActualAdded) -> Uuid {
+        let budget_item = self.budget_items.get(&event.item_id).unwrap();
         let new_actual = ActualItem::new(
             event.actual_id,
-            event.item_id,
+            budget_item.clone(),
             event.period_id,
             event.budgeted_amount,
             Money::default(),

@@ -68,13 +68,7 @@ impl Serialize for Budget {
             .collect();
         state.serialize_field("budget_items", &budget_item_hash)?;
         
-        let budget_period_hash: HashMap<String, BudgetPeriod> = self
-            .budget_periods
-            .iter()
-            .map(|(k, v)| (k.to_string(), v.clone()))
-            .collect();
-        state.serialize_field("budget_periods", &budget_period_hash)?;
-
+        state.serialize_field("budget_periods", &self.budget_periods)?;
         state.serialize_field("match_rules", &self.match_rules)?;
         state.serialize_field("created_at", &self.created_at)?;
         state.serialize_field("updated_at", &self.updated_at)?;

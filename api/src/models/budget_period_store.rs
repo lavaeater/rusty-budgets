@@ -164,16 +164,17 @@ impl BudgetPeriodStore {
     }
 
     fn get_or_create_period(&mut self, id: PeriodId) -> &mut BudgetPeriod {
+        if self.budget_periods.contains_key(&id) {
+            return self.budget_periods.get_mut(&id).unwrap();
+        }
         let previous_period = self.get_period_before(id);
-        self.budget_periods.entry(id).or_insert_with(|| {
-            if let Some(previous_period) = previous_period {
-                let period = previous_period.clone_to(id);
-                period.clone()
-            } else {
-                let period = BudgetPeriod::new_for(id);
-                period.clone()
-            }
-        })
+        let period = if let Some(previous_period) = previous_period {
+            previous_period.clone_to(id)
+        } else {
+            BudgetPeriod::new_for(id)
+        };
+        self.budget_periods.insert(id, period);
+        self.budget_periods.get_mut(&id).unwrap()
     }
 
     pub fn items_by_type(
@@ -182,7 +183,7 @@ impl BudgetPeriodStore {
     ) -> Vec<(usize, BudgetingType, BudgetingTypeOverview, Vec<BudgetItem>)> {
         self.with_period(period_id)
             .map(|p| {
-                let items_by_type = p.actual_items.values().group_by(|item| item.item_type())
+                let items_by_type = p.actual_items.values().group_by(|item| item.budgeting_type())
                     .map(|(index, t, items)| {
                         let overview = match t {
                             Income => self.get_income_overview(period_id),
@@ -410,7 +411,7 @@ impl BudgetPeriodStore {
         &self,
         period_id: PeriodId,
     ) -> Vec<BankTransaction> {
-        self.with_period(period)
+        self.with_period(period_id)
             .map(|p| p.transactions.list_transactions_for_connection())
             .unwrap_or_default()
     }
