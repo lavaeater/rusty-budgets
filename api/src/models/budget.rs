@@ -12,9 +12,11 @@ use crate::models::{
 use crate::pub_events_enum;
 use chrono::{DateTime, Utc};
 use joydb::Model;
+use serde::de::{self, MapAccess, Visitor};
 use serde::ser::SerializeStruct;
-use serde::{Deserialize, Serialize, Serializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::{HashMap, HashSet};
+use std::fmt;
 use std::sync::{Arc, Mutex};
 use uuid::Uuid;
 
@@ -80,6 +82,200 @@ impl Serialize for Budget {
     }
 }
 
+impl<'de> Deserialize<'de> for Budget {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(field_identifier, rename_all = "snake_case")]
+        enum Field {
+            Id,
+            Name,
+            UserId,
+            BudgetItems,
+            BudgetPeriods,
+            MatchRules,
+            CreatedAt,
+            UpdatedAt,
+            DefaultBudget,
+            LastEvent,
+            Version,
+            Currency,
+        }
+
+        struct BudgetVisitor;
+
+        impl<'de> Visitor<'de> for BudgetVisitor {
+            type Value = Budget;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("struct Budget")
+            }
+
+            fn visit_map<V>(self, mut map: V) -> Result<Budget, V::Error>
+            where
+                V: MapAccess<'de>,
+            {
+                let mut id = None;
+                let mut name = None;
+                let mut user_id = None;
+                let mut budget_items = None;
+                let mut budget_periods = None;
+                let mut match_rules = None;
+                let mut created_at = None;
+                let mut updated_at = None;
+                let mut default_budget = None;
+                let mut last_event = None;
+                let mut version = None;
+                let mut currency = None;
+
+                while let Some(key) = map.next_key()? {
+                    match key {
+                        Field::Id => {
+                            if id.is_some() {
+                                return Err(de::Error::duplicate_field("id"));
+                            }
+                            id = Some(map.next_value()?);
+                        }
+                        Field::Name => {
+                            if name.is_some() {
+                                return Err(de::Error::duplicate_field("name"));
+                            }
+                            name = Some(map.next_value()?);
+                        }
+                        Field::UserId => {
+                            if user_id.is_some() {
+                                return Err(de::Error::duplicate_field("user_id"));
+                            }
+                            user_id = Some(map.next_value()?);
+                        }
+                        Field::BudgetItems => {
+                            if budget_items.is_some() {
+                                return Err(de::Error::duplicate_field("budget_items"));
+                            }
+                            let items_map: HashMap<String, BudgetItem> = map.next_value()?;
+                            budget_items = Some(
+                                items_map
+                                    .into_iter()
+                                    .map(|(k, v)| {
+                                        (
+                                            Uuid::parse_str(&k).unwrap(),
+                                            Arc::new(Mutex::new(v)),
+                                        )
+                                    })
+                                    .collect(),
+                            );
+                        }
+                        Field::BudgetPeriods => {
+                            if budget_periods.is_some() {
+                                return Err(de::Error::duplicate_field("budget_periods"));
+                            }
+                            budget_periods = Some(map.next_value()?);
+                        }
+                        Field::MatchRules => {
+                            if match_rules.is_some() {
+                                return Err(de::Error::duplicate_field("match_rules"));
+                            }
+                            match_rules = Some(map.next_value()?);
+                        }
+                        Field::CreatedAt => {
+                            if created_at.is_some() {
+                                return Err(de::Error::duplicate_field("created_at"));
+                            }
+                            created_at = Some(map.next_value()?);
+                        }
+                        Field::UpdatedAt => {
+                            if updated_at.is_some() {
+                                return Err(de::Error::duplicate_field("updated_at"));
+                            }
+                            updated_at = Some(map.next_value()?);
+                        }
+                        Field::DefaultBudget => {
+                            if default_budget.is_some() {
+                                return Err(de::Error::duplicate_field("default_budget"));
+                            }
+                            default_budget = Some(map.next_value()?);
+                        }
+                        Field::LastEvent => {
+                            if last_event.is_some() {
+                                return Err(de::Error::duplicate_field("last_event"));
+                            }
+                            last_event = Some(map.next_value()?);
+                        }
+                        Field::Version => {
+                            if version.is_some() {
+                                return Err(de::Error::duplicate_field("version"));
+                            }
+                            version = Some(map.next_value()?);
+                        }
+                        Field::Currency => {
+                            if currency.is_some() {
+                                return Err(de::Error::duplicate_field("currency"));
+                            }
+                            currency = Some(map.next_value()?);
+                        }
+                    }
+                }
+
+                let id = id.ok_or_else(|| de::Error::missing_field("id"))?;
+                let name = name.ok_or_else(|| de::Error::missing_field("name"))?;
+                let user_id = user_id.ok_or_else(|| de::Error::missing_field("user_id"))?;
+                let budget_items: HashMap<Uuid, Arc<Mutex<BudgetItem>>> =
+                    budget_items.ok_or_else(|| de::Error::missing_field("budget_items"))?;
+                let mut budget_periods: BudgetPeriodStore =
+                    budget_periods.ok_or_else(|| de::Error::missing_field("budget_periods"))?;
+                let match_rules =
+                    match_rules.ok_or_else(|| de::Error::missing_field("match_rules"))?;
+                let created_at =
+                    created_at.ok_or_else(|| de::Error::missing_field("created_at"))?;
+                let updated_at =
+                    updated_at.ok_or_else(|| de::Error::missing_field("updated_at"))?;
+                let default_budget =
+                    default_budget.ok_or_else(|| de::Error::missing_field("default_budget"))?;
+                let last_event =
+                    last_event.ok_or_else(|| de::Error::missing_field("last_event"))?;
+                let version = version.ok_or_else(|| de::Error::missing_field("version"))?;
+                let currency = currency.ok_or_else(|| de::Error::missing_field("currency"))?;
+
+                // Fix up the budget_item references in all ActualItems
+                budget_periods.fix_budget_item_references(&budget_items);
+
+                Ok(Budget {
+                    id,
+                    name,
+                    user_id,
+                    budget_items,
+                    budget_periods,
+                    match_rules,
+                    created_at,
+                    updated_at,
+                    default_budget,
+                    last_event,
+                    version,
+                    currency,
+                })
+            }
+        }
+
+        const FIELDS: &[&str] = &[
+            "id",
+            "name",
+            "user_id",
+            "budget_items",
+            "budget_periods",
+            "match_rules",
+            "created_at",
+            "updated_at",
+            "default_budget",
+            "last_event",
+            "version",
+            "currency",
+        ];
+        deserializer.deserialize_struct("Budget", FIELDS, BudgetVisitor)
+    }
+}
+
 impl Default for Budget {
     fn default() -> Self {
         Self {
@@ -124,7 +320,7 @@ impl Budget {
     pub fn items_by_type(
         &self,
         budget_period_id: PeriodId,
-    ) -> Vec<(usize, BudgetingType, BudgetingTypeOverview, Vec<BudgetItem>)> {
+    ) -> Vec<(usize, BudgetingType, BudgetingTypeOverview, Vec<ActualItem>)> {
         self.budget_periods.items_by_type(budget_period_id)
     }
 

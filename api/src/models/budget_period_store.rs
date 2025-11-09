@@ -12,6 +12,7 @@ use dioxus::logger::tracing;
 use iter_tools::Itertools;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
+use std::sync::{Arc, Mutex};
 use uuid::Uuid;
 
 // Custom serialization for HashMap<BudgetPeriodId, BudgetPeriod>
@@ -513,5 +514,18 @@ impl BudgetPeriodStore {
             .values()
             .flat_map(|v| v.transactions.list_transactions(true))
             .collect()
+    }
+
+    /// Fix up budget_item references in all ActualItems after deserialization
+    /// This replaces the deserialized BudgetItem instances with the shared Arc<Mutex<BudgetItem>>
+    /// references from the Budget's budget_items HashMap
+    pub fn fix_budget_item_references(&mut self, budget_items: &HashMap<Uuid, Arc<Mutex<BudgetItem>>>) {
+        for period in self.budget_periods.values_mut() {
+            for actual_item in period.actual_items.values_mut() {
+                if let Some(shared_budget_item) = budget_items.get(&actual_item.budget_item_id) {
+                    actual_item.budget_item = shared_budget_item.clone();
+                }
+            }
+        }
     }
 }
