@@ -12,8 +12,10 @@ use crate::models::{
 use crate::pub_events_enum;
 use chrono::{DateTime, Utc};
 use joydb::Model;
-use serde::{Deserialize, Serialize};
+use serde::ser::SerializeStruct;
+use serde::{Deserialize, Serialize, Serializer};
 use std::collections::{HashMap, HashSet};
+use std::sync::{Arc, Mutex};
 use uuid::Uuid;
 
 pub_events_enum! {
@@ -34,13 +36,13 @@ pub_events_enum! {
 }
 
 // --- Budget Domain ---
-#[derive(Debug, Clone, Model, Serialize, Deserialize)]
+#[derive(Debug, Clone, Model)]
 pub struct Budget {
     pub id: Uuid,
     pub name: String,
     pub user_id: Uuid,
+    pub budget_items: HashMap<Uuid, Arc<Mutex<BudgetItem>>>,
     budget_periods: BudgetPeriodStore,
-    pub budget_items: HashMap<Uuid, BudgetItem>,
     pub match_rules: HashSet<MatchRule>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
@@ -48,6 +50,40 @@ pub struct Budget {
     pub last_event: i64,
     pub version: u64,
     pub currency: Currency,
+}
+
+impl Serialize for Budget {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("Budget", 10)?;
+        state.serialize_field("id", &self.id)?;
+        state.serialize_field("name", &self.name)?;
+        state.serialize_field("user_id", &self.user_id)?;
+        let budget_item_hash: HashMap<String, BudgetItem> = self
+            .budget_items
+            .iter()
+            .map(|(k, v)| (k.to_string(), v.lock().unwrap().clone()))
+            .collect();
+        state.serialize_field("budget_items", &budget_item_hash)?;
+        
+        let budget_period_hash: HashMap<String, BudgetPeriod> = self
+            .budget_periods
+            .iter()
+            .map(|(k, v)| (k.to_string(), v.clone()))
+            .collect();
+        state.serialize_field("budget_periods", &budget_period_hash)?;
+
+        state.serialize_field("match_rules", &self.match_rules)?;
+        state.serialize_field("created_at", &self.created_at)?;
+        state.serialize_field("updated_at", &self.updated_at)?;
+        state.serialize_field("default_budget", &self.default_budget)?;
+        state.serialize_field("last_event", &self.last_event)?;
+        state.serialize_field("version", &self.version)?;
+        state.serialize_field("currency", &self.currency)?;
+        state.end()
+    }
 }
 
 impl Default for Budget {
@@ -83,18 +119,14 @@ impl Budget {
         self.budget_items.get(item_id)
     }
 
-    pub fn list_ignored_transactions(
-        &self,
-        period_id: PeriodId,
-    ) -> Vec<BankTransaction> {
-        self.budget_periods
-            .list_ignored_transactions(period_id)
+    pub fn list_ignored_transactions(&self, period_id: PeriodId) -> Vec<BankTransaction> {
+        self.budget_periods.list_ignored_transactions(period_id)
     }
 
     pub fn month_begins_on(&self) -> &MonthBeginsOn {
         self.budget_periods.month_begins_on()
     }
-    
+
     pub fn items_by_type(
         &self,
         budget_period_id: PeriodId,
@@ -107,11 +139,13 @@ impl Budget {
     }
 
     pub fn budgeted_for_type(&self, budgeting_type: &BudgetingType, period_id: PeriodId) -> Money {
-        self.budget_periods.budgeted_for_type(budgeting_type, period_id)
+        self.budget_periods
+            .budgeted_for_type(budgeting_type, period_id)
     }
 
     pub fn spent_for_type(&self, budgeting_type: &BudgetingType, period_id: PeriodId) -> Money {
-        self.budget_periods.spent_for_type(budgeting_type, period_id)
+        self.budget_periods
+            .spent_for_type(budgeting_type, period_id)
     }
 
     pub fn recalc_overview(&mut self, period_id: PeriodId) {
@@ -157,7 +191,7 @@ impl Budget {
     pub fn get_transaction(&self, tx_id: &Uuid) -> Option<&BankTransaction> {
         self.budget_periods.get_transaction(tx_id)
     }
-    
+
     pub fn modify_budget_item(
         &mut self,
         id: &Uuid,
@@ -176,12 +210,22 @@ impl Budget {
         });
     }
 
-    pub fn get_budgeted_by_type(&self, budgeting_type: &BudgetingType, period_id: PeriodId) -> Option<&Money> {
-        self.budget_periods.get_budgeted_by_type(budgeting_type, period_id)
+    pub fn get_budgeted_by_type(
+        &self,
+        budgeting_type: &BudgetingType,
+        period_id: PeriodId,
+    ) -> Option<&Money> {
+        self.budget_periods
+            .get_budgeted_by_type(budgeting_type, period_id)
     }
 
-    pub fn get_actual_by_type(&self, budgeting_type: &BudgetingType, period_id: PeriodId) -> Option<&Money> {
-        self.budget_periods.get_actual_by_type(budgeting_type, period_id)
+    pub fn get_actual_by_type(
+        &self,
+        budgeting_type: &BudgetingType,
+        period_id: PeriodId,
+    ) -> Option<&Money> {
+        self.budget_periods
+            .get_actual_by_type(budgeting_type, period_id)
     }
 
     pub fn get_budgeting_overview(

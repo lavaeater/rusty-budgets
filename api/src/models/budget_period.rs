@@ -5,15 +5,36 @@ use crate::models::{ActualItem, BudgetItem, BudgetingType, BudgetingTypeOverview
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::{HashMap, HashSet};
 use dioxus::logger::tracing;
+use serde::ser::SerializeStruct;
 use uuid::Uuid;
 use crate::models::budget_item_store::BudgetItemStore;
 use crate::models::budget_period_id::PeriodId;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct BudgetPeriod {
     pub id: PeriodId,
     pub actual_items: HashMap<Uuid, ActualItem>,
     pub transactions: BankTransactionStore,
+}
+
+impl Serialize for BudgetPeriod {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("BudgetPeriod", 3)?;
+        state.serialize_field("id", &self.id)?;
+        let actual_items: HashMap<String, ActualItem> = self
+            .actual_items
+            .iter()
+            .map(|(k, v)| { 
+                (k.to_string(), v.clone()) }
+            )
+            .collect();
+        state.serialize_field("actual_items", &actual_items)?;
+        state.serialize_field("transactions", &self.transactions)?;
+        state.end()
+    }
 }
 
 impl BudgetPeriod {
