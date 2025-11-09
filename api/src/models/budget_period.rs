@@ -1,14 +1,17 @@
-use core::fmt::Display;
 use crate::models::bank_transaction_store::BankTransactionStore;
-use crate::models::BudgetingType::{Expense, Income, Savings};
-use crate::models::{ActualItem, BudgetItem, BudgetingType, BudgetingTypeOverview, MatchRule, Money};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::collections::{HashMap, HashSet};
-use dioxus::logger::tracing;
-use serde::ser::SerializeStruct;
-use uuid::Uuid;
-use crate::models::budget_item_store::BudgetItemStore;
 use crate::models::budget_period_id::PeriodId;
+use crate::models::BudgetingType::{Expense, Income, Savings};
+use crate::models::{
+    ActualItem, BudgetItem, BudgetingType, BudgetingTypeOverview, MatchRule, Money,
+};
+use core::fmt::Display;
+use dioxus::logger::tracing;
+use serde::de::{MapAccess, Visitor};
+use serde::ser::SerializeStruct;
+use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
+use std::collections::{HashMap, HashSet};
+use std::fmt;
+use uuid::Uuid;
 
 #[derive(Debug, Clone)]
 pub struct BudgetPeriod {
@@ -27,13 +30,83 @@ impl Serialize for BudgetPeriod {
         let actual_items: HashMap<String, ActualItem> = self
             .actual_items
             .iter()
-            .map(|(k, v)| { 
-                (k.to_string(), v.clone()) }
-            )
+            .map(|(k, v)| (k.to_string(), v.clone()))
             .collect();
         state.serialize_field("actual_items", &actual_items)?;
         state.serialize_field("transactions", &self.transactions)?;
         state.end()
+    }
+}
+
+impl Deserialize for BudgetPeriod {
+    fn deserialize<'de, D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(field_identifier, rename_all = "snake_case")]
+        enum Field {
+            Id,
+            ActualItems,
+            Transactions,
+        }
+
+        struct BudgetPeriodVisitor;
+
+        impl<'de> Visitor<'de> for BudgetPeriodVisitor {
+            type Value = BudgetPeriod;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("struct BudgetPeriod")
+            }
+
+            fn visit_map<V>(self, mut map: V) -> Result<BudgetPeriod, V::Error>
+            where
+                V: MapAccess<'de>,
+            {
+                let mut id = None;
+                let mut actual_items = None;
+                let mut transactions = None;
+
+                while let Some(key) = map.next_key()? {
+                    match key {
+                        Field::Id => {
+                            if id.is_some() {
+                                return Err(de::Error::duplicate_field("id"));
+                            }
+                            id = Some(map.next_value()?);
+                        }
+                        Field::ActualItems => {
+                            if actual_items.is_some() {
+                                return Err(de::Error::duplicate_field("actual_items"));
+                            }
+                            actual_items = Some(map.next_value()?);
+                        }
+                        Field::Transactions => {
+                            if transactions.is_some() {
+                                return Err(de::Error::duplicate_field("transactions"));
+                            }
+                            transactions = Some(map.next_value()?);
+                        }
+                    }
+                }
+
+                let id = id.ok_or_else(|| de::Error::missing_field("id"))?;
+                let actual_items =
+                    actual_items.ok_or_else(|| de::Error::missing_field("actual_items"))?;
+                let transactions =
+                    transactions.ok_or_else(|| de::Error::missing_field("transactions"))?;
+
+                Ok(BudgetPeriod {
+                    id,
+                    actual_items,
+                    transactions,
+                })
+            }
+        }
+
+        const FIELDS: &[&str] = &["id", "actual_items", "transactions"];
+        deserializer.deserialize_struct("BudgetPeriod", FIELDS, BudgetPeriodVisitor)
     }
 }
 
@@ -50,12 +123,14 @@ impl BudgetPeriod {
     pub fn get_actual_mut(&mut self, id: Uuid) -> Option<&mut ActualItem> {
         self.actual_items.get_mut(&id)
     }
-    
+
     pub fn add_actual(&mut self, actual_item: ActualItem) {
         self.actual_items.insert(actual_item.id, actual_item);
     }
     pub fn contains_actual_for_item(&self, item_id: Uuid) -> bool {
-       self.actual_items.values().any(|i| i.budget_item_id.borrow().id == item_id)
+        self.actual_items
+            .values()
+            .any(|i| i.budget_item_id == item_id)
     }
     fn clear_hashmaps_and_transactions(&mut self) {
         self.transactions.clear();
@@ -96,4 +171,3 @@ impl BudgetPeriod {
         items.iter().find(|i| rule.matches_item(i)).map(|i| i.id)
     }
 }
-

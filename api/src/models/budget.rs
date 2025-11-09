@@ -115,7 +115,7 @@ impl Budget {
         }
     }
 
-    pub fn get_item(&self, item_id: &Uuid) -> Option<&BudgetItem> {
+    pub fn get_item(&self, item_id: &Uuid) -> Option<&Arc<Mutex<BudgetItem>>> {
         self.budget_items.get(item_id)
     }
 

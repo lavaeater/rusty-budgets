@@ -59,7 +59,7 @@ mod budget_period_map_serde {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct BudgetPeriodStore {
     month_begins_on: MonthBeginsOn,
     #[serde(
@@ -67,6 +67,33 @@ pub struct BudgetPeriodStore {
         deserialize_with = "budget_period_map_serde::deserialize"
     )]
     budget_periods: HashMap<PeriodId, BudgetPeriod>,
+}
+
+impl Serialize for BudgetPeriodStore {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("BudgetPeriodStore", 2)?;
+        state.serialize_field("month_begins_on", &self.month_begins_on)?;
+        state.serialize_field("budget_periods", &self.budget_periods)?;
+        state.end()
+    }
+}
+
+impl Deserialize for BudgetPeriodStore {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let mut state = deserializer.deserialize_struct("BudgetPeriodStore", 2, BudgetPeriodStoreVisitor)?;
+        let month_begins_on = state.month_begins_on;
+        let budget_periods = state.budget_periods;
+        Ok(BudgetPeriodStore {
+            month_begins_on,
+            budget_periods,
+        })
+    }
 }
 
 impl Default for BudgetPeriodStore {

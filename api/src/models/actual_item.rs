@@ -195,13 +195,20 @@ impl ActualItem {
         ActualItem {
             id,
             budget_item_id,
-            budget_item,
+            budget_item: budget_item.clone(),
             period_id,
             budgeted_amount,
             actual_amount,
             notes,
             tags,
         }
+    }
+    pub fn budgeting_type(&self)-> BudgetingType {
+        self.budget_item.lock().unwrap().budgeting_type
+    }
+    
+    pub fn item_name(&self) -> &str {
+        &self.budget_item.lock().unwrap().name
     }
 }
 
@@ -234,5 +241,7 @@ pub mod actual_item_tests {
         let serialized = serde_json::to_string(&actual_item).unwrap();
         let deserialized: ActualItem = serde_json::from_str(&serialized).unwrap();
         assert_eq!(actual_item, deserialized);
+        assert_eq!(actual_item.budgeting_type(), deserialized.budgeting_type());
+        assert_eq!(actual_item.budget_item.lock().unwrap().clone(), deserialized.budget_item.lock().unwrap().clone());
     }
 }

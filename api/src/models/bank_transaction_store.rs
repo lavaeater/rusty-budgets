@@ -135,15 +135,15 @@ impl BankTransactionStore {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Hash, Eq, PartialEq)]
-pub struct MatchRule {
+pub struct  MatchRule {
     pub transaction_key: Vec<String>,
-    pub item_name: String,
+    pub item_name: Vec<String>,
     pub always_apply: bool
 }
 
 impl Display for MatchRule {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "MatchRule {{ transaction_key: {:?}, item_name: {}, always_apply: {} }}", self.transaction_key, self.item_name, self.always_apply)
+        write!(f, "MatchRule {{ transaction_key: {:?}, item_name: {:?}, always_apply: {} }}", self.transaction_key, self.item_name, self.always_apply)
     }
 }
 
@@ -266,17 +266,22 @@ impl MatchRule {
         self.transaction_key == tokenized_transaction_description
     }
 
-    pub fn matches_item(&self, item: &BudgetItem) -> bool {
-        item.name.contains(&self.item_name)
+    pub fn matches_item(&self, item: &ActualItem) -> bool {
+        let tokenized_item_name = tokenize_description(&item.item_name());
+        self.item_name == tokenized_item_name
     }
     
-    pub fn create_rule_for_transaction_and_item(transaction: &BankTransaction, item: &BudgetItem) -> MatchRule {
+    pub fn create_rule_for_transaction_and_item(transaction: &BankTransaction, item: &ActualItem) -> MatchRule {
         let transaction_key = Self::create_transaction_key(transaction);
         MatchRule {
             transaction_key,
-            item_name: item.name.clone(),
+            item_name: Self::create_item_key(item),
             always_apply: true
         }
+    }
+    
+    pub fn create_item_key(item: &ActualItem) -> Vec<String> {
+        tokenize_description(&item.item_name())
     }
     
     pub fn create_transaction_key(transaction: &BankTransaction) -> Vec<String> {
