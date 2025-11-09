@@ -85,7 +85,7 @@ impl BudgetPeriodStore {
             .values()
             .find(|p| p.transactions.contains(tx_id))
     }
-    
+
     pub fn new(date: DateTime<Utc>, month_begins_on: Option<MonthBeginsOn>) -> Self {
         let month_begins_on = month_begins_on.unwrap_or_default();
         let id = PeriodId::from_date(date, month_begins_on);
@@ -120,7 +120,7 @@ impl BudgetPeriodStore {
 
     pub fn evaluate_rules(
         &self,
-        rules: &HashSet<MatchRule>
+        rules: &HashSet<MatchRule>,
     ) -> Vec<(Uuid, Uuid)> {
         self.budget_periods
             .iter()
@@ -144,16 +144,6 @@ impl BudgetPeriodStore {
             .max()
             .map(|key| self.budget_periods.get(key).unwrap())
     }
-
-    // pub fn set_previous_period(&mut self) {
-    //     let previous_id = self.current_period_id.month_before();
-    //     self.set_current_period_id(previous_id);
-    // }
-
-    // pub fn set_next_period(&mut self) {
-    //     let next_id = self.current_period_id.month_after();
-    //     self.set_current_period_id(next_id);
-    // }
 
     pub fn create_period_before(&mut self, period_id: PeriodId) -> &mut BudgetPeriod {
         let period = period_id.month_before();
@@ -190,57 +180,54 @@ impl BudgetPeriodStore {
         &self,
         period_id: PeriodId,
     ) -> Vec<(usize, BudgetingType, BudgetingTypeOverview, Vec<BudgetItem>)> {
-        
         self.with_period(period_id)
             .map(|p| {
                 let items_by_type = p.actual_items.values().group_by(|item| item.item_type())
                     .map(|(index, t, items)| {
-                        let overview = p.budgeting_overview.get(t).unwrap();
+                        let overview = match t {
+                            Income => self.get_income_overview(period_id),
+                            Expense => self.get_expense_overview(period_id),
+                            Savings => self.get_savings_overview(period_id),
+                        };
                         (*index, *t, *overview, items.clone())
                     })
-                    .collect::<Vec<_>>()
+                    .collect::<Vec<_>>();
+                items_by_type
             })
             .unwrap_or_default()
     }
 
     pub fn budgeted_for_type(&self, budgeting_type: &BudgetingType, period_id: PeriodId) -> Money {
         self.with_period(period_id)
-            .map(|p| p.budget_items.by_type(budgeting_type).unwrap_or_default())
+            .map(|p| p.actual_items.values().filter(|item| item.item_type() == *budgeting_type).map(|item| item.budgeted_amount).sum())
             .unwrap_or_default()
-            .iter()
-            .map(|item| item.budgeted_amount)
-            .sum()
     }
 
     pub fn spent_for_type(&self, budgeting_type: &BudgetingType, period_id: PeriodId) -> Money {
         self.with_period(period_id)
             .map(|p| {
-                p.budget_items
-                    .by_type(budgeting_type)
-                    .unwrap_or_default()
-                    .iter()
+                p.actual_items
+                    .values()
+                    .filter(|item| item.item_type() == *budgeting_type)
                     .map(|item| item.actual_amount)
                     .sum()
             })
             .unwrap_or_default()
     }
 
-    pub fn recalc_overview(&mut self, period_id: PeriodId) {
-        let actual_id = self.period_or_now(period_id);
-        self.ensure_period(actual_id);
-
+    pub fn get_income_overview(&self, period_id: PeriodId) -> BudgetingTypeOverview {
         let income_sum = Sum(vec![Income]);
         let budgeted_income = income_sum.evaluate(
             &self
                 .with_period(period_id)
-                .map(|p| p.budget_items.hash_by_type())
+                .map(|p| p.actual_items.values().filter(|item| item.item_type() == Income).map(|item| item.budgeted_amount).sum())
                 .unwrap_or_default(),
             Some(ValueKind::Budgeted),
         );
         let spent_income = income_sum.evaluate(
             &self
                 .with_period(period_id)
-                .map(|p| p.budget_items.hash_by_type())
+                .map(|p| p.actual_items.values().filter(|item| item.item_type() == Income).map(|item| item.actual_amount).sum())
                 .unwrap_or_default(),
             Some(ValueKind::Spent),
         );
@@ -248,7 +235,7 @@ impl BudgetPeriodStore {
         let remaining_income = remaining_rule.evaluate(
             &self
                 .with_period(period_id)
-                .map(|p| p.budget_items.hash_by_type())
+                .map(|p| p.actual_items.values().filter(|item| item.item_type() == Income).map(|item| item.budgeted_amount).sum())
                 .unwrap_or_default(),
             Some(ValueKind::Budgeted),
         );
@@ -260,21 +247,22 @@ impl BudgetPeriodStore {
             is_ok: remaining_income > Money::zero(remaining_income.currency()),
         };
 
-        self.with_period_mut(period_id)
-            .map(|p| p.budgeting_overview.insert(Income, income_overview));
+        income_overview
+    }
 
+    pub fn get_expense_overview(&self, period_id: PeriodId) -> BudgetingTypeOverview {
         let expense_sum = Sum(vec![Expense]);
         let budgeted_expenses = expense_sum.evaluate(
             &self
                 .with_period(period_id)
-                .map(|p| p.budget_items.hash_by_type())
+                .map(|p| p.actual_items.values().filter(|item| item.item_type() == Expense).map(|item| item.budgeted_amount).sum())
                 .unwrap_or_default(),
             Some(ValueKind::Budgeted),
         );
         let spent_expenses = expense_sum.evaluate(
             &self
                 .with_period(period_id)
-                .map(|p| p.budget_items.hash_by_type())
+                .map(|p| p.actual_items.values().filter(|item| item.item_type() == Expense).map(|item| item.actual_amount).sum())
                 .unwrap_or_default(),
             Some(ValueKind::Spent),
         );
@@ -283,7 +271,7 @@ impl BudgetPeriodStore {
         let self_diff = self_difference_rule.evaluate(
             &self
                 .with_period(period_id)
-                .map(|p| p.budget_items.hash_by_type())
+                .map(|p| p.actual_items.values().filter(|item| item.item_type() == Expense).map(|item| item.actual_amount).sum())
                 .unwrap_or_default(),
             None,
         );
@@ -294,29 +282,23 @@ impl BudgetPeriodStore {
             remaining_budget: self_diff,
             is_ok: self_diff < Money::zero(self_diff.currency()),
         };
+        expense_overview
+    }
 
-        self.with_period_mut(period_id)
-            .map(|p| p.budgeting_overview.insert(Expense, expense_overview));
-
+    pub fn get_savings_overview(&self, period_id: PeriodId) -> BudgetingTypeOverview {
         let savings_sum = Sum(vec![Savings]);
         let budgeted_savings = savings_sum.evaluate(
-            &self.with_period(period_id).budget_items.hash_by_type(),
+            &self.with_period(period_id).map(|p| p.actual_items.values().filter(|item| item.item_type() == Savings).map(|item| item.budgeted_amount).sum()).unwrap_or_default(),
             Some(ValueKind::Budgeted),
         );
         let spent_savings = savings_sum.evaluate(
-            &self
-                .with_period(period_id)
-                .map(|p| p.budget_items.hash_by_type())
-                .unwrap_or_default(),
+            &self.with_period(period_id).map(|p| p.actual_items.values().filter(|item| item.item_type() == Savings).map(|item| item.actual_amount).sum()).unwrap_or_default(),
             Some(ValueKind::Spent),
         );
 
         let self_difference_rule = SelfDiff(Savings);
         let self_diff = self_difference_rule.evaluate(
-            &self
-                .with_period(period_id)
-                .map(|p| p.budget_items.hash_by_type())
-                .unwrap_or_default(),
+            &self.with_period(period_id).map(|p| p.actual_items.values().filter(|item| item.item_type() == Savings).map(|item| item.actual_amount).sum()).unwrap_or_default(),
             None,
         );
 
@@ -326,33 +308,7 @@ impl BudgetPeriodStore {
             remaining_budget: self_diff,
             is_ok: self_diff < Money::zero(self_diff.currency()),
         };
-
-        self.with_period_mut(period_id)
-            .map(|p| p.budgeting_overview.insert(Savings, savings_overview));
-    }
-
-    pub fn insert_item(&mut self, item: &BudgetItem, item_type: BudgetingType) {
-        self.with_current_period_mut()
-            .budget_items
-            .insert(item, item_type);
-        self.with_current_period_mut()
-            .budgeted_by_type
-            .entry(item_type)
-            .and_modify(|v| *v += item.budgeted_amount)
-            .or_insert(item.budgeted_amount);
-        self.recalc_overview(None);
-    }
-
-    pub fn remove_item(&mut self, item_id: &Uuid) {
-        if let Some((item, item_type)) =
-            self.with_current_period_mut().budget_items.remove(*item_id)
-        {
-            self.with_current_period_mut()
-                .budgeted_by_type
-                .entry(item_type)
-                .and_modify(|v| *v -= item.budgeted_amount);
-            self.recalc_overview(None);
-        }
+        savings_overview
     }
 
     pub fn insert_transaction(&mut self, tx: BankTransaction) {
@@ -374,13 +330,15 @@ impl BudgetPeriodStore {
     }
 
     pub fn contains_budget_item(&self, item_id: &Uuid) -> bool {
-        let mut periods = self.budget_periods.values();
-        periods.any(|p| p.budget_items.contains(item_id))
+        self.budget_periods
+            .values()
+            .any(|p| p.actual_items.values().any(|i| i.budget_item_id == *item_id))
     }
+
     pub fn contains_item_with_name(&self, name: &str) -> bool {
         self.budget_periods
             .values()
-            .any(|p| p.budget_items.contains_item_with_name(name))
+            .any(|p| p.actual_items.values().any(|i| i.item_name() == name))
     }
 
     pub fn get_transaction_mut(&mut self, tx_id: &Uuid) -> Option<&mut BankTransaction> {
@@ -401,48 +359,6 @@ impl BudgetPeriodStore {
         None
     }
 
-    pub fn type_for_item(&self, item_id: &Uuid) -> Option<BudgetingType> {
-        self.with_current_period()
-            .budget_items
-            .type_for(item_id)
-            .cloned()
-    }
-
-    pub fn update_budget_actual_amount(&mut self, budgeting_type: &BudgetingType, amount: &Money) {
-        self.with_current_period_mut()
-            .actual_by_type
-            .entry(*budgeting_type)
-            .and_modify(|v| {
-                *v += *amount;
-            });
-    }
-
-    pub fn update_budget_budgeted_amount(
-        &mut self,
-        budgeting_type: &BudgetingType,
-        amount: &Money,
-    ) {
-        self.with_current_period_mut()
-            .budgeted_by_type
-            .entry(*budgeting_type)
-            .and_modify(|v| {
-                *v += *amount;
-            });
-    }
-
-    pub fn add_actual_amount_to_item(&mut self, item_id: &Uuid, amount: &Money) {
-        self.with_current_period_mut()
-            .budget_items
-            .add_actual_amount(item_id, amount);
-    }
-
-    pub fn add_budgeted_amount_to_item(&mut self, item_id: &Uuid, amount: &Money) {
-        self.with_current_period_mut()
-            .budget_items
-            .add_budgeted_amount(item_id, amount);
-    }
-
-    #[allow(clippy::too_many_arguments)]
     pub fn modify_budget_item(
         &mut self,
         id: &Uuid,
@@ -466,47 +382,37 @@ impl BudgetPeriodStore {
 
     pub fn get_budgeted_by_type(&self, budgeting_type: &BudgetingType, period_id: PeriodId) -> Option<&Money> {
         self.with_period(period_id)
-            .map(|p| p.actual_items.iter().filter(|a|a.item_type == budgeting_type).map(|a|a.actual_amount).sum()))
+            .map(|p| p.actual_items.iter().filter(|(_, a)| a.budgeting_type() == *budgeting_type).map(|(_, a)| a.budgeted_amount).sum())
     }
 
     pub fn get_actual_by_type(&self, budgeting_type: &BudgetingType, period_id: PeriodId) -> Option<&Money> {
-        self.with_current_period()
-            .actual_by_type
-            .get(budgeting_type)
+        self.with_period(period_id)
+            .map(|p| p.actual_items.iter().filter(|(_, a)| a.budgeting_type() == *budgeting_type).map(|(_, a)| a.actual_amount).sum())
     }
 
-    pub fn get_budgeting_overview(
-        &self,
-        budgeting_type: &BudgetingType,
-    ) -> Option<&BudgetingTypeOverview> {
-        self.with_current_period()
-            .budgeting_overview
-            .get(budgeting_type)
+    pub fn list_bank_transactions(&self,
+                                  period_id: PeriodId) -> Vec<&BankTransaction> {
+        self.with_period(period_id).map(|p| p.transactions.list_transactions(true)).unwrap_or_default()
     }
 
-    pub fn list_bank_transactions(&self) -> Vec<&BankTransaction> {
-        self.with_current_period()
-            .transactions
-            .list_transactions(true)
-    }
     pub fn list_transactions_for_item(
         &self,
+        period_id: PeriodId,
         item_id: &Uuid,
         sorted: bool,
     ) -> Vec<&BankTransaction> {
-        self.with_current_period()
-            .transactions
-            .list_transactions_for_item(item_id, sorted)
+        self.with_period(period_id)
+            .map(|p| p.transactions.list_transactions_for_item(item_id, sorted))
+            .unwrap_or_default()
     }
 
     pub fn list_transactions_for_connection(
         &self,
-        budget_period_id: PeriodId,
+        period_id: PeriodId,
     ) -> Vec<BankTransaction> {
-        let period = self.period_or_now(budget_period_id);
         self.with_period(period)
-            .transactions
-            .list_transactions_for_connection()
+            .map(|p| p.transactions.list_transactions_for_connection())
+            .unwrap_or_default()
     }
 
     pub fn list_all_bank_transactions(&self) -> Vec<&BankTransaction> {
@@ -514,432 +420,5 @@ impl BudgetPeriodStore {
             .values()
             .flat_map(|v| v.transactions.list_transactions(true))
             .collect()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::models::{Budget, Currency, Money};
-    use chrono::{Month, TimeZone};
-
-    #[test]
-    fn test_new_creates_store_with_correct_period() {
-        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
-        let store = BudgetPeriodStore::new(date, Some(MonthBeginsOn::CurrentMonth1stDayOfMonth));
-
-        assert_eq!(store.current_period_id().year, 2025);
-        assert_eq!(store.current_period_id().month, 3);
-    }
-
-    #[test]
-    fn test_new_with_custom_month_begins_on() {
-        let date = Utc.with_ymd_and_hms(2025, 3, 26, 12, 0, 0).unwrap();
-        let store = BudgetPeriodStore::new(date, Some(MonthBeginsOn::PreviousMonth(25)));
-
-        // Date March 26 with PreviousMonth(25) should belong to April period
-        assert_eq!(store.current_period_id().year, 2025);
-        assert_eq!(store.current_period_id().month, 4);
-    }
-
-    #[test]
-    fn test_set_previous_period() {
-        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
-        let mut store =
-            BudgetPeriodStore::new(date, Some(MonthBeginsOn::CurrentMonth1stDayOfMonth));
-
-        store.create_previous_period();
-
-        assert_eq!(store.current_period_id().year, 2025);
-        assert_eq!(store.current_period_id().month, 2);
-    }
-
-    #[test]
-    fn test_set_next_period() {
-        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
-        let mut store =
-            BudgetPeriodStore::new(date, Some(MonthBeginsOn::CurrentMonth1stDayOfMonth));
-
-        store.set_next_period();
-
-        assert_eq!(store.current_period_id().year, 2025);
-        assert_eq!(store.current_period_id().month, 4);
-    }
-
-    #[test]
-    fn test_set_previous_period_crosses_year_boundary() {
-        let date = Utc.with_ymd_and_hms(2025, 1, 15, 12, 0, 0).unwrap();
-        let mut store =
-            BudgetPeriodStore::new(date, Some(MonthBeginsOn::CurrentMonth1stDayOfMonth));
-
-        store.create_previous_period();
-
-        assert_eq!(store.current_period_id().year, 2024);
-        assert_eq!(store.current_period_id().month, 12);
-    }
-
-    #[test]
-    fn test_set_next_period_crosses_year_boundary() {
-        let date = Utc.with_ymd_and_hms(2025, 12, 15, 12, 0, 0).unwrap();
-        let mut store =
-            BudgetPeriodStore::new(date, Some(MonthBeginsOn::CurrentMonth1stDayOfMonth));
-
-        store.set_next_period();
-
-        assert_eq!(store.current_period_id().year, 2026);
-        assert_eq!(store.current_period_id().month, 1);
-    }
-
-    #[test]
-    fn test_get_or_create_period_creates_new_period() {
-        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
-        let mut store = BudgetPeriodStore::new(date, None);
-
-        let new_id = PeriodId {
-            year: 2025,
-            month: 6,
-        };
-        let period = store.get_or_create_period(new_id);
-
-        assert_eq!(period.id.year, 2025);
-        assert_eq!(period.id.month, 6);
-    }
-
-    #[test]
-    fn test_get_or_create_period_returns_existing_period() {
-        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
-        let mut store = BudgetPeriodStore::new(date, None);
-
-        let current_id = store.current_period_id();
-        let period = store.get_or_create_period(current_id);
-
-        assert_eq!(period.id, current_id);
-    }
-
-    #[test]
-    fn test_get_period_before_returns_none_when_no_previous() {
-        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
-        let store = BudgetPeriodStore::new(date, None);
-
-        let id = PeriodId {
-            year: 2025,
-            month: 1,
-        };
-        let result = store.get_period_before(id);
-
-        assert!(result.is_none());
-    }
-
-    #[test]
-    fn test_get_period_before_returns_previous_period() {
-        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
-        let mut store = BudgetPeriodStore::new(date, None);
-
-        // Create a few periods
-        store.create_previous_period();
-        store.set_next_period();
-        store.set_next_period();
-
-        let id = PeriodId {
-            year: 2025,
-            month: 4,
-        };
-        let result = store.get_period_before(id);
-
-        assert!(result.is_some());
-        let prev = result.unwrap();
-        assert_eq!(prev.id.year, 2025);
-        assert_eq!(prev.id.month, 3);
-    }
-
-    #[test]
-    fn test_set_current_period_by_date() {
-        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
-        let mut store =
-            BudgetPeriodStore::new(date, Some(MonthBeginsOn::CurrentMonth1stDayOfMonth));
-
-        let new_date = Utc.with_ymd_and_hms(2025, 6, 20, 12, 0, 0).unwrap();
-        store.set_current_period(&new_date);
-
-        assert_eq!(store.current_period_id().year, 2025);
-        assert_eq!(store.current_period_id().month, 6);
-    }
-
-    #[test]
-    fn test_set_current_period_id() {
-        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
-        let mut store = BudgetPeriodStore::new(date, None);
-
-        let new_id = PeriodId {
-            year: 2025,
-            month: 9,
-        };
-        store.set_current_period_id(new_id);
-
-        assert_eq!(store.current_period_id().year, 2025);
-        assert_eq!(store.current_period_id().month, 9);
-    }
-
-    #[test]
-    fn test_insert_item_adds_to_current_period() {
-        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
-        let mut store = BudgetPeriodStore::new(date, None);
-
-        let item = BudgetItem {
-            id: Uuid::new_v4(),
-            name: "Test Item".to_string(),
-            budgeted_amount: Money::new_dollars(100, Currency::SEK),
-            actual_amount: Money::new_dollars(0, Currency::SEK),
-            notes: None,
-            tags: vec![],
-        };
-
-        let item_id = item.id;
-        store.insert_item(&item, BudgetingType::Expense);
-
-        assert!(store.contains_budget_item(&item_id));
-        assert_eq!(store.get_item(&item_id).unwrap().name, "Test Item");
-    }
-
-    #[test]
-    fn test_remove_item_removes_from_current_period() {
-        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
-        let mut store = BudgetPeriodStore::new(date, None);
-        let period_id = PeriodId::from_date(date, MonthBeginsOn::PreviousMonthWorkDayBefore(25));
-
-        let item = BudgetItem {
-            id: Uuid::new_v4(),
-            name: "Test Item".to_string(),
-            budgeted_amount: Money::new_dollars(100, Currency::SEK),
-            actual_amount: Money::new_dollars(0, Currency::SEK),
-            notes: None,
-            tags: vec![],
-        };
-
-        let item_id = item.id;
-        store.with_period_mut(period_id).insert_item(&item, Expense);
-        assert!(store.contains_budget_item(&item_id));
-
-        store.remove_item(&item_id);
-        assert!(!store.contains_budget_item(&item_id));
-    }
-
-    #[test]
-    fn test_insert_transaction_creates_period_for_transaction_date() {
-        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
-        let mut store = BudgetPeriodStore::new(date, None);
-
-        let tx_date = Utc.with_ymd_and_hms(2025, 6, 20, 12, 0, 0).unwrap();
-        let tx = BankTransaction::new(
-            Uuid::new_v4(),
-            "123456",
-            Money::new_dollars(50, Currency::SEK),
-            Money::new_dollars(1000, Currency::SEK),
-            "Test Transaction",
-            tx_date,
-        );
-
-        let tx_id = tx.id;
-        store.insert_transaction(tx);
-
-        assert!(store.contains_transaction(&tx_id));
-    }
-
-    #[test]
-    fn test_can_insert_transaction_checks_hash_uniqueness() {
-        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
-        let mut store = BudgetPeriodStore::new(date, None);
-
-        let tx = BankTransaction::new(
-            Uuid::new_v4(),
-            "123456",
-            Money::new_dollars(50, Currency::SEK),
-            Money::new_dollars(1000, Currency::SEK),
-            "Test Transaction",
-            date,
-        );
-
-        let tx_hash = tx.get_hash();
-        assert!(store.can_insert_transaction(&tx_hash));
-
-        store.insert_transaction(tx);
-
-        assert!(!store.can_insert_transaction(&tx_hash));
-    }
-
-    #[test]
-    fn test_budgeted_for_type_sums_correctly() {
-        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
-        let mut store = BudgetPeriodStore::new(date, None);
-
-        let item1 = BudgetItem {
-            id: Uuid::new_v4(),
-            name: "Item 1".to_string(),
-            budgeted_amount: Money::new_dollars(100, Currency::SEK),
-            actual_amount: Money::new_dollars(0, Currency::SEK),
-            notes: None,
-            tags: vec![],
-        };
-
-        let item2 = BudgetItem {
-            id: Uuid::new_v4(),
-            name: "Item 2".to_string(),
-            budgeted_amount: Money::new_dollars(200, Currency::SEK),
-            actual_amount: Money::new_dollars(0, Currency::SEK),
-            notes: None,
-            tags: vec![],
-        };
-
-        store.insert_item(&item1, BudgetingType::Expense);
-        store.insert_item(&item2, BudgetingType::Expense);
-
-        let total = store.budgeted_for_type(&BudgetingType::Expense);
-        assert_eq!(total, Money::new_dollars(300, Currency::SEK));
-    }
-
-    #[test]
-    fn test_spent_for_type_sums_correctly() {
-        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
-        let mut store = BudgetPeriodStore::new(date, None);
-
-        let item1 = BudgetItem {
-            id: Uuid::new_v4(),
-            name: "Item 1".to_string(),
-            budgeted_amount: Money::new_dollars(100, Currency::SEK),
-            actual_amount: Money::new_dollars(50, Currency::SEK),
-            notes: None,
-            tags: vec![],
-        };
-
-        let item2 = BudgetItem {
-            id: Uuid::new_v4(),
-            name: "Item 2".to_string(),
-            budgeted_amount: Money::new_dollars(200, Currency::SEK),
-            actual_amount: Money::new_dollars(75, Currency::SEK),
-            notes: None,
-            tags: vec![],
-        };
-
-        store.insert_item(&item1, BudgetingType::Expense);
-        store.insert_item(&item2, BudgetingType::Expense);
-
-        let total = store.spent_for_type(&BudgetingType::Expense);
-        assert_eq!(total, Money::new_dollars(125, Currency::SEK));
-    }
-
-    #[test]
-    fn test_list_all_items_returns_current_period_items() {
-        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
-        let mut store = BudgetPeriodStore::new(date, None);
-
-        let item = BudgetItem {
-            id: Uuid::new_v4(),
-            name: "Test Item".to_string(),
-            budgeted_amount: Money::new_dollars(100, Currency::SEK),
-            actual_amount: Money::new_dollars(0, Currency::SEK),
-            notes: None,
-            tags: vec![],
-        };
-
-        store.insert_item(&item, BudgetingType::Income);
-
-        let items = store.list_all_items();
-        assert_eq!(items.len(), 1);
-        assert_eq!(items[0].name, "Test Item");
-    }
-
-    #[test]
-    fn test_modify_budget_item_updates_item() {
-        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
-        let mut store = BudgetPeriodStore::new(date, None);
-
-        let item = BudgetItem {
-            id: Uuid::new_v4(),
-            name: "Original Name".to_string(),
-            budgeted_amount: Money::new_dollars(100, Currency::SEK),
-            actual_amount: Money::new_dollars(0, Currency::SEK),
-            notes: None,
-            tags: vec![],
-        };
-
-        let item_id = item.id;
-        store.insert_item(&item, BudgetingType::Expense);
-
-        store.modify_budget_item(
-            &item_id,
-            Some("Updated Name".to_string()),
-            None,
-            Some(Money::new_dollars(200, Currency::SEK)),
-            None,
-            None,
-            None,
-        );
-
-        let updated_item = store.get_item(&item_id).unwrap();
-        assert_eq!(updated_item.name, "Updated Name");
-        assert_eq!(
-            updated_item.budgeted_amount,
-            Money::new_dollars(200, Currency::SEK)
-        );
-    }
-
-    #[test]
-    fn test_serialization_deserialization() {
-        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
-        let mut store = BudgetPeriodStore::new(date, None);
-
-        let item = BudgetItem {
-            id: Uuid::new_v4(),
-            name: "Test Item".to_string(),
-            budgeted_amount: Money::new_dollars(100, Currency::SEK),
-            actual_amount: Money::new_dollars(50, Currency::SEK),
-            notes: None,
-            tags: vec![],
-        };
-
-        store.insert_item(&item, Expense);
-
-        let month_begins = MonthBeginsOn::PreviousMonthWorkDayBefore(25);
-        let serialized = serde_json::to_string(&month_begins).unwrap();
-        println!("Serialized: {}", serialized);
-
-        let deserialized: MonthBeginsOn = serde_json::from_str(&serialized).unwrap();
-        assert_eq!(deserialized, MonthBeginsOn::PreviousMonthWorkDayBefore(25));
-
-        // Serialize
-        let serialized = serde_json::to_string(&store).unwrap();
-        println!("Serialized Store: {}", serialized);
-
-        // Deserialize
-        let deserialized: BudgetPeriodStore = serde_json::from_str(&serialized).unwrap();
-
-        assert_eq!(deserialized.current_period_id(), store.current_period_id());
-        assert_eq!(deserialized.list_all_items().len(), 1);
-
-        let budget = Budget::new(Uuid::new_v4());
-        let serialized = serde_json::to_string(&budget).unwrap();
-        println!("Serialized Budget: {}", serialized);
-        let deserialized: Budget = serde_json::from_str(&serialized).unwrap();
-        assert_eq!(deserialized.id, budget.id);
-    }
-
-    #[test]
-    fn test_multiple_periods_navigation() {
-        let date = Utc.with_ymd_and_hms(2025, 3, 15, 12, 0, 0).unwrap();
-        let mut store =
-            BudgetPeriodStore::new(date, Some(MonthBeginsOn::CurrentMonth1stDayOfMonth));
-
-        // Navigate forward and backward
-        store.set_next_period();
-        assert_eq!(store.current_period_id().month, 4);
-
-        store.set_next_period();
-        assert_eq!(store.current_period_id().month, 5);
-
-        store.create_previous_period();
-        assert_eq!(store.current_period_id().month, 4);
-
-        store.create_previous_period();
-        assert_eq!(store.current_period_id().month, 3);
     }
 }

@@ -1,10 +1,11 @@
 use core::fmt;
 use core::fmt::{Display, Formatter};
 use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
 use serde::{Deserialize, Serialize};
 use strum_macros::EnumIter;
 use uuid::Uuid;
-use crate::models::{ActualItem, ActualView, BudgetItem, Currency, Money, PeriodId};
+use crate::models::{ActualItem, BudgetItem, Currency, Money, PeriodId};
 
 #[derive(Default,Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, EnumIter)]
 pub enum BudgetingType {
@@ -19,7 +20,6 @@ pub struct BudgetingTypeOverview {
     pub budgeted_amount: Money,
     pub actual_amount: Money,
     pub remaining_budget: Money,
-    #[serde(default)]
     pub is_ok: bool,
 }
 
@@ -50,7 +50,7 @@ pub enum ValueKind {
 }
 
 impl ValueKind {
-    fn pick(&self, item: &ActualView) -> Money {
+    fn pick(&self, item: &ActualItem) -> Money {
         match self {
             ValueKind::Budgeted => item.budgeted_amount,
             ValueKind::Spent => item.actual_amount,
@@ -61,7 +61,7 @@ impl ValueKind {
 impl Rule {
     pub fn evaluate(
         &self,
-        store: &Vec<ActualView>,
+        store: &Vec<ActualItem>,
         kind: Option<ValueKind>,
     ) -> Money {
         match self {
@@ -87,8 +87,8 @@ impl Rule {
         }
     }
 
-    pub fn get_sum(store: &Vec<ActualView>, kind: &ValueKind, base: &BudgetingType) -> Money {
-        store.iter().filter(|i| i.budgeting_type == *base).map(|i| kind.pick(i)).sum::<Money>()
+    pub fn get_sum(store: &Vec<ActualItem>, kind: &ValueKind, base: &BudgetingType) -> Money {
+        store.iter().filter(|i| i.budgeting_type() == *base).map(|i| kind.pick(i)).sum::<Money>()
     }
 }
 
@@ -99,18 +99,14 @@ fn test_calculate_rules() {
     use Rule::*;
     let period_id = PeriodId::new(2025, 12);
     let mut budget_items = Vec::new();
-    budget_items.push(BudgetItem::new(Uuid::new_v4(), "Lön", Income));
-    budget_items.push(BudgetItem::new(Uuid::new_v4(), "Hyra", Expense));
-    budget_items.push(BudgetItem::new(Uuid::new_v4(), "Spara", Savings));
+    budget_items.push(Arc::new(Mutex::new(BudgetItem::new(Uuid::new_v4(), "Lön", Income))));
+    budget_items.push(Arc::new(Mutex::new(BudgetItem::new(Uuid::new_v4(), "Hyra", Expense))));
+    budget_items.push(Arc::new(Mutex::new(BudgetItem::new(Uuid::new_v4(), "Spara", Savings))));
     
-    let mut actual_items = Vec::new();
-    actual_items.push(ActualItem::new(Uuid::new_v4(), budget_items[0].id, period_id, Money::new_dollars(5000, Currency::SEK), Money::new_dollars(4000, Currency::SEK), None, vec![]));
-    actual_items.push(ActualItem::new(Uuid::new_v4(), budget_items[1].id, period_id, Money::new_dollars(3000, Currency::SEK), Money::new_dollars(2000, Currency::SEK), None, vec![]));
-    actual_items.push(ActualItem::new(Uuid::new_v4(), budget_items[2].id, period_id, Money::new_dollars(1000, Currency::SEK), Money::new_dollars(500, Currency::SEK), None, vec![]));
-    
-    let store = actual_items.iter().map(|i| { 
-        ActualView::new(i, budget_items.iter().find(|b| b.id == i.budget_item_id).unwrap())
-    }).collect::<Vec<_>>();
+    let mut store = Vec::new();
+    store.push(ActualItem::new(Uuid::new_v4(), budget_items[0].clone(), period_id, Money::new_dollars(5000, Currency::SEK), Money::new_dollars(4000, Currency::SEK), None, vec![]));
+    store.push(ActualItem::new(Uuid::new_v4(), budget_items[1].clone(), period_id, Money::new_dollars(3000, Currency::SEK), Money::new_dollars(2000, Currency::SEK), None, vec![]));
+    store.push(ActualItem::new(Uuid::new_v4(), budget_items[2].clone(), period_id, Money::new_dollars(1000, Currency::SEK), Money::new_dollars(500, Currency::SEK), None, vec![]));
     
     
     let income_rule = Sum(vec![Income]);

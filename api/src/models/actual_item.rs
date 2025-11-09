@@ -195,7 +195,7 @@ impl ActualItem {
         ActualItem {
             id,
             budget_item_id,
-            budget_item: budget_item.clone(),
+            budget_item,
             period_id,
             budgeted_amount,
             actual_amount,
@@ -207,8 +207,8 @@ impl ActualItem {
         self.budget_item.lock().unwrap().budgeting_type
     }
     
-    pub fn item_name(&self) -> &str {
-        &self.budget_item.lock().unwrap().name
+    pub fn item_name(&self) -> String {
+        self.budget_item.lock().unwrap().name.clone()
     }
 }
 
