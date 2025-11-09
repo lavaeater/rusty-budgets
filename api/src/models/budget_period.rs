@@ -38,8 +38,8 @@ impl Serialize for BudgetPeriod {
     }
 }
 
-impl Deserialize for BudgetPeriod {
-    fn deserialize<'de, D>(deserializer: D) -> Result<Self, D::Error>
+impl<'de> Deserialize<'de> for BudgetPeriod {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
