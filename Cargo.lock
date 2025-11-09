@@ -49,6 +49,7 @@ dependencies = [
  "csv",
  "dioxus",
  "duration-extender",
+ "iter_tools",
  "joydb",
  "once_cell",
  "serde",
@@ -516,6 +517,12 @@ dependencies = [
  "ciborium-io",
  "half",
 ]
+
+[[package]]
+name = "clone_dyn_types"
+version = "0.42.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2ec7312693a0cd0e18272fda7db24123877c6d4f594906c97e1101f10d3b0790"
 
 [[package]]
 name = "cocoa"
@@ -1769,6 +1776,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1a2c524db105dc30f04ad1fa7cbfa9278baa29465f0c6b2058e4a3709254ea56"
 
 [[package]]
+name = "either"
+version = "1.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "48c757948c5ede0e46177b7add2e67155f70e33c07fea8284df6576da70b3719"
+
+[[package]]
 name = "encoding_rs"
 version = "0.8.35"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2865,6 +2878,25 @@ checksum = "dbc5ebe9c3a1a7a5127f920a418f7585e9e758e911d0466ed004f393b0e380b2"
 dependencies = [
  "memchr",
  "serde",
+]
+
+[[package]]
+name = "iter_tools"
+version = "0.42.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4109f84d113a0ff44a512281061f56066c321dc98c4caeb91ee1c0b91fbd70b4"
+dependencies = [
+ "clone_dyn_types",
+ "itertools",
+]
+
+[[package]]
+name = "itertools"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1c173a5686ce8bfa551b3563d0c2170bf24ca44da99c7ca4bfdab5418c3fe57"
+dependencies = [
+ "either",
 ]
 
 [[package]]
