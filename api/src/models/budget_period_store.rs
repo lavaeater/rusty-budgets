@@ -363,7 +363,7 @@ impl BudgetPeriodStore {
         self.budget_periods.values().any(|p| {
             p.actual_items
                 .values()
-                .any(|i| i.budget_item_id == *item_id)
+                .any(|i| i.budget_item_id == item_id)
         })
     }
 

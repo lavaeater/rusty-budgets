@@ -94,13 +94,13 @@ pub fn import_from_skandia_excel(
                     return Err(anyhow::anyhow!("Could not find account number"));
                 };
                 match runtime.add_transaction(
-                    *budget_id,
+                    user_id,
+                    budget_id,
                     &acct_no,
                     amount,
                     balance,
                     &description,
                     date,
-                    *user_id,
                 ) {
                     Ok(_) => {
                         imported += 1;
@@ -124,7 +124,7 @@ pub fn import_from_skandia_excel(
     if let Ok(Some(budget)) = runtime.load(budget_id) {
         let matches = budget.evaluate_rules();
         for (tx_id, item_id) in matches {
-            let _ = runtime.connect_transaction(budget_id, &tx_id, &item_id, user_id);
+            let _ = runtime.connect_transaction(user_id,budget_id, tx_id, item_id);
         }
     }
 

@@ -27,7 +27,7 @@ impl TransactionConnectedHandler for Budget {
     fn apply_connect_transaction(&mut self, event: &TransactionConnected) -> Uuid {
         let cost_types = Vec::from([BudgetingType::Expense, BudgetingType::Savings]);
 
-        let tx = self.get_transaction(&event.tx_id).unwrap();
+        let tx = self.get_transaction(event.tx_id).unwrap();
         let period_id = PeriodId::from_date(tx.date, *self.month_begins_on());
         let tx_amount = tx.amount;
         if let Some(previous_id) = tx.actual_item_id {
@@ -43,7 +43,7 @@ impl TransactionConnectedHandler for Budget {
                 });
         }
         let bt = self.with_period(period_id).get_actual(event.actual_id).unwrap().budgeting_type();
-        let tx_mut = self.get_transaction_mut(&event.tx_id).unwrap();
+        let tx_mut = self.get_transaction_mut(event.tx_id).unwrap();
         tx_mut.actual_item_id = Some(event.actual_id);
 
         self.with_period_mut(period_id)
@@ -64,7 +64,7 @@ impl TransactionConnectedHandler for Budget {
         tx_id: Uuid,
         actual_id: Uuid,
     ) -> Result<TransactionConnected, CommandError> {
-        if let Some(period) = self.get_period_for_transaction(&tx_id) {
+        if let Some(period) = self.get_period_for_transaction(tx_id) {
             if period.contains_actual_for_item(actual_id) {
                 Ok(TransactionConnected {
                     budget_id: self.id,

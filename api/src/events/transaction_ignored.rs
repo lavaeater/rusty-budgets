@@ -28,7 +28,7 @@ impl TransactionIgnoredHandler for Budget {
         let cost_types = Vec::from([BudgetingType::Expense, BudgetingType::Savings]);
 
         // First, extract all the data we need from the transaction (immutable borrow)
-        let tx = self.get_transaction(&event.tx_id).unwrap();
+        let tx = self.get_transaction(event.tx_id).unwrap();
         let tx_amount = tx.amount;
         let previous_actual_id = tx.actual_item_id;
         let period_id = PeriodId::from_date(tx.date, *self.month_begins_on());
@@ -46,7 +46,7 @@ impl TransactionIgnoredHandler for Budget {
             });
         }
 
-        self.with_period_mut(period_id).transactions.ignore_transaction(&event.tx_id);
+        self.with_period_mut(period_id).transactions.ignore_transaction(event.tx_id);
         event.tx_id
     }
 
@@ -54,7 +54,7 @@ impl TransactionIgnoredHandler for Budget {
         &self,
         tx_id: Uuid
     ) -> Result<TransactionIgnored, CommandError> {
-        if self.contains_transaction(&tx_id) {
+        if self.contains_transaction(tx_id) {
             Ok(TransactionIgnored {
                 budget_id: self.id,
                 tx_id,
