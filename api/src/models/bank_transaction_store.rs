@@ -21,7 +21,7 @@ impl BankTransactionStore {
 }
 
 impl BankTransactionStore {
-    pub fn list_transactions_for_item(&self, item_id: &Uuid, sorted: bool) -> Vec<&BankTransaction> {
+    pub fn list_transactions_for_item(&self, item_id: Uuid, sorted: bool) -> Vec<&BankTransaction> {
         let mut transactions = self.by_id.values().filter(|tx| tx.actual_item_id == Some(*item_id)).collect::<Vec<_>>();
         if sorted {
             transactions.sort_by_key(|tx| tx.date);
@@ -65,7 +65,7 @@ impl BankTransactionStore {
         }
     }
     
-    pub fn ignore_transaction(&mut self, tx_id: &Uuid) -> bool {
+    pub fn ignore_transaction(&mut self, tx_id: Uuid) -> bool {
         if let Some(mut transaction) = self.by_id.remove(tx_id) {
             transaction.ignored = true;
             transaction.actual_item_id = None;
@@ -85,15 +85,15 @@ impl BankTransactionStore {
         !self.hashes.contains(hash)
     }
 
-    pub fn get_mut(&mut self, id: &Uuid) -> Option<&mut BankTransaction> {
+    pub fn get_mut(&mut self, id: Uuid) -> Option<&mut BankTransaction> {
         self.by_id.get_mut(id)
     }
 
-    pub fn get(&self, id: &Uuid) -> Option<&BankTransaction> {
+    pub fn get(&self, id: Uuid) -> Option<&BankTransaction> {
         self.by_id.get(id)
     }
 
-    pub fn contains(&self, id: &Uuid) -> bool {
+    pub fn contains(&self, id: Uuid) -> bool {
         self.by_id.contains_key(id)
     }
 

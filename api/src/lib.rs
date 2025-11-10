@@ -103,8 +103,8 @@ pub mod db {
         }
     }
 
-    pub fn get_default_budget(user_id: &Uuid) -> anyhow::Result<Option<Budget>> {
-        match with_client(None).get::<UserBudgets>(user_id) {
+    pub fn get_default_budget(user_id: Uuid) -> anyhow::Result<Option<Budget>> {
+        match with_client(None).get::<UserBudgets>(&user_id) {
             Ok(b) => match b {
                 None => {
                     tracing::info!("User has no budgets");
@@ -125,7 +125,7 @@ pub mod db {
         }
     }
 
-    pub fn get_budget(budget_id: &Uuid) -> anyhow::Result<Budget> {
+    pub fn get_budget(budget_id: Uuid) -> anyhow::Result<Budget> {
         match with_runtime(None).load(&budget_id) {
             Ok(budget) => match budget {
                 None => Err(anyhow::anyhow!("Could not load budget")),
@@ -136,8 +136,8 @@ pub mod db {
     }
 
     pub fn add_budget_to_user(
-        user_id: &Uuid,
-        budget_id: &Uuid,
+        user_id: Uuid,
+        budget_id: Uuid,
         default: bool,
     ) -> anyhow::Result<()> {
         match with_client(None).get::<UserBudgets>(&user_id) {
@@ -174,7 +174,7 @@ pub mod db {
 
     pub fn create_budget(
         name: &str,
-        user_id: &Uuid,
+        user_id: Uuid,
         default_budget: bool,
     ) -> anyhow::Result<Budget> {
         match with_runtime(None).create_budget(
@@ -192,8 +192,8 @@ pub mod db {
     }
 
     pub fn import_transactions(
-        budget_id: &Uuid,
-        user_id: &Uuid,
+        budget_id: Uuid,
+        user_id: Uuid,
         file_name: &str,
     ) -> anyhow::Result<Budget> {
         let runtime = with_runtime(None);
@@ -202,8 +202,8 @@ pub mod db {
     }
 
     pub fn add_item(
-        budget_id: &Uuid,
-        user_id: &Uuid,
+        budget_id: Uuid,
+        user_id: Uuid,
         name: String,
         item_type: BudgetingType,
         budgeted_amount: Money,
@@ -213,9 +213,9 @@ pub mod db {
     }
 
     pub fn modify_item(
-        budget_id: &Uuid,
-        item_id: &Uuid,
-        user_id: &Uuid,
+        budget_id: Uuid,
+        item_id: Uuid,
+        user_id: Uuid,
         name: Option<String>,
         item_type: Option<BudgetingType>,
         budgeted_amount: Option<Money>,
@@ -234,10 +234,10 @@ pub mod db {
     }
 
     pub fn connect_transaction(
-        budget_id: &Uuid,
-        user_id: &Uuid,
-        tx_id: &Uuid,
-        item_id: &Uuid,
+        budget_id: Uuid,
+        user_id: Uuid,
+        tx_id: Uuid,
+        item_id: Uuid,
     ) -> anyhow::Result<Budget> {
         match with_runtime(None).connect_transaction(budget_id, tx_id, item_id, user_id) {
             Ok((budget, _)) => {
@@ -264,9 +264,9 @@ pub mod db {
     }
 
     pub fn ignore_transaction(
-        budget_id: &Uuid,
-        user_id: &Uuid,
-        tx_id: &Uuid,
+        budget_id: Uuid,
+        user_id: Uuid,
+        tx_id: Uuid,
     ) -> anyhow::Result<Budget> {
         with_runtime(None)
             .ignore_transaction(budget_id, tx_id, user_id)
@@ -274,22 +274,22 @@ pub mod db {
     }
 
     pub fn adjust_item_funds(
-        budget_id: &Uuid,
-        item_id: &Uuid,
+        budget_id: Uuid,
+        item_id: Uuid,
         budget_period_id: Option<PeriodId>,
         amount: &Money,
-        user_id: &Uuid,
+        user_id: Uuid,
     ) -> anyhow::Result<Budget> {
         with_runtime(None)
-            .adjust_item_funds(*budget_id, *item_id, budget_period_id, *amount, *user_id)
+            .adjust_actual_funds(*budget_id, *item_id, budget_period_id, *amount, *user_id)
             .map(|(b, _)| b)
     }
 
     pub fn create_rule(
         budget: &Budget,
-        user_id: &Uuid,
-        tx_id: &Uuid,
-        item_id: &Uuid,
+        user_id: Uuid,
+        tx_id: Uuid,
+        item_id: Uuid,
     ) -> anyhow::Result<Budget> {
         let transaction = budget.get_transaction(tx_id).unwrap();
         let item = budget.get_item(item_id).unwrap();

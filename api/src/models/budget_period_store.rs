@@ -143,7 +143,7 @@ impl Default for BudgetPeriodStore {
 }
 
 impl BudgetPeriodStore {
-    pub fn get_period_for_transaction(&self, tx_id: &Uuid) -> Option<&BudgetPeriod> {
+    pub fn get_period_for_transaction(&self, tx_id: Uuid) -> Option<&BudgetPeriod> {
         self.budget_periods
             .values()
             .find(|p| p.transactions.contains(tx_id))
@@ -189,7 +189,7 @@ impl BudgetPeriodStore {
             .collect::<Vec<_>>()
     }
 
-    pub fn move_transaction_to_ignored(&mut self, tx_id: &Uuid, period_id: PeriodId) -> bool {
+    pub fn move_transaction_to_ignored(&mut self, tx_id: Uuid, period_id: PeriodId) -> bool {
         self.with_period_mut(period_id)
             .map(|p| p.transactions.ignore_transaction(tx_id))
             .unwrap_or_default()
@@ -353,13 +353,13 @@ impl BudgetPeriodStore {
             .all(|p| p.transactions.can_insert(tx_hash))
     }
 
-    pub fn contains_transaction(&self, tx_id: &Uuid) -> bool {
+    pub fn contains_transaction(&self, tx_id: Uuid) -> bool {
         self.budget_periods
             .values()
             .any(|p| p.transactions.contains(tx_id))
     }
 
-    pub fn contains_budget_item(&self, item_id: &Uuid) -> bool {
+    pub fn contains_budget_item(&self, item_id: Uuid) -> bool {
         self.budget_periods.values().any(|p| {
             p.actual_items
                 .values()
@@ -373,7 +373,7 @@ impl BudgetPeriodStore {
             .any(|p| p.actual_items.values().any(|i| i.item_name() == name))
     }
 
-    pub fn get_transaction_mut(&mut self, tx_id: &Uuid) -> Option<&mut BankTransaction> {
+    pub fn get_transaction_mut(&mut self, tx_id: Uuid) -> Option<&mut BankTransaction> {
         for period in self.budget_periods.values_mut() {
             if let Some(tx) = period.transactions.get_mut(tx_id) {
                 return Some(tx);
@@ -382,7 +382,7 @@ impl BudgetPeriodStore {
         None
     }
 
-    pub fn get_transaction(&self, tx_id: &Uuid) -> Option<&BankTransaction> {
+    pub fn get_transaction(&self, tx_id: Uuid) -> Option<&BankTransaction> {
         for period in self.budget_periods.values() {
             if let Some(tx) = period.transactions.get(tx_id) {
                 return Some(tx);
@@ -428,7 +428,7 @@ impl BudgetPeriodStore {
     pub fn list_transactions_for_item(
         &self,
         period_id: PeriodId,
-        item_id: &Uuid,
+        item_id: Uuid,
         sorted: bool,
     ) -> Vec<&BankTransaction> {
         self.with_period(period_id)

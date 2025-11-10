@@ -423,7 +423,7 @@ pub fn reallocate_item_funds() -> anyhow::Result<()> {
         &user_id,
     )?;
 
-    let (res, _) = rt.reallocate_item_funds(
+    let (res, _) = rt.reallocate_funds(
         budget_id,
         from_item_id,
         to_item_id,
@@ -460,7 +460,7 @@ pub fn adjust_item_funds() -> anyhow::Result<()> {
         &user_id,
     )?;
 
-    let (res, _) = rt.adjust_item_funds(
+    let (res, _) = rt.adjust_actual_funds(
         budget_id,
         item_id,
         None,

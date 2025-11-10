@@ -12,8 +12,8 @@ use uuid::Uuid;
 
 pub fn import_from_path(
     path: &str,
-    user_id: &Uuid,
-    budget_id: &Uuid,
+    user_id: Uuid,
+    budget_id: Uuid,
     runtime: &JoyDbBudgetRuntime,
 ) -> anyhow::Result<u64> {
     let p = Path::new(path);
@@ -58,8 +58,8 @@ pub fn import_from_path(
 
 pub fn import_from_skandia_excel(
     path: &str,
-    user_id: &Uuid,
-    budget_id: &Uuid,
+    user_id: Uuid,
+    budget_id: Uuid,
     runtime: &JoyDbBudgetRuntime,
 ) -> anyhow::Result<u64> {
     let mut excel: Xlsx<_> = open_workbook(path)?;

@@ -305,8 +305,8 @@ impl Budget {
         }
     }
 
-    pub fn get_item(&self, item_id: &Uuid) -> Option<&Arc<Mutex<BudgetItem>>> {
-        self.budget_items.get(item_id)
+    pub fn get_item(&self, item_id: Uuid) -> Option<&Arc<Mutex<BudgetItem>>> {
+        self.budget_items.get(&item_id)
     }
 
     pub fn list_ignored_transactions(&self, period_id: PeriodId) -> Vec<BankTransaction> {
@@ -342,8 +342,8 @@ impl Budget {
         self.budget_items.insert(item.id, Arc::new(Mutex::new(item.clone())));
     }
 
-    pub fn remove_item(&mut self, item_id: &Uuid) {
-        self.budget_items.remove(item_id);
+    pub fn remove_item(&mut self, item_id: Uuid) {
+        self.budget_items.remove(&item_id);
     }
 
     pub fn insert_transaction(&mut self, tx: BankTransaction) {
@@ -354,37 +354,37 @@ impl Budget {
         self.budget_periods.can_insert_transaction(tx_hash)
     }
 
-    pub fn contains_transaction(&self, tx_id: &Uuid) -> bool {
+    pub fn contains_transaction(&self, tx_id: Uuid) -> bool {
         self.budget_periods.contains_transaction(tx_id)
     }
 
-    pub fn get_period_for_transaction(&self, tx_id: &Uuid) -> Option<&BudgetPeriod> {
+    pub fn get_period_for_transaction(&self, tx_id: Uuid) -> Option<&BudgetPeriod> {
         self.budget_periods.get_period_for_transaction(tx_id)
     }
 
-    pub fn contains_budget_item(&self, item_id: &Uuid) -> bool {
-        self.budget_items.contains_key(item_id)
+    pub fn contains_budget_item(&self, item_id: Uuid) -> bool {
+        self.budget_items.contains_key(&item_id)
     }
 
     pub fn contains_item_with_name(&self, name: &str) -> bool {
         self.budget_items.values().any(|i| i.lock().unwrap().name == name)
     }
 
-    pub fn get_transaction_mut(&mut self, tx_id: &Uuid) -> Option<&mut BankTransaction> {
+    pub fn get_transaction_mut(&mut self, tx_id: Uuid) -> Option<&mut BankTransaction> {
         self.budget_periods.get_transaction_mut(tx_id)
     }
 
-    pub fn get_transaction(&self, tx_id: &Uuid) -> Option<&BankTransaction> {
+    pub fn get_transaction(&self, tx_id: Uuid) -> Option<&BankTransaction> {
         self.budget_periods.get_transaction(tx_id)
     }
 
     pub fn modify_budget_item(
         &mut self,
-        id: &Uuid,
+        id: Uuid,
         name: Option<String>,
         budgeting_type: Option<BudgetingType>,
     ) {
-        self.budget_items.entry(*id).and_modify(|item| {
+        self.budget_items.entry(id).and_modify(|item| {
             if let Ok(mut item) = item.lock() {
                 if let Some(name) = name {
                     item.name = name;
@@ -430,14 +430,14 @@ impl Budget {
         self.budget_periods.list_bank_transactions(period_id)
     }
 
-    pub fn move_transaction_to_ignored(&mut self, tx_id: &Uuid, period_id: PeriodId) -> bool {
+    pub fn move_transaction_to_ignored(&mut self, tx_id: Uuid, period_id: PeriodId) -> bool {
         self.budget_periods.move_transaction_to_ignored(tx_id, period_id)
     }
 
     pub fn list_transactions_for_item(
         &self,
         period_id: PeriodId,
-        item_id: &Uuid,
+        item_id: Uuid,
         sorted: bool,
     ) -> Vec<&BankTransaction> {
         self.budget_periods
