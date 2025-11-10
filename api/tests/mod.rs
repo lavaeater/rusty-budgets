@@ -168,64 +168,66 @@ pub fn connect_bank_transaction() -> anyhow::Result<()> {
 
     Ok(())
 }
-//
-// #[test]
-// pub fn add_bank_transaction() -> anyhow::Result<()> {
-//     let rt = JoyDbBudgetRuntime::new_in_memory();
-//     let user_id = Uuid::new_v4();
-//     let bank_account_number = "1234567890".to_string();
-//
-//     let (_, budget_id) = rt.create_budget("Test Budget", true, Currency::SEK, user_id)?;
-//
-//     let date_str = "2025-10-26";
-//     let naive_date = NaiveDate::parse_from_str(&date_str, "%Y-%m-%d")?;
-//
-//     // Convert to midnight UTC
-//     let now: DateTime<Utc> = naive_date
-//         .and_hms_opt(0, 0, 0) // hours, minutes, seconds
-//         .unwrap()
-//         .and_utc();
-//
-//     let res = rt.add_transaction(
-//         budget_id,
-//         &bank_account_number,
-//         Money::new_dollars(100, Currency::SEK),
-//         Money::new_dollars(100, Currency::SEK),
-//         "Test Transaction",
-//         now,
-//         user_id,
-//     );
-//
-//     assert!(res.is_ok());
-//     let mut res = res?.0;
-//     res.set_current_period(&now);
-//     assert_eq!(res.list_bank_transactions().len(), 1);
-//
-//
-//     let also_now: DateTime<Utc> = naive_date
-//         .and_hms_opt(0, 0, 0) // hours, minutes, seconds
-//         .unwrap()
-//         .and_utc();
-//     let res = rt
-//         .add_transaction(
-//             budget_id,
-//             &bank_account_number,
-//             Money::new_dollars(100, Currency::SEK),
-//             Money::new_dollars(100, Currency::SEK),
-//             "Test Transaction",
-//             also_now,
-//             user_id,
-//         )
-//         .err();
-//
-//     assert!(res.is_some());
-//     assert_eq!(
-//         res.unwrap().to_string(),
-//         "Validation error: Transaction already exists."
-//     );
-//
-//     Ok(())
-// }
+
+#[test]
+pub fn add_bank_transaction() -> anyhow::Result<()> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let bank_account_number = "1234567890".to_string();
+
+    let (_, budget_id) = rt.create_budget(user_id,"Test Budget", true, Currency::SEK)?;
+
+    let date_str = "2025-10-26";
+    let naive_date = NaiveDate::parse_from_str(&date_str, "%Y-%m-%d")?;
+
+    // Convert to midnight UTC
+    let now: DateTime<Utc> = naive_date
+        .and_hms_opt(0, 0, 0) // hours, minutes, seconds
+        .unwrap()
+        .and_utc();
+    
+    let period_id = PeriodId::from_date(now, MonthBeginsOn::PreviousMonthWorkDayBefore(25));
+
+    let res = rt.add_transaction(
+        user_id,
+        budget_id,
+        &bank_account_number,
+        Money::new_dollars(100, Currency::SEK),
+        Money::new_dollars(100, Currency::SEK),
+        "Test Transaction",
+        now,
+    );
+
+    assert!(res.is_ok());
+    let mut res = res?.0;
+    assert_eq!(res.list_bank_transactions(period_id).len(), 1);
+
+
+    let also_now: DateTime<Utc> = naive_date
+        .and_hms_opt(0, 0, 0) // hours, minutes, seconds
+        .unwrap()
+        .and_utc();
+    let also_period_id = PeriodId::from_date(also_now, MonthBeginsOn::PreviousMonthWorkDayBefore(25));
+    let res = rt
+        .add_transaction(
+            user_id,
+            budget_id,
+            &bank_account_number,
+            Money::new_dollars(100, Currency::SEK),
+            Money::new_dollars(100, Currency::SEK),
+            "Test Transaction",
+            also_now
+        )
+        .err();
+
+    assert!(res.is_some());
+    assert_eq!(
+        res.unwrap().to_string(),
+        "Validation error: Transaction already exists."
+    );
+
+    Ok(())
+}
 //
 // #[test]
 // pub fn test_import_from_skandia_excel() -> anyhow::Result<()> {
