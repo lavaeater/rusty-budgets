@@ -119,7 +119,7 @@ pub fn BudgetHero() -> Element {
                         }
                     }
                     // Main content area with tabs
-                    div { class: "budget-main-content", BudgetTabs {} }
+                    // div { class: "budget-main-content", BudgetTabs {} }
                     // Transactions section - prominent if there are unassigned
                     if transactions_for_connection.is_empty() {
                         div { class: "transactions-section-minimal",
