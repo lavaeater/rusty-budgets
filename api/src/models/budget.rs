@@ -324,26 +324,22 @@ impl Budget {
         self.budget_periods.items_by_type(budget_period_id)
     }
 
-    pub fn list_all_items(&self) -> Vec<BudgetItem> {
-        self.budget_items.values().cloned().collect()
+    pub fn list_all_items(&self) -> Vec<Arc<Mutex<BudgetItem>>> {
+        self.budget_items.values().map(|item| item.clone()).collect()
     }
 
-    pub fn budgeted_for_type(&self, budgeting_type: &BudgetingType, period_id: PeriodId) -> Money {
+    pub fn budgeted_for_type(&self, budgeting_type: BudgetingType, period_id: PeriodId) -> Money {
         self.budget_periods
             .budgeted_for_type(budgeting_type, period_id)
     }
 
-    pub fn spent_for_type(&self, budgeting_type: &BudgetingType, period_id: PeriodId) -> Money {
+    pub fn spent_for_type(&self, budgeting_type: BudgetingType, period_id: PeriodId) -> Money {
         self.budget_periods
             .spent_for_type(budgeting_type, period_id)
     }
 
-    pub fn recalc_overview(&mut self, period_id: PeriodId) {
-        self.budget_periods.recalc_overview(period_id);
-    }
-
     pub fn insert_item(&mut self, item: &BudgetItem) {
-        self.budget_items.insert(item.id, item.clone());
+        self.budget_items.insert(item.id, Arc::new(Mutex::new(item.clone())));
     }
 
     pub fn remove_item(&mut self, item_id: &Uuid) {
@@ -371,7 +367,7 @@ impl Budget {
     }
 
     pub fn contains_item_with_name(&self, name: &str) -> bool {
-        self.budget_items.values().any(|i| i.name == name)
+        self.budget_items.values().any(|i| i.lock().unwrap().name == name)
     }
 
     pub fn get_transaction_mut(&mut self, tx_id: &Uuid) -> Option<&mut BankTransaction> {
@@ -386,15 +382,15 @@ impl Budget {
         &mut self,
         id: &Uuid,
         name: Option<String>,
-        item_type: Option<BudgetingType>,
+        budgeting_type: Option<BudgetingType>,
     ) {
         self.budget_items.entry(*id).and_modify(|item| {
-            if let Some(mut item) = item.borrow_mut() {
+            if let Ok(mut item) = item.lock() {
                 if let Some(name) = name {
                     item.name = name;
                 }
-                if let Some(item_type) = item_type {
-                    item.item_type = item_type;
+                if let Some(item_type) = budgeting_type {
+                    item.budgeting_type = item_type;
                 }
             }
         });
@@ -404,7 +400,7 @@ impl Budget {
         &self,
         budgeting_type: &BudgetingType,
         period_id: PeriodId,
-    ) -> Option<&Money> {
+    ) -> Option<Money> {
         self.budget_periods
             .get_budgeted_by_type(budgeting_type, period_id)
     }
@@ -413,41 +409,47 @@ impl Budget {
         &self,
         budgeting_type: &BudgetingType,
         period_id: PeriodId,
-    ) -> Option<&Money> {
+    ) -> Option<Money> {
         self.budget_periods
             .get_actual_by_type(budgeting_type, period_id)
     }
 
     pub fn get_budgeting_overview(
         &self,
-        budgeting_type: &BudgetingType,
-    ) -> Option<&BudgetingTypeOverview> {
-        self.budget_periods.get_budgeting_overview(budgeting_type)
+        period_id: PeriodId,
+        budgeting_type: BudgetingType,
+    ) -> Option<BudgetingTypeOverview> {
+        match budgeting_type {
+            BudgetingType::Expense => Some(self.budget_periods.get_expense_overview(period_id)),
+            BudgetingType::Income => Some(self.budget_periods.get_income_overview(period_id)),
+            BudgetingType::Savings => Some(self.budget_periods.get_savings_overview(period_id)),
+        }
     }
 
-    pub fn list_bank_transactions(&self) -> Vec<&BankTransaction> {
-        self.budget_periods.list_bank_transactions()
+    pub fn list_bank_transactions(&self, period_id: PeriodId) -> Vec<&BankTransaction> {
+        self.budget_periods.list_bank_transactions(period_id)
     }
 
-    pub fn move_transaction_to_ignored(&mut self, tx_id: &Uuid) -> bool {
-        self.budget_periods.move_transaction_to_ignored(tx_id)
+    pub fn move_transaction_to_ignored(&mut self, tx_id: &Uuid, period_id: PeriodId) -> bool {
+        self.budget_periods.move_transaction_to_ignored(tx_id, period_id)
     }
 
     pub fn list_transactions_for_item(
         &self,
+        period_id: PeriodId,
         item_id: &Uuid,
         sorted: bool,
     ) -> Vec<&BankTransaction> {
         self.budget_periods
-            .list_transactions_for_item(item_id, sorted)
+            .list_transactions_for_item(period_id, item_id, sorted)
     }
 
     pub fn list_transactions_for_connection(
         &self,
-        budget_period_id: Option<PeriodId>,
+        period_id: PeriodId,
     ) -> Vec<BankTransaction> {
         self.budget_periods
-            .list_transactions_for_connection(budget_period_id)
+            .list_transactions_for_connection(period_id)
     }
 
     pub fn list_all_bank_transactions(&self) -> Vec<&BankTransaction> {
@@ -466,8 +468,7 @@ impl Budget {
         /* we must evaluate all transactions against all items for the BUDGET, not for
         a specific period.
          */
-        self.budget_periods
-            .evaluate_rules(&self.match_rules, &self.budget_items.list_all_items())
+        self.budget_periods.evaluate_rules(&self.match_rules)
     }
 
     pub fn get_period_mut(&mut self, period_id: PeriodId) -> Option<&mut BudgetPeriod> {
