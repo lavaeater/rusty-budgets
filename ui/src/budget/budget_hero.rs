@@ -7,27 +7,27 @@ use dioxus::prelude::*;
 use dioxus_primitives::label::Label;
 use std::future::Future;
 use uuid::Uuid;
+use chrono::Utc;
 
 const HERO_CSS: Asset = asset!("assets/styling/budget-hero-a.css");
 #[component]
 pub fn BudgetHero() -> Element {
-    let budget_resource = use_server_future(api::get_default_budget)?;
+    let budget_resource = use_server_future(api::get_budget(None))?;
+    let mut period_id = use_signal(|| PeriodId::default());
 
     let mut budget_signal = use_signal(|| None::<Budget>);
     let mut budget_id = use_signal(Uuid::default);
-    let mut current_period_id = use_signal(|| None::<PeriodId>);
 
     use_context_provider(|| budget_signal);
-    use_context_provider(|| current_period_id);
+    use_context_provider(|| period_id);
 
     let mut budget_name = use_signal(|| "".to_string());
 
     use_effect(move || {
         if let Some(Ok(Some(budget))) = budget_resource.read().as_ref() {
-            tracing::info!("We have budget: {}", budget.id);
-            current_period_id.set(Some(budget.get_current_period_id()));
+            info!("We have budget: {}", budget.id);
             budget_signal.set(Some(budget.clone()));
-
+            period_id.set(PeriodId::from_date(Utc::now(), budget.month_begins_on()));
         }
     });
 
@@ -35,7 +35,7 @@ pub fn BudgetHero() -> Element {
         let file_name = file.data.to_string();
         spawn(async move {
             if !file_name.is_empty() {
-                if let Ok(updated_budget) = api::import_transactions(budget_id(), file_name).await {
+                if let Ok(updated_budget) = import_transactions(budget_id(), file_name).await {
                     budget_signal.set(Some(updated_budget));
                 }
             }

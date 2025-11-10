@@ -389,11 +389,6 @@ pub async fn get_default_user() -> Result<User, ServerFnError> {
 }
 
 #[server]
-pub async fn get_default_budget() -> Result<Option<Budget>, ServerFnError> {
-    get_budget(None).await
-}
-
-#[server]
 pub async fn get_budget(budget_id: Option<Uuid>) -> Result<Option<Budget>, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
     if let Some(budget_id) = budget_id {

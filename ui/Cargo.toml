@@ -9,4 +9,5 @@ dioxus-primitives = { workspace = true }
 api = { workspace = true }
 uuid = { version = "1.18.1", features = ["v4"] }
 strum = { workspace = true }
+chrono = {workspace = true}
 #open = "5.3.2"
