@@ -236,9 +236,7 @@ impl BudgetPeriodStore {
                 .map(|p| {
                     p.actual_items
                         .values()
-                        .filter(|item| item.budgeting_type() == Income)
-                        .map(|item| item.budgeted_amount)
-                        .sum()
+                        .filter(|item| item.budgeting_type() == Income).collect::<Vec<_>>()
                 })
                 .unwrap_or_default(),
             Some(ValueKind::Budgeted),
