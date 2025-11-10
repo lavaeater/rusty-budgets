@@ -192,7 +192,7 @@ pub fn BudgetItemView(item: BudgetItem, item_type: BudgetingType, is_over_budget
                                         let item_id = item.id;
                                         let shortage = shortage;
                                         spawn(async move {
-                                            match api::adjust_item_funds(budget_id, item_id, shortage, budget_period_id()).await {
+                                            match api::adjust_actual_funds(budget_id, item_id, shortage, budget_period_id()).await {
                                                 Ok(updated_budget) => {
                                                     budget_signal.set(Some(updated_budget));
                                                 }

@@ -111,7 +111,7 @@ pub mod db {
                     Ok(None)
                 }
                 Some(b) => match b.budgets.iter().find(|(_, default)| *default) {
-                    Some((budget_id, _)) => match with_runtime(None).load(&budget_id) {
+                    Some((budget_id, _)) => match with_runtime(None).load(*budget_id) {
                         Ok(budget) => Ok(budget),
                         Err(_) => Err(anyhow::anyhow!("Could not load default budget")),
                     },
@@ -126,7 +126,7 @@ pub mod db {
     }
 
     pub fn get_budget(budget_id: Uuid) -> anyhow::Result<Budget> {
-        match with_runtime(None).load(&budget_id) {
+        match with_runtime(None).load(budget_id) {
             Ok(budget) => match budget {
                 None => Err(anyhow::anyhow!("Could not load budget")),
                 Some(budget) => Ok(budget),
@@ -144,19 +144,19 @@ pub mod db {
             Ok(list) => match list {
                 None => {
                     match with_client(None).insert(&UserBudgets {
-                        id: *user_id,
-                        budgets: vec![(*budget_id, default)],
+                        id: user_id,
+                        budgets: vec![(budget_id, default)],
                     }) {
                         Ok(_) => Ok(()),
                         Err(_) => Err(anyhow::anyhow!("Could not add budget to user")),
                     }
                 }
                 Some(list) => {
-                    if !list.budgets.contains(&(*budget_id, default)) {
+                    if !list.budgets.contains(&(budget_id, default)) {
                         let mut budgets = list.budgets.clone();
-                        budgets.push((*budget_id, default));
+                        budgets.push((budget_id, default));
                         let list = UserBudgets {
-                            id: *user_id,
+                            id: user_id,
                             budgets,
                         };
                         match with_client(None).upsert(&list) {
@@ -173,18 +173,18 @@ pub mod db {
     }
 
     pub fn create_budget(
-        name: &str,
         user_id: Uuid,
+        name: &str,
         default_budget: bool,
     ) -> anyhow::Result<Budget> {
         match with_runtime(None).create_budget(
-            &name.to_string(),
+            user_id,
+            name,
             default_budget,
             Currency::SEK,
-            *user_id,
         ) {
             Ok((budget, budget_id)) => {
-                add_budget_to_user(user_id, &budget_id, default_budget)?;
+                add_budget_to_user(user_id, budget_id, default_budget)?;
                 Ok(budget)
             }
             Err(_) => Err(anyhow::anyhow!("Could not create budget")),
@@ -192,8 +192,8 @@ pub mod db {
     }
 
     pub fn import_transactions(
-        budget_id: Uuid,
         user_id: Uuid,
+        budget_id: Uuid,
         file_name: &str,
     ) -> anyhow::Result<Budget> {
         let runtime = with_runtime(None);
@@ -202,51 +202,45 @@ pub mod db {
     }
 
     pub fn add_item(
-        budget_id: Uuid,
         user_id: Uuid,
+        budget_id: Uuid,
         name: String,
-        item_type: BudgetingType,
-        budgeted_amount: Money,
-        tx_id: Option<Uuid>
+        item_type: BudgetingType
     ) -> anyhow::Result<(Budget, Uuid)> {
-        with_runtime(None).add_item(budget_id, name, item_type, budgeted_amount, tx_id, user_id)
+        with_runtime(None).add_item( user_id, budget_id, name, item_type)
     }
 
     pub fn modify_item(
+        user_id: Uuid,
         budget_id: Uuid,
         item_id: Uuid,
-        user_id: Uuid,
         name: Option<String>,
         item_type: Option<BudgetingType>,
-        budgeted_amount: Option<Money>,
     ) -> anyhow::Result<Budget> {
         with_runtime(None).modify_item(
+            user_id,
             budget_id,
             item_id,
             name,
             item_type,
-            budgeted_amount,
-            None,
-            None,
-            user_id,
         )
         .map(|(b, _)| b)
     }
 
     pub fn connect_transaction(
-        budget_id: Uuid,
         user_id: Uuid,
+        budget_id: Uuid,
         tx_id: Uuid,
-        item_id: Uuid,
+        actual_id: Uuid,
     ) -> anyhow::Result<Budget> {
-        match with_runtime(None).connect_transaction(budget_id, tx_id, item_id, user_id) {
+        match with_runtime(None).connect_transaction(budget_id, tx_id, actual_id, user_id) {
             Ok((budget, _)) => {
-                let budget = create_rule(&budget, user_id, tx_id, item_id).unwrap_or(budget);
+                let budget = create_rule(&budget, user_id, tx_id, actual_id).unwrap_or(budget);
                 let matches = budget.evaluate_rules();
                 let mut return_budget = budget.clone();
-                for (tx_id, item_id) in matches {
+                for (tx_id, actual_id) in matches {
                     match with_runtime(None)
-                        .connect_transaction(budget_id, &tx_id, &item_id, user_id)
+                        .connect_transaction(user_id, budget_id, tx_id, actual_id)
                     {
                         Ok((b, _)) => {
                             return_budget = b;
@@ -273,15 +267,15 @@ pub mod db {
             .map(|(b, _)| b)
     }
 
-    pub fn adjust_item_funds(
-        budget_id: Uuid,
-        item_id: Uuid,
-        budget_period_id: Option<PeriodId>,
-        amount: &Money,
+    pub fn adjust_actual_funds(
         user_id: Uuid,
+        budget_id: Uuid,
+        actual_id: Uuid,
+        period_id: PeriodId,
+        amount: Money,
     ) -> anyhow::Result<Budget> {
         with_runtime(None)
-            .adjust_actual_funds(*budget_id, *item_id, budget_period_id, *amount, *user_id)
+            .adjust_actual_funds(user_id, budget_id, actual_id, period_id, amount)
             .map(|(b, _)| b)
     }
 
@@ -289,21 +283,22 @@ pub mod db {
         budget: &Budget,
         user_id: Uuid,
         tx_id: Uuid,
-        item_id: Uuid,
+        actual_id: Uuid,
     ) -> anyhow::Result<Budget> {
         let transaction = budget.get_transaction(tx_id).unwrap();
-        let item = budget.get_item(item_id).unwrap();
+        let period_id = PeriodId::from_date(transaction.date, budget.month_begins_on());
+        let item = budget.with_period(period_id).get_actual(actual_id).unwrap();
         let transaction_key = MatchRule::create_transaction_key(transaction);
-        let item_name = item.name.clone();
+        let item_key = MatchRule::create_item_key(item);
         let always_apply = true;
 
         with_runtime(None)
             .add_rule(
-                &budget.id,
-                transaction_key,
-                item_name,
-                always_apply,
                 user_id,
+                budget.id,
+                transaction_key,
+                item_key,
+                always_apply,
             )
             .map(|(budget, _)| budget)
     }
@@ -334,7 +329,7 @@ pub async fn create_budget(
     default_budget: Option<bool>,
 ) ->  ServerFnResult<Budget> {
     let user = db::get_default_user(None).expect("Could not get default user");
-    match db::create_budget(&name, &user.id, default_budget.unwrap_or(true)) {
+    match db::create_budget(user.id,&name, default_budget.unwrap_or(true)) {
         Ok(b) => Ok(b),
         Err(e) => {
             tracing::error!(error = %e, "Could not get default budget");
@@ -348,12 +343,10 @@ pub async fn add_item(
     budget_id: Uuid,
     name: String,
     item_type: BudgetingType,
-    budgeted_amount: Money,
-    tx_id: Option<Uuid>
 ) -> Result<(Budget, Uuid), ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
     
-    match db::add_item(&budget_id, &user.id, name, item_type, budgeted_amount, tx_id) {
+    match db::add_item(user.id,budget_id,  name, item_type) {
         Ok(b) => {
             // let items = b.budget_items.by_type(&item_type).expect("Could not get budgeting_type");
             Ok(b)
@@ -371,10 +364,9 @@ pub async fn modify_item(
     item_id: Uuid,
     name: Option<String>,
     item_type: Option<BudgetingType>,
-    budgeted_amount: Option<Money>,
 ) -> Result<Budget, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
-    match db::modify_item(&budget_id, &item_id, &user.id, name, item_type, budgeted_amount) {
+    match db::modify_item(user.id, budget_id, item_id, name, item_type) {
         Ok(b) => {
             Ok(b)
         }
@@ -405,7 +397,7 @@ pub async fn get_default_budget() -> Result<Option<Budget>, ServerFnError> {
 pub async fn get_budget(budget_id: Option<Uuid>) -> Result<Option<Budget>, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
     if let Some(budget_id) = budget_id {
-        match db::get_budget(&budget_id) {
+        match db::get_budget(budget_id) {
             Ok(b) => Ok(Some(b)),
             Err(e) => {
                 tracing::error!(error = %e, "Could not get budget");
@@ -413,7 +405,7 @@ pub async fn get_budget(budget_id: Option<Uuid>) -> Result<Option<Budget>, Serve
             }
         }
     } else {
-        match db::get_default_budget(&user.id) {
+        match db::get_default_budget(user.id) {
             Ok(b) => Ok(b),
             Err(e) => {
                 error!(error = %e, "Could not get default budget");
@@ -429,7 +421,7 @@ pub async fn import_transactions(
     file_name: String,
 ) -> Result<Budget, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
-    match db::import_transactions(&budget_id, &user.id, &file_name) {
+    match db::import_transactions(user.id, budget_id,  &file_name) {
         Ok(b) => Ok(b),
         Err(e) => {
             tracing::error!(error = %e, "Could not get default budget");
@@ -442,10 +434,10 @@ pub async fn import_transactions(
 pub async fn connect_transaction(
     budget_id: Uuid,
     tx_id: Uuid,
-    item_id: Uuid,
+    actual_id: Uuid,
 ) -> Result<Budget, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
-    match db::connect_transaction(&budget_id, &user.id, &tx_id, &item_id) {
+    match db::connect_transaction(user.id, budget_id, tx_id, actual_id) {
         Ok(b) => Ok(b),
         Err(e) => {
             tracing::error!(error = %e, "Could not connect transaction to item.");
@@ -457,7 +449,7 @@ pub async fn connect_transaction(
 #[server]
 pub async fn ignore_transaction(budget_id: Uuid, tx_id: Uuid) -> Result<Budget, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
-    match db::ignore_transaction(&budget_id, &user.id, &tx_id) {
+    match db::ignore_transaction(user.id, budget_id, tx_id) {
         Ok(b) => Ok(b),
         Err(e) => {
             tracing::error!(error = %e, "Could not ignore transaction to item.");
@@ -467,14 +459,14 @@ pub async fn ignore_transaction(budget_id: Uuid, tx_id: Uuid) -> Result<Budget, 
 }
 
 #[server]
-pub async fn adjust_item_funds(
+pub async fn adjust_actual_funds(
     budget_id: Uuid,
-    item_id: Uuid,
+    actual_id: Uuid,
     amount: Money,
-    budget_period_id: Option<PeriodId>,
+    period_id: PeriodId,
 ) -> Result<Budget, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
-    match db::adjust_item_funds(&budget_id, &item_id, budget_period_id, &amount, &user.id) {
+    match db::adjust_actual_funds(user.id, budget_id, actual_id, period_id, amount) {
         Ok(b) => Ok(b),
         Err(e) => {
             tracing::error!(error = %e, "Could not adjust item funds");

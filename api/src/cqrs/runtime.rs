@@ -115,10 +115,10 @@ impl JoyDbBudgetRuntime {
         user_id: Uuid,
         budget_id: Uuid,
         tx_id: Uuid,
-        item_id: Uuid,
+        actual_id: Uuid,
     ) -> anyhow::Result<(Budget, Uuid)> {
         self.cmd(user_id, budget_id, |budget| {
-            budget.connect_transaction(tx_id, item_id)
+            budget.connect_transaction(tx_id, actual_id)
         })
     }
 

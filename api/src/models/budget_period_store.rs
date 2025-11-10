@@ -178,8 +178,8 @@ impl BudgetPeriodStore {
             .unwrap_or_default()
     }
 
-    pub(crate) fn month_begins_on(&self) -> &MonthBeginsOn {
-        &self.month_begins_on
+    pub(crate) fn month_begins_on(&self) -> MonthBeginsOn {
+        self.month_begins_on
     }
 
     pub fn evaluate_rules(&self, rules: &HashSet<MatchRule>) -> Vec<(Uuid, Uuid)> {

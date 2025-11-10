@@ -313,7 +313,7 @@ impl Budget {
         self.budget_periods.list_ignored_transactions(period_id)
     }
 
-    pub fn month_begins_on(&self) -> &MonthBeginsOn {
+    pub fn month_begins_on(&self) -> MonthBeginsOn {
         self.budget_periods.month_begins_on()
     }
 

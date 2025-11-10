@@ -28,7 +28,7 @@ impl TransactionConnectedHandler for Budget {
         let cost_types = Vec::from([BudgetingType::Expense, BudgetingType::Savings]);
 
         let tx = self.get_transaction(event.tx_id).unwrap();
-        let period_id = PeriodId::from_date(tx.date, *self.month_begins_on());
+        let period_id = PeriodId::from_date(tx.date, self.month_begins_on());
         let tx_amount = tx.amount;
         if let Some(previous_id) = tx.actual_item_id {
             let bt = self.with_period(period_id).get_actual(previous_id).unwrap().budgeting_type();
