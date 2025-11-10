@@ -1,19 +1,19 @@
+// use crate::budget::{BudgetTabs, TransactionsView};
 use crate::file_chooser::*;
-use crate::budget::{BudgetTabs, TransactionsView};
 use crate::{Button, Input};
 use api::models::{Budget, PeriodId};
-use api::{import_transactions, get_budget};
+use api::{get_budget, import_transactions};
+use chrono::Utc;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use dioxus_primitives::label::Label;
 use std::future::Future;
 use uuid::Uuid;
-use chrono::Utc;
 
 const HERO_CSS: Asset = asset!("assets/styling/budget-hero-a.css");
 #[component]
 pub fn BudgetHero() -> Element {
-    let budget_resource = use_server_future(get_budget(None))?;
+    let budget_resource = use_server_future(move || get_budget(None))?;
     let mut period_id = use_signal(|| PeriodId::default());
 
     let mut budget_signal = use_signal(|| None::<Budget>);
@@ -42,17 +42,17 @@ pub fn BudgetHero() -> Element {
             }
         });
     };
-    
+
     // Handle the resource state
     match budget_signal() {
         Some(budget) => {
-            
             info!("The budget signal was updated: {}", budget.id);
             budget_id.set(budget.id);
-            let transactions_for_connection = budget.list_transactions_for_connection(current_period_id());
-            let ignored_transactions = budget.list_ignored_transactions(current_period_id());
-            let items_by_type = budget.items_by_type(current_period_id());
-            
+            let transactions_for_connection =
+                budget.list_transactions_for_connection(period_id());
+            let ignored_transactions = budget.list_ignored_transactions(period_id());
+            let items_by_type = budget.items_by_type(period_id());
+
             rsx! {
                 document::Link { rel: "stylesheet", href: HERO_CSS }
                 div { class: "budget-hero-a-container",
@@ -60,20 +60,16 @@ pub fn BudgetHero() -> Element {
                     div { class: "budget-header-a",
                         div { class: "header-title",
                             h1 { {budget.name.clone()} }
-                            h2 { {current_period_id().unwrap_or(PeriodId::default()).to_string()} }
+                            h2 { {period_id().to_string()} }
                             Button {
                                 onclick: move |_| {
-                                    if let Some(period_id) = current_period_id() {
-                                        current_period_id.set(Some(period_id.month_before()));
-                                    }
+                                    period_id.set(period_id().month_before());
                                 },
                                 "Previous period"
                             }
                             Button {
                                 onclick: move |_| {
-                                    if let Some(period_id) = current_period_id() {
-                                        current_period_id.set(Some(period_id.month_after()));
-                                    }
+                                    period_id.set(period_id().month_after());
                                 },
                                 "Next period"
                             }
@@ -131,11 +127,12 @@ pub fn BudgetHero() -> Element {
                         }
                     } else {
                         div { class: "transactions-section-prominent",
-                            TransactionsView {
-                                budget_id: budget_id(),
-                                transactions: transactions_for_connection,
-                                items: budget.list_all_items(),
-                            }
+                            "TransactionsView"
+                                                // TransactionsView {
+                        //     budget_id: budget_id(),
+                        //     transactions: transactions_for_connection,
+                        //     items: budget.list_all_items(),
+                        // }
                         }
                     }
                     if ignored_transactions.is_empty() {
@@ -144,11 +141,12 @@ pub fn BudgetHero() -> Element {
                         }
                     } else {
                         div { class: "transactions-section-prominent",
-                            TransactionsView {
-                                budget_id: budget.id,
-                                transactions: ignored_transactions,
-                                items: budget.list_all_items(),
-                            }
+                            "Another transactions view"
+                                                // TransactionsView {
+                        //     budget_id: budget.id,
+                        //     transactions: ignored_transactions,
+                        //     items: budget.list_all_items(),
+                        // }
                         }
                     }
                 }
@@ -194,7 +192,7 @@ pub fn BudgetHero() -> Element {
                         "data-style": "primary",
                         onclick: move |_| async move {
                             if let Ok(budget) = api::create_budget(budget_name.to_string(), None).await {
-                                tracing::info!("UI received a budget: {budget:?}");
+                                info!("UI received a budget: {budget:?}");
                                 budget_signal.set(Some(budget));
                             }
                         },
