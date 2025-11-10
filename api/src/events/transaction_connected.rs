@@ -65,7 +65,7 @@ impl TransactionConnectedHandler for Budget {
         actual_id: Uuid,
     ) -> Result<TransactionConnected, CommandError> {
         if let Some(period) = self.get_period_for_transaction(tx_id) {
-            if period.contains_actual_for_item(actual_id) {
+            if period.contains_actual(actual_id) {
                 Ok(TransactionConnected {
                     budget_id: self.id,
                     tx_id,

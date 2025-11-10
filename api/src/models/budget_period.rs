@@ -132,6 +132,11 @@ impl BudgetPeriod {
             .values()
             .any(|i| i.budget_item_id == item_id)
     }
+
+    pub fn contains_actual(&self, actual_id: Uuid) -> bool {
+        self.actual_items.contains_key(&actual_id)
+    }
+    
     fn clear_hashmaps_and_transactions(&mut self) {
         self.transactions.clear();
     }

@@ -31,7 +31,7 @@ impl TransactionIgnoredHandler for Budget {
         let tx = self.get_transaction(event.tx_id).unwrap();
         let tx_amount = tx.amount;
         let previous_actual_id = tx.actual_item_id;
-        let period_id = PeriodId::from_date(tx.date, *self.month_begins_on());
+        let period_id = PeriodId::from_date(tx.date, self.month_begins_on());
         
         if let Some(previous_actual_id) = previous_actual_id {
             let previous_actual = self.with_period(period_id).get_actual(previous_actual_id).unwrap();
