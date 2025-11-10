@@ -38,6 +38,7 @@ impl Display for BudgetingType {
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Rule {
     Sum(Vec<BudgetingType>),
     Difference(BudgetingType, Vec<BudgetingType>),

@@ -4,7 +4,7 @@ use crate::models::BudgetingType::{Expense, Income, Savings};
 use crate::models::Rule::{Difference, SelfDiff, Sum};
 use crate::models::{
     ActualItem, BankTransaction, BudgetItem, BudgetingType, BudgetingTypeOverview, MatchRule,
-    Money, MonthBeginsOn, ValueKind,
+    Money, MonthBeginsOn, Rule, ValueKind,
 };
 use anyhow::__private::NotBothDebug;
 use chrono::{DateTime, Utc};
@@ -69,6 +69,64 @@ pub struct BudgetPeriodStore {
         deserialize_with = "budget_period_map_serde::deserialize"
     )]
     budget_periods: HashMap<PeriodId, BudgetPeriod>,
+    #[serde(default)]
+    rules: RulePackages,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RulePackages {
+    pub rule_packages: Vec<RulePackage>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RulePackage {
+    pub budgeting_type: BudgetingType,
+    pub budgeted_rule: Rule,
+    pub spent_rule: Rule,
+    pub remaining_rule: Rule,
+}
+
+impl RulePackage {
+    pub fn new(
+        budgeting_type: BudgetingType,
+        budgeted_rule: Rule,
+        actual_rule: Rule,
+        remaining_rule: Rule,
+    ) -> Self {
+        Self {
+            budgeting_type,
+            budgeted_rule,
+            spent_rule: actual_rule,
+            remaining_rule,
+        }
+    }
+}
+
+impl Default for RulePackages {
+    fn default() -> Self {
+        Self {
+            rule_packages: vec![
+                RulePackage::new(
+                    Income,
+                    Sum(vec![Income]),
+                    Sum(vec![Income]),
+                    Difference(Income, vec![Expense, Savings]),
+                ),
+                RulePackage::new(
+                    Expense,
+                    Sum(vec![Expense]),
+                    Sum(vec![Expense]),
+                    SelfDiff(Expense),
+                ),
+                RulePackage::new(
+                    Savings,
+                    Sum(vec![Savings]),
+                    Sum(vec![Savings]),
+                    SelfDiff(Savings),
+                ),
+            ],
+        }
+    }
 }
 
 impl Default for BudgetPeriodStore {
@@ -79,6 +137,7 @@ impl Default for BudgetPeriodStore {
         Self {
             month_begins_on,
             budget_periods: HashMap::from([(id, BudgetPeriod::new_for(id))]),
+            rules: Default::default(),
         }
     }
 }
@@ -97,6 +156,7 @@ impl BudgetPeriodStore {
         Self {
             month_begins_on,
             budget_periods: HashMap::from([(id, period.clone())]),
+            rules: Default::default(),
         }
     }
 
@@ -204,124 +264,57 @@ impl BudgetPeriodStore {
         b
     }
 
-    pub fn budgeted_for_type(&self, budgeting_type: &BudgetingType, period_id: PeriodId) -> Money {
+    pub fn list_items_of_type(
+        &self,
+        budgeting_type: BudgetingType,
+        period_id: PeriodId,
+    ) -> Vec<&ActualItem> {
         self.with_period(period_id)
             .map(|p| {
                 p.actual_items
                     .values()
-                    .filter(|item| item.budgeting_type() == *budgeting_type)
-                    .map(|item| item.budgeted_amount)
-                    .sum()
+                    .filter(|item| item.budgeting_type() == budgeting_type)
+                    .collect::<Vec<_>>()
             })
             .unwrap_or_default()
     }
 
-    pub fn spent_for_type(&self, budgeting_type: &BudgetingType, period_id: PeriodId) -> Money {
-        self.with_period(period_id)
-            .map(|p| {
-                p.actual_items
-                    .values()
-                    .filter(|item| item.budgeting_type() == *budgeting_type)
-                    .map(|item| item.actual_amount)
-                    .sum()
-            })
-            .unwrap_or_default()
+    pub fn budgeted_for_type(&self, budgeting_type: BudgetingType, period_id: PeriodId) -> Money {
+        self.list_items_of_type(budgeting_type, period_id)
+            .iter()
+            .map(|item| item.budgeted_amount)
+            .sum()
+    }
+
+    pub fn spent_for_type(&self, budgeting_type: BudgetingType, period_id: PeriodId) -> Money {
+        self.list_items_of_type(budgeting_type, period_id)
+            .iter()
+            .map(|item| item.actual_amount)
+            .sum()
     }
 
     pub fn get_income_overview(&self, period_id: PeriodId) -> BudgetingTypeOverview {
-        let income_sum = Sum(vec![Income]);
-        let budgeted_income = income_sum.evaluate(
-            &self
-                .with_period(period_id)
-                .map(|p| {
-                    p.actual_items
-                        .values()
-                        .filter(|item| item.budgeting_type() == Income).collect::<Vec<_>>()
-                })
-                .unwrap_or_default(),
-            Some(ValueKind::Budgeted),
-        );
-        let spent_income = income_sum.evaluate(
-            &self
-                .with_period(period_id)
-                .map(|p| {
-                    p.actual_items
-                        .values()
-                        .filter(|item| item.budgeting_type() == Income)
-                        .map(|item| item.actual_amount)
-                        .sum()
-                })
-                .unwrap_or_default(),
-            Some(ValueKind::Spent),
-        );
-        let remaining_rule = Difference(Income, vec![Expense, Savings]);
-        let remaining_income = remaining_rule.evaluate(
-            &self
-                .with_period(period_id)
-                .map(|p| {
-                    p.actual_items
-                        .values()
-                        .filter(|item| item.budgeting_type() == Income)
-                        .map(|item| item.budgeted_amount)
-                        .sum()
-                })
-                .unwrap_or_default(),
-            Some(ValueKind::Budgeted),
-        );
+        let rules = &self.rules.rule_packages.iter().find(|p| p.budgeting_type == Income).unwrap();
+        let items = &self.list_items_of_type(Income, period_id);
+        let budgeted_income = rules.budgeted_rule.evaluate(items, Some(ValueKind::Budgeted));
+        let spent_income = rules.spent_rule.evaluate(items, Some(ValueKind::Spent));
+        let remaining_income = rules.remaining_rule.evaluate(items, None);
 
         let income_overview = BudgetingTypeOverview {
             budgeted_amount: budgeted_income,
             actual_amount: spent_income,
             remaining_budget: remaining_income,
-            is_ok: remaining_income > Money::zero(remaining_income.currency()),
+            is_ok: remaining_income == Money::zero(remaining_income.currency()),
         };
-
         income_overview
     }
 
     pub fn get_expense_overview(&self, period_id: PeriodId) -> BudgetingTypeOverview {
-        let expense_sum = Sum(vec![Expense]);
-        let budgeted_expenses = expense_sum.evaluate(
-            &self
-                .with_period(period_id)
-                .map(|p| {
-                    p.actual_items
-                        .values()
-                        .filter(|item| item.budgeting_type() == Expense)
-                        .map(|item| item.budgeted_amount)
-                        .sum()
-                })
-                .unwrap_or_default(),
-            Some(ValueKind::Budgeted),
-        );
-        let spent_expenses = expense_sum.evaluate(
-            &self
-                .with_period(period_id)
-                .map(|p| {
-                    p.actual_items
-                        .values()
-                        .filter(|item| item.budgeting_type() == Expense)
-                        .map(|item| item.actual_amount)
-                        .sum()
-                })
-                .unwrap_or_default(),
-            Some(ValueKind::Spent),
-        );
-
-        let self_difference_rule = SelfDiff(Expense);
-        let self_diff = self_difference_rule.evaluate(
-            &self
-                .with_period(period_id)
-                .map(|p| {
-                    p.actual_items
-                        .values()
-                        .filter(|item| item.budgeting_type() == Expense)
-                        .map(|item| item.actual_amount)
-                        .sum()
-                })
-                .unwrap_or_default(),
-            None,
-        );
+        let rules = &self.rules.rule_packages.iter().find(|p| p.budgeting_type == Expense).unwrap();
+        let items = &self.list_items_of_type(Expense, period_id);
+        let budgeted_expenses = rules.budgeted_rule.evaluate(items, Some(ValueKind::Budgeted));
+        let spent_expenses = rules.spent_rule.evaluate(items, Some(ValueKind::Spent));
+        let self_diff = rules.remaining_rule.evaluate(items, None);
 
         let expense_overview = BudgetingTypeOverview {
             budgeted_amount: budgeted_expenses,
@@ -333,48 +326,11 @@ impl BudgetPeriodStore {
     }
 
     pub fn get_savings_overview(&self, period_id: PeriodId) -> BudgetingTypeOverview {
-        let savings_sum = Sum(vec![Savings]);
-        let budgeted_savings = savings_sum.evaluate(
-            &self
-                .with_period(period_id)
-                .map(|p| {
-                    p.actual_items
-                        .values()
-                        .filter(|item| item.budgeting_type() == Savings)
-                        .map(|item| item.budgeted_amount)
-                        .sum()
-                })
-                .unwrap_or_default(),
-            Some(ValueKind::Budgeted),
-        );
-        let spent_savings = savings_sum.evaluate(
-            &self
-                .with_period(period_id)
-                .map(|p| {
-                    p.actual_items
-                        .values()
-                        .filter(|item| item.budgeting_type() == Savings)
-                        .map(|item| item.actual_amount)
-                        .sum()
-                })
-                .unwrap_or_default(),
-            Some(ValueKind::Spent),
-        );
-
-        let self_difference_rule = SelfDiff(Savings);
-        let self_diff = self_difference_rule.evaluate(
-            &self
-                .with_period(period_id)
-                .map(|p| {
-                    p.actual_items
-                        .values()
-                        .filter(|item| item.budgeting_type() == Savings)
-                        .map(|item| item.actual_amount)
-                        .sum()
-                })
-                .unwrap_or_default(),
-            None,
-        );
+        let rules = &self.rules.rule_packages.iter().find(|p| p.budgeting_type == Savings).unwrap();
+        let items = &self.list_items_of_type(Savings, period_id);
+        let budgeted_savings = rules.budgeted_rule.evaluate(items, Some(ValueKind::Budgeted));
+        let spent_savings = rules.spent_rule.evaluate(items, Some(ValueKind::Spent));
+        let self_diff = rules.remaining_rule.evaluate(items, None);
 
         let savings_overview = BudgetingTypeOverview {
             budgeted_amount: budgeted_savings,
@@ -435,32 +391,11 @@ impl BudgetPeriodStore {
         None
     }
 
-    pub fn modify_budget_item(
-        &mut self,
-        id: &Uuid,
-        name: Option<String>,
-        item_type: Option<BudgetingType>,
-        budgeted_amount: Option<Money>,
-        actual_amount: Option<Money>,
-        notes: Option<String>,
-        tags: Option<Vec<String>>,
-    ) {
-        self.with_current_period_mut().budget_items.modify_item(
-            id,
-            name,
-            item_type,
-            budgeted_amount,
-            actual_amount,
-            notes,
-            tags,
-        );
-    }
-
     pub fn get_budgeted_by_type(
         &self,
         budgeting_type: &BudgetingType,
         period_id: PeriodId,
-    ) -> Option<&Money> {
+    ) -> Option<Money> {
         self.with_period(period_id).map(|p| {
             p.actual_items
                 .iter()
@@ -474,7 +409,7 @@ impl BudgetPeriodStore {
         &self,
         budgeting_type: &BudgetingType,
         period_id: PeriodId,
-    ) -> Option<&Money> {
+    ) -> Option<Money> {
         self.with_period(period_id).map(|p| {
             p.actual_items
                 .iter()
@@ -517,7 +452,10 @@ impl BudgetPeriodStore {
     /// Fix up budget_item references in all ActualItems after deserialization
     /// This replaces the deserialized BudgetItem instances with the shared Arc<Mutex<BudgetItem>>
     /// references from the Budget's budget_items HashMap
-    pub fn fix_budget_item_references(&mut self, budget_items: &HashMap<Uuid, Arc<Mutex<BudgetItem>>>) {
+    pub fn fix_budget_item_references(
+        &mut self,
+        budget_items: &HashMap<Uuid, Arc<Mutex<BudgetItem>>>,
+    ) {
         for period in self.budget_periods.values_mut() {
             for actual_item in period.actual_items.values_mut() {
                 if let Some(shared_budget_item) = budget_items.get(&actual_item.budget_item_id) {
