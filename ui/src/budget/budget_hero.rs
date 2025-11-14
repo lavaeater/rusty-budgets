@@ -1,7 +1,9 @@
 // use crate::budget::{BudgetTabs, TransactionsView};
+use api::models::{ActualItem, BudgetItem};
+use crate::budget::TransactionsView;
 use crate::file_chooser::*;
 use crate::{Button, Input};
-use api::models::{Budget, PeriodId};
+use api::models::{BankTransaction, Budget, PeriodId};
 use api::{get_budget, import_transactions};
 use chrono::Utc;
 use dioxus::logger::tracing;
@@ -18,9 +20,16 @@ pub fn BudgetHero() -> Element {
 
     let mut budget_signal = use_signal(|| None::<Budget>);
     let mut budget_id = use_signal(Uuid::default);
-
+    let mut items_by_type = use_signal(||Vec::new());
+    let tranny_view = TransactionViewModel {
+        to_connect: use_signal(||Vec::new()),
+        ignored: use_signal(||Vec::new()),
+        budget_items: use_signal(||Vec::new()),
+        actual_items: use_signal(||Vec::new())
+    };
     use_context_provider(|| budget_signal);
     use_context_provider(|| period_id);
+    
 
     let mut budget_name = use_signal(|| "".to_string());
 
@@ -28,7 +37,19 @@ pub fn BudgetHero() -> Element {
         if let Some(Ok(Some(budget))) = budget_resource.read().as_ref() {
             info!("We have budget: {}", budget.id);
             budget_signal.set(Some(budget.clone()));
-            period_id.set(PeriodId::from_date(Utc::now(), budget.month_begins_on()));
+            let p_id = PeriodId::from_date(Utc::now(), budget.month_begins_on());
+            period_id.set(p_id);
+            tranny_view.budget_items.set(budget.list_all_items_inner());
+            budget_name.set(budget.name.clone());
+        }
+    });
+    
+    use_effect(move || {
+        if let Some(budget) = budget_signal() {
+            tranny_view.to_connect.set(budget.list_transactions_for_connection(period_id()));
+            tranny_view.ignored.set(budget.list_ignored_transactions(period_id()));
+            items_by_type.set(budget.items_by_type(period_id()));
+            tranny_view.actual_items.set(budget.with_period(period_id()).all_actual_items());
         }
     });
 
@@ -48,10 +69,6 @@ pub fn BudgetHero() -> Element {
         Some(budget) => {
             info!("The budget signal was updated: {}", budget.id);
             budget_id.set(budget.id);
-            let transactions_for_connection =
-                budget.list_transactions_for_connection(period_id());
-            let ignored_transactions = budget.list_ignored_transactions(period_id());
-            let items_by_type = budget.items_by_type(period_id());
 
             rsx! {
                 document::Link { rel: "stylesheet", href: HERO_CSS }
@@ -76,21 +93,21 @@ pub fn BudgetHero() -> Element {
                         }
                         div { class: "header-actions",
                             FileDialog { on_chosen: import_file }
-                            if !transactions_for_connection.is_empty() {
+                            if !tranny_view.to_connect().is_empty() {
                                 div { class: "unassigned-badge",
-                                    "{transactions_for_connection.len()} transaktioner att hantera"
+                                    "{tranny_view.to_connect().len()} transaktioner att hantera"
                                 }
                             }
-                            if !ignored_transactions.is_empty() {
+                            if !tranny_view.ignored().is_empty() {
                                 div { class: "unassigned-badge",
-                                    "{ignored_transactions.len()} transaktioner att hantera"
+                                    "{tranny_view.ignored().len()} transaktioner att hantera"
                                 }
                             }
                         }
                     }
                     // Dashboard cards showing overview
                     div { class: "dashboard-cards",
-                        for (_ , budgeting_type , overview , _) in &items_by_type {
+                        for (_ , budgeting_type , overview , _) in actual_items_by_type() {
                             div { class: format!("overview-card {}", if !overview.is_ok { "over-budget" } else { "" }),
                                 h3 { class: if !overview.is_ok { "warning" } else { "" },
                                     {budgeting_type.to_string()}
@@ -121,18 +138,19 @@ pub fn BudgetHero() -> Element {
                     // Main content area with tabs
                     // div { class: "budget-main-content", BudgetTabs {} }
                     // Transactions section - prominent if there are unassigned
-                    if transactions_for_connection.is_empty() {
+                    if transactions_for_connection().is_empty() {
                         div { class: "transactions-section-minimal",
                             p { class: "success-message", "✓ Alla transaktioner är hanterade!" }
                         }
                     } else {
                         div { class: "transactions-section-prominent",
                             "TransactionsView"
-                                                // TransactionsView {
-                        //     budget_id: budget_id(),
-                        //     transactions: transactions_for_connection,
-                        //     items: budget.list_all_items(),
-                        // }
+                            TransactionsView {
+                            budget_id: budget_id,
+                            to_connect: transactions_for_connection,
+                            ignored: ignored_transactions,
+                            items: budget_items,
+                        }
                         }
                     }
                     if ignored_transactions.is_empty() {

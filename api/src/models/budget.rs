@@ -69,7 +69,7 @@ impl Serialize for Budget {
             .map(|(k, v)| (k.to_string(), v.lock().unwrap().clone()))
             .collect();
         state.serialize_field("budget_items", &budget_item_hash)?;
-        
+
         state.serialize_field("budget_periods", &self.budget_periods)?;
         state.serialize_field("match_rules", &self.match_rules)?;
         state.serialize_field("created_at", &self.created_at)?;
@@ -159,10 +159,7 @@ impl<'de> Deserialize<'de> for Budget {
                                 items_map
                                     .into_iter()
                                     .map(|(k, v)| {
-                                        (
-                                            Uuid::parse_str(&k).unwrap(),
-                                            Arc::new(Mutex::new(v)),
-                                        )
+                                        (Uuid::parse_str(&k).unwrap(), Arc::new(Mutex::new(v)))
                                     })
                                     .collect(),
                             );
@@ -325,7 +322,14 @@ impl Budget {
     }
 
     pub fn list_all_items(&self) -> Vec<Arc<Mutex<BudgetItem>>> {
-        self.budget_items.values().map(|item| item.clone()).collect()
+        self.budget_items.values().cloned().collect()
+    }
+
+    pub fn list_all_items_inner(&self) -> Vec<BudgetItem> {
+        self.budget_items
+            .values()
+            .map(|bi| bi.lock().unwrap().clone())
+            .collect()
     }
 
     pub fn budgeted_for_type(&self, budgeting_type: BudgetingType, period_id: PeriodId) -> Money {
@@ -339,7 +343,8 @@ impl Budget {
     }
 
     pub fn insert_item(&mut self, item: &BudgetItem) {
-        self.budget_items.insert(item.id, Arc::new(Mutex::new(item.clone())));
+        self.budget_items
+            .insert(item.id, Arc::new(Mutex::new(item.clone())));
     }
 
     pub fn remove_item(&mut self, item_id: Uuid) {
@@ -367,7 +372,9 @@ impl Budget {
     }
 
     pub fn contains_item_with_name(&self, name: &str) -> bool {
-        self.budget_items.values().any(|i| i.lock().unwrap().name == name)
+        self.budget_items
+            .values()
+            .any(|i| i.lock().unwrap().name == name)
     }
 
     pub fn get_transaction_mut(&mut self, tx_id: Uuid) -> Option<&mut BankTransaction> {
@@ -431,7 +438,8 @@ impl Budget {
     }
 
     pub fn move_transaction_to_ignored(&mut self, tx_id: Uuid, period_id: PeriodId) -> bool {
-        self.budget_periods.move_transaction_to_ignored(tx_id, period_id)
+        self.budget_periods
+            .move_transaction_to_ignored(tx_id, period_id)
     }
 
     pub fn list_transactions_for_item(
@@ -444,10 +452,7 @@ impl Budget {
             .list_transactions_for_item(period_id, item_id, sorted)
     }
 
-    pub fn list_transactions_for_connection(
-        &self,
-        period_id: PeriodId,
-    ) -> Vec<BankTransaction> {
+    pub fn list_transactions_for_connection(&self, period_id: PeriodId) -> Vec<BankTransaction> {
         self.budget_periods
             .list_transactions_for_connection(period_id)
     }

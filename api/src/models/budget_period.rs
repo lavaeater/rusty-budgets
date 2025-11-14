@@ -175,4 +175,8 @@ impl BudgetPeriod {
     pub fn get_item_for_rule(&self, rule: &MatchRule, items: &Vec<&ActualItem>) -> Option<Uuid> {
         items.iter().find(|i| rule.matches_item(i)).map(|i| i.id)
     }
+    
+    pub fn all_actual_items(&self) -> Vec<ActualItem> {
+        self.actual_items.values().cloned().collect()
+    }
 }

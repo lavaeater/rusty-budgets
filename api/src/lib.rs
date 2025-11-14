@@ -7,6 +7,7 @@ pub mod import;
 pub mod models;
 pub mod holidays;
 pub mod time_delta;
+pub mod view_models;
 
 use crate::models::*;
 #[cfg(feature = "server")]
@@ -430,10 +431,10 @@ pub async fn connect_transaction(
     budget_id: Uuid,
     tx_id: Uuid,
     actual_id: Uuid,
-) -> Result<Budget, ServerFnError> {
+) -> Result<(), ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
     match db::connect_transaction(user.id, budget_id, tx_id, actual_id) {
-        Ok(b) => Ok(b),
+        Ok(_) => Ok(()),
         Err(e) => {
             tracing::error!(error = %e, "Could not connect transaction to item.");
             Err(ServerFnError::new(e.to_string()))
@@ -442,10 +443,10 @@ pub async fn connect_transaction(
 }
 
 #[server]
-pub async fn ignore_transaction(budget_id: Uuid, tx_id: Uuid) -> Result<Budget, ServerFnError> {
+pub async fn ignore_transaction(budget_id: Uuid, tx_id: Uuid) -> Result<(), ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
     match db::ignore_transaction(user.id, budget_id, tx_id) {
-        Ok(b) => Ok(b),
+        Ok(_) => Ok(()),
         Err(e) => {
             tracing::error!(error = %e, "Could not ignore transaction to item.");
             Err(ServerFnError::new(e.to_string()))

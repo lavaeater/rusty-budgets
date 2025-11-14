@@ -4,10 +4,9 @@ use api::models::BudgetItem;
 use crate::*;
 
 #[component]
-pub fn ItemSelector(items: Vec<BudgetItem>, on_change: EventHandler<Option<BudgetItem>>) -> Element {
-    let mut items = items;
-    items.sort_by_key(|it| it.name.clone());
-    let items = items
+pub fn ItemSelector(mut items: Signal<Vec<BudgetItem>>, on_change: EventHandler<Option<BudgetItem>>) -> Element {
+    items().sort_by_key(|it| it.name.clone());
+    let selector_items = items()
         .into_iter()
         .enumerate()
         .map(|(ix, it)| {
@@ -27,7 +26,7 @@ pub fn ItemSelector(items: Vec<BudgetItem>, on_change: EventHandler<Option<Budge
             SelectList { aria_label: "Select Demo",
                 SelectGroup {
                     SelectGroupLabel { "Budgetposter" }
-                    {items}
+                    {selector_items}
                 }
             }
         }
