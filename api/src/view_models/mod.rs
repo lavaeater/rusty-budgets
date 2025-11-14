@@ -5,13 +5,13 @@ use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct BudgetItemViewModel {
-    item_id: Uuid,
-    actual_id: Option<Uuid>,
-    name: String,
-    budgeting_type: BudgetingType,
-    budgeted_amount: Money,
-    actual_amount: Money,
-    remaining_budget: Money,
+    pub item_id: Uuid,
+    pub actual_id: Option<Uuid>,
+    pub name: String,
+    pub budgeting_type: BudgetingType,
+    pub budgeted_amount: Money,
+    pub actual_amount: Money,
+    pub remaining_budget: Money,
 }
 
 impl BudgetItemViewModel {

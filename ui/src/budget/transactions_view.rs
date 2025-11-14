@@ -3,21 +3,23 @@ use api::models::{BankTransaction, Budget, BudgetItem, BudgetingType};
 use dioxus::prelude::*;
 use uuid::Uuid;
 use api::connect_transaction;
-use api::view_models::BudgetViewModel;
+use api::view_models::{BudgetItemViewModel, BudgetViewModel};
 use crate::{Button, PopoverContent, PopoverRoot, PopoverTrigger};
 
 #[component]
 pub fn TransactionsView() -> Element {
     let mut budget_signal = use_context::<Signal<Option<BudgetViewModel>>>();
     
-    rsx! {
+    match budget_signal() {
+        Some(budget) => {
+            rsx! {
         div { class: "transactions-view-a",
             h2 { class: "transactions-title",
                 "Ohanterade transaktioner "
-                span { class: "transaction-count", "({to_connect().len()})" }
+                span { class: "transaction-count", "({budget.to_connect.len()})" }
             }
             div { class: "transactions-list",
-                for tx in to_connect() {
+                for tx in budget.to_connect {
                     div { class: "transaction-card",
                         div { class: "transaction-info",
                             div { class: "transaction-description",
@@ -35,13 +37,11 @@ pub fn TransactionsView() -> Element {
                         div { class: "transaction-actions",
                             div { class: "action-group",
                                 ItemSelector {
-                                    items: items,
-                                    on_change: move |e: Option<BudgetItem>| async move {
+                                    items: budget.items,
+                                    on_change: move |e: Option<BudgetItemViewModel>| async move {
                                         if let Some(item) = e {
-                                            
-                                            
-                                            if let Ok(()) = connect_transaction(budget_id(), tx.id, item.id).await {
-                                                to_connect.set(to_connect().into_iter().filter(|t| t.id != tx.id).collect());
+                                            if let Ok(bv) = connect_transaction(budget.id, tx.tx_id, item.actual_id, item.item_id, budget.period_id).await {
+                                                budget_signal.set(Some(bv));
                                             }
                                         }
                                     },
@@ -51,16 +51,16 @@ pub fn TransactionsView() -> Element {
                                 if tx.amount.is_pos() {
                                     NewBudgetItemPopover {
                                         budgeting_type: BudgetingType::Income,
-                                        tx_id: Some(tx.id),
+                                        tx_id: Some(tx.tx_id),
                                     }
                                 } else {
                                     NewBudgetItemPopover {
                                         budgeting_type: BudgetingType::Expense,
-                                        tx_id: Some(tx.id),
+                                        tx_id: Some(tx.tx_id),
                                     }
                                     NewBudgetItemPopover {
                                         budgeting_type: BudgetingType::Savings,
-                                        tx_id: Some(tx.id),
+                                        tx_id: Some(tx.tx_id),
                                     }
                                 }
                             }
@@ -68,7 +68,8 @@ pub fn TransactionsView() -> Element {
                                 r#type: "button",
                                 "data-style": "destructive",
                                 onclick: move |_| async move {
-                                    if let Ok(()) = api::ignore_transaction(budget_id(), tx.id).await {
+                                    if let Ok(bv) = api::ignore_transaction(budget.id, tx.tx_id, budget.period_id).await {
+                                        budget_signal.set(Some(bv));
                                     }
                                 },
                                 "Ignorera"
@@ -79,6 +80,15 @@ pub fn TransactionsView() -> Element {
             }
         }
     }
+        }
+        None => {
+            rsx! {
+                div { "No budget found" }
+            }
+        }
+    }
+    
+    
 }
 
 #[component]

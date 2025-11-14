@@ -237,7 +237,9 @@ pub mod db {
         user_id: Uuid,
         budget_id: Uuid,
         tx_id: Uuid,
-        actual_id: Uuid,
+        actual_id: Option<Uuid>,
+        item_id: Uuid,
+        period_id: PeriodId,
     ) -> anyhow::Result<Budget> {
         match with_runtime(None).connect_transaction(budget_id, tx_id, actual_id, user_id) {
             Ok((budget, _)) => {
@@ -438,11 +440,12 @@ pub async fn import_transactions(
 pub async fn connect_transaction(
     budget_id: Uuid,
     tx_id: Uuid,
-    actual_id: Uuid,
+    actual_id: Option<Uuid>,
+    budget_item_id: Uuid,
     period_id: PeriodId
 ) -> Result<BudgetViewModel, ServerFnError> {
-    let user = db::get_default_user(None).expect("Could not get default user");
-    match db::connect_transaction(user.id, budget_id, tx_id, actual_id) {
+    let user = db::get_default_user(None).expect("Could not get default user");    
+    match db::connect_transaction(user.id, budget_id, tx_id, actual_id, budget_item_id,period_id) {
         Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
         Err(e) => {
             tracing::error!(error = %e, "Could not connect transaction to item.");
