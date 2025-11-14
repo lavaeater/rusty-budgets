@@ -9,7 +9,12 @@ pub mod holidays;
 pub mod time_delta;
 pub mod view_models;
 
+use chrono::Utc;
 use crate::models::*;
+use crate::view_models::TransactionViewModel;
+use crate::view_models::BudgetItemViewModel;
+use crate::view_models::BudgetViewModel;
+
 #[cfg(feature = "server")]
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
@@ -327,11 +332,12 @@ pub mod db {
 #[server]
 pub async fn create_budget(
     name: String,
+    period_id: PeriodId,
     default_budget: Option<bool>,
-) ->  ServerFnResult<Budget> {
+) ->  ServerFnResult<BudgetViewModel> {
     let user = db::get_default_user(None).expect("Could not get default user");
     match db::create_budget(user.id,&name, default_budget.unwrap_or(true)) {
-        Ok(b) => Ok(b),
+        Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
         Err(e) => {
             tracing::error!(error = %e, "Could not get default budget");
             Err(ServerFnError::new("Could not get default budget".to_string()))
@@ -344,13 +350,13 @@ pub async fn add_item(
     budget_id: Uuid,
     name: String,
     item_type: BudgetingType,
-) -> Result<(Budget, Uuid), ServerFnError> {
+    period_id: PeriodId,
+) -> Result<(BudgetViewModel), ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
     
-    match db::add_item(user.id,budget_id,  name, item_type) {
-        Ok(b) => {
-            // let items = b.budget_items.by_type(&item_type).expect("Could not get budgeting_type");
-            Ok(b)
+    match db::add_item(user.id, budget_id,  name, item_type) {
+        Ok((b,_)) => {
+            Ok(BudgetViewModel::from_budget(&b, period_id))
         }
         Err(e) => {
             tracing::error!(error = %e, "Could not get default budget");
@@ -365,11 +371,12 @@ pub async fn modify_item(
     item_id: Uuid,
     name: Option<String>,
     item_type: Option<BudgetingType>,
-) -> Result<Budget, ServerFnError> {
+    period_id: PeriodId,
+) -> Result<BudgetViewModel, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
     match db::modify_item(user.id, budget_id, item_id, name, item_type) {
         Ok(b) => {
-            Ok(b)
+            Ok(BudgetViewModel::from_budget(&b, period_id))
         }
         Err(e) => {
             tracing::error!(error = %e, "Could not get default budget");
@@ -390,11 +397,11 @@ pub async fn get_default_user() -> Result<User, ServerFnError> {
 }
 
 #[server]
-pub async fn get_budget(budget_id: Option<Uuid>) -> Result<Option<Budget>, ServerFnError> {
+pub async fn get_budget(budget_id: Option<Uuid>, period_id: PeriodId) -> Result<Option<BudgetViewModel>, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
     if let Some(budget_id) = budget_id {
         match db::get_budget(budget_id) {
-            Ok(b) => Ok(Some(b)),
+            Ok(b) => Ok(Some(BudgetViewModel::from_budget(&b, period_id))),
             Err(e) => {
                 tracing::error!(error = %e, "Could not get budget");
                 Err(ServerFnError::new(e.to_string()))
@@ -402,7 +409,7 @@ pub async fn get_budget(budget_id: Option<Uuid>) -> Result<Option<Budget>, Serve
         }
     } else {
         match db::get_default_budget(user.id) {
-            Ok(b) => Ok(b),
+            Ok(b) => Ok(b.map(|b| BudgetViewModel::from_budget(&b, period_id))),
             Err(e) => {
                 error!(error = %e, "Could not get default budget");
                 Err(ServerFnError::new(e.to_string()))
@@ -415,10 +422,11 @@ pub async fn get_budget(budget_id: Option<Uuid>) -> Result<Option<Budget>, Serve
 pub async fn import_transactions(
     budget_id: Uuid,
     file_name: String,
-) -> Result<Budget, ServerFnError> {
+    period_id: PeriodId
+) -> Result<BudgetViewModel, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
     match db::import_transactions(user.id, budget_id,  &file_name) {
-        Ok(b) => Ok(b),
+        Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
         Err(e) => {
             tracing::error!(error = %e, "Could not get default budget");
             Err(ServerFnError::new(e.to_string()))
@@ -431,10 +439,11 @@ pub async fn connect_transaction(
     budget_id: Uuid,
     tx_id: Uuid,
     actual_id: Uuid,
-) -> Result<(), ServerFnError> {
+    period_id: PeriodId
+) -> Result<BudgetViewModel, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
     match db::connect_transaction(user.id, budget_id, tx_id, actual_id) {
-        Ok(_) => Ok(()),
+        Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
         Err(e) => {
             tracing::error!(error = %e, "Could not connect transaction to item.");
             Err(ServerFnError::new(e.to_string()))
@@ -443,10 +452,10 @@ pub async fn connect_transaction(
 }
 
 #[server]
-pub async fn ignore_transaction(budget_id: Uuid, tx_id: Uuid) -> Result<(), ServerFnError> {
+pub async fn ignore_transaction(budget_id: Uuid, tx_id: Uuid, period_id: PeriodId) -> Result<BudgetViewModel, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
     match db::ignore_transaction(user.id, budget_id, tx_id) {
-        Ok(_) => Ok(()),
+        Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
         Err(e) => {
             tracing::error!(error = %e, "Could not ignore transaction to item.");
             Err(ServerFnError::new(e.to_string()))
@@ -460,10 +469,10 @@ pub async fn adjust_actual_funds(
     actual_id: Uuid,
     amount: Money,
     period_id: PeriodId,
-) -> Result<Budget, ServerFnError> {
+) -> Result<BudgetViewModel, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
     match db::adjust_actual_funds(user.id, budget_id, actual_id, period_id, amount) {
-        Ok(b) => Ok(b),
+        Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
         Err(e) => {
             tracing::error!(error = %e, "Could not adjust item funds");
             Err(ServerFnError::new(e.to_string()))
