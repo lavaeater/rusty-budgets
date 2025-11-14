@@ -1,6 +1,7 @@
-use api::models::{Budget, BudgetingType, BudgetingTypeOverview};
+use api::models::{Budget, BudgetingType};
 use dioxus::prelude::*;
 use uuid::Uuid;
+use api::view_models::BudgetingTypeOverview;
 
 #[component]
 pub fn BudgetingTypeOverviewView(

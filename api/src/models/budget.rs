@@ -7,7 +7,7 @@ use crate::models::budget_period_store::BudgetPeriodStore;
 use crate::models::budgeting_type::BudgetingType;
 use crate::models::money::{Currency, Money};
 use crate::models::{
-    ActualItem, BankTransaction, BudgetPeriod, BudgetingTypeOverview, MatchRule, MonthBeginsOn,
+    ActualItem, BankTransaction, BudgetPeriod, MatchRule, MonthBeginsOn,
 };
 use crate::pub_events_enum;
 use chrono::{DateTime, Utc};
@@ -19,6 +19,7 @@ use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::sync::{Arc, Mutex};
 use uuid::Uuid;
+use crate::view_models::BudgetingTypeOverview;
 
 pub_events_enum! {
     #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -423,13 +424,13 @@ impl Budget {
 
     pub fn get_budgeting_overview(
         &self,
-        period_id: PeriodId,
         budgeting_type: BudgetingType,
-    ) -> Option<BudgetingTypeOverview> {
+        period_id: PeriodId,
+    ) -> BudgetingTypeOverview {
         match budgeting_type {
-            BudgetingType::Expense => Some(self.budget_periods.get_expense_overview(period_id)),
-            BudgetingType::Income => Some(self.budget_periods.get_income_overview(period_id)),
-            BudgetingType::Savings => Some(self.budget_periods.get_savings_overview(period_id)),
+            BudgetingType::Expense => self.budget_periods.get_expense_overview(period_id),
+            BudgetingType::Income => self.budget_periods.get_income_overview(period_id),
+            BudgetingType::Savings => self.budget_periods.get_savings_overview(period_id),
         }
     }
 

@@ -1,9 +1,9 @@
-// use crate::budget::{BudgetTabs, TransactionsView};
+use api::models::PeriodId;
+use api::models::MonthBeginsOn;
 use api::models::{ActualItem, BudgetItem};
 use crate::budget::TransactionsView;
 use crate::file_chooser::*;
 use crate::{Button, Input};
-use api::models::{BankTransaction, Budget, PeriodId};
 use api::{get_budget, import_transactions};
 use chrono::Utc;
 use dioxus::logger::tracing;
@@ -11,45 +11,26 @@ use dioxus::prelude::*;
 use dioxus_primitives::label::Label;
 use std::future::Future;
 use uuid::Uuid;
+use api::view_models::BudgetViewModel;
 
 const HERO_CSS: Asset = asset!("assets/styling/budget-hero-a.css");
 #[component]
 pub fn BudgetHero() -> Element {
-    let budget_resource = use_server_future(move || get_budget(None))?;
-    let mut period_id = use_signal(|| PeriodId::default());
+    let mut period_id = use_signal(|| PeriodId::from_date(Utc::now(), MonthBeginsOn::default()));
+    let budget_resource = use_server_future(move || get_budget(None, period_id()))?;
 
-    let mut budget_signal = use_signal(|| None::<Budget>);
-    let mut budget_id = use_signal(Uuid::default);
-    let mut items_by_type = use_signal(||Vec::new());
-    let tranny_view = TransactionViewModel {
-        to_connect: use_signal(||Vec::new()),
-        ignored: use_signal(||Vec::new()),
-        budget_items: use_signal(||Vec::new()),
-        actual_items: use_signal(||Vec::new())
-    };
+
+    let mut budget_signal = use_signal(|| None::<BudgetViewModel>);
     use_context_provider(|| budget_signal);
-    use_context_provider(|| period_id);
-    
 
     let mut budget_name = use_signal(|| "".to_string());
+    let mut budget_id = use_signal(|| Uuid::default());
 
     use_effect(move || {
         if let Some(Ok(Some(budget))) = budget_resource.read().as_ref() {
             info!("We have budget: {}", budget.id);
             budget_signal.set(Some(budget.clone()));
-            let p_id = PeriodId::from_date(Utc::now(), budget.month_begins_on());
-            period_id.set(p_id);
-            tranny_view.budget_items.set(budget.list_all_items_inner());
             budget_name.set(budget.name.clone());
-        }
-    });
-    
-    use_effect(move || {
-        if let Some(budget) = budget_signal() {
-            tranny_view.to_connect.set(budget.list_transactions_for_connection(period_id()));
-            tranny_view.ignored.set(budget.list_ignored_transactions(period_id()));
-            items_by_type.set(budget.items_by_type(period_id()));
-            tranny_view.actual_items.set(budget.with_period(period_id()).all_actual_items());
         }
     });
 
@@ -57,7 +38,7 @@ pub fn BudgetHero() -> Element {
         let file_name = file.data.to_string();
         spawn(async move {
             if !file_name.is_empty() {
-                if let Ok(updated_budget) = import_transactions(budget_id(), file_name).await {
+                if let Ok(updated_budget) = import_transactions(budget_id(), file_name, period_id()).await {
                     budget_signal.set(Some(updated_budget));
                 }
             }
@@ -93,24 +74,24 @@ pub fn BudgetHero() -> Element {
                         }
                         div { class: "header-actions",
                             FileDialog { on_chosen: import_file }
-                            if !tranny_view.to_connect().is_empty() {
+                            if !budget.to_connect.is_empty() {
                                 div { class: "unassigned-badge",
-                                    "{tranny_view.to_connect().len()} transaktioner att hantera"
+                                    "{budget.to_connect.len()} transaktioner att hantera"
                                 }
                             }
-                            if !tranny_view.ignored().is_empty() {
+                            if !budget.ignored.is_empty() {
                                 div { class: "unassigned-badge",
-                                    "{tranny_view.ignored().len()} transaktioner att hantera"
+                                    "{budget.ignored.len()} transaktioner att hantera"
                                 }
                             }
                         }
                     }
                     // Dashboard cards showing overview
                     div { class: "dashboard-cards",
-                        for (_ , budgeting_type , overview , _) in actual_items_by_type() {
+                        for (overview) in budget.overviews {
                             div { class: format!("overview-card {}", if !overview.is_ok { "over-budget" } else { "" }),
                                 h3 { class: if !overview.is_ok { "warning" } else { "" },
-                                    {budgeting_type.to_string()}
+                                    {overview.budgeting_type.to_string()}
                                 }
                                 div { class: "card-stats",
                                     div { class: "stat",
@@ -138,22 +119,17 @@ pub fn BudgetHero() -> Element {
                     // Main content area with tabs
                     // div { class: "budget-main-content", BudgetTabs {} }
                     // Transactions section - prominent if there are unassigned
-                    if transactions_for_connection().is_empty() {
+                    if budget.to_connect.is_empty() {
                         div { class: "transactions-section-minimal",
                             p { class: "success-message", "✓ Alla transaktioner är hanterade!" }
                         }
                     } else {
                         div { class: "transactions-section-prominent",
                             "TransactionsView"
-                            TransactionsView {
-                            budget_id: budget_id,
-                            to_connect: transactions_for_connection,
-                            ignored: ignored_transactions,
-                            items: budget_items,
-                        }
+                            TransactionsView {}
                         }
                     }
-                    if ignored_transactions.is_empty() {
+                    if budget.ignored.is_empty() {
                         div { class: "transactions-section-minimal",
                             p { class: "success-message", "✓ Inga ignorerade transaktioner!" }
                         }

@@ -1,19 +1,19 @@
 use crate::models::budget_period::BudgetPeriod;
 use crate::models::budget_period_id::PeriodId;
 use crate::models::BudgetingType::{Expense, Income, Savings};
-use crate::models::Rule::{Difference, SelfDiff, Sum};
+use crate::view_models::Rule::{Difference, SelfDiff, Sum};
 use crate::models::{
-    ActualItem, BankTransaction, BudgetItem, BudgetingType, BudgetingTypeOverview, MatchRule,
-    Money, MonthBeginsOn, Rule, ValueKind,
+    ActualItem, BankTransaction, BudgetItem, BudgetingType, MatchRule,
+    Money, MonthBeginsOn,
 };
 use anyhow::__private::NotBothDebug;
 use chrono::{DateTime, Utc};
-use dioxus::logger::tracing;
 use iter_tools::Itertools;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex};
 use uuid::Uuid;
+use crate::view_models::{BudgetingTypeOverview, Rule, ValueKind};
 
 // Custom serialization for HashMap<BudgetPeriodId, BudgetPeriod>
 mod budget_period_map_serde {
@@ -300,13 +300,13 @@ impl BudgetPeriodStore {
         let spent_income = rules.spent_rule.evaluate(items, Some(ValueKind::Spent));
         let remaining_income = rules.remaining_rule.evaluate(items, None);
 
-        let income_overview = BudgetingTypeOverview {
+        BudgetingTypeOverview {
+            budgeting_type: Income,
             budgeted_amount: budgeted_income,
             actual_amount: spent_income,
             remaining_budget: remaining_income,
             is_ok: remaining_income == Money::zero(remaining_income.currency()),
-        };
-        income_overview
+        }
     }
 
     pub fn get_expense_overview(&self, period_id: PeriodId) -> BudgetingTypeOverview {
@@ -316,13 +316,13 @@ impl BudgetPeriodStore {
         let spent_expenses = rules.spent_rule.evaluate(items, Some(ValueKind::Spent));
         let self_diff = rules.remaining_rule.evaluate(items, None);
 
-        let expense_overview = BudgetingTypeOverview {
+        BudgetingTypeOverview {
+            budgeting_type: Expense,
             budgeted_amount: budgeted_expenses,
             actual_amount: spent_expenses,
             remaining_budget: self_diff,
             is_ok: self_diff < Money::zero(self_diff.currency()),
-        };
-        expense_overview
+        }
     }
 
     pub fn get_savings_overview(&self, period_id: PeriodId) -> BudgetingTypeOverview {
@@ -332,13 +332,13 @@ impl BudgetPeriodStore {
         let spent_savings = rules.spent_rule.evaluate(items, Some(ValueKind::Spent));
         let self_diff = rules.remaining_rule.evaluate(items, None);
 
-        let savings_overview = BudgetingTypeOverview {
+        BudgetingTypeOverview {
+            budgeting_type: Savings,
             budgeted_amount: budgeted_savings,
             actual_amount: spent_savings,
             remaining_budget: self_diff,
             is_ok: self_diff < Money::zero(self_diff.currency()),
-        };
-        savings_overview
+        }
     }
 
     pub fn insert_transaction(&mut self, tx: BankTransaction) {

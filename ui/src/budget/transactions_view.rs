@@ -3,10 +3,13 @@ use api::models::{BankTransaction, Budget, BudgetItem, BudgetingType};
 use dioxus::prelude::*;
 use uuid::Uuid;
 use api::connect_transaction;
+use api::view_models::BudgetViewModel;
 use crate::{Button, PopoverContent, PopoverRoot, PopoverTrigger};
 
 #[component]
-pub fn TransactionsView(budget_id: Signal<Uuid>, to_connect: Signal<Vec<BankTransaction>>, ignored: Signal<Vec<BankTransaction>>, items: Signal<Vec<BudgetItem>>) -> Element {
+pub fn TransactionsView() -> Element {
+    let mut budget_signal = use_context::<Signal<Option<BudgetViewModel>>>();
+    
     rsx! {
         div { class: "transactions-view-a",
             h2 { class: "transactions-title",
