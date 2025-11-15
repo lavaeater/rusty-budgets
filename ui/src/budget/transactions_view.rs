@@ -46,7 +46,7 @@ pub fn TransactionsView(ignored: bool) -> Element {
                                 div { class: "transaction-actions",
                                     div { class: "action-group",
                                         ItemSelector {
-                                            items: budget.items,
+                                            items: budget.items.clone(),
                                             on_change: move |e: Option<BudgetItemViewModel>| async move {
                                                 if let Some(item) = e {
                                                     if let Ok(bv) = connect_transaction(

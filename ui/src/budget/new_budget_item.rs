@@ -30,8 +30,7 @@ pub fn NewBudgetItem(budgeting_type: BudgetingType, tx_id: Option<Uuid>, close_s
                 r#type: "button",
                 "data-style": "primary",
                 onclick: move |_| async move {
-                    //Here we need some date-aware magic - if we have a transaction!
-                    if let Ok((updated_budget, item_id)) = api::add_item(
+                    if let Ok(updated_budget) = api::add_item(
                             budget_id,
                             new_item_name(),
                             budgeting_type,
