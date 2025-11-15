@@ -216,6 +216,18 @@ pub mod db {
         with_runtime(None).add_item( user_id, budget_id, name, item_type)
     }
 
+    pub fn add_actual(
+        user_id: Uuid,
+        budget_id: Uuid,
+        item_id: Uuid,
+        budget_amount: Money,
+        notes: Option<String>,
+        tags: Vec<String>,
+        period_id: PeriodId,
+    ) -> anyhow::Result<(Budget, Uuid)> {
+        with_runtime(None).add_actual(user_id, budget_id, item_id, period_id)
+    }
+
     pub fn modify_item(
         user_id: Uuid,
         budget_id: Uuid,
@@ -241,27 +253,18 @@ pub mod db {
         item_id: Uuid,
         period_id: PeriodId,
     ) -> anyhow::Result<Budget> {
-        match with_runtime(None).connect_transaction(budget_id, tx_id, actual_id, user_id) {
-            Ok((budget, _)) => {
-                let budget = create_rule(&budget, user_id, tx_id, actual_id).unwrap_or(budget);
-                let matches = budget.evaluate_rules();
-                let mut return_budget = budget.clone();
-                for (tx_id, actual_id) in matches {
-                    match with_runtime(None)
-                        .connect_transaction(user_id, budget_id, tx_id, actual_id)
-                    {
-                        Ok((b, _)) => {
-                            return_budget = b;
-                            tracing::info!("connceted some tranny");
-                        }
-                        Err(e) => {
-                            tracing::error!("failed to connect the tranny {}", e);
-                        }
-                    }
-                }
-                Ok(return_budget)
+        let actual_id = match actual_id {
+            None => {
+                let (budget, actual_id) = with_runtime(None).add_actual(budget_id, item_id, Money::zero(Currency::default()), period_id)?;
+                actual_id
             }
-            Err(err) => Err(err),
+            Some(actual_id) => {
+                actual_id
+            }
+        };
+        match with_runtime(None).connect_transaction(user_id, budget_id, tx_id, actual_id) {
+            Ok((budget, _)) => {Ok(budget)}
+            Err(err) => {Err(err)}
         }
     }
 
