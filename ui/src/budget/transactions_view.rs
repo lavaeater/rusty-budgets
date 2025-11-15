@@ -13,73 +13,83 @@ pub fn TransactionsView() -> Element {
     match budget_signal() {
         Some(budget) => {
             rsx! {
-        div { class: "transactions-view-a",
-            h2 { class: "transactions-title",
-                "Ohanterade transaktioner "
-                span { class: "transaction-count", "({budget.to_connect.len()})" }
-            }
-            div { class: "transactions-list",
-                for tx in budget.to_connect {
-                    div { class: "transaction-card",
-                        div { class: "transaction-info",
-                            div { class: "transaction-description",
-                                strong { {tx.description.to_string()} }
-                            }
-                            div { class: "transaction-meta",
-                                span { class: "transaction-date",
-                                    {tx.date.format("%Y-%m-%d").to_string()}
+                div { class: "transactions-view-a",
+                    h2 { class: "transactions-title",
+                        "Ohanterade transaktioner "
+                        span { class: "transaction-count", "({budget.to_connect.len()})" }
+                    }
+                    div { class: "transactions-list",
+                        for tx in budget.to_connect {
+                            div { class: "transaction-card",
+                                div { class: "transaction-info",
+                                    div { class: "transaction-description",
+                                        strong { {tx.description.to_string()} }
+                                    }
+                                    div { class: "transaction-meta",
+                                        span { class: "transaction-date",
+                                            {tx.date.format("%Y-%m-%d").to_string()}
+                                        }
+                                        span { class: if tx.amount.is_pos() { "transaction-amount positive" } else { "transaction-amount negative" },
+                                            {tx.amount.to_string()}
+                                        }
+                                    }
                                 }
-                                span { class: if tx.amount.is_pos() { "transaction-amount positive" } else { "transaction-amount negative" },
-                                    {tx.amount.to_string()}
-                                }
-                            }
-                        }
-                        div { class: "transaction-actions",
-                            div { class: "action-group",
-                                ItemSelector {
-                                    items: budget.items,
-                                    on_change: move |e: Option<BudgetItemViewModel>| async move {
-                                        if let Some(item) = e {
-                                            if let Ok(bv) = connect_transaction(budget.id, tx.tx_id, item.actual_id, item.item_id, budget.period_id).await {
-                                                budget_signal.set(Some(bv));
+                                div { class: "transaction-actions",
+                                    div { class: "action-group",
+                                        ItemSelector {
+                                            items: budget.items,
+                                            on_change: move |e: Option<BudgetItemViewModel>| async move {
+                                                if let Some(item) = e {
+                                                    if let Ok(bv) = connect_transaction(
+                                                            budget.id,
+                                                            tx.tx_id,
+                                                            item.actual_id,
+                                                            item.item_id,
+                                                            budget.period_id,
+                                                        )
+                                                        .await
+                                                    {
+                                                        budget_signal.set(Some(bv));
+                                                    }
+                                                }
+                                            },
+                                        }
+                                    }
+                                    div { class: "action-group",
+                                        if tx.amount.is_pos() {
+                                            NewBudgetItemPopover {
+                                                budgeting_type: BudgetingType::Income,
+                                                tx_id: Some(tx.tx_id),
+                                            }
+                                        } else {
+                                            NewBudgetItemPopover {
+                                                budgeting_type: BudgetingType::Expense,
+                                                tx_id: Some(tx.tx_id),
+                                            }
+                                            NewBudgetItemPopover {
+                                                budgeting_type: BudgetingType::Savings,
+                                                tx_id: Some(tx.tx_id),
                                             }
                                         }
-                                    },
-                                }
-                            }
-                            div { class: "action-group",
-                                if tx.amount.is_pos() {
-                                    NewBudgetItemPopover {
-                                        budgeting_type: BudgetingType::Income,
-                                        tx_id: Some(tx.tx_id),
                                     }
-                                } else {
-                                    NewBudgetItemPopover {
-                                        budgeting_type: BudgetingType::Expense,
-                                        tx_id: Some(tx.tx_id),
-                                    }
-                                    NewBudgetItemPopover {
-                                        budgeting_type: BudgetingType::Savings,
-                                        tx_id: Some(tx.tx_id),
+                                    Button {
+                                        r#type: "button",
+                                        "data-style": "destructive",
+                                        onclick: move |_| async move {
+                                            if let Ok(bv) = api::ignore_transaction(budget.id, tx.tx_id, budget.period_id)
+                                                .await
+                                            {
+                                                budget_signal.set(Some(bv));
+                                            }
+                                        },
+                                        "Ignorera"
                                     }
                                 }
-                            }
-                            Button {
-                                r#type: "button",
-                                "data-style": "destructive",
-                                onclick: move |_| async move {
-                                    if let Ok(bv) = api::ignore_transaction(budget.id, tx.tx_id, budget.period_id).await {
-                                        budget_signal.set(Some(bv));
-                                    }
-                                },
-                                "Ignorera"
                             }
                         }
                     }
                 }
             }
-        }
-    }
         }
         None => {
             rsx! {

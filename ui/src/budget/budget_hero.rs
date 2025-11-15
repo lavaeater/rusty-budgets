@@ -79,9 +79,9 @@ pub fn BudgetHero() -> Element {
                                     "{budget.to_connect.len()} transaktioner att hantera"
                                 }
                             }
-                            if !budget.ignored.is_empty() {
+                            if !budget.ignored_transactions.is_empty() {
                                 div { class: "unassigned-badge",
-                                    "{budget.ignored.len()} transaktioner att hantera"
+                                    "{budget.ignored_transactions.len()} transaktioner att hantera"
                                 }
                             }
                         }
@@ -129,18 +129,14 @@ pub fn BudgetHero() -> Element {
                             TransactionsView {}
                         }
                     }
-                    if budget.ignored.is_empty() {
+                    if budget.ignored_transactions.is_empty() {
                         div { class: "transactions-section-minimal",
                             p { class: "success-message", "✓ Inga ignorerade transaktioner!" }
                         }
                     } else {
                         div { class: "transactions-section-prominent",
                             "Another transactions view"
-                                                // TransactionsView {
-                        //     budget_id: budget.id,
-                        //     transactions: ignored_transactions,
-                        //     items: budget.list_all_items(),
-                        // }
+                            TransactionsView {}
                         }
                     }
                 }
@@ -185,7 +181,9 @@ pub fn BudgetHero() -> Element {
                         class: "button",
                         "data-style": "primary",
                         onclick: move |_| async move {
-                            if let Ok(budget) = api::create_budget(budget_name.to_string(), None).await {
+                            if let Ok(budget) = api::create_budget(budget_name.to_string(), period_id())
+                                .await
+                            {
                                 info!("UI received a budget: {budget:?}");
                                 budget_signal.set(Some(budget));
                             }
