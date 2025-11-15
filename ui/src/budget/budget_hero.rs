@@ -181,7 +181,11 @@ pub fn BudgetHero() -> Element {
                         class: "button",
                         "data-style": "primary",
                         onclick: move |_| async move {
-                            if let Ok(budget) = api::create_budget(budget_name.to_string(), period_id())
+                            if let Ok(budget) = api::create_budget(
+                                    budget_name.to_string(),
+                                    period_id(),
+                                    Some(true),
+                                )
                                 .await
                             {
                                 info!("UI received a budget: {budget:?}");
