@@ -126,7 +126,7 @@ pub fn BudgetHero() -> Element {
                     } else {
                         div { class: "transactions-section-prominent",
                             "TransactionsView"
-                            TransactionsView {}
+                            TransactionsView { ignored: false}
                         }
                     }
                     if budget.ignored_transactions.is_empty() {
@@ -136,7 +136,7 @@ pub fn BudgetHero() -> Element {
                     } else {
                         div { class: "transactions-section-prominent",
                             "Another transactions view"
-                            TransactionsView {}
+                            TransactionsView {ignored: true}
                         }
                     }
                 }

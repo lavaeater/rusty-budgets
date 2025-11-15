@@ -7,19 +7,24 @@ use api::view_models::{BudgetItemViewModel, BudgetViewModel};
 use crate::{Button, PopoverContent, PopoverRoot, PopoverTrigger};
 
 #[component]
-pub fn TransactionsView() -> Element {
+pub fn TransactionsView(ignored: bool) -> Element {
     let mut budget_signal = use_context::<Signal<Option<BudgetViewModel>>>();
     
     match budget_signal() {
         Some(budget) => {
+            let transactions = if ignored {
+                budget.ignored_transactions.clone()
+            } else {
+                budget.to_connect.clone()
+            };
             rsx! {
                 div { class: "transactions-view-a",
                     h2 { class: "transactions-title",
-                        "Ohanterade transaktioner "
-                        span { class: "transaction-count", "({budget.to_connect.len()})" }
+                        if ignored { "Ignorerade transaktioner " } else { "Ohanterade transaktioner " }
+                        span { class: "transaction-count", "({transactions.len()})" }
                     }
                     div { class: "transactions-list",
-                        for tx in budget.to_connect {
+                        for tx in transactions {
                             div { class: "transaction-card",
                                 div { class: "transaction-info",
                                     div { class: "transaction-description",
