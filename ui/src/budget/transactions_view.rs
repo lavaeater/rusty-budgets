@@ -20,7 +20,11 @@ pub fn TransactionsView(ignored: bool) -> Element {
             rsx! {
                 div { class: "transactions-view-a",
                     h2 { class: "transactions-title",
-                        if ignored { "Ignorerade transaktioner " } else { "Ohanterade transaktioner " }
+                        if ignored {
+                            "Ignorerade transaktioner "
+                        } else {
+                            "Ohanterade transaktioner "
+                        }
                         span { class: "transaction-count", "({transactions.len()})" }
                     }
                     div { class: "transactions-list",

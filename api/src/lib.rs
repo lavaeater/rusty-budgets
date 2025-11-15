@@ -3,17 +3,17 @@
 #![allow(dead_code)]
 pub mod cqrs;
 pub mod events;
+pub mod holidays;
 pub mod import;
 pub mod models;
-pub mod holidays;
 pub mod time_delta;
 pub mod view_models;
 
-use chrono::Utc;
 use crate::models::*;
-use crate::view_models::TransactionViewModel;
 use crate::view_models::BudgetItemViewModel;
 use crate::view_models::BudgetViewModel;
+use crate::view_models::TransactionViewModel;
+use chrono::Utc;
 
 #[cfg(feature = "server")]
 use dioxus::logger::tracing;
@@ -29,6 +29,7 @@ pub mod db {
     use crate::cqrs::framework::{CommandError, Runtime};
     use crate::cqrs::runtime::{Db, JoyDbBudgetRuntime, UserBudgets};
     use crate::events::TransactionConnected;
+    use crate::import::{import_from_path, import_from_skandia_excel};
     use crate::models::*;
     use crate::models::*;
     use crate::DEFAULT_USER_EMAIL;
@@ -38,7 +39,6 @@ pub mod db {
     use joydb::JoydbError;
     use once_cell::sync::Lazy;
     use uuid::Uuid;
-    use crate::import::{import_from_path, import_from_skandia_excel};
 
     pub static CLIENT: Lazy<JoyDbBudgetRuntime> = Lazy::new(|| {
         tracing::info!("Init DB Client");
@@ -141,11 +141,7 @@ pub mod db {
         }
     }
 
-    pub fn add_budget_to_user(
-        user_id: Uuid,
-        budget_id: Uuid,
-        default: bool,
-    ) -> anyhow::Result<()> {
+    pub fn add_budget_to_user(user_id: Uuid, budget_id: Uuid, default: bool) -> anyhow::Result<()> {
         match with_client(None).get::<UserBudgets>(&user_id) {
             Ok(list) => match list {
                 None => {
@@ -183,12 +179,7 @@ pub mod db {
         name: &str,
         default_budget: bool,
     ) -> anyhow::Result<Budget> {
-        match with_runtime(None).create_budget(
-            user_id,
-            name,
-            default_budget,
-            Currency::SEK,
-        ) {
+        match with_runtime(None).create_budget(user_id, name, default_budget, Currency::SEK) {
             Ok((budget, budget_id)) => {
                 add_budget_to_user(user_id, budget_id, default_budget)?;
                 Ok(budget)
@@ -211,9 +202,9 @@ pub mod db {
         user_id: Uuid,
         budget_id: Uuid,
         name: String,
-        item_type: BudgetingType
+        item_type: BudgetingType,
     ) -> anyhow::Result<(Budget, Uuid)> {
-        with_runtime(None).add_item( user_id, budget_id, name, item_type)
+        with_runtime(None).add_item(user_id, budget_id, name, item_type)
     }
 
     pub fn add_actual(
@@ -221,11 +212,9 @@ pub mod db {
         budget_id: Uuid,
         item_id: Uuid,
         budget_amount: Money,
-        notes: Option<String>,
-        tags: Vec<String>,
         period_id: PeriodId,
     ) -> anyhow::Result<(Budget, Uuid)> {
-        with_runtime(None).add_actual(user_id, budget_id, item_id, period_id)
+        with_runtime(None).add_actual(user_id, budget_id, item_id, budget_amount, period_id)
     }
 
     pub fn modify_item(
@@ -235,14 +224,9 @@ pub mod db {
         name: Option<String>,
         item_type: Option<BudgetingType>,
     ) -> anyhow::Result<Budget> {
-        with_runtime(None).modify_item(
-            user_id,
-            budget_id,
-            item_id,
-            name,
-            item_type,
-        )
-        .map(|(b, _)| b)
+        with_runtime(None)
+            .modify_item(user_id, budget_id, item_id, name, item_type)
+            .map(|(b, _)| b)
     }
 
     pub fn connect_transaction(
@@ -255,16 +239,20 @@ pub mod db {
     ) -> anyhow::Result<Budget> {
         let actual_id = match actual_id {
             None => {
-                let (budget, actual_id) = with_runtime(None).add_actual(budget_id, item_id, Money::zero(Currency::default()), period_id)?;
+                let (budget, actual_id) = with_runtime(None).add_actual(
+                    user_id,
+                    budget_id,
+                    item_id,
+                    Money::zero(Currency::default()),
+                    period_id,
+                )?;
                 actual_id
             }
-            Some(actual_id) => {
-                actual_id
-            }
+            Some(actual_id) => actual_id,
         };
         match with_runtime(None).connect_transaction(user_id, budget_id, tx_id, actual_id) {
-            Ok((budget, _)) => {Ok(budget)}
-            Err(err) => {Err(err)}
+            Ok((budget, _)) => Ok(budget),
+            Err(err) => Err(err),
         }
     }
 
@@ -304,13 +292,7 @@ pub mod db {
         let always_apply = true;
 
         with_runtime(None)
-            .add_rule(
-                user_id,
-                budget.id,
-                transaction_key,
-                item_key,
-                always_apply,
-            )
+            .add_rule(user_id, budget.id, transaction_key, item_key, always_apply)
             .map(|(budget, _)| budget)
     }
 
@@ -339,13 +321,15 @@ pub async fn create_budget(
     name: String,
     period_id: PeriodId,
     default_budget: Option<bool>,
-) ->  ServerFnResult<BudgetViewModel> {
+) -> ServerFnResult<BudgetViewModel> {
     let user = db::get_default_user(None).expect("Could not get default user");
-    match db::create_budget(user.id,&name, default_budget.unwrap_or(true)) {
+    match db::create_budget(user.id, &name, default_budget.unwrap_or(true)) {
         Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
         Err(e) => {
             tracing::error!(error = %e, "Could not get default budget");
-            Err(ServerFnError::new("Could not get default budget".to_string()))
+            Err(ServerFnError::new(
+                "Could not get default budget".to_string(),
+            ))
         }
     }
 }
@@ -358,11 +342,9 @@ pub async fn add_item(
     period_id: PeriodId,
 ) -> Result<(BudgetViewModel), ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
-    
-    match db::add_item(user.id, budget_id,  name, item_type) {
-        Ok((b,_)) => {
-            Ok(BudgetViewModel::from_budget(&b, period_id))
-        }
+
+    match db::add_item(user.id, budget_id, name, item_type) {
+        Ok((b, _)) => Ok(BudgetViewModel::from_budget(&b, period_id)),
         Err(e) => {
             tracing::error!(error = %e, "Could not get default budget");
             Err(ServerFnError::new(e.to_string()))
@@ -380,9 +362,7 @@ pub async fn modify_item(
 ) -> Result<BudgetViewModel, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
     match db::modify_item(user.id, budget_id, item_id, name, item_type) {
-        Ok(b) => {
-            Ok(BudgetViewModel::from_budget(&b, period_id))
-        }
+        Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
         Err(e) => {
             tracing::error!(error = %e, "Could not get default budget");
             Err(ServerFnError::new(e.to_string()))
@@ -402,7 +382,10 @@ pub async fn get_default_user() -> Result<User, ServerFnError> {
 }
 
 #[server]
-pub async fn get_budget(budget_id: Option<Uuid>, period_id: PeriodId) -> Result<Option<BudgetViewModel>, ServerFnError> {
+pub async fn get_budget(
+    budget_id: Option<Uuid>,
+    period_id: PeriodId,
+) -> Result<Option<BudgetViewModel>, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
     if let Some(budget_id) = budget_id {
         match db::get_budget(budget_id) {
@@ -427,10 +410,10 @@ pub async fn get_budget(budget_id: Option<Uuid>, period_id: PeriodId) -> Result<
 pub async fn import_transactions(
     budget_id: Uuid,
     file_name: String,
-    period_id: PeriodId
+    period_id: PeriodId,
 ) -> Result<BudgetViewModel, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
-    match db::import_transactions(user.id, budget_id,  &file_name) {
+    match db::import_transactions(user.id, budget_id, &file_name) {
         Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
         Err(e) => {
             tracing::error!(error = %e, "Could not get default budget");
@@ -445,20 +428,31 @@ pub async fn connect_transaction(
     tx_id: Uuid,
     actual_id: Option<Uuid>,
     budget_item_id: Uuid,
-    period_id: PeriodId
+    period_id: PeriodId,
 ) -> Result<BudgetViewModel, ServerFnError> {
-    let user = db::get_default_user(None).expect("Could not get default user");    
-    match db::connect_transaction(user.id, budget_id, tx_id, actual_id, budget_item_id,period_id) {
+    let user = db::get_default_user(None).expect("Could not get default user");
+    match db::connect_transaction(
+        user.id,
+        budget_id,
+        tx_id,
+        actual_id,
+        budget_item_id,
+        period_id,
+    ) {
         Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
         Err(e) => {
-            tracing::error!(error = %e, "Could not connect transaction to item.");
+            error!(error = %e, "Could not connect transaction to item.");
             Err(ServerFnError::new(e.to_string()))
         }
     }
 }
 
 #[server]
-pub async fn ignore_transaction(budget_id: Uuid, tx_id: Uuid, period_id: PeriodId) -> Result<BudgetViewModel, ServerFnError> {
+pub async fn ignore_transaction(
+    budget_id: Uuid,
+    tx_id: Uuid,
+    period_id: PeriodId,
+) -> Result<BudgetViewModel, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
     match db::ignore_transaction(user.id, budget_id, tx_id) {
         Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
