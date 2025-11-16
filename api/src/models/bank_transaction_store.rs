@@ -3,6 +3,7 @@ use crate::models::{BankTransaction, BudgetItem};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::hash::{DefaultHasher, Hash, Hasher};
+use dioxus::logger::tracing;
 use once_cell::sync::Lazy;
 use uuid::Uuid;
 use crate::models::actual_item::ActualItem;
@@ -94,6 +95,7 @@ impl BankTransactionStore {
     }
 
     pub fn contains(&self, id: Uuid) -> bool {
+        tracing::info!("Does this exist: {} in this: {:#?}", id, self.by_id.keys());
         self.by_id.contains_key(&id)
     }
 

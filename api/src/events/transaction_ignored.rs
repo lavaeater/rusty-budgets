@@ -1,6 +1,7 @@
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
 use crate::models::{Budget, PeriodId, BudgetingType};
 use core::fmt::Display;
+use dioxus::logger::tracing;
 use cqrs_macros::DomainEvent;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -60,8 +61,10 @@ impl TransactionIgnoredHandler for Budget {
                 tx_id,
             })
         } else {
+            let bork = &self.list_all_bank_transactions();
+            tracing::error!("These are the transactions: {:?}", bork);
             Err(CommandError::Validation(
-                "Transaction does not exist.".to_string(),
+                format!("Transaction {} does not exist", tx_id),
             ))
         }
     }

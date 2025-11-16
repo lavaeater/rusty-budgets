@@ -478,7 +478,7 @@ pub async fn ignore_transaction(
     match db::ignore_transaction(user.id, budget_id, tx_id) {
         Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
         Err(e) => {
-            error!(error = %e, "Could not ignore transaction to item.");
+            error!(error = %e, "Could not ignore transaction.");
             Err(ServerFnError::new(e.to_string()))
         }
     }
