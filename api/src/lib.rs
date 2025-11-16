@@ -239,7 +239,7 @@ pub mod db {
     ) -> anyhow::Result<Budget> {
         let actual_id = match actual_id {
             None => {
-                let (budget, actual_id) = with_runtime(None).add_actual(
+                let (_, actual_id) = with_runtime(None).add_actual(
                     user_id,
                     budget_id,
                     item_id,
@@ -326,7 +326,7 @@ pub async fn create_budget(
     match db::create_budget(user.id, &name, default_budget.unwrap_or(true)) {
         Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
         Err(e) => {
-            tracing::error!(error = %e, "Could not get default budget");
+            error!(error = %e, "Could not get default budget");
             Err(ServerFnError::new(
                 "Could not get default budget".to_string(),
             ))
@@ -335,20 +335,41 @@ pub async fn create_budget(
 }
 
 #[server]
-pub async fn add_item(
+pub async fn add_new_actual_item(
     budget_id: Uuid,
     name: String,
     item_type: BudgetingType,
+    budgeted_amount: Money,
+    tx_id: Option<Uuid>,
     period_id: PeriodId,
-) -> Result<(BudgetViewModel), ServerFnError> {
+) -> Result<BudgetViewModel, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
-
-    match db::add_item(user.id, budget_id, name, item_type) {
-        Ok((b, _)) => Ok(BudgetViewModel::from_budget(&b, period_id)),
+    let (_, item_id) = match db::add_item(user.id, budget_id, name, item_type) {
+        Ok((b, item_id)) => (b, item_id),
         Err(e) => {
-            tracing::error!(error = %e, "Could not get default budget");
-            Err(ServerFnError::new(e.to_string()))
+            error!(error = %e, "Could not get default budget");
+            return Err(ServerFnError::new(e.to_string()));
         }
+    };
+
+    let (budget, actual_id) = match db::add_actual(user.id, budget_id, item_id, budgeted_amount, period_id) {
+        Ok((b, actual_id)) => (b, actual_id),
+        Err(e) => {
+            error!(error = %e, "Could not add actual item");
+            return Err(ServerFnError::new(e.to_string()));
+        }
+    };
+    match tx_id {
+        Some(tx_id) => {
+            match db::connect_transaction(user.id, budget_id, tx_id, Some(actual_id), item_id, period_id) {
+                Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
+                Err(e) => {
+                    error!(error = %e, "Could not connect transaction");
+                    Err(ServerFnError::new(e.to_string()))
+                }
+            }
+        }
+        None => Ok(BudgetViewModel::from_budget(&budget, period_id)),
     }
 }
 
@@ -364,7 +385,7 @@ pub async fn modify_item(
     match db::modify_item(user.id, budget_id, item_id, name, item_type) {
         Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
         Err(e) => {
-            tracing::error!(error = %e, "Could not get default budget");
+            error!(error = %e, "Could not modify item");
             Err(ServerFnError::new(e.to_string()))
         }
     }
@@ -375,7 +396,7 @@ pub async fn get_default_user() -> Result<User, ServerFnError> {
     match db::get_default_user(None) {
         Ok(b) => Ok(b),
         Err(e) => {
-            tracing::error!(error = %e, "Could not get default User");
+            error!(error = %e, "Could not get default User");
             Err(ServerFnError::new(e.to_string()))
         }
     }
@@ -391,7 +412,7 @@ pub async fn get_budget(
         match db::get_budget(budget_id) {
             Ok(b) => Ok(Some(BudgetViewModel::from_budget(&b, period_id))),
             Err(e) => {
-                tracing::error!(error = %e, "Could not get budget");
+                error!(error = %e, "Could not get budget");
                 Err(ServerFnError::new(e.to_string()))
             }
         }
@@ -416,7 +437,7 @@ pub async fn import_transactions(
     match db::import_transactions(user.id, budget_id, &file_name) {
         Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
         Err(e) => {
-            tracing::error!(error = %e, "Could not get default budget");
+            error!(error = %e, "Could not import transactions");
             Err(ServerFnError::new(e.to_string()))
         }
     }
@@ -457,7 +478,7 @@ pub async fn ignore_transaction(
     match db::ignore_transaction(user.id, budget_id, tx_id) {
         Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
         Err(e) => {
-            tracing::error!(error = %e, "Could not ignore transaction to item.");
+            error!(error = %e, "Could not ignore transaction to item.");
             Err(ServerFnError::new(e.to_string()))
         }
     }
@@ -474,7 +495,7 @@ pub async fn adjust_actual_funds(
     match db::adjust_actual_funds(user.id, budget_id, actual_id, period_id, amount) {
         Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
         Err(e) => {
-            tracing::error!(error = %e, "Could not adjust item funds");
+            error!(error = %e, "Could not adjust actual item funds");
             Err(ServerFnError::new(e.to_string()))
         }
     }
