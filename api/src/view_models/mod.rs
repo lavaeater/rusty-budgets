@@ -1,4 +1,5 @@
 use chrono::{DateTime, Utc};
+use dioxus::logger::tracing;
 use crate::models::{ActualItem, BankTransaction, Budget, BudgetItem, BudgetingType, Currency, Money, MonthBeginsOn, PeriodId};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -84,7 +85,8 @@ impl BudgetViewModel {
         let items = budget_items.iter().map(|bi| BudgetItemViewModel::from_item(&bi, actual_items.iter().find(|ai| ai.budget_item_id == bi.id), budget.currency)).collect::<Vec<_>>();
         let to_connect = transactions.iter().map(TransactionViewModel::from_transaction).collect::<Vec<_>>();
         let ignored_transactions = ignored_transactions.iter().map(TransactionViewModel::from_transaction).collect::<Vec<_>>();
-        let mut overviews = vec!(budget.get_budgeting_overview(BudgetingType::Income, period_id),budget.get_budgeting_overview(BudgetingType::Expense, period_id), budget.get_budgeting_overview(BudgetingType::Savings, period_id));
+        let mut overviews = vec!(budget.get_budgeting_overview(BudgetingType::Income, period_id));
+//,budget.get_budgeting_overview(BudgetingType::Expense, period_id), budget.get_budgeting_overview(BudgetingType::Savings, period_id)
         overviews.sort_by_key(|ov| ov.budgeting_type);
         Self {
             id: budget.id,
@@ -116,6 +118,7 @@ pub enum Rule {
     SelfDiff(BudgetingType)
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ValueKind {
     Budgeted,
     Spent,
@@ -144,6 +147,9 @@ impl Rule {
                 })
                 .sum(),
             Rule::Difference(base, subtracts) => {
+                tracing::info!("Base: {:?}", base);
+                tracing::info!("Subtracts: {:?}", subtracts);
+                tracing::info!("Kind: {:?}", kind);
                 let base_sum = Self::get_sum(store, kind.as_ref().unwrap(), base);
                 let subtract_sum: Money = subtracts
                     .iter()

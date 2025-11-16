@@ -12,6 +12,7 @@ use iter_tools::Itertools;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex};
+use dioxus::logger::tracing;
 use uuid::Uuid;
 use crate::view_models::{BudgetingTypeOverview, Rule, ValueKind};
 
@@ -82,7 +83,7 @@ pub struct RulePackages {
 pub struct RulePackage {
     pub budgeting_type: BudgetingType,
     pub budgeted_rule: Rule,
-    pub spent_rule: Rule,
+    pub actual_rule: Rule,
     pub remaining_rule: Rule,
 }
 
@@ -96,7 +97,7 @@ impl RulePackage {
         Self {
             budgeting_type,
             budgeted_rule,
-            spent_rule: actual_rule,
+            actual_rule,
             remaining_rule,
         }
     }
@@ -295,10 +296,12 @@ impl BudgetPeriodStore {
 
     pub fn get_income_overview(&self, period_id: PeriodId) -> BudgetingTypeOverview {
         let rules = &self.rules.rule_packages.iter().find(|p| p.budgeting_type == Income).unwrap();
+        tracing::info!("Rules: {:?}", rules);
+        
         let items = &self.list_items_of_type(Income, period_id);
         let budgeted_income = rules.budgeted_rule.evaluate(items, Some(ValueKind::Budgeted));
-        let spent_income = rules.spent_rule.evaluate(items, Some(ValueKind::Spent));
-        let remaining_income = rules.remaining_rule.evaluate(items, None);
+        let spent_income = rules.actual_rule.evaluate(items, Some(ValueKind::Spent));
+        let remaining_income = rules.remaining_rule.evaluate(items, Some(ValueKind::Budgeted));
 
         BudgetingTypeOverview {
             budgeting_type: Income,
@@ -313,7 +316,7 @@ impl BudgetPeriodStore {
         let rules = &self.rules.rule_packages.iter().find(|p| p.budgeting_type == Expense).unwrap();
         let items = &self.list_items_of_type(Expense, period_id);
         let budgeted_expenses = rules.budgeted_rule.evaluate(items, Some(ValueKind::Budgeted));
-        let spent_expenses = rules.spent_rule.evaluate(items, Some(ValueKind::Spent));
+        let spent_expenses = rules.actual_rule.evaluate(items, Some(ValueKind::Spent));
         let self_diff = rules.remaining_rule.evaluate(items, None);
 
         BudgetingTypeOverview {
@@ -329,7 +332,7 @@ impl BudgetPeriodStore {
         let rules = &self.rules.rule_packages.iter().find(|p| p.budgeting_type == Savings).unwrap();
         let items = &self.list_items_of_type(Savings, period_id);
         let budgeted_savings = rules.budgeted_rule.evaluate(items, Some(ValueKind::Budgeted));
-        let spent_savings = rules.spent_rule.evaluate(items, Some(ValueKind::Spent));
+        let spent_savings = rules.actual_rule.evaluate(items, Some(ValueKind::Spent));
         let self_diff = rules.remaining_rule.evaluate(items, None);
 
         BudgetingTypeOverview {
