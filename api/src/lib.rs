@@ -347,10 +347,11 @@ pub async fn add_new_actual_item(
     let (_, item_id) = match db::add_item(user.id, budget_id, name, item_type) {
         Ok((b, item_id)) => (b, item_id),
         Err(e) => {
-            error!(error = %e, "Could not get default budget");
+            error!(error = %e, "Could not add new item");
             return Err(ServerFnError::new(e.to_string()));
         }
     };
+    info!("We have a new item with Id: {}", item_id);
 
     let (budget, actual_id) = match db::add_actual(user.id, budget_id, item_id, budgeted_amount, period_id) {
         Ok((b, actual_id)) => (b, actual_id),
@@ -359,6 +360,7 @@ pub async fn add_new_actual_item(
             return Err(ServerFnError::new(e.to_string()));
         }
     };
+    
     match tx_id {
         Some(tx_id) => {
             match db::connect_transaction(user.id, budget_id, tx_id, Some(actual_id), item_id, period_id) {

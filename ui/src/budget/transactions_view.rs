@@ -49,6 +49,7 @@ pub fn TransactionsView(ignored: bool) -> Element {
                                             items: budget.items.clone(),
                                             on_change: move |e: Option<BudgetItemViewModel>| async move {
                                                 if let Some(item) = e {
+                                                    info!("Lets connect transaction {} to item {}", tx.tx_id, item.item_id);
                                                     if let Ok(bv) = connect_transaction(
                                                             budget.id,
                                                             tx.tx_id,
@@ -58,6 +59,8 @@ pub fn TransactionsView(ignored: bool) -> Element {
                                                         )
                                                         .await
                                                     {
+                                                        info!("Connected transaction {} to item {}", tx.tx_id, item.item_id);
+                                                        info!("Updated budget: {:#?}", bv);
                                                         budget_signal.set(Some(bv));
                                                     }
                                                 }
