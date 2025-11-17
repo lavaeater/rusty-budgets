@@ -5,7 +5,7 @@ use uuid::Uuid;
 use chrono::{DateTime, Utc};
 use dioxus::logger::tracing;
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
-use crate::models::{get_transaction_hash, BankTransaction};
+use crate::models::{get_transaction_hash, BankTransaction, PeriodId};
 use crate::models::Budget;
 use crate::models::Money;
 
@@ -33,7 +33,8 @@ impl Hash for TransactionAdded {
 
 impl TransactionAddedHandler for Budget {
     fn apply_add_transaction(&mut self, event: &TransactionAdded) -> Uuid {
-        self.insert_transaction(BankTransaction::new(
+        let period_id = PeriodId::from_date(event.date, self.month_begins_on());
+        self.with_period_mut(period_id).transactions.insert(BankTransaction::new(
             event.transaction_id,
             &event.account_number,
             event.amount,
@@ -67,7 +68,7 @@ impl TransactionAddedHandler for Budget {
                 date,
             })
         } else {
-            Err(CommandError::Validation("Transaction already exists."))
+            Err(CommandError::Validation("Transaction already exists.".to_string()))
         }
     }
 }

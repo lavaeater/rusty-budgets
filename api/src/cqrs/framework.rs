@@ -74,9 +74,9 @@ pub trait DomainEvent<A: Aggregate>: Clone + Debug + Sized {
 
 #[derive(Debug)]
 pub enum CommandError {
-    Validation(&'static str),
-    Conflict(&'static str),
-    NotFound(&'static str),
+    Validation(String),
+    Conflict(String),
+    NotFound(String),
 }
 
 impl Display for CommandError {
@@ -97,20 +97,20 @@ where
     E: DomainEvent<A>,
 {
     /// Load and rebuild current state from stored events.
-    fn load(&self, id: &A::Id) -> anyhow::Result<Option<A>>;
+    fn load(&self, id: A::Id) -> anyhow::Result<Option<A>>;
 
     fn snapshot(&self, agg: &A) -> anyhow::Result<()>;
 
     /// Append one new event to the stream.
-    fn append(&self, user_id: &Uuid, ev: E) -> anyhow::Result<()>;
+    fn append(&self, user_id: Uuid, ev: E) -> anyhow::Result<()>;
 
     /// Execute a command: decide → append → return event.
-    fn execute<F>(&self, user_id: &Uuid, id: &A::Id, command: F) -> anyhow::Result<(A, Uuid)>
+    fn execute<F>(&self, user_id: Uuid, id: A::Id, command: F) -> anyhow::Result<(A, Uuid)>
     where
         F: FnOnce(&A) -> Result<E, CommandError>,
     {
         let d: A::Id = Default::default();
-        if id == &d {
+        if id == d {
             tracing::info!("This is ugly trick for creating new aggregates");
             let mut current = A::_default();
             let ev = command(&current)?;
@@ -130,7 +130,7 @@ where
     }
 
     /// Materialize latest state after commands.
-    fn materialize(&self, id: &A::Id) -> anyhow::Result<A> {
+    fn materialize(&self, id: A::Id) -> anyhow::Result<A> {
         let state = self.load(id)?;
         if let Some(state) = state {
             Ok(state)
@@ -140,5 +140,5 @@ where
     }
 
     /// Inspect raw events (for audit/testing).
-    fn events(&self, id: &A::Id) -> anyhow::Result<Vec<StoredEvent<A, E>>>;
+    fn events(&self, id: A::Id) -> anyhow::Result<Vec<StoredEvent<A, E>>>;
 }

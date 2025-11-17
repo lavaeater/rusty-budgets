@@ -1,25 +1,24 @@
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
-use crate::models::{Budget, BudgetingType};
+use crate::models::{Budget, BudgetingType, PeriodId};
 use core::fmt::Display;
 use cqrs_macros::DomainEvent;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-// TransactionConnected,
 #[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]
 #[domain_event(aggregate = "Budget")]
 pub struct TransactionConnected {
     budget_id: Uuid,
     tx_id: Uuid,
-    item_id: Uuid,
+    actual_id: Uuid,
 }
 
 impl Display for TransactionConnected {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "TransactionConnected {{ budget_id: {}, tx_id: {}, item_id: {} }}",
-            self.budget_id, self.tx_id, self.item_id
+            "TransactionConnected {{ budget_id: {}, tx_id: {}, actual_id: {} }}",
+            self.budget_id, self.tx_id, self.actual_id
         )
     }
 }
@@ -28,49 +27,34 @@ impl TransactionConnectedHandler for Budget {
     fn apply_connect_transaction(&mut self, event: &TransactionConnected) -> Uuid {
         let cost_types = Vec::from([BudgetingType::Expense, BudgetingType::Savings]);
 
-        // First, extract all the data we need from the transaction (immutable borrow)
-        let tx = self.get_transaction(&event.tx_id).unwrap();
+        let tx = self.get_transaction(event.tx_id).unwrap();
+        let period_id = PeriodId::from_date(tx.date, self.month_begins_on());
         let tx_amount = tx.amount;
-        let previous_item_id = tx.budget_item_id;
-        let previous_item_type = match previous_item_id {
-            Some(id) => self.type_for_item(&id),
-            None => None,
-        };
-        // End of immutable borrow - tx goes out of scope here
-
-        // Handle previous connection if it exists
-        if let Some(previous_budget_item_id) = previous_item_id {
-            let previous_budgeting_type = previous_item_type.unwrap();
-            // Adjust amount for cost types (negate for Expense/Savings)
-            let adjusted_amount = if cost_types.contains(&previous_budgeting_type) {
-                -tx_amount
-            } else {
-                tx_amount
-            };
-            // Update budget total (remove from previous item)
-            self.update_budget_actual_amount(&previous_budgeting_type, &-adjusted_amount);
-            self.add_actual_amount_to_item(&previous_budget_item_id, &-adjusted_amount);
+        if let Some(previous_id) = tx.actual_item_id {
+            let bt = self.with_period(period_id).get_actual(previous_id).unwrap().budgeting_type();
+            self.with_period_mut(period_id)
+                .mutate_actual(previous_id, |a| {
+                    let adjusted_amount = if cost_types.contains(&bt) {
+                        -tx_amount
+                    } else {
+                        tx_amount
+                    };
+                    a.actual_amount -= adjusted_amount;
+                });
         }
+        let bt = self.with_period(period_id).get_actual(event.actual_id).unwrap().budgeting_type();
+        let tx_mut = self.get_transaction_mut(event.tx_id).unwrap();
+        tx_mut.actual_item_id = Some(event.actual_id);
 
-        // Now we can mutably borrow to update the transaction
-        let tx_mut = self.get_transaction_mut(&event.tx_id).unwrap();
-        tx_mut.budget_item_id = Some(event.item_id);
-        // End of mutable borrow
-
-        // Update the new item
-        let budgeting_type = self.type_for_item(&event.item_id).unwrap();
-
-        // Adjust amount for cost types (negate for Expense/Savings)
-        let adjusted_amount = if cost_types.contains(&budgeting_type) {
-            -tx_amount
-        } else {
-            tx_amount
-        };
-
-        // Update budget total (add to new item)
-        self.update_budget_actual_amount(&budgeting_type, &adjusted_amount);
-        self.add_actual_amount_to_item(&event.item_id, &adjusted_amount);
-        self.recalc_overview();
+        self.with_period_mut(period_id)
+            .mutate_actual(event.actual_id, |a| {
+                let adjusted_amount = if cost_types.contains(&bt) {
+                    -tx_amount
+                } else {
+                    tx_amount
+                };
+                a.actual_amount += adjusted_amount;
+            });
 
         event.tx_id
     }
@@ -78,24 +62,23 @@ impl TransactionConnectedHandler for Budget {
     fn connect_transaction_impl(
         &self,
         tx_id: Uuid,
-        item_id: Uuid,
+        actual_id: Uuid,
     ) -> Result<TransactionConnected, CommandError> {
-        if self.contains_transaction(&tx_id) && self.contains_budget_item(&item_id) {
-            if let Some(tx) = self.get_transaction(&tx_id) {
-                if tx.budget_item_id == Some(item_id) {
-                    return Err(CommandError::Validation(
-                        "Transaction is already connected to this item.",
-                    ));
-                }
+        if let Some(period) = self.get_period_for_transaction(tx_id) {
+            if period.contains_actual(actual_id) {
+                Ok(TransactionConnected {
+                    budget_id: self.id,
+                    tx_id,
+                    actual_id,
+                })
+            } else {
+                Err(CommandError::Validation(
+                    "Actual does not exist for period.".to_string(),
+                ))
             }
-            Ok(TransactionConnected {
-                budget_id: self.id,
-                tx_id,
-                item_id,
-            })
         } else {
             Err(CommandError::Validation(
-                "Transaction or item does not exist.",
+                "Transaction does not exist.".to_string(),
             ))
         }
     }

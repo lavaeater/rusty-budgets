@@ -5,6 +5,7 @@ use uuid::Uuid;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use crate::models::money::Money;
+use crate::models::{MonthBeginsOn, PeriodId};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct BankAccount {
@@ -22,7 +23,7 @@ pub struct BankTransaction {
     pub amount: Money,
     pub description: String,
     pub date: DateTime<Utc>,
-    pub budget_item_id: Option<Uuid>,
+    pub actual_item_id: Option<Uuid>,
     pub balance: Money,
     #[serde(default)]
     pub ignored: bool,
@@ -88,8 +89,12 @@ impl BankTransaction {
             balance,
             description: description.to_string(),
             date,
-            budget_item_id: None,
+            actual_item_id: None,
             ignored: false,
         }
+    }
+    
+    pub fn period_id(&self, month_begins_on: MonthBeginsOn)-> PeriodId {
+        PeriodId::from_date(self.date, month_begins_on)
     }
 }

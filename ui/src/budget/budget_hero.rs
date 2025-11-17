@@ -1,29 +1,36 @@
+use api::models::PeriodId;
+use api::models::MonthBeginsOn;
+use api::models::{ActualItem, BudgetItem};
+use crate::budget::TransactionsView;
 use crate::file_chooser::*;
-use crate::budget::{BudgetTabs, TransactionsView};
-use crate::Input;
-use api::models::Budget;
+use crate::{Button, Input};
+use api::{get_budget, import_transactions};
+use chrono::Utc;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use dioxus_primitives::label::Label;
 use std::future::Future;
 use uuid::Uuid;
+use api::view_models::BudgetViewModel;
 
 const HERO_CSS: Asset = asset!("assets/styling/budget-hero-a.css");
 #[component]
 pub fn BudgetHero() -> Element {
-    let budget_resource = use_server_future(api::get_default_budget)?;
+    let mut period_id = use_signal(|| PeriodId::from_date(Utc::now(), MonthBeginsOn::default()));
+    let budget_resource = use_server_future(move || get_budget(None, period_id()))?;
 
-    let mut budget_signal = use_signal(|| None::<Budget>);
-    let mut budget_id = use_signal(Uuid::default);
 
+    let mut budget_signal = use_signal(|| None::<BudgetViewModel>);
     use_context_provider(|| budget_signal);
 
     let mut budget_name = use_signal(|| "".to_string());
+    let mut budget_id = use_signal(|| Uuid::default());
 
     use_effect(move || {
         if let Some(Ok(Some(budget))) = budget_resource.read().as_ref() {
-            tracing::info!("We have budget: {}", budget.id);
+            info!("We have budget: {}", budget.id);
             budget_signal.set(Some(budget.clone()));
+            budget_name.set(budget.name.clone());
         }
     });
 
@@ -31,7 +38,7 @@ pub fn BudgetHero() -> Element {
         let file_name = file.data.to_string();
         spawn(async move {
             if !file_name.is_empty() {
-                if let Ok(updated_budget) = api::import_transactions(budget_id(), file_name).await {
+                if let Ok(updated_budget) = import_transactions(budget_id(), file_name, period_id()).await {
                     budget_signal.set(Some(updated_budget));
                 }
             }
@@ -41,11 +48,9 @@ pub fn BudgetHero() -> Element {
     // Handle the resource state
     match budget_signal() {
         Some(budget) => {
-            tracing::info!("The budget signal was updated: {}", budget.id);
+            info!("The budget signal was updated: {}", budget.id);
             budget_id.set(budget.id);
-            let unassigned_count = budget.list_transactions_for_connection().len();
-            let items_by_type = budget.items_by_type();
-            
+
             rsx! {
                 document::Link { rel: "stylesheet", href: HERO_CSS }
                 div { class: "budget-hero-a-container",
@@ -53,22 +58,41 @@ pub fn BudgetHero() -> Element {
                     div { class: "budget-header-a",
                         div { class: "header-title",
                             h1 { {budget.name.clone()} }
-                            h2 { {budget.get_current_period_id().to_string()} }
+                            h2 { {period_id().to_string()} }
+                            Button {
+                                onclick: move |_| {
+                                    period_id.set(period_id().month_before());
+                                },
+                                "Previous period"
+                            }
+                            Button {
+                                onclick: move |_| {
+                                    period_id.set(period_id().month_after());
+                                },
+                                "Next period"
+                            }
                         }
                         div { class: "header-actions",
                             FileDialog { on_chosen: import_file }
-                            if unassigned_count > 0 {
+                            if !budget.to_connect.is_empty() {
                                 div { class: "unassigned-badge",
-                                    "{unassigned_count} transaktioner att hantera"
+                                    "{budget.to_connect.len()} transaktioner att hantera"
+                                }
+                            }
+                            if !budget.ignored_transactions.is_empty() {
+                                div { class: "unassigned-badge",
+                                    "{budget.ignored_transactions.len()} transaktioner att hantera"
                                 }
                             }
                         }
                     }
                     // Dashboard cards showing overview
                     div { class: "dashboard-cards",
-                        for (_ , budgeting_type , overview , _) in &items_by_type {
-                            div { class: "overview-card",
-                                h3 { {budgeting_type.to_string()} }
+                        for (overview) in budget.overviews {
+                            div { class: format!("overview-card {}", if !overview.is_ok { "over-budget" } else { "" }),
+                                h3 { class: if !overview.is_ok { "warning" } else { "" },
+                                    {overview.budgeting_type.to_string()}
+                                }
                                 div { class: "card-stats",
                                     div { class: "stat",
                                         span { class: "stat-label", "Budgeterat" }
@@ -93,19 +117,26 @@ pub fn BudgetHero() -> Element {
                         }
                     }
                     // Main content area with tabs
-                    div { class: "budget-main-content", BudgetTabs {} }
+                    // div { class: "budget-main-content", BudgetTabs {} }
                     // Transactions section - prominent if there are unassigned
-                    if unassigned_count > 0 {
-                        div { class: "transactions-section-prominent",
-                            TransactionsView {
-                                budget_id: budget.id,
-                                transactions: budget.list_transactions_for_connection(),
-                                items: budget.list_all_items(),
-                            }
-                        }
-                    } else {
+                    if budget.to_connect.is_empty() {
                         div { class: "transactions-section-minimal",
                             p { class: "success-message", "✓ Alla transaktioner är hanterade!" }
+                        }
+                    } else {
+                        div { class: "transactions-section-prominent",
+                            "TransactionsView"
+                            TransactionsView { ignored: false }
+                        }
+                    }
+                    if budget.ignored_transactions.is_empty() {
+                        div { class: "transactions-section-minimal",
+                            p { class: "success-message", "✓ Inga ignorerade transaktioner!" }
+                        }
+                    } else {
+                        div { class: "transactions-section-prominent",
+                            "Another transactions view"
+                            TransactionsView { ignored: true }
                         }
                     }
                 }
@@ -150,8 +181,14 @@ pub fn BudgetHero() -> Element {
                         class: "button",
                         "data-style": "primary",
                         onclick: move |_| async move {
-                            if let Ok(budget) = api::create_budget(budget_name.to_string(), None).await {
-                                tracing::info!("UI received a budget: {budget:?}");
+                            if let Ok(budget) = api::create_budget(
+                                    budget_name.to_string(),
+                                    period_id(),
+                                    Some(true),
+                                )
+                                .await
+                            {
+                                info!("UI received a budget: {budget:?}");
                                 budget_signal.set(Some(budget));
                             }
                         },

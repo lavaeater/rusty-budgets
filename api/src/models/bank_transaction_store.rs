@@ -1,10 +1,12 @@
 use core::fmt::Display;
-use crate::models::{BankTransaction, BudgetItem, Money};
+use crate::models::{BankTransaction, BudgetItem};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::hash::{DefaultHasher, Hash, Hasher};
+use dioxus::logger::tracing;
 use once_cell::sync::Lazy;
 use uuid::Uuid;
+use crate::models::actual_item::ActualItem;
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct BankTransactionStore {
@@ -14,8 +16,14 @@ pub struct BankTransactionStore {
 }
 
 impl BankTransactionStore {
-    pub fn list_transactions_for_item(&self, item_id: &Uuid, sorted: bool) -> Vec<&BankTransaction> {
-        let mut transactions = self.by_id.values().filter(|tx| tx.budget_item_id == Some(*item_id)).collect::<Vec<_>>();
+    pub fn list_ignored_transactions(&self) -> Vec<BankTransaction> {
+        self.ignored.values().cloned().collect()
+    }
+}
+
+impl BankTransactionStore {
+    pub fn list_transactions_for_item(&self, item_id: Uuid, sorted: bool) -> Vec<&BankTransaction> {
+        let mut transactions = self.by_id.values().filter(|tx| tx.actual_item_id == Some(item_id)).collect::<Vec<_>>();
         if sorted {
             transactions.sort_by_key(|tx| tx.date);
         }
@@ -58,12 +66,12 @@ impl BankTransactionStore {
         }
     }
     
-    pub fn ignore_transaction(&mut self, tx_id: &Uuid) -> bool {
-        if let Some(mut transaction) = self.by_id.remove(tx_id) {
+    pub fn ignore_transaction(&mut self, tx_id: Uuid) -> bool {
+        if let Some(mut transaction) = self.by_id.remove(&tx_id) {
             transaction.ignored = true;
-            transaction.budget_item_id = None;
+            transaction.actual_item_id = None;
             
-            self.ignored.insert(*tx_id, transaction);
+            self.ignored.insert(tx_id, transaction);
             true
         } else {
             false
@@ -78,16 +86,16 @@ impl BankTransactionStore {
         !self.hashes.contains(hash)
     }
 
-    pub fn get_mut(&mut self, id: &Uuid) -> Option<&mut BankTransaction> {
-        self.by_id.get_mut(id)
+    pub fn get_mut(&mut self, id: Uuid) -> Option<&mut BankTransaction> {
+        self.by_id.get_mut(&id)
     }
 
-    pub fn get(&self, id: &Uuid) -> Option<&BankTransaction> {
-        self.by_id.get(id)
+    pub fn get(&self, id: Uuid) -> Option<&BankTransaction> {
+        self.by_id.get(&id)
     }
 
-    pub fn contains(&self, id: &Uuid) -> bool {
-        self.by_id.contains_key(id)
+    pub fn contains(&self, id: Uuid) -> bool {
+        self.by_id.contains_key(&id)
     }
 
     pub fn list_transactions(&self, sorted: bool) -> Vec<&BankTransaction> {
@@ -99,29 +107,44 @@ impl BankTransactionStore {
             self.by_id.values().collect()
         }
     }
-    
+
     pub fn list_transactions_for_connection(&self) -> Vec<BankTransaction> {
         let mut transactions = self
             .by_id
             .values()
-            .filter(|tx| tx.budget_item_id.is_none())
+            .filter(|tx| tx.actual_item_id.is_none())
             .cloned()
             .collect::<Vec<_>>();
-        transactions.sort_by(|a, b| a.date.cmp(&b.date).then_with(|| a.description.cmp(&b.description)));
+
+        // Sort transactions by date, then by absolute amount (descending), then by amount (ascending)
+        // This groups transactions with opposite amounts together
+        transactions.sort_by(|a, b| {
+            a.date.cmp(&b.date)
+                .then_with(|| {
+                    // Compare absolute amounts in reverse order (largest absolute amounts first)
+                    b.amount.abs().partial_cmp(&a.amount.abs()).unwrap()
+                })
+                .then_with(|| {
+                    // Then by actual amount (this will group positive and negative amounts together)
+                    a.amount.partial_cmp(&b.amount).unwrap()
+                })
+                .then_with(|| a.description.cmp(&b.description))
+        });
+
         transactions
     }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Hash, Eq, PartialEq)]
-pub struct MatchRule {
+pub struct  MatchRule {
     pub transaction_key: Vec<String>,
-    pub item_name: String,
+    pub item_key: Vec<String>,
     pub always_apply: bool
 }
 
 impl Display for MatchRule {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "MatchRule {{ transaction_key: {:?}, item_name: {}, always_apply: {} }}", self.transaction_key, self.item_name, self.always_apply)
+        write!(f, "MatchRule {{ transaction_key: {:?}, item_name: {:?}, always_apply: {} }}", self.transaction_key, self.item_key, self.always_apply)
     }
 }
 
@@ -244,17 +267,22 @@ impl MatchRule {
         self.transaction_key == tokenized_transaction_description
     }
 
-    pub fn matches_item(&self, item: &BudgetItem) -> bool {
-        item.name.contains(&self.item_name)
+    pub fn matches_item(&self, item: &ActualItem) -> bool {
+        let tokenized_item_name = tokenize_description(&item.item_name());
+        self.item_key == tokenized_item_name
     }
     
-    pub fn create_rule_for_transaction_and_item(transaction: &BankTransaction, item: &BudgetItem) -> MatchRule {
+    pub fn create_rule_for_transaction_and_item(transaction: &BankTransaction, item: &ActualItem) -> MatchRule {
         let transaction_key = Self::create_transaction_key(transaction);
         MatchRule {
             transaction_key,
-            item_name: item.name.clone(),
+            item_key: Self::create_item_key(item),
             always_apply: true
         }
+    }
+    
+    pub fn create_item_key(item: &ActualItem) -> Vec<String> {
+        tokenize_description(&item.item_name())
     }
     
     pub fn create_transaction_key(transaction: &BankTransaction) -> Vec<String> {

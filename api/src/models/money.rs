@@ -43,6 +43,10 @@ impl Money {
     pub fn is_pos(&self) -> bool {
         self.cents >= 0
     }
+    
+    pub fn zero(currency: Currency) -> Self {
+        Self { cents: 0, currency }
+    }
 }
 
 impl Neg for Money {
@@ -95,7 +99,11 @@ impl Money {
     pub fn currency(&self) -> Currency {
         self.currency
     }
+    pub fn abs(&self) -> Money {
+        Money::new_cents(self.cents.abs(), self.currency)
+    }
 }
+
 
 impl Add for Money {
     type Output = Money;

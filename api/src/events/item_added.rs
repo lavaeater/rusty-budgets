@@ -1,8 +1,6 @@
+use std::sync::{Arc, Mutex};
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
-use crate::models::Budget;
-use crate::models::BudgetItem;
-use crate::models::BudgetingType;
-use crate::models::Money;
+use crate::models::{Budget, BudgetItem, BudgetingType};
 use cqrs_macros::DomainEvent;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -15,35 +13,30 @@ pub struct ItemAdded {
     pub item_id: Uuid,
     pub name: String,
     pub item_type: BudgetingType,
-    pub budgeted_amount: Money,
 }
 
 impl ItemAddedHandler for Budget {
     fn apply_add_item(&mut self, event: &ItemAdded) -> Uuid {
-        let new_item = BudgetItem::new(
-            event.item_id,
-            &event.name,
-            event.budgeted_amount,
-            None,
-            None,
-        );
-        let new_item_id = new_item.id;
-        self.insert_item(&new_item, event.item_type);
-        new_item_id
+        let new_item = BudgetItem::new(event.item_id, &event.name, event.item_type);
+
+        self.budget_items.insert(event.item_id, Arc::new(Mutex::new(new_item)));
+
+        event.item_id
     }
 
     fn add_item_impl(
         &self,
         name: String,
         item_type: BudgetingType,
-        budgeted_amount: Money,
     ) -> Result<ItemAdded, CommandError> {
+        if self.contains_item_with_name(&name) {
+            return Err(CommandError::Validation("Item already exists.".to_string()));
+        }
         Ok(ItemAdded {
             budget_id: self.id,
             item_id: Uuid::new_v4(),
             name,
             item_type,
-            budgeted_amount,
         })
     }
 }

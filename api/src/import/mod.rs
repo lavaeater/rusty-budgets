@@ -5,18 +5,67 @@ use calamine::{open_workbook, DataType, Reader, Xlsx};
 use chrono::{DateTime, NaiveDate, Utc};
 use dioxus::logger;
 use dioxus::logger::tracing;
+use dioxus::logger::tracing::debug;
+use dioxus::prelude::error;
+use std::path::Path;
 use uuid::Uuid;
+
+pub fn import_from_path(
+    path: &str,
+    user_id: Uuid,
+    budget_id: Uuid,
+    runtime: &JoyDbBudgetRuntime,
+) -> anyhow::Result<u64> {
+    let p = Path::new(path);
+    debug!("Importing from path: {}", path);
+    if p.exists() {
+        debug!("Path does exist!");
+        if p.is_dir() {
+            debug!("Path is a dir!");
+            let mut imported = 0u64;
+            for entry in p.read_dir()? {
+                let path = entry?.path();
+                if path.is_file() {
+                    match import_from_skandia_excel(
+                        path.to_str().unwrap(),
+                        user_id,
+                        budget_id,
+                        runtime,
+                    ) {
+                        Ok(i) => {
+                            imported += i;
+                        }
+                        Err(err) => {
+                            error!(error = %err, "Failed to import from path");
+                        }
+                    }
+                }
+            }
+            Ok(imported)
+        } else {
+            match import_from_skandia_excel(path, user_id, budget_id, runtime) {
+                Ok(imported) => Ok(imported),
+                Err(e) => {
+                    error!(error = %e, "Failed to import from path");
+                    Err(e)
+                }
+            }
+        }
+    } else {
+        Err(anyhow::anyhow!("Path does not exist"))
+    }
+}
 
 pub fn import_from_skandia_excel(
     path: &str,
-    user_id: &Uuid,
-    budget_id: &Uuid,
+    user_id: Uuid,
+    budget_id: Uuid,
     runtime: &JoyDbBudgetRuntime,
 ) -> anyhow::Result<u64> {
     let mut excel: Xlsx<_> = open_workbook(path)?;
     let mut imported = 0u64;
     let mut not_imported = 0u64;
-    let mut total_rows= 0u64;
+    let mut total_rows = 0u64;
     if let Ok(r) = excel.worksheet_range("Kontoutdrag") {
         let mut account_number: Option<String> = None;
 
@@ -45,13 +94,13 @@ pub fn import_from_skandia_excel(
                     return Err(anyhow::anyhow!("Could not find account number"));
                 };
                 match runtime.add_transaction(
-                    *budget_id,
+                    user_id,
+                    budget_id,
                     &acct_no,
                     amount,
                     balance,
                     &description,
                     date,
-                    *user_id,
                 ) {
                     Ok(_) => {
                         imported += 1;
@@ -64,13 +113,18 @@ pub fn import_from_skandia_excel(
                 }
             }
         }
-        tracing::info!("Imported {} transactions, skipped {} transactions, total {} transactions", imported, not_imported, total_rows);
+        tracing::info!(
+            "Imported {} transactions, skipped {} transactions, total {} transactions",
+            imported,
+            not_imported,
+            total_rows
+        );
     }
 
     if let Ok(Some(budget)) = runtime.load(budget_id) {
         let matches = budget.evaluate_rules();
         for (tx_id, item_id) in matches {
-            let _ = runtime.connect_transaction(budget_id, &tx_id, &item_id, user_id);
+            let _ = runtime.connect_transaction(user_id,budget_id, tx_id, item_id);
         }
     }
 

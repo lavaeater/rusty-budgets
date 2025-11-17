@@ -14,21 +14,14 @@ pub struct ItemModified {
     pub item_id: Uuid,
     pub name: Option<String>,
     pub item_type: Option<BudgetingType>,
-    pub budgeted_amount: Option<Money>,
-    pub notes: Option<String>,
-    pub tags: Option<Vec<String>>,
 }
 
 impl ItemModifiedHandler for Budget {
     fn apply_modify_item(&mut self, event: &ItemModified) -> Uuid {
         self.modify_budget_item(
-            &event.item_id,
+            event.item_id,
             event.name.clone(),
-            event.item_type,
-            event.budgeted_amount,
-            None,
-            event.notes.clone(),
-            event.tags.clone(),
+            event.item_type
         );
         event.item_id
     }
@@ -38,23 +31,17 @@ impl ItemModifiedHandler for Budget {
         item_id: Uuid,
         name: Option<String>,
         item_type: Option<BudgetingType>,
-        budgeted_amount: Option<Money>,
-        notes: Option<String>,
-        tags: Option<Vec<String>>,
     ) -> Result<ItemModified, CommandError> {
-        if self.contains_budget_item(&item_id) {
+        if self.contains_budget_item(item_id) {
             Ok(ItemModified {
                 budget_id: self.id,
                 item_id,
                 name,
-                item_type,
-                budgeted_amount,
-                notes,
-                tags,
+                item_type
             })
         } else {
             tracing::error!("Budget Item not found");
-            Err(CommandError::NotFound("Budget Item not found"))
+            Err(CommandError::NotFound("Budget Item not found".to_string()))
         }
     }
 }
