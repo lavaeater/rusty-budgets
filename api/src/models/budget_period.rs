@@ -159,8 +159,8 @@ impl BudgetPeriod {
         for transaction in self.transactions.list_transactions_for_connection() {
             for rule in rules {
                 if rule.matches_transaction(&transaction) {
-                    if let Some(item_id) = self.get_item_for_rule(rule, &items) {
-                        matched_transactions.push((transaction.id, item_id));
+                    if let Some(actual_id) = self.get_item_for_rule(rule, &items) {
+                        matched_transactions.push((transaction.id, actual_id));
                         break;
                     }
                 }

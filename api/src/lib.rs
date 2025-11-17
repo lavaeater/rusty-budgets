@@ -206,6 +206,31 @@ pub mod db {
     ) -> anyhow::Result<(Budget, Uuid)> {
         with_runtime(None).add_item(user_id, budget_id, name, item_type)
     }
+    
+    pub fn evaluate_rules(
+        user_id: Uuid,
+        budget_id: Uuid
+    ) -> anyhow::Result<Budget> {
+        match get_budget(budget_id) {
+            Ok(b) => {
+                for ((tx_id, actual_id)) in b.evaluate_rules().iter() {
+                    match with_runtime(None).connect_transaction(user_id, budget_id, *tx_id, *actual_id) {
+                        Ok(_) => {
+                            info!("Connected tx {} with actual item {}", tx_id, actual_id);
+                        }
+                        Err(e) => {
+                            error!("Could not connect tx {} with actual item {}", tx_id, actual_id, error = %e);
+                        }
+                    } 
+                }
+                get_budget(budget_id)
+            }
+            Err(err) => {
+                error!("Could not evaluate rules for budget {}", budget_id, error = %err);
+                Err(err)
+            }
+        }
+    }
 
     pub fn add_actual(
         user_id: Uuid,
