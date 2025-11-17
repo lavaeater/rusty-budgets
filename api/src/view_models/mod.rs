@@ -77,7 +77,7 @@ pub struct BudgetViewModel {
 
 impl BudgetViewModel {
     pub fn from_budget(budget: &Budget, period_id: PeriodId) -> Self {
-        let actual_items = budget.with_period(period_id).all_actual_items();
+        let actual_items = budget.get_period(period_id).map(|p| p.all_actual_items()).unwrap_or_default();
         let budget_items = budget.list_all_items_inner();
         let transactions = budget.list_transactions_for_connection(period_id);
         let ignored_transactions = budget.list_ignored_transactions(period_id);

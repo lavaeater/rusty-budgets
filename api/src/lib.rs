@@ -286,14 +286,23 @@ pub mod db {
     ) -> anyhow::Result<Budget> {
         let transaction = budget.get_transaction(tx_id).unwrap();
         let period_id = PeriodId::from_date(transaction.date, budget.month_begins_on());
-        let item = budget.with_period(period_id).get_actual(actual_id).unwrap();
-        let transaction_key = MatchRule::create_transaction_key(transaction);
-        let item_key = MatchRule::create_item_key(item);
-        let always_apply = true;
+        if let Some(period) = budget.get_period(period_id) {
+            if let Some(item) = period.get_actual(actual_id) {
+                let transaction_key = MatchRule::create_transaction_key(transaction);
+                let item_key = MatchRule::create_item_key(item);
+                let always_apply = true;
 
-        with_runtime(None)
-            .add_rule(user_id, budget.id, transaction_key, item_key, always_apply)
-            .map(|(budget, _)| budget)
+                with_runtime(None)
+                    .add_rule(user_id, budget.id, transaction_key, item_key, always_apply)
+                    .map(|(budget, _)| budget)
+            } else {
+                Err(anyhow::anyhow!("Actual item not found"))
+            }
+        } else {
+            Err(anyhow::anyhow!("Period not found"))
+        }
+        
+        
     }
 
     pub fn create_user(
@@ -477,7 +486,7 @@ pub async fn ignore_transaction(
     period_id: PeriodId,
 ) -> Result<BudgetViewModel, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
-    match db::ignore_transaction(user.id, budget_id, tx_id) {
+    match db::ignore_transaction( budget_id, user.id, tx_id) {
         Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
         Err(e) => {
             error!(error = %e, "Could not ignore transaction.");

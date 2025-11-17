@@ -95,7 +95,6 @@ impl BankTransactionStore {
     }
 
     pub fn contains(&self, id: Uuid) -> bool {
-        tracing::info!("Does this exist: {} in this: {:#?}", id, self.by_id.keys());
         self.by_id.contains_key(&id)
     }
 

@@ -88,6 +88,7 @@ pub fn TransactionsView(ignored: bool) -> Element {
                                         r#type: "button",
                                         "data-style": "destructive",
                                         onclick: move |_| async move {
+                                            info!("Ignoring: {} in {}", tx.tx_id, budget.period_id);
                                             if let Ok(bv) = api::ignore_transaction(budget.id, tx.tx_id, budget.period_id)
                                                 .await
                                             {
