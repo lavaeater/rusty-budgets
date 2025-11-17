@@ -40,19 +40,22 @@ impl ActualModifiedHandler for Budget {
         notes: Option<String>,
         tags: Option<Vec<String>>,
     ) -> Result<ActualModified, CommandError> {
-        if !self.with_period(period_id).actual_items.contains_key(&actual_id) {
-            tracing::error!("Actual not found");
-            Err(CommandError::NotFound("Actual not found".to_string()))
+        if let Some(period) = self.get_period(period_id) {
+            if period.contains_actual(actual_id) {
+                Ok(ActualModified {
+                    budget_id: self.id,
+                    actual_id,
+                    period_id,
+                    budgeted_amount,
+                    actual_amount,
+                    notes,
+                    tags,
+                })
+            } else {
+                Err(CommandError::NotFound("Actual not found".to_string()))
+            }
         } else {
-            Ok(ActualModified {
-                budget_id: self.id,
-                actual_id,
-                period_id,
-                budgeted_amount,
-                actual_amount,
-                notes,
-                tags,
-            })
+            Err(CommandError::NotFound("Period not found".to_string()))
         }
     }
 }

@@ -477,6 +477,10 @@ impl Budget {
         self.budget_periods.evaluate_rules(&self.match_rules)
     }
 
+    pub fn get_period(&self, period_id: PeriodId) -> Option<&BudgetPeriod> {
+        self.budget_periods.with_period(period_id)
+    }
+
     pub fn with_period_mut(&mut self, period_id: PeriodId) -> &mut BudgetPeriod {
         self.budget_periods.ensure_period(period_id);
         self.budget_periods.with_period_mut(period_id).unwrap()
