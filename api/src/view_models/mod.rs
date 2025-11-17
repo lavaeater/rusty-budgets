@@ -85,8 +85,7 @@ impl BudgetViewModel {
         let items = budget_items.iter().map(|bi| BudgetItemViewModel::from_item(&bi, actual_items.iter().find(|ai| ai.budget_item_id == bi.id), budget.currency)).collect::<Vec<_>>();
         let to_connect = transactions.iter().map(TransactionViewModel::from_transaction).collect::<Vec<_>>();
         let ignored_transactions = ignored_transactions.iter().map(TransactionViewModel::from_transaction).collect::<Vec<_>>();
-        let mut overviews = vec!(budget.get_budgeting_overview(BudgetingType::Income, period_id));
-//,budget.get_budgeting_overview(BudgetingType::Expense, period_id), budget.get_budgeting_overview(BudgetingType::Savings, period_id)
+        let mut overviews = vec!(budget.get_budgeting_overview(BudgetingType::Income, period_id), budget.get_budgeting_overview(BudgetingType::Expense, period_id), budget.get_budgeting_overview(BudgetingType::Savings, period_id));
         overviews.sort_by_key(|ov| ov.budgeting_type);
         Self {
             id: budget.id,
