@@ -60,7 +60,6 @@ pub fn TransactionsView(ignored: bool) -> Element {
                                                         .await
                                                     {
                                                         info!("Connected transaction {} to item {}", tx.tx_id, item.item_id);
-                                                        info!("Updated budget: {:#?}", bv);
                                                         budget_signal.set(Some(bv));
                                                     }
                                                 }

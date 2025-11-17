@@ -236,7 +236,7 @@ pub mod db {
         actual_id: Option<Uuid>,
         item_id: Uuid,
         period_id: PeriodId,
-    ) -> anyhow::Result<Budget> {
+    ) -> anyhow::Result<(Budget, Uuid)> {
         let actual_id = match actual_id {
             None => {
                 let (_, actual_id) = with_runtime(None).add_actual(
@@ -251,7 +251,7 @@ pub mod db {
             Some(actual_id) => actual_id,
         };
         match with_runtime(None).connect_transaction(user_id, budget_id, tx_id, actual_id) {
-            Ok((budget, _)) => Ok(budget),
+            Ok((budget, _)) => Ok((budget, actual_id)),
             Err(err) => Err(err),
         }
     }
@@ -373,7 +373,15 @@ pub async fn add_new_actual_item(
     match tx_id {
         Some(tx_id) => {
             match db::connect_transaction(user.id, budget_id, tx_id, Some(actual_id), item_id, period_id) {
-                Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
+                Ok((b, actual_id)) => {
+                    match db::create_rule(&b, user.id, tx_id, actual_id) {
+                        Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
+                        Err(e) => {
+                            error!(error = %e, "Could not create rule");
+                            Err(ServerFnError::new(e.to_string()))
+                        }
+                    }
+                },
                 Err(e) => {
                     error!(error = %e, "Could not connect transaction");
                     Err(ServerFnError::new(e.to_string()))
@@ -471,7 +479,15 @@ pub async fn connect_transaction(
         budget_item_id,
         period_id,
     ) {
-        Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
+        Ok((b, actual_id)) => {
+            match db::create_rule(&b, user.id, tx_id, actual_id) {
+                Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
+                Err(e) => {
+                    error!(error = %e, "Could not create rule");
+                    Err(ServerFnError::new(e.to_string()))
+                }
+            }
+        },
         Err(e) => {
             error!(error = %e, "Could not connect transaction to item.");
             Err(ServerFnError::new(e.to_string()))
