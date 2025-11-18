@@ -22,8 +22,8 @@ impl BankTransactionStore {
 }
 
 impl BankTransactionStore {
-    pub fn list_transactions_for_item(&self, item_id: Uuid, sorted: bool) -> Vec<&BankTransaction> {
-        let mut transactions = self.by_id.values().filter(|tx| tx.actual_item_id == Some(item_id)).collect::<Vec<_>>();
+    pub fn list_transactions_for_actual(&self, actual_id: Uuid, sorted: bool) -> Vec<&BankTransaction> {
+        let mut transactions = self.by_id.values().filter(|tx| tx.actual_item_id == Some(actual_id)).collect::<Vec<_>>();
         if sorted {
             transactions.sort_by_key(|tx| tx.date);
         }

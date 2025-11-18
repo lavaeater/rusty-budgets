@@ -428,14 +428,14 @@ impl BudgetPeriodStore {
             .unwrap_or_default()
     }
 
-    pub fn list_transactions_for_item(
+    pub fn list_transactions_for_actual(
         &self,
         period_id: PeriodId,
-        item_id: Uuid,
+        actual_id: Uuid,
         sorted: bool,
     ) -> Vec<&BankTransaction> {
         self.with_period(period_id)
-            .map(|p| p.transactions.list_transactions_for_item(item_id, sorted))
+            .map(|p| p.transactions.list_transactions_for_actual(actual_id, sorted))
             .unwrap_or_default()
     }
 

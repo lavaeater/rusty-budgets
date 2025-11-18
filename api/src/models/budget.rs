@@ -443,14 +443,14 @@ impl Budget {
             .move_transaction_to_ignored(tx_id, period_id)
     }
 
-    pub fn list_transactions_for_item(
+    pub fn list_transactions_for_actual(
         &self,
         period_id: PeriodId,
-        item_id: Uuid,
+        actual: Uuid,
         sorted: bool,
     ) -> Vec<&BankTransaction> {
         self.budget_periods
-            .list_transactions_for_item(period_id, item_id, sorted)
+            .list_transactions_for_actual(period_id, actual, sorted)
     }
 
     pub fn list_transactions_for_connection(&self, period_id: PeriodId) -> Vec<BankTransaction> {

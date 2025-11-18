@@ -13,11 +13,15 @@ pub struct BudgetItemViewModel {
     pub budgeted_amount: Money,
     pub actual_amount: Money,
     pub remaining_budget: Money,
+    pub is_over_budget: bool,
+    pub transactions: Vec<TransactionViewModel>
 }
 
 impl BudgetItemViewModel {
-    pub fn from_item(budget_item: &BudgetItem, actual_item: Option<&ActualItem>, currency: Currency) -> Self {
+    pub fn from_item(budget_item: &BudgetItem, actual_items: &Vec<ActualItem>, currency: Currency, transactions: &Vec<&BankTransaction>) -> Self {
+        let actual_item = actual_items.iter().find(|ai| ai.budget_item_id == budget_item.id);
         if let Some(actual_item) = actual_item {
+            let transactions = transactions.iter().filter(|tx| tx.actual_item_id == Some(actual_item.id)).map(|tx| TransactionViewModel::from_transaction(tx)).collect::<Vec<_>>();
             Self {
                 item_id: actual_item.budget_item_id,
                 actual_id: Some(actual_item.id),
@@ -26,6 +30,8 @@ impl BudgetItemViewModel {
                 budgeted_amount: actual_item.budgeted_amount,
                 actual_amount: actual_item.actual_amount,
                 remaining_budget: actual_item.budgeted_amount - actual_item.actual_amount,
+                is_over_budget: actual_item.budgeted_amount < actual_item.actual_amount,
+                transactions,
             }   
         } else {
             Self {
@@ -36,6 +42,8 @@ impl BudgetItemViewModel {
                 budgeted_amount: Money::zero(currency),
                 actual_amount: Money::zero(currency),
                 remaining_budget: Money::zero(currency),
+                is_over_budget: false,
+                transactions: Vec::new(),
             }
         }
     }
@@ -81,8 +89,9 @@ impl BudgetViewModel {
         let budget_items = budget.list_all_items_inner();
         let transactions = budget.list_transactions_for_connection(period_id);
         let ignored_transactions = budget.list_ignored_transactions(period_id);
+        let all_connected_transactions = budget.list_bank_transactions(period_id).iter().map(|tx|*tx).filter(|tx| tx.actual_item_id.is_some() && !tx.ignored).collect::<Vec<_>>();
         
-        let items = budget_items.iter().map(|bi| BudgetItemViewModel::from_item(&bi, actual_items.iter().find(|ai| ai.budget_item_id == bi.id), budget.currency)).collect::<Vec<_>>();
+        let items = budget_items.iter().map(|bi| BudgetItemViewModel::from_item(&bi, &actual_items, budget.currency, &all_connected_transactions)).collect::<Vec<_>>();
         let to_connect = transactions.iter().map(TransactionViewModel::from_transaction).collect::<Vec<_>>();
         let ignored_transactions = ignored_transactions.iter().map(TransactionViewModel::from_transaction).collect::<Vec<_>>();
         let mut overviews = vec!(budget.get_budgeting_overview(BudgetingType::Income, period_id), budget.get_budgeting_overview(BudgetingType::Expense, period_id), budget.get_budgeting_overview(BudgetingType::Savings, period_id));
