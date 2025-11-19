@@ -1,6 +1,7 @@
 use crate::budget::{BudgetingTypeCard, BudgetingTypeOverviewView};
 use crate::components::{TabContent, TabList, TabTrigger, Tabs};
 use api::view_models::*;
+use api::models::*;
 use dioxus::prelude::*;
 use uuid::Uuid;
 
@@ -26,7 +27,7 @@ pub fn BudgetTabs() -> Element {
                             .collect(),
                     )
                 })
-                .collect::<Vec<(usize, BudgetingType, BudgetOverview, Vec<BudgetItemViewModel>)>>();
+                .collect::<Vec<(usize, BudgetingType, BudgetingTypeOverview, Vec<BudgetItemViewModel>)>>();
 
             rsx! {
                 Tabs {
@@ -39,7 +40,7 @@ pub fn BudgetTabs() -> Element {
                                 index: *index,
                                 BudgetingTypeOverviewView {
                                     budgeting_type: *budgeting_type,
-                                    overview,
+                                    overview: *overview,
                                 }
                             }
                         }
