@@ -18,16 +18,10 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
     let mut selected_transactions = use_signal(HashSet::<Uuid>::new);
     let mut show_move_selector = use_signal(|| false);
     let budget = budget_signal().unwrap();
+    let budget_id = budget.id;
     
     if expanded() {
-        let transactions = 
-            &budget
-                .map(|b| b.
-                    list_transactions_for_item(&item.id, true)
-                    .into_iter()
-                    .cloned()
-                    .collect::<Vec<BankTransaction>>())
-                .unwrap_or_default();
+    
             rsx! {
                 div { class: "flex flex-col p-2 border-b border-gray-200 text-sm",
                     // Header with item name and amount
@@ -41,10 +35,10 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                     // Transaction list with checkboxes
                     div { class: "mt-2",
                         {
-                            transactions
+                            item.transactions
                                 .iter()
                                 .map(|transaction| {
-                                    let tx_id = transaction.id;
+                                    let tx_id = transaction.tx_id;
                                     let is_selected = selected_transactions().contains(&tx_id);
                                     rsx! {
                                         div { class: "flex items-center p-1 hover:bg-gray-50 rounded",
@@ -87,15 +81,14 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                                     let selected_ids: Vec<Uuid> = selected_transactions().into_iter().collect();
 
                                     for tx_id in selected_ids {
-
                                         // Refresh the budget data
-                                        if let Err(_) = ignore_transaction(budget_id, tx_id).await {
+                                        if let Err(_) = ignore_transaction(budget_id, tx_id, budget.period_id).await {
                                             success = false;
                                             break;
                                         }
                                     }
                                     if success {
-                                        if let Ok(updated_budget) = api::get_budget(Some(budget_id)).await {
+                                        if let Ok(updated_budget) = api::get_budget(Some(budget_id), budget.period_id).await {
                                             budget_signal.set(updated_budget);
                                         }
                                         selected_transactions.set(HashSet::new());
@@ -118,19 +111,20 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                                 div { class: "flex-1 flex items-center gap-2",
                                     span { "Flytta till:" }
                                     ItemSelector {
-                                        items: items.iter().filter(|i| i.id != item.id).cloned().collect(),
-                                        on_change: move |target_item: Option<BudgetItem>| async move {
+                                        items: budget.items.iter().filter(|i| i.item_id != item.item_id).cloned().collect(),
+                                        on_change: move |target_item: Option<BudgetItemViewModel>| async move {
                                             if let Some(target_item) = target_item {
                                                 let mut success = true;
                                                 let selected_ids: Vec<Uuid> = selected_transactions().into_iter().collect();
 
                                                 for tx_id in selected_ids {
                                                     if let Err(_) = api::connect_transaction(
-
-                                                            // Refresh the budget data
+                                                        // Refresh the budget data
                                                             budget_id,
                                                             tx_id,
-                                                            target_item.id,
+                                                            target_item.actual_id,
+                                                        target_item.item_id,
+                                                        budget.period_id
                                                         )
                                                         .await
                                                     {
@@ -139,7 +133,7 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                                                     }
                                                 }
                                                 if success {
-                                                    if let Ok(updated_budget) = api::get_budget(Some(budget_id)).await {
+                                                    if let Ok(updated_budget) = api::get_budget(Some(budget_id), budget.period_id).await {
                                                         budget_signal.set(updated_budget);
                                                     }
                                                     selected_transactions.set(HashSet::new());
@@ -159,42 +153,43 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
         // }
     } else {
         rsx! {
-            div { class: format!("budget-item {}", if is_over_budget { "over-budget" } else { "" }),
+            div { class: format!("budget-item {}", if item.is_over_budget { "over-budget" } else { "" }),
                 // Left side: name
                 div {
                     class: "font-large",
                     onclick: move |_| { expanded.set(!expanded()) },
-                    "{item_name()}"
+                    "{item.name}"
                 }
                 // Right side: actual / budgeted
                 div { class: "text-gray-700",
                     "{item.actual_amount.to_string()} / {item.budgeted_amount.to_string()}"
                 }
-                if is_over_budget {
+                if item.is_over_budget {
                     span { class: "over-budget-indicator", "Over Budget" }
                     // Auto-adjust button if there's available income
                     {
                         let shortage = item.actual_amount - item.budgeted_amount;
-                        let can_auto_adjust = budget_signal()
-                            .as_ref()
-                            .and_then(|b| b.get_budgeting_overview(&BudgetingType::Income))
-                            .map(|o| o.remaining_budget >= shortage)
-                            .unwrap_or(false);
+                        let can_auto_adjust = budget
+                         .overviews
+                         .iter()
+                         .find(|o| o.budgeting_type == BudgetingType::Income)
+                         .map(|o| o.remaining_budget >= shortage)
+                         .unwrap_or(false);
 
                         if can_auto_adjust {
                             rsx! {
                                 button {
                                     class: "auto-adjust-button",
                                     onclick: move |_| {
-                                        let item_id = item.id;
+                                        let actual_id = item.actual_id.unwrap();
                                         let shortage = shortage;
                                         spawn(async move {
-                                            match api::adjust_actual_funds(budget_id, item_id, shortage, budget_period_id()).await {
+                                            match api::adjust_actual_funds(budget_id, actual_id, shortage, budget.period_id).await {
                                                 Ok(updated_budget) => {
                                                     budget_signal.set(Some(updated_budget));
                                                 }
                                                 Err(e) => {
-                                                    dioxus::logger::tracing::error!(
+                                                    error!(
                                                         "Failed to adjust item funds: {}", e
                                                     );
                                                 }
