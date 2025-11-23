@@ -195,7 +195,7 @@ pub mod db {
     ) -> anyhow::Result<Budget> {
         let runtime = with_runtime(None);
         let _ = import_from_path(file_name, user_id, budget_id, runtime)?;
-        get_budget(budget_id)
+        evaluate_rules(user_id, budget_id)
     }
 
     pub fn add_item(

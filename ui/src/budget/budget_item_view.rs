@@ -2,6 +2,7 @@ use crate::Button;
 use api::view_models::*;
 use dioxus::prelude::*;
 use std::collections::HashSet;
+use lucide_dioxus::Pen;
 use uuid::Uuid;
 use api::ignore_transaction;
 use api::models::BudgetingType;
@@ -11,7 +12,9 @@ use crate::budget::ItemSelector;
 pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
     let mut budget_signal = use_context::<Signal<Option<BudgetViewModel>>>();
     let mut expanded = use_signal(|| false);
-    // let mut edit_item = use_signal(|| false);
+    
+    
+    let mut edit_item = use_signal(|| false);
     let item_name = use_signal(|| item.name.clone());
     
     // State for selected transaction IDs and the target item for moving
@@ -159,6 +162,7 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                     onclick: move |_| { expanded.set(!expanded()) },
                     "{item.name}"
                 }
+                Button { onclick: move |_| { edit_item.set(true) }, Pen {} }
                 // Right side: actual / budgeted
                 div { class: "text-gray-700",
                     "{item.actual_amount.to_string()} / {item.budgeted_amount.to_string()}"
@@ -168,7 +172,7 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                     // Auto-adjust button if there's available income
                     {
                         let shortage = item.actual_amount - item.budgeted_amount;
-                        let can_auto_adjust = budget
+                        let can_auto_adjust = item.budgeting_type == BudgetingType::Income || budget
                          .overviews
                          .iter()
                          .find(|o| o.budgeting_type == BudgetingType::Income)

@@ -10,6 +10,7 @@ api = { workspace = true }
 uuid = { version = "1.18.1", features = ["v4"] }
 strum = { workspace = true }
 chrono = {workspace = true}
+lucide-dioxus = { workspace = true }
 
 [features]
 server = ["api/server"]

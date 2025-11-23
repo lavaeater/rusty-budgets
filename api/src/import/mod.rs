@@ -9,7 +9,6 @@ use dioxus::logger::tracing::debug;
 use dioxus::prelude::error;
 use std::path::Path;
 use uuid::Uuid;
-use crate::db;
 
 pub fn import_from_path(
     path: &str,
@@ -42,10 +41,14 @@ pub fn import_from_path(
                     }
                 }
             }
-            Ok(imported)
+            { 
+                Ok(imported)
+            }
         } else {
             match import_from_skandia_excel(path, user_id, budget_id, runtime) {
-                Ok(imported) => Ok(imported),
+                Ok(imported) => { 
+                    Ok(imported)
+                },
                 Err(e) => {
                     error!(error = %e, "Failed to import from path");
                     Err(e)
@@ -121,9 +124,7 @@ pub fn import_from_skandia_excel(
             total_rows
         );
     }
-
-    db::evaluate_rules(user_id, budget_id)?;
-
+    
     Ok(imported)
 }
 
