@@ -63,6 +63,21 @@ impl JoyDbBudgetRuntime {
     }
 
     #[allow(clippy::too_many_arguments)]
+    pub fn modify_actual(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        actual_id: Uuid,
+        period_id: PeriodId,
+        budgeted_amount: Option<Money>,
+        actual_amount: Option<Money>,
+    ) -> anyhow::Result<(Budget, Uuid)> {
+        self.cmd(user_id, budget_id,|budget| {
+            budget.modify_actual(actual_id, period_id, budgeted_amount, actual_amount, None, None)
+        })
+    }
+
+    #[allow(clippy::too_many_arguments)]
     pub fn add_and_connect_tx(
         &self,
         user_id: Uuid,

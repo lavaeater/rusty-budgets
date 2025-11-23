@@ -270,6 +270,28 @@ pub mod db {
                 .map(|(b, _)| b)
         }
 
+    /*
+        pub budget_id: Uuid,
+    pub actual_id: Uuid,
+    pub period_id: PeriodId,
+    pub budgeted_amount: Option<Money>,
+    pub actual_amount: Option<Money>,
+    pub notes: Option<String>,
+    pub tags: Option<Vec<String>>,
+     */
+    pub fn modify_actual(
+        user_id: Uuid,
+        budget_id: Uuid,
+        actual_id: Uuid,
+        period_id: PeriodId,
+        budgeted_amount: Option<Money>,
+        actual_amount: Option<Money>,
+    ) -> anyhow::Result<Budget> {
+        with_runtime(None)
+            .modify_actual(user_id, budget_id, actual_id, period_id, budgeted_amount, actual_amount)
+            .map(|(b, _)| b)
+    }
+
         pub fn connect_transaction(
             user_id: Uuid,
             budget_id: Uuid,
@@ -456,6 +478,24 @@ pub mod db {
             }
         }
     }
+
+#[server]
+pub async fn modify_actual(
+    budget_id: Uuid,
+    actual_id: Uuid,
+    period_id: PeriodId,
+    budgeted_amount: Option<Money>,
+    actual_amount: Option<Money>,
+) -> Result<BudgetViewModel, ServerFnError> {
+    let user = db::get_default_user(None).expect("Could not get default user");
+    match db::modify_actual(user.id, budget_id, actual_id, period_id, budgeted_amount, actual_amount) {
+        Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
+        Err(e) => {
+            tracing::error!(error = %e, "Could not modify item");
+            Err(ServerFnError::new(e.to_string()))
+        }
+    }
+}
 
     #[server]
     pub async fn get_default_user() -> Result<User, ServerFnError> {
