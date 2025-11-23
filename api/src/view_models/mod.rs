@@ -6,6 +6,16 @@ use chrono::{DateTime, Utc};
 use dioxus::logger::tracing;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use crate::view_models::BudgetItemStatus::{Balanced, NotBudgeted, OverBudget, UnderBudget};
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+pub enum BudgetItemStatus {
+    Balanced,
+    OverBudget,
+    #[default]
+    NotBudgeted,
+    UnderBudget,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct BudgetItemViewModel {
@@ -16,7 +26,7 @@ pub struct BudgetItemViewModel {
     pub budgeted_amount: Money,
     pub actual_amount: Money,
     pub remaining_budget: Money,
-    pub is_over_budget: bool,
+    pub status: BudgetItemStatus,
     pub transactions: Vec<TransactionViewModel>,
 }
 
@@ -36,6 +46,17 @@ impl BudgetItemViewModel {
                 .filter(|tx| tx.actual_item_id == Some(actual_item.id))
                 .map(|tx| TransactionViewModel::from_transaction(tx))
                 .collect::<Vec<_>>();
+            
+            let status = if actual_item.budgeted_amount.is_zero() {
+                NotBudgeted
+            } else if actual_item.actual_amount > actual_item.budgeted_amount {
+                OverBudget
+            } else if actual_item.actual_amount < actual_item.budgeted_amount {
+                UnderBudget
+            } else {
+                Balanced
+            };
+            
             Self {
                 item_id: actual_item.budget_item_id,
                 actual_id: Some(actual_item.id),
@@ -44,7 +65,7 @@ impl BudgetItemViewModel {
                 budgeted_amount: actual_item.budgeted_amount,
                 actual_amount: actual_item.actual_amount,
                 remaining_budget: actual_item.budgeted_amount - actual_item.actual_amount,
-                is_over_budget: actual_item.budgeted_amount < actual_item.actual_amount,
+                status,
                 transactions,
             }
         } else {
@@ -56,7 +77,7 @@ impl BudgetItemViewModel {
                 budgeted_amount: Money::zero(currency),
                 actual_amount: Money::zero(currency),
                 remaining_budget: Money::zero(currency),
-                is_over_budget: false,
+                status: NotBudgeted,
                 transactions: Vec::new(),
             }
         }

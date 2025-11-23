@@ -165,7 +165,7 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
         // }
     } else {
         rsx! {
-            div { class: format!("budget-item {}", if item.is_over_budget { "over-budget" } else { "" }),
+            div { class: format!("budget-item {}", if item.status { "over-budget" } else { "" }),
                 // Left side: name
                 div {
                     class: "font-large",
@@ -177,7 +177,7 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                 div { class: "text-gray-700",
                     "{item.actual_amount.to_string()} / {item.budgeted_amount.to_string()}"
                 }
-                if item.is_over_budget {
+                if item.status {
                     span { class: "over-budget-indicator", "Over Budget" }
                     // Auto-adjust button if there's available income
                     {
