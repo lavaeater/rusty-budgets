@@ -184,6 +184,7 @@ impl BudgetPeriodStore {
     }
 
     pub fn evaluate_rules(&self, rules: &HashSet<MatchRule>) -> Vec<(Uuid, Uuid)> {
+        tracing::info!("What is up with the rules, bro? {:#?}", rules);
         self.budget_periods
             .iter()
             .flat_map(|(_, period)| period.evaluate_rules(rules))

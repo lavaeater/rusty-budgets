@@ -213,7 +213,7 @@ pub mod db {
     ) -> anyhow::Result<Budget> {
         match get_budget(budget_id) {
             Ok(b) => {
-                for ((tx_id, actual_id)) in b.evaluate_rules().iter() {
+                for (tx_id, actual_id) in b.evaluate_rules().iter() {
                     match with_runtime(None).connect_transaction(user_id, budget_id, *tx_id, *actual_id) {
                         Ok(_) => {
                             tracing::info!("Connected tx {} with actual item {}", tx_id, actual_id);
@@ -326,8 +326,6 @@ pub mod db {
         } else {
             Err(anyhow::anyhow!("Period not found"))
         }
-        
-        
     }
 
     pub fn create_user(
@@ -400,7 +398,15 @@ pub async fn add_new_actual_item(
             match db::connect_transaction(user.id, budget_id, tx_id, Some(actual_id), item_id, period_id) {
                 Ok((b, actual_id)) => {
                     match db::create_rule(&b, user.id, tx_id, actual_id) {
-                        Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
+                        Ok(b) => {
+                            match db::evaluate_rules(user.id, budget_id) {
+                                Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
+                                Err(e) => {
+                                    tracing::error!(error = %e, "Could not evaluate rules");
+                                    Err(ServerFnError::new(e.to_string()))
+                                }
+                            }
+                        },
                         Err(e) => {
                             tracing::error!(error = %e, "Could not create rule");
                             Err(ServerFnError::new(e.to_string()))
@@ -453,16 +459,27 @@ pub async fn get_budget(
 ) -> Result<Option<BudgetViewModel>, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
     if let Some(budget_id) = budget_id {
-        match db::get_budget(budget_id) {
+        match db::evaluate_rules(user.id, budget_id) {
             Ok(b) => Ok(Some(BudgetViewModel::from_budget(&b, period_id))),
             Err(e) => {
-                tracing::error!(error = %e, "Could not get budget");
+                tracing::error!(error = %e, "Could not evaluate rules");
                 Err(ServerFnError::new(e.to_string()))
             }
         }
     } else {
         match db::get_default_budget(user.id) {
-            Ok(b) => Ok(b.map(|b| BudgetViewModel::from_budget(&b, period_id))),
+            Ok(b) => {
+                match b {
+                    Some(b) => match db::evaluate_rules(user.id, b.id) {
+                        Ok(b) => Ok(Some(BudgetViewModel::from_budget(&b, period_id))),
+                        Err(e) => {
+                            tracing::error!(error = %e, "Could not evaluate rules");
+                            Err(ServerFnError::new(e.to_string()))
+                        }
+                    },
+                    None => Ok(None),
+                }         
+            },
             Err(e) => {
                 tracing::error!(error = %e, "Could not get default budget");
                 Err(ServerFnError::new(e.to_string()))
@@ -479,7 +496,15 @@ pub async fn import_transactions(
 ) -> Result<BudgetViewModel, ServerFnError> {
     let user = db::get_default_user(None).expect("Could not get default user");
     match db::import_transactions(user.id, budget_id, &file_name) {
-        Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
+        Ok(b) => {
+            match db::evaluate_rules(user.id, budget_id) {
+                Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
+                Err(e) => {
+                    tracing::error!(error = %e, "Could not evaluate rules");
+                    Err(ServerFnError::new(e.to_string()))
+                }
+            }
+        },
         Err(e) => {
             tracing::error!(error = %e, "Could not import transactions");
             Err(ServerFnError::new(e.to_string()))
@@ -506,7 +531,15 @@ pub async fn connect_transaction(
     ) {
         Ok((b, actual_id)) => {
             match db::create_rule(&b, user.id, tx_id, actual_id) {
-                Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
+                Ok(b) => { 
+                    match db::evaluate_rules(user.id, budget_id) {
+                        Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
+                        Err(e) => {
+                            tracing::error!(error = %e, "Could not evaluate rules");
+                            Err(ServerFnError::new(e.to_string()))
+                        }
+                    } 
+                },
                 Err(e) => {
                     tracing::error!(error = %e, "Could not create rule");
                     Err(ServerFnError::new(e.to_string()))
