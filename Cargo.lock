@@ -3168,6 +3168,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "112b39cec0b298b6c1999fee3e31427f74f676e4cb9879ed1a121b43661a4154"
 
 [[package]]
+name = "lucide-dioxus"
+version = "2.44.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3d08b978818a02150fa1e92ba44e782fc14411d4369a200098d468d74c36dcdc"
+dependencies = [
+ "dioxus",
+]
+
+[[package]]
 name = "mac"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5582,6 +5591,7 @@ dependencies = [
  "chrono",
  "dioxus",
  "dioxus-primitives",
+ "lucide-dioxus",
  "strum",
  "uuid",
 ]

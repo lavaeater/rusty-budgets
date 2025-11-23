@@ -443,14 +443,14 @@ impl Budget {
             .move_transaction_to_ignored(tx_id, period_id)
     }
 
-    pub fn list_transactions_for_item(
+    pub fn list_transactions_for_actual(
         &self,
         period_id: PeriodId,
-        item_id: Uuid,
+        actual: Uuid,
         sorted: bool,
     ) -> Vec<&BankTransaction> {
         self.budget_periods
-            .list_transactions_for_item(period_id, item_id, sorted)
+            .list_transactions_for_actual(period_id, actual, sorted)
     }
 
     pub fn list_transactions_for_connection(&self, period_id: PeriodId) -> Vec<BankTransaction> {
@@ -470,11 +470,11 @@ impl Budget {
         self.budget_periods.create_period_after(period_id)
     }
 
-    pub fn evaluate_rules(&self) -> Vec<(Uuid, Uuid)> {
+    pub fn evaluate_rules(&self) -> Vec<(Uuid, Option<Uuid>, Option<Uuid>)> {
         /* we must evaluate all transactions against all items for the BUDGET, not for
         a specific period.
          */
-        self.budget_periods.evaluate_rules(&self.match_rules)
+        self.budget_periods.evaluate_rules(&self.match_rules, &self.list_all_items_inner())
     }
 
     pub fn get_period(&self, period_id: PeriodId) -> Option<&BudgetPeriod> {

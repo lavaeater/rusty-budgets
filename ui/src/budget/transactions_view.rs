@@ -50,18 +50,22 @@ pub fn TransactionsView(ignored: bool) -> Element {
                                             on_change: move |e: Option<BudgetItemViewModel>| async move {
                                                 if let Some(item) = e {
                                                     info!("Lets connect transaction {} to item {}", tx.tx_id, item.item_id);
-                                                    if let Ok(bv) = connect_transaction(
+                                                    match connect_transaction(
                                                             budget.id,
                                                             tx.tx_id,
                                                             item.actual_id,
                                                             item.item_id,
                                                             budget.period_id,
                                                         )
-                                                        .await
-                                                    {
-                                                        info!("Connected transaction {} to item {}", tx.tx_id, item.item_id);
-                                                        budget_signal.set(Some(bv));
-                                                    }
+                                                        .await {
+                                                            Ok(bv) => {
+                                                                info!("Connected transaction {} to item {}", tx.tx_id, item.item_id);
+                                                                budget_signal.set(Some(bv));
+                                                            }
+                                                            Err(e) => {
+                                                                error!("Failed to connect transaction {} to item {}: {}", tx.tx_id, item.item_id, e);
+                                                            }
+                                                        } 
                                                 }
                                             },
                                         }

@@ -41,10 +41,14 @@ pub fn import_from_path(
                     }
                 }
             }
-            Ok(imported)
+            { 
+                Ok(imported)
+            }
         } else {
             match import_from_skandia_excel(path, user_id, budget_id, runtime) {
-                Ok(imported) => Ok(imported),
+                Ok(imported) => { 
+                    Ok(imported)
+                },
                 Err(e) => {
                     error!(error = %e, "Failed to import from path");
                     Err(e)
@@ -120,14 +124,7 @@ pub fn import_from_skandia_excel(
             total_rows
         );
     }
-
-    if let Ok(Some(budget)) = runtime.load(budget_id) {
-        let matches = budget.evaluate_rules();
-        for (tx_id, item_id) in matches {
-            let _ = runtime.connect_transaction(user_id,budget_id, tx_id, item_id);
-        }
-    }
-
+    
     Ok(imported)
 }
 

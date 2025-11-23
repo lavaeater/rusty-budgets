@@ -22,8 +22,8 @@ impl BankTransactionStore {
 }
 
 impl BankTransactionStore {
-    pub fn list_transactions_for_item(&self, item_id: Uuid, sorted: bool) -> Vec<&BankTransaction> {
-        let mut transactions = self.by_id.values().filter(|tx| tx.actual_item_id == Some(item_id)).collect::<Vec<_>>();
+    pub fn list_transactions_for_actual(&self, actual_id: Uuid, sorted: bool) -> Vec<&BankTransaction> {
+        let mut transactions = self.by_id.values().filter(|tx| tx.actual_item_id == Some(actual_id)).collect::<Vec<_>>();
         if sorted {
             transactions.sort_by_key(|tx| tx.date);
         }
@@ -267,8 +267,13 @@ impl MatchRule {
         self.transaction_key == tokenized_transaction_description
     }
 
-    pub fn matches_item(&self, item: &ActualItem) -> bool {
-        let tokenized_item_name = tokenize_description(&item.item_name());
+    pub fn matches_actual(&self, actual: &ActualItem) -> bool {
+        let tokenized_item_name = tokenize_description(&actual.item_name());
+        self.item_key == tokenized_item_name
+    }
+
+    pub fn matches_item(&self, item: &BudgetItem) -> bool {
+        let tokenized_item_name = tokenize_description(&item.name);
         self.item_key == tokenized_item_name
     }
     
