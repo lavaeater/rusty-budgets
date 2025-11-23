@@ -23,8 +23,8 @@ impl ActualModifiedHandler for Budget {
     fn apply_modify_actual(&mut self, event: &ActualModified) -> Uuid {
         self.with_period_mut(event.period_id)
             .mutate_actual(event.actual_id, | actual| {
-                event.budgeted_amount.map(|budgeted_amount| actual.budgeted_amount = budgeted_amount);
-                event.actual_amount.map(|actual_amount| actual.actual_amount = actual_amount);
+                event.budgeted_amount.map(|budgeted_amount| actual.budgeted_amount += budgeted_amount);
+                event.actual_amount.map(|actual_amount| actual.actual_amount += actual_amount);
                 actual.notes = event.notes.clone();
                 event.tags.clone().map(|t| actual.tags = t);
             });
