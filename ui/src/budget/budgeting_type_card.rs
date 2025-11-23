@@ -34,7 +34,6 @@ pub fn BudgetingTypeCard(budgeting_type: BudgetingType, items: Vec<BudgetItemVie
         for item in items {
             BudgetItemView {
                 item: item.clone(),
-                item_type: budgeting_type,
             }
             Separator {
                 style: "margin: 15px 0; width: 50%;",

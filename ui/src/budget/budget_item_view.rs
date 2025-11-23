@@ -21,7 +21,6 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
     let budget_id = budget.id;
     
     if expanded() {
-    
             rsx! {
                 div { class: "flex flex-col p-2 border-b border-gray-200 text-sm",
                     // Header with item name and amount
