@@ -267,8 +267,13 @@ impl MatchRule {
         self.transaction_key == tokenized_transaction_description
     }
 
-    pub fn matches_item(&self, item: &ActualItem) -> bool {
-        let tokenized_item_name = tokenize_description(&item.item_name());
+    pub fn matches_actual(&self, actual: &ActualItem) -> bool {
+        let tokenized_item_name = tokenize_description(&actual.item_name());
+        self.item_key == tokenized_item_name
+    }
+
+    pub fn matches_item(&self, item: &BudgetItem) -> bool {
+        let tokenized_item_name = tokenize_description(&item.name);
         self.item_key == tokenized_item_name
     }
     

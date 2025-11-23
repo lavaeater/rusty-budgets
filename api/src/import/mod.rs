@@ -9,6 +9,7 @@ use dioxus::logger::tracing::debug;
 use dioxus::prelude::error;
 use std::path::Path;
 use uuid::Uuid;
+use crate::db;
 
 pub fn import_from_path(
     path: &str,
@@ -121,12 +122,7 @@ pub fn import_from_skandia_excel(
         );
     }
 
-    if let Ok(Some(budget)) = runtime.load(budget_id) {
-        let matches = budget.evaluate_rules();
-        for (tx_id, item_id) in matches {
-            let _ = runtime.connect_transaction(user_id,budget_id, tx_id, item_id);
-        }
-    }
+    db::evaluate_rules(user_id, budget_id)?;
 
     Ok(imported)
 }

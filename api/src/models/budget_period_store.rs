@@ -183,11 +183,11 @@ impl BudgetPeriodStore {
         self.month_begins_on
     }
 
-    pub fn evaluate_rules(&self, rules: &HashSet<MatchRule>) -> Vec<(Uuid, Uuid)> {
+    pub fn evaluate_rules(&self, rules: &HashSet<MatchRule>, items: &Vec<BudgetItem>) -> Vec<(Uuid, Option<Uuid>, Option<Uuid>)> {
         tracing::info!("What is up with the rules, bro? {:#?}", rules);
         self.budget_periods
             .iter()
-            .flat_map(|(_, period)| period.evaluate_rules(rules))
+            .flat_map(|(_, period)| period.evaluate_rules(rules, items))
             .collect::<Vec<_>>()
     }
 

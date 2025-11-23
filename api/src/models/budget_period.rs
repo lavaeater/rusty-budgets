@@ -1,8 +1,6 @@
 use crate::models::bank_transaction_store::BankTransactionStore;
 use crate::models::budget_period_id::PeriodId;
-use crate::models::{
-    ActualItem, MatchRule,
-};
+use crate::models::{ActualItem, BudgetItem, MatchRule};
 use core::fmt::Display;
 use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeStruct;
@@ -153,14 +151,17 @@ impl BudgetPeriod {
         period
     }
 
-    pub fn evaluate_rules(&self, rules: &HashSet<MatchRule>) -> Vec<(Uuid, Uuid)> {
+    pub fn evaluate_rules(&self, rules: &HashSet<MatchRule>, items: &[BudgetItem]) -> Vec<(Uuid, Option<Uuid>, Option<Uuid>)> {
         let mut matched_transactions = Vec::new();
-        let items = self.actual_items.values().collect();
+        let actuals = self.actual_items.values().collect::<Vec<_>>();
         for transaction in self.transactions.list_transactions_for_connection() {
             for rule in rules {
                 if rule.matches_transaction(&transaction) {
-                    if let Some(actual_id) = self.get_item_for_rule(rule, &items) {
-                        matched_transactions.push((transaction.id, actual_id));
+                    if let Some(actual_id) = self.get_actual_id_for_rule(rule, &actuals) {
+                        matched_transactions.push((transaction.id, Some(actual_id), None));
+                        break;
+                    } else if let Some(item_id) = self.get_item_id_for_rule(rule, items) {
+                        matched_transactions.push((transaction.id, None, Some(item_id)));
                         break;
                     }
                 }
@@ -169,7 +170,11 @@ impl BudgetPeriod {
         matched_transactions
     }
 
-    pub fn get_item_for_rule(&self, rule: &MatchRule, items: &Vec<&ActualItem>) -> Option<Uuid> {
+    pub fn get_actual_id_for_rule(&self, rule: &MatchRule, actuals: &Vec<&ActualItem>) -> Option<Uuid> {
+        actuals.iter().find(|i| rule.matches_actual(i)).map(|i| i.id)
+    }
+
+    pub fn get_item_id_for_rule(&self, rule: &MatchRule, items: &[BudgetItem]) -> Option<Uuid> {
         items.iter().find(|i| rule.matches_item(i)).map(|i| i.id)
     }
     
