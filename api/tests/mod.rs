@@ -44,13 +44,13 @@ pub fn add_budget_item() -> anyhow::Result<()> {
         BudgetingType::Expense,
     )?;
 
-    let item = res.get_item(item_id).unwrap().lock().unwrap();
+    let item = res.get_item(item_id).unwrap();
     assert_eq!(item.name, "Utgifter");
     assert_eq!(item.budgeting_type, BudgetingType::Expense);
 
     let budget_agg = rt.materialize(budget_id)?;
 
-    let new_item = budget_agg.get_item(item_id).unwrap().lock().unwrap();
+    let new_item = budget_agg.get_item(item_id).unwrap();
     assert_eq!(new_item.name, "Utgifter");
     assert_eq!(new_item.budgeting_type, BudgetingType::Expense);
     Ok(())
@@ -150,13 +150,11 @@ pub fn connect_bank_transaction() -> anyhow::Result<()> {
     let (res, _tx_id) = rt.connect_transaction(user_id, budget_id, tx_id, actual_id)?;
 
     assert_eq!(
-        res.get_budgeted_by_type(&BudgetingType::Expense, period_id)
-            .unwrap(),
+        res.get_budgeted_by_type(&BudgetingType::Expense, period_id),
         hundred_money
     );
     assert_eq!(
-        res.get_actual_by_type(&BudgetingType::Expense, period_id)
-            .unwrap(),
+        res.get_actual_by_type(&BudgetingType::Expense, period_id),
         -hundred_money
     );
     Ok(())
@@ -193,7 +191,7 @@ pub fn add_bank_transaction() -> anyhow::Result<()> {
 
     assert!(res.is_ok());
     let mut res = res?.0;
-    assert_eq!(res.list_bank_transactions(period_id).len(), 1);
+    assert_eq!(res.with_period(period_id).transactions.len(), 1);
 
     let also_now: DateTime<Utc> = naive_date
         .and_hms_opt(0, 0, 0) // hours, minutes, seconds
@@ -229,26 +227,18 @@ pub fn test_import_from_skandia_excel() -> anyhow::Result<()> {
 
     let (_, budget_id) = rt.create_budget(user_id, "Test Budget", true, Currency::SEK)?;
 
-    let imported = import_from_skandia_excel(
-        &rt,
-        user_id,
-        budget_id,
-        "./tests/unit-test-data.xlsx",
-    )?;
+    let imported =
+        import_from_skandia_excel(&rt, user_id, budget_id, "./tests/unit-test-data.xlsx")?;
 
     println!("Imported {} transactions", imported);
-    let not_imported = import_from_skandia_excel(
-        &rt,
-        user_id,
-        budget_id,
-        "./tests/unit-test-data.xlsx",
-    )?;
-    
+    let not_imported =
+        import_from_skandia_excel(&rt, user_id, budget_id, "./tests/unit-test-data.xlsx")?;
+
     assert_eq!(not_imported, 98);
 
     println!("Not imported {} transactions", not_imported);
 
-    let res = rt.load(budget_id)?.unwrap();
+    let mut res = rt.load(budget_id)?.unwrap();
 
     let date = Utc::now()
         .with_year(2025)
@@ -257,10 +247,10 @@ pub fn test_import_from_skandia_excel() -> anyhow::Result<()> {
         .unwrap()
         .with_day(19)
         .unwrap();
-    
+
     let current_period = PeriodId::from_date(date, res.month_begins_on());
-    
-    assert_eq!(res.list_bank_transactions(current_period).len(), 39);
+
+    assert_eq!(res.with_period(current_period).transactions.len(), 39);
     assert_eq!(imported, 39);
 
     Ok(())
