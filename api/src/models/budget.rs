@@ -300,7 +300,7 @@ impl Budget {
             .map(|p| {
                 p.transactions
                     .iter()
-                    .filter(|t| t.actual_id.is_none())
+                    .filter(|t| t.actual_id.is_none() && !t.ignored)
                     .collect()
             })
             .unwrap_or_default()

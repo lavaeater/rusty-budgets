@@ -566,3 +566,367 @@ pub fn test_budeting_overview() -> anyhow::Result<()> {
     Ok(())
 }
 
+// ============================================================================
+// evaluate_rules tests
+// ============================================================================
+
+#[test]
+pub fn evaluate_rules_no_rules_returns_empty() -> anyhow::Result<()> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let now = Utc::now();
+    let period_id = PeriodId::from_date(now, MonthBeginsOn::default());
+
+    let (budget_id, _) = create_budget_with_items(
+        &rt,
+        user_id,
+        "Test Budget",
+        vec![("Groceries".to_string(), BudgetingType::Expense, Money::new_dollars(500, Currency::SEK), period_id)],
+    )?;
+
+    // Add a transaction
+    let (_res, _tx_id) = rt.add_transaction(
+        user_id,
+        budget_id,
+        "1234567890",
+        Money::new_dollars(-100, Currency::SEK),
+        Money::new_dollars(1000, Currency::SEK),
+        "WILLYS GROCERIES",
+        now,
+    )?;
+
+    let budget = rt.load(budget_id)?.unwrap();
+    
+    // No rules added, so evaluate_rules should return empty
+    let matches = budget.evaluate_rules();
+    assert!(matches.is_empty(), "Expected no matches when no rules exist");
+
+    Ok(())
+}
+
+#[test]
+pub fn evaluate_rules_matches_transaction_to_actual() -> anyhow::Result<()> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let now = Utc::now();
+    let period_id = PeriodId::from_date(now, MonthBeginsOn::default());
+
+    let (budget_id, items) = create_budget_with_items(
+        &rt,
+        user_id,
+        "Test Budget",
+        vec![("groceries".to_string(), BudgetingType::Expense, Money::new_dollars(500, Currency::SEK), period_id)],
+    )?;
+    let (_item_id, actual_id) = items[0];
+
+    // Add a transaction
+    let (_res, tx_id) = rt.add_transaction(
+        user_id,
+        budget_id,
+        "1234567890",
+        Money::new_dollars(-100, Currency::SEK),
+        Money::new_dollars(1000, Currency::SEK),
+        "groceries",
+        now,
+    )?;
+
+    // Add a rule that matches "groceries" transaction to "groceries" item
+    let (_budget, _) = rt.add_rule(
+        user_id,
+        budget_id,
+        vec!["groceries".to_string()],
+        vec!["groceries".to_string()],
+        true,
+    )?;
+
+    let budget = rt.load(budget_id)?.unwrap();
+    let matches = budget.evaluate_rules();
+
+    assert_eq!(matches.len(), 1, "Expected one match");
+    let (matched_tx_id, matched_actual_id, matched_item_id) = &matches[0];
+    assert_eq!(*matched_tx_id, tx_id);
+    assert_eq!(*matched_actual_id, Some(actual_id), "Should match to actual");
+    assert!(matched_item_id.is_none(), "Item ID should be None when actual is found");
+
+    Ok(())
+}
+
+#[test]
+pub fn evaluate_rules_matches_transaction_to_item_when_no_actual() -> anyhow::Result<()> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let now = Utc::now();
+
+    // Create budget with item but NO actual for this period
+    let (_res, budget_id) = rt.create_budget(
+        user_id,
+        "Test Budget",
+        true,
+        MonthBeginsOn::default(),
+        Currency::SEK,
+    )?;
+
+    let (_res, item_id) = rt.add_item(
+        user_id,
+        budget_id,
+        "rent".to_string(),
+        BudgetingType::Expense,
+    )?;
+
+    // Add a transaction
+    let (_res, tx_id) = rt.add_transaction(
+        user_id,
+        budget_id,
+        "1234567890",
+        Money::new_dollars(-1000, Currency::SEK),
+        Money::new_dollars(5000, Currency::SEK),
+        "rent payment",
+        now,
+    )?;
+
+    // Add a rule that matches "rent" transaction to "rent" item
+    let (_budget, _) = rt.add_rule(
+        user_id,
+        budget_id,
+        vec!["rent".to_string(), "payment".to_string()],
+        vec!["rent".to_string()],
+        true,
+    )?;
+
+    let budget = rt.load(budget_id)?.unwrap();
+    let matches = budget.evaluate_rules();
+
+    assert_eq!(matches.len(), 1, "Expected one match");
+    let (matched_tx_id, matched_actual_id, matched_item_id) = &matches[0];
+    assert_eq!(*matched_tx_id, tx_id);
+    assert!(matched_actual_id.is_none(), "Actual ID should be None when no actual exists");
+    assert_eq!(*matched_item_id, Some(item_id), "Should match to item");
+
+    Ok(())
+}
+
+#[test]
+pub fn evaluate_rules_no_match_for_unrelated_transaction() -> anyhow::Result<()> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let now = Utc::now();
+    let period_id = PeriodId::from_date(now, MonthBeginsOn::default());
+
+    let (budget_id, _) = create_budget_with_items(
+        &rt,
+        user_id,
+        "Test Budget",
+        vec![("groceries".to_string(), BudgetingType::Expense, Money::new_dollars(500, Currency::SEK), period_id)],
+    )?;
+
+    // Add a transaction with different description
+    let (_res, _tx_id) = rt.add_transaction(
+        user_id,
+        budget_id,
+        "1234567890",
+        Money::new_dollars(-50, Currency::SEK),
+        Money::new_dollars(1000, Currency::SEK),
+        "coffee shop",
+        now,
+    )?;
+
+    // Add a rule for groceries (won't match "coffee shop")
+    let (_budget, _) = rt.add_rule(
+        user_id,
+        budget_id,
+        vec!["groceries".to_string()],
+        vec!["groceries".to_string()],
+        true,
+    )?;
+
+    let budget = rt.load(budget_id)?.unwrap();
+    let matches = budget.evaluate_rules();
+
+    assert!(matches.is_empty(), "Expected no matches for unrelated transaction");
+
+    Ok(())
+}
+
+#[test]
+pub fn evaluate_rules_multiple_transactions_multiple_rules() -> anyhow::Result<()> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let now = Utc::now();
+    let period_id = PeriodId::from_date(now, MonthBeginsOn::default());
+
+    let (budget_id, items) = create_budget_with_items(
+        &rt,
+        user_id,
+        "Test Budget",
+        vec![
+            ("groceries".to_string(), BudgetingType::Expense, Money::new_dollars(500, Currency::SEK), period_id),
+            ("utilities".to_string(), BudgetingType::Expense, Money::new_dollars(200, Currency::SEK), period_id),
+        ],
+    )?;
+    let (_groceries_item_id, groceries_actual_id) = items[0];
+    let (_utilities_item_id, utilities_actual_id) = items[1];
+
+    // Add transactions
+    let (_res, tx1_id) = rt.add_transaction(
+        user_id,
+        budget_id,
+        "1234567890",
+        Money::new_dollars(-100, Currency::SEK),
+        Money::new_dollars(1000, Currency::SEK),
+        "groceries",
+        now,
+    )?;
+
+    let (_res, tx2_id) = rt.add_transaction(
+        user_id,
+        budget_id,
+        "1234567890",
+        Money::new_dollars(-150, Currency::SEK),
+        Money::new_dollars(850, Currency::SEK),
+        "utilities",
+        now,
+    )?;
+
+    let (_res, _tx3_id) = rt.add_transaction(
+        user_id,
+        budget_id,
+        "1234567890",
+        Money::new_dollars(-25, Currency::SEK),
+        Money::new_dollars(825, Currency::SEK),
+        "random purchase",
+        now,
+    )?;
+
+    // Add rules
+    let (_budget, _) = rt.add_rule(
+        user_id,
+        budget_id,
+        vec!["groceries".to_string()],
+        vec!["groceries".to_string()],
+        true,
+    )?;
+
+    let (_budget, _) = rt.add_rule(
+        user_id,
+        budget_id,
+        vec!["utilities".to_string()],
+        vec!["utilities".to_string()],
+        true,
+    )?;
+
+    let budget = rt.load(budget_id)?.unwrap();
+    let matches = budget.evaluate_rules();
+
+    assert_eq!(matches.len(), 2, "Expected two matches");
+
+    // Check that both transactions are matched to their respective actuals
+    let tx1_match = matches.iter().find(|(tx_id, _, _)| *tx_id == tx1_id);
+    let tx2_match = matches.iter().find(|(tx_id, _, _)| *tx_id == tx2_id);
+
+    assert!(tx1_match.is_some(), "Transaction 1 should be matched");
+    assert!(tx2_match.is_some(), "Transaction 2 should be matched");
+
+    let (_, actual1, _) = tx1_match.unwrap();
+    let (_, actual2, _) = tx2_match.unwrap();
+
+    assert_eq!(*actual1, Some(groceries_actual_id));
+    assert_eq!(*actual2, Some(utilities_actual_id));
+
+    Ok(())
+}
+
+#[test]
+pub fn evaluate_rules_across_multiple_periods() -> anyhow::Result<()> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let period1 = PeriodId::new(2025, 10);
+    let period2 = PeriodId::new(2025, 11);
+
+    let (_res, budget_id) = rt.create_budget(
+        user_id,
+        "Test Budget",
+        true,
+        MonthBeginsOn::default(),
+        Currency::SEK,
+    )?;
+
+    // Create item
+    let (_res, item_id) = rt.add_item(
+        user_id,
+        budget_id,
+        "salary".to_string(),
+        BudgetingType::Income,
+    )?;
+
+    // Create actuals in both periods
+    let (_res, actual1_id) = rt.add_actual(
+        user_id,
+        budget_id,
+        item_id,
+        Money::new_dollars(5000, Currency::SEK),
+        period1,
+    )?;
+
+    let (_res, actual2_id) = rt.add_actual(
+        user_id,
+        budget_id,
+        item_id,
+        Money::new_dollars(5000, Currency::SEK),
+        period2,
+    )?;
+
+    // Add transactions in different periods
+    let date1 = NaiveDate::from_ymd_opt(2025, 10, 15).unwrap()
+        .and_hms_opt(0, 0, 0).unwrap().and_utc();
+    let date2 = NaiveDate::from_ymd_opt(2025, 11, 15).unwrap()
+        .and_hms_opt(0, 0, 0).unwrap().and_utc();
+
+    let (_res, tx1_id) = rt.add_transaction(
+        user_id,
+        budget_id,
+        "1234567890",
+        Money::new_dollars(5000, Currency::SEK),
+        Money::new_dollars(10000, Currency::SEK),
+        "salary",
+        date1,
+    )?;
+
+    let (_res, tx2_id) = rt.add_transaction(
+        user_id,
+        budget_id,
+        "1234567890",
+        Money::new_dollars(5000, Currency::SEK),
+        Money::new_dollars(15000, Currency::SEK),
+        "salary",
+        date2,
+    )?;
+
+    // Add rule
+    let (_budget, _) = rt.add_rule(
+        user_id,
+        budget_id,
+        vec!["salary".to_string()],
+        vec!["salary".to_string()],
+        true,
+    )?;
+
+    let budget = rt.load(budget_id)?.unwrap();
+    let matches = budget.evaluate_rules();
+
+    assert_eq!(matches.len(), 2, "Expected matches from both periods");
+
+    let tx1_match = matches.iter().find(|(tx_id, _, _)| *tx_id == tx1_id);
+    let tx2_match = matches.iter().find(|(tx_id, _, _)| *tx_id == tx2_id);
+
+    assert!(tx1_match.is_some());
+    assert!(tx2_match.is_some());
+
+    // Each transaction should match to the actual in its respective period
+    let (_, actual1, _) = tx1_match.unwrap();
+    let (_, actual2, _) = tx2_match.unwrap();
+
+    assert_eq!(*actual1, Some(actual1_id));
+    assert_eq!(*actual2, Some(actual2_id));
+
+    Ok(())
+}
