@@ -150,7 +150,7 @@ impl JoyDbBudgetRuntime {
         })
     }
 
-    pub fn reallocate_funds(
+    pub fn reallocate_budgeted_funds(
         &self,
         user_id: Uuid,
         budget_id: Uuid,
@@ -164,16 +164,16 @@ impl JoyDbBudgetRuntime {
         })
     }
 
-    pub fn adjust_actual_funds(
+    pub fn adjust_budgeted_amount(
         &self,
         user_id: Uuid,
         budget_id: Uuid,
-        item_id: Uuid,
+        actual_id: Uuid,
         period_id: PeriodId,
-        amount: Money,
+        budgeted_amount: Money,
     ) -> anyhow::Result<(Budget, Uuid)> {
         self.cmd(user_id, budget_id, |budget| {
-            budget.adjust_actual_funds(item_id, period_id, amount)
+            budget.adjust_actual_budgeted_funds(actual_id, period_id, budgeted_amount)
         })
     }
 

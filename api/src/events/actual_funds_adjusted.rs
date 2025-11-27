@@ -8,27 +8,27 @@ use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]
 #[domain_event(aggregate = "Budget")]
-pub struct ActualFundsAdjusted {
+pub struct ActualBudgetedFundsAdjusted {
     budget_id: Uuid,
     actual_id: Uuid,
     period_id: PeriodId,
     budgeted_amount: Money,
 }
 
-impl ActualFundsAdjustedHandler for Budget {
-    fn apply_adjust_actual_funds(&mut self, event: &ActualFundsAdjusted) -> Uuid {
+impl ActualBudgetedFundsAdjustedHandler for Budget {
+    fn apply_adjust_actual_budgeted_funds(&mut self, event: &ActualBudgetedFundsAdjusted) -> Uuid {
         self.mutate_actual(event.period_id, event.actual_id, |actual| {
-            actual.actual_amount += event.budgeted_amount;
+            actual.budgeted_amount += event.budgeted_amount;
         });
         event.actual_id
     }
 
-    fn adjust_actual_funds_impl(
+    fn adjust_actual_budgeted_funds_impl(
         &self,
         actual_id: Uuid,
         period_id: PeriodId,
         budgeted_amount: Money,
-    ) -> Result<ActualFundsAdjusted, CommandError> {
+    ) -> Result<ActualBudgetedFundsAdjusted, CommandError> {
         if let Some(period) = self.get_period(period_id) {
             if let Some(actual) = period.get_actual(actual_id) {
                 if (actual.budgeted_amount + budgeted_amount) < Money::default() {
@@ -36,7 +36,7 @@ impl ActualFundsAdjustedHandler for Budget {
                         "Items are not allowed to be less than zero.".to_string(),
                     ))
                 } else {
-                    Ok(ActualFundsAdjusted {
+                    Ok(ActualBudgetedFundsAdjusted {
                         budget_id: self.id,
                         actual_id,
                         period_id,

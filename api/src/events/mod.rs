@@ -15,7 +15,7 @@ pub use item_added::ItemAdded;
 pub use transaction_added::TransactionAdded;
 pub use transaction_connected::TransactionConnected;
 pub use actual_funds_reallocated::BudgetedFundsReallocated;
-pub use actual_funds_adjusted::ActualFundsAdjusted;
+pub use actual_funds_adjusted::ActualBudgetedFundsAdjusted;
 pub use item_modified::ItemModified;
 pub use rule_added::RuleAdded;
 pub use transaction_ignored::TransactionIgnored;

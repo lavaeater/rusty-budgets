@@ -412,7 +412,7 @@ pub fn reallocate_item_funds() -> anyhow::Result<()> {
         period_id,
     )?;
 
-    let (mut res, _) = rt.reallocate_funds(
+    let (mut res, _) = rt.reallocate_budgeted_funds(
         user_id,
         budget_id,
         period_id,
@@ -429,34 +429,40 @@ pub fn reallocate_item_funds() -> anyhow::Result<()> {
     );
     Ok(())
 }
-//
-// #[test]
-// pub fn adjust_item_funds() -> anyhow::Result<()> {
-//     let rt = JoyDbBudgetRuntime::new_in_memory();
-//     let user_id = Uuid::new_v4();
-//
-//     let (_res, budget_id) = rt.create_budget("Test Budget", true, Currency::SEK, user_id)?;
-//
-//     let (_res, item_id) = rt.add_item(
-//         &budget_id,
-//         "Hyra".to_string(),
-//         BudgetingType::Expense,
-//         Money::new_dollars(100, Currency::SEK),
-//         None,
-//         &user_id,
-//     )?;
-//
-//     let (res, _) = rt.adjust_actual_funds(
-//         budget_id,
-//         item_id,
-//         None,
-//         Money::new_dollars(-50, Currency::SEK),
-//         user_id,
-//     )?;
-//     let item = res.get_item(&item_id).unwrap();
-//     assert_eq!(item.budgeted_amount, Money::new_dollars(50, Currency::SEK));
-//     Ok(())
-// }
+
+pub fn create_budget_with_items(rt: &JoyDbBudgetRuntime, user_id: Uuid, budget_name: &str, items: Vec<(String, BudgetingType, Money, PeriodId)>) -> anyhow::Result<(Uuid, Vec<(Uuid, Uuid)>)> {
+    let (_res, budget_id) = rt.create_budget(user_id, budget_name, true, MonthBeginsOn::default(), Currency::SEK)?;
+    let mut item_ids = Vec::new();
+    for item in items {
+        let (_res, item_id) = rt.add_item(user_id, budget_id, item.0, item.1)?;
+        let (_res, actual_id) = rt.add_actual(user_id, budget_id, item_id, item.2, item.3)?;
+        item_ids.push((item_id, actual_id));
+    }
+    Ok((budget_id, item_ids))
+}
+
+#[test]
+pub fn adjust_item_funds() -> anyhow::Result<()> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let period_id = PeriodId::from_date(Utc::now(), MonthBeginsOn::default());
+    
+    let (budget_id, items) = create_budget_with_items(&rt, user_id, "Test Budget", vec![("Hyra".to_string(), BudgetingType::Expense, Money::new_dollars(100, Currency::SEK), period_id)])?;
+    let (item_id, actual_id) = items.first().unwrap();
+    let (_res, _) = rt.adjust_budgeted_amount(
+        user_id,
+        budget_id,
+        *actual_id,
+        period_id,
+        Money::new_dollars(-50, Currency::SEK),
+    )?;
+    
+    let mut budget = rt.load(budget_id)?.unwrap();
+    
+    let item = budget.with_period(period_id).get_actual(*actual_id).unwrap();
+    assert_eq!(item.budgeted_amount, Money::new_dollars(50, Currency::SEK));
+    Ok(())
+}
 //
 // #[test]
 // fn test_calculate_rules() {
