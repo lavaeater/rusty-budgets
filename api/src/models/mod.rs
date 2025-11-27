@@ -10,6 +10,7 @@ mod bank_transaction_store;
 mod budget_period_store;
 mod budget_period_id;
 mod actual_item;
+mod rule_packages;
 
 pub use user::*;
 pub use month_begins_on::*;

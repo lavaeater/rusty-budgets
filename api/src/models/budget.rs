@@ -1,23 +1,21 @@
-use crate::budget_period_map_serde;
 use crate::cqrs::framework::Aggregate;
 use crate::cqrs::framework::DomainEvent;
 use crate::events::*;
 use crate::models::budget_item::BudgetItem;
 use crate::models::budget_period_id::PeriodId;
-use crate::models::budget_period_store::BudgetPeriodStore;
 use crate::models::budgeting_type::BudgetingType;
 use crate::models::money::{Currency, Money};
-use crate::models::{ActualItem, BankTransaction, BudgetPeriod, MatchRule, MonthBeginsOn, RulePackages};
+use crate::models::{ActualItem, BankTransaction, BudgetPeriod, MatchRule, MonthBeginsOn};
 use crate::pub_events_enum;
 use chrono::{DateTime, Utc};
 use joydb::Model;
-use serde::de::{self, MapAccess, Visitor};
+use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeStruct;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::collections::{HashMap, HashSet};
-use std::fmt;
+use std::collections::HashSet;
 use std::sync::{Arc, Mutex};
 use uuid::Uuid;
+use crate::models::rule_packages::RulePackages;
 use crate::view_models::BudgetingTypeOverview;
 
 pub_events_enum! {
@@ -65,6 +63,7 @@ impl Default for Budget {
             name: "".to_string(),
             user_id: Default::default(),
             budget_periods: Default::default(),
+            rules: Default::default(),
             budget_items: Default::default(),
             match_rules: HashSet::default(),
             created_at: Default::default(),
@@ -73,6 +72,8 @@ impl Default for Budget {
             last_event: 0,
             version: 0,
             currency: Default::default(),
+            month_begins_on: Default::default(),
+            transaction_hashes: Default::default(),
         }
     }
 }
@@ -82,62 +83,62 @@ impl Budget {
         let today = Utc::now();
         Self {
             id,
-            budget_periods: BudgetPeriodStore::new(today, None),
+            budget_periods: vec![BudgetPeriod::new(PeriodId::from_date(today, MonthBeginsOn::default()))],
             ..Default::default()
         }
     }
 
-    pub fn get_item(&self, item_id: Uuid) -> Option<&Arc<Mutex<BudgetItem>>> {
-        self.budget_items.get(&item_id)
+    pub fn get_item(&self, item_id: Uuid) -> Option<&BudgetItem> {
+        self.budget_items.iter().find(|item| item.id == item_id)
     }
 
-    pub fn list_ignored_transactions(&self, period_id: PeriodId) -> Vec<BankTransaction> {
-        self.budget_periods.list_ignored_transactions(period_id)
+    pub fn get_period(&self, period_id: PeriodId) -> Option<&BudgetPeriod> {
+        self.budget_periods.iter().find(|period| period.id == period_id)
+    }
+
+    pub fn ignored_transactions(&self, period_id: PeriodId) -> Vec<&BankTransaction> {
+        self.get_period(period_id).map(|p| p.ignored_transactions()).unwrap_or_default()
     }
 
     pub fn month_begins_on(&self) -> MonthBeginsOn {
-        self.budget_periods.month_begins_on()
+        self.month_begins_on
     }
 
     pub fn items_by_type(
         &self,
         budget_period_id: PeriodId,
     ) -> Vec<(usize, BudgetingType, BudgetingTypeOverview, Vec<ActualItem>)> {
-        self.budget_periods.items_by_type(budget_period_id)
+        self.get_period(budget_period_id)
+            .map(|p| p.items_by_type(&self.rules))
+            .unwrap_or_default()
     }
 
-    pub fn list_all_items(&self) -> Vec<Arc<Mutex<BudgetItem>>> {
-        self.budget_items.values().cloned().collect()
-    }
-
-    pub fn list_all_items_inner(&self) -> Vec<BudgetItem> {
-        self.budget_items
-            .values()
-            .map(|bi| bi.lock().unwrap().clone())
-            .collect()
+    pub fn list_all_items(&self) -> &Vec<BudgetItem> {
+        &self.budget_items
     }
 
     pub fn budgeted_for_type(&self, budgeting_type: BudgetingType, period_id: PeriodId) -> Money {
-        self.budget_periods
-            .budgeted_for_type(budgeting_type, period_id)
+        self.get_period(period_id)
+            .map(|p| p.budgeted_for_type(budgeting_type))
+            .unwrap_or_default()
     }
 
     pub fn spent_for_type(&self, budgeting_type: BudgetingType, period_id: PeriodId) -> Money {
-        self.budget_periods
-            .spent_for_type(budgeting_type, period_id)
+        self.get_period(period_id)
+            .map(|p| p.spent_for_type(budgeting_type))
+            .unwrap_or_default()
     }
 
-    pub fn insert_item(&mut self, item: &BudgetItem) {
-        self.budget_items
-            .insert(item.id, Arc::new(Mutex::new(item.clone())));
+    pub fn insert_item(&mut self, item: BudgetItem) {
+        self.budget_items.push(item);
     }
 
     pub fn remove_item(&mut self, item_id: Uuid) {
-        self.budget_items.remove(&item_id);
-    }
+        self.budget_items.retain(|item| item.id != item_id);
+    }   
 
     pub fn insert_transaction(&mut self, tx: BankTransaction) {
-        self.budget_periods.insert_transaction(tx);
+        self.with_period_mut(|p| p.insert_transaction(tx));
     }
 
     pub fn can_insert_transaction(&self, tx_hash: &u64) -> bool {
@@ -260,19 +261,28 @@ impl Budget {
          */
         self.budget_periods.evaluate_rules(&self.match_rules, &self.list_all_items_inner())
     }
+    
+    pub fn contains_period(&self, period_id: PeriodId) -> bool {
+        self.budget_periods.iter().any(|p| p.id == period_id)
+    }
 
-    pub fn get_period(&self, period_id: PeriodId) -> Option<&BudgetPeriod> {
-        self.budget_periods.with_period(period_id)
+    fn ensure_period(&mut self, period_id: PeriodId) -> usize {
+        if let Some(idx) = self.budget_periods.iter().position(|p| p.id == period_id) {
+            idx
+        } else {
+            self.budget_periods.push(BudgetPeriod::new(period_id));
+            self.budget_periods.len() - 1
+        }
     }
 
     pub fn with_period_mut(&mut self, period_id: PeriodId) -> &mut BudgetPeriod {
-        self.budget_periods.ensure_period(period_id);
-        self.budget_periods.with_period_mut(period_id).unwrap()
+        let idx = self.ensure_period(period_id);
+        &mut self.budget_periods[idx]
     }
 
     pub fn with_period(&mut self, period_id: PeriodId) -> &BudgetPeriod {
-        self.budget_periods.ensure_period(period_id);
-        self.budget_periods.with_period(period_id).unwrap()
+        let idx = self.ensure_period(period_id);
+        &self.budget_periods[idx]
     }
 
     pub fn mutate_actual(
