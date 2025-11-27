@@ -199,6 +199,7 @@ pub fn add_bank_transaction() -> anyhow::Result<()> {
         .and_utc();
     let also_period_id =
         PeriodId::from_date(also_now, MonthBeginsOn::PreviousMonthWorkDayBefore(25));
+    
     let res = rt
         .add_transaction(
             user_id,

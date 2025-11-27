@@ -1,13 +1,13 @@
-use std::hash::Hash;
-use serde::{Deserialize, Serialize};
-use cqrs_macros::DomainEvent;
-use uuid::Uuid;
-use chrono::{DateTime, Utc};
-use dioxus::logger::tracing;
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
-use crate::models::{get_transaction_hash, BankTransaction, PeriodId};
 use crate::models::Budget;
 use crate::models::Money;
+use crate::models::{get_transaction_hash, BankTransaction, PeriodId};
+use chrono::{DateTime, Utc};
+use cqrs_macros::DomainEvent;
+use dioxus::logger::tracing;
+use serde::{Deserialize, Serialize};
+use std::hash::Hash;
+use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]
 #[domain_event(aggregate = "Budget")]
@@ -34,7 +34,7 @@ impl Hash for TransactionAdded {
 impl TransactionAddedHandler for Budget {
     fn apply_add_transaction(&mut self, event: &TransactionAdded) -> Uuid {
         let period_id = PeriodId::from_date(event.date, self.month_begins_on());
-        self.with_period_mut(period_id).insert_transaction(BankTransaction::new(
+        self.insert_transaction(BankTransaction::new(
             event.transaction_id,
             &event.account_number,
             event.amount,
@@ -54,7 +54,7 @@ impl TransactionAddedHandler for Budget {
         date: DateTime<Utc>,
     ) -> Result<TransactionAdded, CommandError> {
         let hash = get_transaction_hash(&amount, &balance, &account_number, &description, &date);
-        
+
         if self.can_insert_transaction(&hash) {
             Ok(TransactionAdded {
                 budget_id: self.id,
@@ -66,7 +66,9 @@ impl TransactionAddedHandler for Budget {
                 date,
             })
         } else {
-            Err(CommandError::Validation("Transaction already exists.".to_string()))
+            Err(CommandError::Validation(
+                "Transaction already exists.".to_string(),
+            ))
         }
     }
 }
