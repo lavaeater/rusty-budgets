@@ -157,15 +157,6 @@ pub fn connect_bank_transaction() -> anyhow::Result<()> {
         res.get_actual_by_type(&BudgetingType::Expense, period_id).unwrap(),
         -hundred_money
     );
-
-    //Verify that the budget overview is updated
-    // let income_overview = res.get_budgeting_overview(&BudgetingType::Income).unwrap();
-    // assert_eq!(income_overview.budgeted_amount, zero_money);
-    // let expense_overview = res.get_budgeting_overview(&BudgetingType::Expense).unwrap();
-    // assert_eq!(expense_overview.budgeted_amount, hundred_money);
-    // let savings_overview = res.get_budgeting_overview(&BudgetingType::Savings).unwrap();
-    // assert_eq!(savings_overview.budgeted_amount, zero_money);
-
     Ok(())
 }
 
@@ -201,8 +192,7 @@ pub fn add_bank_transaction() -> anyhow::Result<()> {
     assert!(res.is_ok());
     let mut res = res?.0;
     assert_eq!(res.list_bank_transactions(period_id).len(), 1);
-
-
+    
     let also_now: DateTime<Utc> = naive_date
         .and_hms_opt(0, 0, 0) // hours, minutes, seconds
         .unwrap()
@@ -229,48 +219,48 @@ pub fn add_bank_transaction() -> anyhow::Result<()> {
     Ok(())
 }
 
-// #[test]
-// pub fn test_import_from_skandia_excel() -> anyhow::Result<()> {
-//     let rt = JoyDbBudgetRuntime::new_in_memory();
-//     let user_id = Uuid::new_v4();
-// 
-//     let (_, budget_id) = rt.create_budget("Test Budget", true, Currency::SEK, user_id)?;
-// 
-//     let imported = import_from_skandia_excel(
-//         "../test_data/91594824853_2025-09-25-2025-10-07.xlsx",
-//         &user_id,
-//         &budget_id,
-//         &rt,
-//     )?;
-// 
-//     println!("Imported {} transactions", imported);
-//     let not_imported = import_from_skandia_excel(
-//         "../test_data/91594824853_2025-09-25-2025-10-07.xlsx",
-//         &user_id,
-//         &budget_id,
-//         &rt,
-//     )?;
-// 
-//     println!("Not imported {} transactions", not_imported);
-// 
-//     let mut res = rt.load(&budget_id)?.unwrap();
-// 
-//     let date = Utc::now()
-//         .with_year(2025)
-//         .unwrap()
-//         .with_month(9)
-//         .unwrap()
-//         .with_day(19)
-//         .unwrap();
-// 
-//     res.set_current_period(&date);
-// 
-//     assert_eq!(res.list_all_bank_transactions().len(), 39);
-//     assert_eq!(imported, 39);
-//     assert_eq!(not_imported, 0);
-// 
-//     Ok(())
-// }
+#[test]
+pub fn test_import_from_skandia_excel() -> anyhow::Result<()> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+
+    let (_, budget_id) = rt.create_budget("Test Budget", true, Currency::SEK, user_id)?;
+
+    let imported = import_from_skandia_excel(
+        "../test_data/91594824853_2025-09-25-2025-10-07.xlsx",
+        &user_id,
+        &budget_id,
+        &rt,
+    )?;
+
+    println!("Imported {} transactions", imported);
+    let not_imported = import_from_skandia_excel(
+        "../test_data/91594824853_2025-09-25-2025-10-07.xlsx",
+        &user_id,
+        &budget_id,
+        &rt,
+    )?;
+
+    println!("Not imported {} transactions", not_imported);
+
+    let mut res = rt.load(&budget_id)?.unwrap();
+
+    let date = Utc::now()
+        .with_year(2025)
+        .unwrap()
+        .with_month(9)
+        .unwrap()
+        .with_day(19)
+        .unwrap();
+
+    res.set_current_period(&date);
+
+    assert_eq!(res.list_all_bank_transactions().len(), 39);
+    assert_eq!(imported, 39);
+    assert_eq!(not_imported, 0);
+
+    Ok(())
+}
 //
 // #[test]
 // pub fn reconnect_bank_transaction() -> anyhow::Result<()> {
