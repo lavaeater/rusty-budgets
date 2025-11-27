@@ -36,6 +36,8 @@ pub mod db {
     use anyhow::Error;
     use chrono::NaiveDate;
     use dioxus::logger::tracing;
+    use dioxus::logger::tracing::error;
+    use dioxus::logger::tracing::info;
     use joydb::JoydbError;
     use once_cell::sync::Lazy;
     use uuid::Uuid;
@@ -50,7 +52,7 @@ pub mod db {
                 tracing::info!("Default user exists");
             }
             Err(e) => {
-                tracing::error!(error = %e, "Could not get default user");
+                error!(error = %e, "Could not get default user");
                 panic!("Could not get default user");
             }
         }
@@ -77,7 +79,7 @@ pub mod db {
         match with_client(client).get_all_by(|u: &User| u.email == email) {
             Ok(users) => Ok(!users.is_empty()),
             Err(e) => {
-                tracing::error!(error = %e, "Could not get default user");
+                error!(error = %e, "Could not get default user");
                 Err(anyhow::Error::from(e))
             }
         }
@@ -103,7 +105,7 @@ pub mod db {
                 }
             }
             Err(e) => {
-                tracing::error!(error = %e, "Could not get default user");
+                error!(error = %e, "Could not get default user");
                 Err(anyhow::Error::from(e))
             }
         }
@@ -113,7 +115,7 @@ pub mod db {
         match with_client(None).get::<UserBudgets>(&user_id) {
             Ok(b) => match b {
                 None => {
-                    tracing::info!("User has no budgets");
+                    info!("User has no budgets");
                     Ok(None)
                 }
                 Some(b) => match b.budgets.iter().find(|(_, default)| *default) {
@@ -122,7 +124,7 @@ pub mod db {
                         Err(_) => Err(anyhow::anyhow!("Could not load default budget")),
                     },
                     None => {
-                        tracing::info!("User had budgets but none were default");
+                        info!("User had budgets but none were default");
                         Ok(None)
                     }
                 },
@@ -179,7 +181,7 @@ pub mod db {
         name: &str,
         default_budget: bool,
     ) -> anyhow::Result<Budget> {
-        match with_runtime(None).create_budget(user_id, name, default_budget, Currency::SEK) {
+        match with_runtime(None).create_budget(user_id, name, default_budget, MonthBeginsOn::default(), Currency::SEK) {
             Ok((budget, budget_id)) => {
                 add_budget_to_user(user_id, budget_id, default_budget)?;
                 Ok(budget)
@@ -222,19 +224,19 @@ pub mod db {
                         let period_id = b.get_period_for_transaction(*tx_id).unwrap().id;
                         match connect_transaction(user_id, budget_id, *tx_id, None, item_id.unwrap(), period_id) {
                             Ok(_) => {
-                                tracing::info!("Connected tx {:?} with actual item {:?}", tx_id, actual_id);
+                                info!("Connected tx {:?} with actual item {:?}", tx_id, actual_id);
                             }
                             Err(e) => {
-                                tracing::error!(error = %e, "Could not connect tx {:?} with actual item {:?}", tx_id, actual_id);
+                                error!(error = %e, "Could not connect tx {:?} with actual item {:?}", tx_id, actual_id);
                             }
                         } 
                     } else if actual_id.is_some() {
                         match with_runtime(None).connect_transaction(user_id, budget_id, *tx_id, actual_id.unwrap()) {
                             Ok(_) => {
-                                tracing::info!("Connected tx {:?} with actual item {:?}", tx_id, actual_id);
+                                info!("Connected tx {:?} with actual item {:?}", tx_id, actual_id);
                             }
                             Err(e) => {
-                                tracing::error!(error = %e, "Could not connect tx {:?} with actual item {:?}", tx_id, actual_id);
+                                error!(error = %e, "Could not connect tx {:?} with actual item {:?}", tx_id, actual_id);
                             }
                         }
                     }
@@ -242,7 +244,7 @@ pub mod db {
                 get_budget(budget_id)
             }
             Err(err) => {
-                tracing::error!(error = %err, "Could not evaluate rules for budget {:?}", budget_id);
+                error!(error = %err, "Could not evaluate rules for budget {:?}", budget_id);
                 Err(err)
                 }
             }
@@ -337,7 +339,7 @@ pub mod db {
             amount: Money,
         ) -> anyhow::Result<Budget> {
             with_runtime(None)
-                .adjust_actual_funds(user_id, budget_id, actual_id, period_id, amount)
+                .adjust_budgeted_amount(user_id, budget_id, actual_id, period_id, amount)
                 .map(|(b, _)| b)
         }
 
@@ -379,7 +381,7 @@ pub mod db {
             match with_client(client).insert(&user) {
                 Ok(_) => Ok(user),
                 Err(e) => {
-                    tracing::error!(error = %e, "Could not create user");
+                    error!(error = %e, "Could not create user");
                     Err(anyhow::Error::from(e))
                 }
             }
@@ -426,7 +428,7 @@ pub mod db {
         let (budget, actual_id) = match db::add_actual(user.id, budget_id, item_id, budgeted_amount, period_id) {
             Ok((b, actual_id)) => (b, actual_id),
             Err(e) => {
-                tracing::error!(error = %e, "Could not add actual item");
+                error!(error = %e, "Could not add actual item");
                 return Err(ServerFnError::new(e.to_string()));
             }
         };
@@ -440,19 +442,19 @@ pub mod db {
                                 match db::evaluate_rules(user.id, budget_id) {
                                     Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
                                     Err(e) => {
-                                        tracing::error!(error = %e, "Could not evaluate rules");
+                                        error!(error = %e, "Could not evaluate rules");
                                         Err(ServerFnError::new(e.to_string()))
                                     }
                                 }
                             }
                             Err(e) => {
-                                tracing::error!(error = %e, "Could not create rule");
+                                error!(error = %e, "Could not create rule");
                                 Err(ServerFnError::new(e.to_string()))
                             }
                         }
                     }
                     Err(e) => {
-                        tracing::error!(error = %e, "Could not connect transaction");
+                        error!(error = %e, "Could not connect transaction");
                         Err(ServerFnError::new(e.to_string()))
                     }
                 }
@@ -473,7 +475,7 @@ pub mod db {
         match db::modify_item(user.id, budget_id, item_id, name, item_type) {
             Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
             Err(e) => {
-                tracing::error!(error = %e, "Could not modify item");
+                error!(error = %e, "Could not modify item");
                 Err(ServerFnError::new(e.to_string()))
             }
         }
@@ -491,7 +493,7 @@ pub async fn modify_actual(
     match db::modify_actual(user.id, budget_id, actual_id, period_id, budgeted_amount, actual_amount) {
         Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
         Err(e) => {
-            tracing::error!(error = %e, "Could not modify item");
+            error!(error = %e, "Could not modify item");
             Err(ServerFnError::new(e.to_string()))
         }
     }
@@ -502,7 +504,7 @@ pub async fn modify_actual(
         match db::get_default_user(None) {
             Ok(b) => Ok(b),
             Err(e) => {
-                tracing::error!(error = %e, "Could not get default User");
+                error!(error = %e, "Could not get default User");
                 Err(ServerFnError::new(e.to_string()))
             }
         }
@@ -518,7 +520,7 @@ pub async fn modify_actual(
             match db::evaluate_rules(user.id, budget_id) {
                 Ok(b) => Ok(Some(BudgetViewModel::from_budget(&b, period_id))),
                 Err(e) => {
-                    tracing::error!(error = %e, "Could not evaluate rules");
+                    error!(error = %e, "Could not evaluate rules");
                     Err(ServerFnError::new(e.to_string()))
                 }
             }
@@ -529,7 +531,7 @@ pub async fn modify_actual(
                         Some(b) => match db::evaluate_rules(user.id, b.id) {
                             Ok(b) => Ok(Some(BudgetViewModel::from_budget(&b, period_id))),
                             Err(e) => {
-                                tracing::error!(error = %e, "Could not evaluate rules");
+                                error!(error = %e, "Could not evaluate rules");
                                 Err(ServerFnError::new(e.to_string()))
                             }
                         },
@@ -537,7 +539,7 @@ pub async fn modify_actual(
                     }
                 }
                 Err(e) => {
-                    tracing::error!(error = %e, "Could not get default budget");
+                    error!(error = %e, "Could not get default budget");
                     Err(ServerFnError::new(e.to_string()))
                 }
             }
@@ -556,13 +558,13 @@ pub async fn modify_actual(
                 match db::evaluate_rules(user.id, budget_id) {
                     Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
                     Err(e) => {
-                        tracing::error!(error = %e, "Could not evaluate rules");
+                        error!(error = %e, "Could not evaluate rules");
                         Err(ServerFnError::new(e.to_string()))
                     }
                 }
             }
             Err(e) => {
-                tracing::error!(error = %e, "Could not import transactions");
+                error!(error = %e, "Could not import transactions");
                 Err(ServerFnError::new(e.to_string()))
             }
         }
@@ -591,19 +593,19 @@ pub async fn modify_actual(
                         match db::evaluate_rules(user.id, budget_id) {
                             Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
                             Err(e) => {
-                                tracing::error!(error = %e, "Could not evaluate rules");
+                                error!(error = %e, "Could not evaluate rules");
                                 Err(ServerFnError::new(e.to_string()))
                             }
                         }
                     }
                     Err(e) => {
-                        tracing::error!(error = %e, "Could not create rule");
+                        error!(error = %e, "Could not create rule");
                         Err(ServerFnError::new(e.to_string()))
                     }
                 }
             }
             Err(e) => {
-                tracing::error!(error = %e, "Could not connect transaction to item.");
+                error!(error = %e, "Could not connect transaction to item.");
                 Err(ServerFnError::new(e.to_string()))
             }
         }
@@ -619,7 +621,7 @@ pub async fn modify_actual(
         match db::ignore_transaction(budget_id, user.id, tx_id) {
             Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
             Err(e) => {
-                tracing::error!(error = %e, "Could not ignore transaction.");
+                error!(error = %e, "Could not ignore transaction.");
                 Err(ServerFnError::new(e.to_string()))
             }
         }
@@ -636,7 +638,7 @@ pub async fn modify_actual(
         match db::adjust_actual_funds(user.id, budget_id, actual_id, period_id, amount) {
             Ok(b) => Ok(BudgetViewModel::from_budget(&b, period_id)),
             Err(e) => {
-                tracing::error!(error = %e, "Could not adjust actual item funds");
+                error!(error = %e, "Could not adjust actual item funds");
                 Err(ServerFnError::new(e.to_string()))
             }
         }
