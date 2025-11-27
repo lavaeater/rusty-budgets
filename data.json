@@ -1,5 +1,25 @@
 {
-  "StoredBudgetEvent": [],
+  "StoredBudgetEvent": [
+    {
+      "id": "9603b378-bcc4-41bd-b033-34094bb6281b",
+      "aggregate_id": "8aedf780-eb60-45ba-bdb2-3444da969d1a",
+      "timestamp": 1764255483856516518,
+      "created_at": "2025-11-27T14:58:03.856516518Z",
+      "data": {
+        "BudgetCreated": {
+          "budget_id": "8aedf780-eb60-45ba-bdb2-3444da969d1a",
+          "name": "Snorkfrökenbudgeten",
+          "user_id": "c96b46a9-f5fe-4bc0-82fc-145315e80cd4",
+          "month_begins_on": {
+            "PreviousMonthWorkDayBefore": 25
+          },
+          "default_budget": true,
+          "currency": "SEK"
+        }
+      },
+      "user_id": "c96b46a9-f5fe-4bc0-82fc-145315e80cd4"
+    }
+  ],
   "Budget": [],
   "User": [
     {
@@ -12,5 +32,15 @@
       "birthday": "1973-05-12"
     }
   ],
-  "UserBudgets": []
+  "UserBudgets": [
+    {
+      "id": "c96b46a9-f5fe-4bc0-82fc-145315e80cd4",
+      "budgets": [
+        [
+          "8aedf780-eb60-45ba-bdb2-3444da969d1a",
+          true
+        ]
+      ]
+    }
+  ]
 }

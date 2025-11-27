@@ -33,7 +33,7 @@ pub struct BudgetItemViewModel {
 impl BudgetItemViewModel {
     pub fn from_item(
         budget_item: &BudgetItem,
-        actual_items: &[ActualItem],
+        actual_items: &[&ActualItem],
         currency: Currency,
         transactions: &Vec<&BankTransaction>,
     ) -> Self {
@@ -120,8 +120,7 @@ pub struct BudgetViewModel {
 
 impl BudgetViewModel {
     pub fn from_budget(budget: &Budget, period_id: PeriodId) -> Self {
-        let period = budget.get_period(period_id).unwrap();
-        let actual_items = period.all_actuals();
+        let actual_items = budget.all_actuals(period_id);
         let budget_items = budget.all_items();
         let transactions = budget.unconnected_transactions(period_id);
         let ignored_transactions = budget.ignored_transactions(period_id);
@@ -132,7 +131,7 @@ impl BudgetViewModel {
             .map(|bi| {
                 BudgetItemViewModel::from_item(
                     bi,
-                    actual_items,
+                    &actual_items,
                     budget.currency,
                     &connected_transactions,
                 )

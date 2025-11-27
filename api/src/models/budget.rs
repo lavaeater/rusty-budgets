@@ -103,6 +103,10 @@ impl Budget {
         self.periods.iter().find(|period| period.id == period_id)
     }
 
+    pub fn all_actuals(&self, period_id: PeriodId) -> Vec<&ActualItem> {
+        self.get_period(period_id).map(|p|p.all_actuals()).unwrap_or_default()
+    }
+
     pub fn ignored_transactions(&self, period_id: PeriodId) -> Vec<&BankTransaction> {
         self.get_period(period_id)
             .map(|p| p.ignored_transactions())
