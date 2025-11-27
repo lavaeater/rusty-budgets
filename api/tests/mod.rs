@@ -373,52 +373,62 @@ pub fn reconnect_bank_transaction() -> anyhow::Result<()> {
 
     Ok(())
 }
-//
-// #[test]
-// pub fn reallocate_item_funds() -> anyhow::Result<()> {
-//     let rt = JoyDbBudgetRuntime::new_in_memory();
-//     let user_id = Uuid::new_v4();
-//
-//     let (_res, budget_id) = rt.create_budget("Test Budget", true, Currency::SEK, user_id)?;
-//
-//     let (_res, from_item_id) = rt.add_item(
-//         &budget_id,
-//         "Hyra".to_string(),
-//         BudgetingType::Expense,
-//         Money::new_dollars(100, Currency::SEK),
-//         None,
-//         &user_id,
-//     )?;
-//
-//     let (_res, to_item_id) = rt.add_item(
-//         &budget_id,
-//         "Livsmedel".to_string(),
-//         BudgetingType::Expense,
-//         Money::new_dollars(50, Currency::SEK),
-//         None,
-//         &user_id,
-//     )?;
-//
-//     let (res, _) = rt.reallocate_funds(
-//         budget_id,
-//         from_item_id,
-//         to_item_id,
-//         Money::new_dollars(50, Currency::SEK),
-//         user_id,
-//     )?;
-//     let from_item = res.get_item(&from_item_id).unwrap();
-//     let to_item = res.get_item(&to_item_id).unwrap();
-//     assert_eq!(
-//         from_item.budgeted_amount,
-//         Money::new_dollars(50, Currency::SEK)
-//     );
-//     assert_eq!(
-//         to_item.budgeted_amount,
-//         Money::new_dollars(100, Currency::SEK)
-//     );
-//
-//     Ok(())
-// }
+
+#[test]
+pub fn reallocate_item_funds() -> anyhow::Result<()> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let now = Utc::now();
+    let period_id = PeriodId::from_date(now, MonthBeginsOn::default());
+
+    let (_res, budget_id) = rt.create_budget(user_id,"Test Budget", true, MonthBeginsOn::default(), Currency::SEK)?;
+
+    let (_res, from_item_id) = rt.add_item(
+        user_id,
+        budget_id,
+        "Hyra".to_string(),
+        BudgetingType::Expense,
+    )?;
+
+    let (_res, to_item_id) = rt.add_item(
+        user_id,
+        budget_id,
+        "Livsmedel".to_string(),
+        BudgetingType::Expense,
+    )?;
+
+    let (_res, from_actual_id) = rt.add_actual(
+        user_id,
+        budget_id,
+        from_item_id,
+        Money::new_dollars(100, Currency::SEK),
+        period_id,
+    )?;
+    let (_res, to_actual_id) = rt.add_actual(
+        user_id,
+        budget_id,
+        to_item_id,
+        Money::new_dollars(50, Currency::SEK),
+        period_id,
+    )?;
+
+    let (mut res, _) = rt.reallocate_funds(
+        user_id,
+        budget_id,
+        period_id,
+        from_actual_id,
+        to_actual_id,
+        Money::new_dollars(50, Currency::SEK),
+    )?;
+    let from_item = res.with_period(period_id).get_actual(from_actual_id).unwrap();
+    assert_eq!(from_item.budgeted_amount, Money::new_dollars(50, Currency::SEK));
+    let to_item = res.with_period(period_id).get_actual(to_actual_id).unwrap();
+    assert_eq!(
+        to_item.budgeted_amount,
+        Money::new_dollars(100, Currency::SEK)
+    );
+    Ok(())
+}
 //
 // #[test]
 // pub fn adjust_item_funds() -> anyhow::Result<()> {

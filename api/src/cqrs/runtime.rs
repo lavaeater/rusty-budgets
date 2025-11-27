@@ -160,7 +160,7 @@ impl JoyDbBudgetRuntime {
         amount: Money,
     ) -> anyhow::Result<(Budget, Uuid)> {
         self.cmd(user_id, budget_id, |budget| {
-            budget.reallocate_actual_funds(period_id, from_actual_id, to_actual_id, amount)
+            budget.reallocate_budgeted_funds(period_id, from_actual_id, to_actual_id, amount)
         })
     }
 
