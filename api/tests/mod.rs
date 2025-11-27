@@ -135,8 +135,8 @@ pub fn connect_bank_transaction() -> anyhow::Result<()> {
     )?;
     let now = Utc::now();
     let period_id = PeriodId::from_date(now, MonthBeginsOn::PreviousMonthWorkDayBefore(25));
-    let(_res, actual_id) = rt.add_actual(user_id, budget_id, item_id, hundred_money, period_id)?;
-    
+    let (_res, actual_id) = rt.add_actual(user_id, budget_id, item_id, hundred_money, period_id)?;
+
     let (_res, tx_id) = rt.add_transaction(
         user_id,
         budget_id,
@@ -150,11 +150,13 @@ pub fn connect_bank_transaction() -> anyhow::Result<()> {
     let (res, _tx_id) = rt.connect_transaction(user_id, budget_id, tx_id, actual_id)?;
 
     assert_eq!(
-        res.get_budgeted_by_type(&BudgetingType::Expense, period_id).unwrap(),
+        res.get_budgeted_by_type(&BudgetingType::Expense, period_id)
+            .unwrap(),
         hundred_money
     );
     assert_eq!(
-        res.get_actual_by_type(&BudgetingType::Expense, period_id).unwrap(),
+        res.get_actual_by_type(&BudgetingType::Expense, period_id)
+            .unwrap(),
         -hundred_money
     );
     Ok(())
@@ -166,7 +168,7 @@ pub fn add_bank_transaction() -> anyhow::Result<()> {
     let user_id = Uuid::new_v4();
     let bank_account_number = "1234567890".to_string();
 
-    let (_, budget_id) = rt.create_budget(user_id,"Test Budget", true, Currency::SEK)?;
+    let (_, budget_id) = rt.create_budget(user_id, "Test Budget", true, Currency::SEK)?;
 
     let date_str = "2025-10-26";
     let naive_date = NaiveDate::parse_from_str(&date_str, "%Y-%m-%d")?;
@@ -176,7 +178,7 @@ pub fn add_bank_transaction() -> anyhow::Result<()> {
         .and_hms_opt(0, 0, 0) // hours, minutes, seconds
         .unwrap()
         .and_utc();
-    
+
     let period_id = PeriodId::from_date(now, MonthBeginsOn::PreviousMonthWorkDayBefore(25));
 
     let res = rt.add_transaction(
@@ -192,12 +194,13 @@ pub fn add_bank_transaction() -> anyhow::Result<()> {
     assert!(res.is_ok());
     let mut res = res?.0;
     assert_eq!(res.list_bank_transactions(period_id).len(), 1);
-    
+
     let also_now: DateTime<Utc> = naive_date
         .and_hms_opt(0, 0, 0) // hours, minutes, seconds
         .unwrap()
         .and_utc();
-    let also_period_id = PeriodId::from_date(also_now, MonthBeginsOn::PreviousMonthWorkDayBefore(25));
+    let also_period_id =
+        PeriodId::from_date(also_now, MonthBeginsOn::PreviousMonthWorkDayBefore(25));
     let res = rt
         .add_transaction(
             user_id,
@@ -206,7 +209,7 @@ pub fn add_bank_transaction() -> anyhow::Result<()> {
             Money::new_dollars(100, Currency::SEK),
             Money::new_dollars(100, Currency::SEK),
             "Test Transaction",
-            also_now
+            also_now,
         )
         .err();
 
@@ -224,21 +227,21 @@ pub fn test_import_from_skandia_excel() -> anyhow::Result<()> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
     let user_id = Uuid::new_v4();
 
-    let (_, budget_id) = rt.create_budget("Test Budget", true, Currency::SEK, user_id)?;
+    let (_, budget_id) = rt.create_budget(user_id, "Test Budget", true, Currency::SEK)?;
 
     let imported = import_from_skandia_excel(
-        "../test_data/91594824853_2025-09-25-2025-10-07.xlsx",
-        &user_id,
-        &budget_id,
         &rt,
+        user_id,
+        budget_id,
+        "../test_data/unit-test-data.xlsx",
     )?;
 
     println!("Imported {} transactions", imported);
     let not_imported = import_from_skandia_excel(
-        "../test_data/91594824853_2025-09-25-2025-10-07.xlsx",
-        &user_id,
-        &budget_id,
         &rt,
+        user_id,
+        budget_id,
+        "../test_data/91594824853_2025-09-25-2025-10-07.xlsx",
     )?;
 
     println!("Not imported {} transactions", not_imported);

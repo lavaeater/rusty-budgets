@@ -27,10 +27,10 @@ pub fn import_from_path(
                 let path = entry?.path();
                 if path.is_file() {
                     match import_from_skandia_excel(
-                        path.to_str().unwrap(),
+                        runtime,
                         user_id,
                         budget_id,
-                        runtime,
+                        path.to_str().unwrap(),
                     ) {
                         Ok(i) => {
                             imported += i;
@@ -45,7 +45,7 @@ pub fn import_from_path(
                 Ok(imported)
             }
         } else {
-            match import_from_skandia_excel(path, user_id, budget_id, runtime) {
+            match import_from_skandia_excel(runtime, user_id, budget_id, path ) {
                 Ok(imported) => { 
                     Ok(imported)
                 },
@@ -61,10 +61,10 @@ pub fn import_from_path(
 }
 
 pub fn import_from_skandia_excel(
-    path: &str,
+    runtime: &JoyDbBudgetRuntime,
     user_id: Uuid,
     budget_id: Uuid,
-    runtime: &JoyDbBudgetRuntime,
+    path: &str,
 ) -> anyhow::Result<u64> {
     let mut excel: Xlsx<_> = open_workbook(path)?;
     let mut imported = 0u64;
