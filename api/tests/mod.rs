@@ -839,8 +839,15 @@ pub fn evaluate_rules_multiple_transactions_multiple_rules() -> anyhow::Result<(
 pub fn evaluate_rules_across_multiple_periods() -> anyhow::Result<()> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
     let user_id = Uuid::new_v4();
-    let period1 = PeriodId::new(2025, 10);
-    let period2 = PeriodId::new(2025, 11);
+
+    // Use dates to derive periods
+    let date1 = NaiveDate::from_ymd_opt(2025, 10, 15).unwrap()
+        .and_hms_opt(0, 0, 0).unwrap().and_utc();
+    let date2 = NaiveDate::from_ymd_opt(2025, 11, 15).unwrap()
+        .and_hms_opt(0, 0, 0).unwrap().and_utc();
+
+    let period1 = PeriodId::from_date(date1, MonthBeginsOn::default());
+    let period2 = PeriodId::from_date(date2, MonthBeginsOn::default());
 
     let (_res, budget_id) = rt.create_budget(
         user_id,
@@ -858,29 +865,7 @@ pub fn evaluate_rules_across_multiple_periods() -> anyhow::Result<()> {
         BudgetingType::Income,
     )?;
 
-    // Create actuals in both periods
-    let (_res, actual1_id) = rt.add_actual(
-        user_id,
-        budget_id,
-        item_id,
-        Money::new_dollars(5000, Currency::SEK),
-        period1,
-    )?;
-
-    let (_res, actual2_id) = rt.add_actual(
-        user_id,
-        budget_id,
-        item_id,
-        Money::new_dollars(5000, Currency::SEK),
-        period2,
-    )?;
-
-    // Add transactions in different periods
-    let date1 = NaiveDate::from_ymd_opt(2025, 10, 15).unwrap()
-        .and_hms_opt(0, 0, 0).unwrap().and_utc();
-    let date2 = NaiveDate::from_ymd_opt(2025, 11, 15).unwrap()
-        .and_hms_opt(0, 0, 0).unwrap().and_utc();
-
+    // Add transactions first - this creates the periods
     let (_res, tx1_id) = rt.add_transaction(
         user_id,
         budget_id,
@@ -899,6 +884,23 @@ pub fn evaluate_rules_across_multiple_periods() -> anyhow::Result<()> {
         Money::new_dollars(15000, Currency::SEK),
         "salary",
         date2,
+    )?;
+
+    // Now create actuals in both periods (periods exist now)
+    let (_res, actual1_id) = rt.add_actual(
+        user_id,
+        budget_id,
+        item_id,
+        Money::new_dollars(5000, Currency::SEK),
+        period1,
+    )?;
+
+    let (_res, actual2_id) = rt.add_actual(
+        user_id,
+        budget_id,
+        item_id,
+        Money::new_dollars(5000, Currency::SEK),
+        period2,
     )?;
 
     // Add rule

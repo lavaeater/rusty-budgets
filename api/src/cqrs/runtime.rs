@@ -18,7 +18,7 @@ impl JoyDbBudgetRuntime {
         default_budget: bool,
         month_begins_on: MonthBeginsOn,
         currency: Currency,
-    ) -> anyhow::Result<(Budget, Uuid)> {
+    ) -> anyhow::Result<Uuid> {
         self.cmd(user_id, Uuid::default(), |budget| {
             budget.create_budget(budget_name.to_string(), user_id, month_begins_on, default_budget, currency)
         })
@@ -30,7 +30,7 @@ impl JoyDbBudgetRuntime {
         budget_id: Uuid,
         item_name: String,
         item_type: BudgetingType,
-    ) -> anyhow::Result<(Budget, Uuid)> {
+    ) -> anyhow::Result<Uuid> {
         self.cmd(user_id, budget_id, |budget| {
             budget.add_item(item_name.to_string(), item_type)
         })
@@ -43,7 +43,7 @@ impl JoyDbBudgetRuntime {
         item_id: Uuid,
         amount: Money,
         period_id: PeriodId,
-    ) -> anyhow::Result<(Budget, Uuid)> {
+    ) -> anyhow::Result<Uuid> {
         self.cmd(user_id, budget_id, |budget| {
             budget.add_actual(item_id, period_id, amount)
         })
@@ -57,7 +57,7 @@ impl JoyDbBudgetRuntime {
         item_id: Uuid,
         name: Option<String>,
         item_type: Option<BudgetingType>
-    ) -> anyhow::Result<(Budget, Uuid)> {
+    ) -> anyhow::Result<Uuid> {
         self.cmd(user_id, budget_id,|budget| {
             budget.modify_item(item_id, name, item_type)
         })
@@ -72,7 +72,7 @@ impl JoyDbBudgetRuntime {
         period_id: PeriodId,
         budgeted_amount: Option<Money>,
         actual_amount: Option<Money>,
-    ) -> anyhow::Result<(Budget, Uuid)> {
+    ) -> anyhow::Result<Uuid> {
         self.cmd(user_id, budget_id,|budget| {
             budget.modify_actual(actual_id, period_id, budgeted_amount, actual_amount, None, None)
         })
@@ -89,8 +89,8 @@ impl JoyDbBudgetRuntime {
         balance: Money,
         description: &str,
         date: DateTime<Utc>
-    ) -> anyhow::Result<(Budget, Uuid)> {
-        if let Ok((_, tx_id)) = self.add_transaction(
+    ) -> anyhow::Result<Uuid> {
+        if let Ok(tx_id) = self.add_transaction(
             user_id,
             budget_id,
             bank_account_number,
@@ -115,7 +115,7 @@ impl JoyDbBudgetRuntime {
         balance: Money,
         description: &str,
         date: DateTime<Utc>
-    ) -> anyhow::Result<(Budget, Uuid)> {
+    ) -> anyhow::Result<Uuid> {
         self.cmd(user_id, budget_id, |budget| {
             budget.add_transaction(
                 bank_account_number.to_string(),
@@ -133,7 +133,7 @@ impl JoyDbBudgetRuntime {
         budget_id: Uuid,
         tx_id: Uuid,
         actual_id: Uuid,
-    ) -> anyhow::Result<(Budget, Uuid)> {
+    ) -> anyhow::Result<Uuid> {
         self.cmd(user_id, budget_id, |budget| {
             budget.connect_transaction(tx_id, actual_id)
         })
@@ -144,7 +144,7 @@ impl JoyDbBudgetRuntime {
         budget_id: Uuid,
         tx_id: Uuid,
         user_id: Uuid,
-    ) -> anyhow::Result<(Budget, Uuid)> {
+    ) -> anyhow::Result<Uuid> {
         self.cmd(user_id, budget_id, |budget| {
             budget.ignore_transaction(tx_id)
         })
@@ -158,7 +158,7 @@ impl JoyDbBudgetRuntime {
         from_actual_id: Uuid,
         to_actual_id: Uuid,
         amount: Money,
-    ) -> anyhow::Result<(Budget, Uuid)> {
+    ) -> anyhow::Result<Uuid> {
         self.cmd(user_id, budget_id, |budget| {
             budget.reallocate_budgeted_funds(period_id, from_actual_id, to_actual_id, amount)
         })
@@ -171,7 +171,7 @@ impl JoyDbBudgetRuntime {
         actual_id: Uuid,
         period_id: PeriodId,
         budgeted_amount: Money,
-    ) -> anyhow::Result<(Budget, Uuid)> {
+    ) -> anyhow::Result<Uuid> {
         self.cmd(user_id, budget_id, |budget| {
             budget.adjust_actual_budgeted_funds(actual_id, period_id, budgeted_amount)
         })
@@ -184,7 +184,7 @@ impl JoyDbBudgetRuntime {
         transaction_key: Vec<String>,
         item_key: Vec<String>,
         always_apply: bool,
-    ) -> anyhow::Result<(Budget, Uuid)> {
+    ) -> anyhow::Result<Uuid> {
         self.cmd(user_id, budget_id, |budget| {
             budget.add_rule(transaction_key, item_key, always_apply)
         })
@@ -244,7 +244,7 @@ impl JoyDbBudgetRuntime {
 
     /// Ergonomic command execution - eliminates all the boilerplate!
     /// Usage: rt.cmd(id, |budget| budget.create_budget(name, user_id, default))
-    pub fn cmd<F, E>(&self, user_id: Uuid, id: Uuid, command: F) -> anyhow::Result<(Budget, Uuid)>
+    pub fn cmd<F, E>(&self, user_id: Uuid, id: Uuid, command: F) -> anyhow::Result<Uuid>
     where
         F: FnOnce(&Budget) -> Result<E, crate::cqrs::framework::CommandError>,
         E: Into<BudgetEvent>,

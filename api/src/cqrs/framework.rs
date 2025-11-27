@@ -105,7 +105,7 @@ where
     fn append(&self, user_id: Uuid, ev: E) -> anyhow::Result<()>;
 
     /// Execute a command: decide → append → return event.
-    fn execute<F>(&self, user_id: Uuid, id: A::Id, command: F) -> anyhow::Result<(A, Uuid)>
+    fn execute<F>(&self, user_id: Uuid, id: A::Id, command: F) -> anyhow::Result<Uuid>
     where
         F: FnOnce(&A) -> Result<E, CommandError>,
     {
@@ -116,7 +116,7 @@ where
             let ev = command(&current)?;
             let latest_id = ev.apply(&mut current);
             self.append(user_id, ev.clone())?;
-            Ok((current, latest_id))
+            Ok(latest_id)
         } else {
             let mut current = self.load(id)?.unwrap();
 
@@ -125,7 +125,7 @@ where
             let latest_id = ev.apply(&mut current);
 
             self.append(user_id, ev.clone())?;
-            Ok((current, latest_id))
+            Ok(latest_id)
         }
     }
 
