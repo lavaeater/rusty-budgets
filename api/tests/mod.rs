@@ -232,10 +232,11 @@ pub fn test_import_from_skandia_excel() -> anyhow::Result<()> {
         import_from_skandia_excel(&rt, user_id, budget_id, "./tests/unit-test-data.xlsx")?;
     assert_eq!(imported, 295);
     println!("Imported {} transactions", imported);
-    let (_, not_imported, _) =
+    let (omp, not_imported, _) =
         import_from_skandia_excel(&rt, user_id, budget_id, "./tests/unit-test-data.xlsx")?;
 
     assert_eq!(not_imported, 295);
+    assert_eq!(omp, 0);
     
     let res = rt.load(budget_id)?.unwrap();
 
