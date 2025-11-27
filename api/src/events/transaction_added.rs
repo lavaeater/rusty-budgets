@@ -34,7 +34,7 @@ impl Hash for TransactionAdded {
 impl TransactionAddedHandler for Budget {
     fn apply_add_transaction(&mut self, event: &TransactionAdded) -> Uuid {
         let period_id = PeriodId::from_date(event.date, self.month_begins_on());
-        self.with_period_mut(period_id).transactions.insert(BankTransaction::new(
+        self.with_period_mut(period_id).insert_transaction(BankTransaction::new(
             event.transaction_id,
             &event.account_number,
             event.amount,
