@@ -258,7 +258,7 @@ impl BudgetPeriod {
         items.iter().find(|i| rule.matches_item(i)).map(|i| i.id)
     }
 
-    pub fn all_actual_items(&self) -> &Vec<ActualItem> {
+    pub fn all_actuals(&self) -> &Vec<ActualItem> {
         &self.actual_items
     }
 }

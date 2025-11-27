@@ -122,7 +122,7 @@ impl Budget {
             .unwrap_or_default()
     }
 
-    pub fn list_all_items(&self) -> &Vec<BudgetItem> {
+    pub fn all_items(&self) -> &Vec<BudgetItem> {
         &self.items
     }
 
@@ -297,6 +297,17 @@ impl Budget {
                 p.transactions
                     .iter()
                     .filter(|t| t.actual_id.is_none())
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+
+    pub fn connected_transactions(&self, period_id: PeriodId) -> Vec<&BankTransaction> {
+        self.get_period(period_id)
+            .map(|p| {
+                p.transactions
+                    .iter()
+                    .filter(|t| t.actual_id.is_some())
                     .collect()
             })
             .unwrap_or_default()
