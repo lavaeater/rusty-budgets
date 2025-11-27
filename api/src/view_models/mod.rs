@@ -43,7 +43,7 @@ impl BudgetItemViewModel {
         if let Some(actual_item) = actual_item {
             let transactions = transactions
                 .iter()
-                .filter(|tx| tx.actual_item_id == Some(actual_item.id))
+                .filter(|tx| tx.actual_id == Some(actual_item.id))
                 .map(|tx| TransactionViewModel::from_transaction(tx))
                 .collect::<Vec<_>>();
             
@@ -100,7 +100,7 @@ impl TransactionViewModel {
             amount: tx.amount,
             description: tx.description.clone(),
             date: tx.date,
-            actual_item_id: tx.actual_item_id,
+            actual_item_id: tx.actual_id,
         }
     }
 }
@@ -125,13 +125,13 @@ impl BudgetViewModel {
             .map(|p| p.all_actual_items())
             .unwrap_or_default();
         let budget_items = budget.list_all_items_inner();
-        let transactions = budget.list_transactions_for_connection(period_id);
+        let transactions = budget.unconnected_transactions(period_id);
         let ignored_transactions = budget.list_ignored_transactions(period_id);
         let all_connected_transactions = budget
             .list_bank_transactions(period_id)
             .iter()
             .copied()
-            .filter(|tx| tx.actual_item_id.is_some() && !tx.ignored)
+            .filter(|tx| tx.actual_id.is_some() && !tx.ignored)
             .collect::<Vec<_>>();
 
         let items = budget_items

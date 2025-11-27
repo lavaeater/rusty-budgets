@@ -62,7 +62,7 @@
 // 
 //     pub fn create_period_before(&mut self, period_id: PeriodId) -> &mut BudgetPeriod {
 //         let period = period_id.month_before();
-//         self.get_or_create_period(period)
+//         self.get_or_create_periodget_or_create_period(period)
 //     }
 // 
 //     pub fn create_period_after(&mut self, period_id: PeriodId) -> &mut BudgetPeriod {
