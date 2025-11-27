@@ -267,7 +267,7 @@ impl Budget {
         }
     }
 
-    pub fn ignore_transaction(&mut self, tx_id: Uuid, period_id: PeriodId) -> bool {
+    pub fn set_transaction_ignored(&mut self, tx_id: Uuid, period_id: PeriodId) -> bool {
         match self.get_transaction_mut(tx_id) {
             Some(tx) => {
                 if tx.ignored {
