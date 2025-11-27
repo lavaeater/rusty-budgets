@@ -53,9 +53,9 @@ impl BudgetPeriod {
             .enumerate()
             .map(|(index, (group, items))| {
                 let overview = match group {
-                    Income => self.get_income_overview(self.id, rules),
-                    Expense => self.get_expense_overview(self.id, rules),
-                    Savings => self.get_savings_overview(self.id, rules),
+                    Income => self.get_income_overview(rules),
+                    Expense => self.get_expense_overview(rules),
+                    Savings => self.get_savings_overview(rules),
                 };
                 (index, group, overview, items.cloned().collect::<Vec<_>>())
             })
@@ -80,7 +80,6 @@ impl BudgetPeriod {
 
     pub fn get_income_overview(
         &self,
-        period_id: PeriodId,
         rules: &RulePackages,
     ) -> BudgetingTypeOverview {
         let rules = &rules
@@ -88,18 +87,16 @@ impl BudgetPeriod {
             .iter()
             .find(|p| p.budgeting_type == Income)
             .unwrap();
-        let items = &self
-            .actual_items
-            .iter()
-            .filter(|i| i.budgeting_type == Income)
-            .collect::<Vec<_>>();
+       
         let budgeted_income = rules
             .budgeted_rule
-            .evaluate(items, Some(ValueKind::Budgeted));
-        let spent_income = rules.actual_rule.evaluate(items, Some(ValueKind::Spent));
+            .evaluate(&self.actual_items, Some(ValueKind::Budgeted));
+        
+        let spent_income = rules.actual_rule.evaluate(&self.actual_items, Some(ValueKind::Spent));
+        
         let remaining_income = rules
             .remaining_rule
-            .evaluate(items, Some(ValueKind::Budgeted));
+            .evaluate(&self.actual_items, Some(ValueKind::Budgeted));
 
         BudgetingTypeOverview {
             budgeting_type: Income,
@@ -112,7 +109,6 @@ impl BudgetPeriod {
 
     pub fn get_expense_overview(
         &self,
-        period_id: PeriodId,
         rules: &RulePackages,
     ) -> BudgetingTypeOverview {
         let rules = &rules
@@ -120,16 +116,11 @@ impl BudgetPeriod {
             .iter()
             .find(|p| p.budgeting_type == Expense)
             .unwrap();
-        let items = &self
-            .actual_items
-            .iter()
-            .filter(|i| i.budgeting_type == Expense)
-            .collect::<Vec<_>>();
         let budgeted_expenses = rules
             .budgeted_rule
-            .evaluate(items, Some(ValueKind::Budgeted));
-        let spent_expenses = rules.actual_rule.evaluate(items, Some(ValueKind::Spent));
-        let self_diff = rules.remaining_rule.evaluate(items, None);
+            .evaluate(&self.actual_items, Some(ValueKind::Budgeted));
+        let spent_expenses = rules.actual_rule.evaluate(&self.actual_items, Some(ValueKind::Spent));
+        let self_diff = rules.remaining_rule.evaluate(&self.actual_items, None);
 
         BudgetingTypeOverview {
             budgeting_type: Expense,
@@ -142,7 +133,6 @@ impl BudgetPeriod {
 
     pub fn get_savings_overview(
         &self,
-        period_id: PeriodId,
         rules: &RulePackages,
     ) -> BudgetingTypeOverview {
         let rules = &rules
@@ -150,16 +140,11 @@ impl BudgetPeriod {
             .iter()
             .find(|p| p.budgeting_type == Savings)
             .unwrap();
-        let items = &self
-            .actual_items
-            .iter()
-            .filter(|i| i.budgeting_type == Savings)
-            .collect::<Vec<_>>();
         let budgeted_savings = rules
             .budgeted_rule
-            .evaluate(items, Some(ValueKind::Budgeted));
-        let spent_savings = rules.actual_rule.evaluate(items, Some(ValueKind::Spent));
-        let self_diff = rules.remaining_rule.evaluate(items, None);
+            .evaluate(&self.actual_items, Some(ValueKind::Budgeted));
+        let spent_savings = rules.actual_rule.evaluate(&self.actual_items, Some(ValueKind::Spent));
+        let self_diff = rules.remaining_rule.evaluate(&self.actual_items, None);
 
         BudgetingTypeOverview {
             budgeting_type: Savings,

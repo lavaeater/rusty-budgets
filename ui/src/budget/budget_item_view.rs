@@ -211,7 +211,6 @@ pub fn BudgetItemStatusView(item: BudgetItemViewModel) -> Element {
                             onclick: move |_| async move {
                                 let actual_id = item.actual_id.unwrap();
                                 let shortage = shortage;
-
         
                                 match api::modify_actual(
                                         budget_id,

@@ -198,7 +198,7 @@ impl ValueKind {
 }
 
 impl Rule {
-    pub fn evaluate(&self, store: &Vec<&ActualItem>, kind: Option<ValueKind>) -> Money {
+    pub fn evaluate(&self, store: &Vec<ActualItem>, kind: Option<ValueKind>) -> Money {
         match self {
             Rule::Sum(types) => types
                 .iter()
@@ -223,7 +223,7 @@ impl Rule {
         }
     }
 
-    pub fn get_sum(store: &Vec<&ActualItem>, kind: &ValueKind, base: &BudgetingType) -> Money {
+    pub fn get_sum(store: &Vec<ActualItem>, kind: &ValueKind, base: &BudgetingType) -> Money {
         store
             .iter()
             .filter(|i| i.budgeting_type == *base)
@@ -245,7 +245,7 @@ fn test_calculate_rules() {
         BudgetItem::new(Uuid::new_v4(), "Spara", Savings),
     ];
 
-    let store = [
+    let store = vec![
         ActualItem::new(
             Uuid::new_v4(),
             &budget_items[0].name,
@@ -285,11 +285,11 @@ fn test_calculate_rules() {
     let remaining_rule = Difference(Income, vec![Expense, Savings]);
 
     assert_eq!(
-        income_rule.evaluate(&store.iter().collect::<Vec<_>>(), Some(ValueKind::Budgeted)),
+        income_rule.evaluate(&store, Some(ValueKind::Budgeted)),
         Money::new_dollars(5000, Currency::SEK)
     );
     assert_eq!(
-        remaining_rule.evaluate(&store.iter().collect::<Vec<_>>(), Some(ValueKind::Budgeted)),
+        remaining_rule.evaluate(&store, Some(ValueKind::Budgeted)),
         Money::new_dollars(1000, Currency::SEK)
     );
 }

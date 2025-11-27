@@ -47,7 +47,7 @@ impl TransactionIgnoredHandler for Budget {
             });
         }
 
-        self.set_transaction_ignored(event.tx_id, period_id);
+        self.set_transaction_ignored(event.tx_id);
         event.tx_id
     }
 

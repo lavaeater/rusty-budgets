@@ -2,7 +2,7 @@ use api::cqrs::framework::Runtime;
 use api::cqrs::runtime::JoyDbBudgetRuntime;
 use api::import::import_from_skandia_excel;
 use api::models::*;
-use chrono::{DateTime, Datelike, NaiveDate, Utc};
+use chrono::{DateTime, NaiveDate, Utc};
 use std::collections::HashSet;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use uuid::Uuid;
@@ -135,7 +135,6 @@ pub fn connect_bank_transaction() -> anyhow::Result<()> {
     let user_id = Uuid::new_v4();
     let bank_account_number = "1234567890".to_string();
     let hundred_money = Money::new_dollars(100, Currency::SEK);
-    let zero_money = Money::new_dollars(0, Currency::SEK);
 
     let (_res, budget_id) = rt.create_budget(
         user_id,
@@ -221,8 +220,6 @@ pub fn add_bank_transaction() -> anyhow::Result<()> {
         .and_hms_opt(0, 0, 0) // hours, minutes, seconds
         .unwrap()
         .and_utc();
-    let also_period_id =
-        PeriodId::from_date(also_now, MonthBeginsOn::PreviousMonthWorkDayBefore(25));
 
     let res = rt
         .add_transaction(
@@ -448,7 +445,7 @@ pub fn adjust_item_funds() -> anyhow::Result<()> {
     let period_id = PeriodId::from_date(Utc::now(), MonthBeginsOn::default());
     
     let (budget_id, items) = create_budget_with_items(&rt, user_id, "Test Budget", vec![("Hyra".to_string(), BudgetingType::Expense, Money::new_dollars(100, Currency::SEK), period_id)])?;
-    let (item_id, actual_id) = items.first().unwrap();
+    let (_, actual_id) = items.first().unwrap();
     let (_res, _) = rt.adjust_budgeted_amount(
         user_id,
         budget_id,
@@ -463,192 +460,109 @@ pub fn adjust_item_funds() -> anyhow::Result<()> {
     assert_eq!(item.budgeted_amount, Money::new_dollars(50, Currency::SEK));
     Ok(())
 }
-//
-// #[test]
-// fn test_calculate_rules() {
-//     use BudgetingType::*;
-//     use Rule::*;
-//     let store =
-//     store.insert(
-//         &BudgetItem::new(
-//             Uuid::new_v4(),
-//             "Lön",
-//             Money::new_dollars(5000, Currency::SEK),
-//             None,
-//             None,
-//         ),
-//         Income,
-//     );
-//     store.insert(
-//         &BudgetItem::new(
-//             Uuid::new_v4(),
-//             "Lön",
-//             Money::new_dollars(3000, Currency::SEK),
-//             None,
-//             None,
-//         ),
-//         Expense,
-//     );
-//     store.insert(
-//         &BudgetItem::new(
-//             Uuid::new_v4(),
-//             "Lön",
-//             Money::new_dollars(1000, Currency::SEK),
-//             None,
-//             None,
-//         ),
-//         Savings,
-//     );
-//
-//     let income_rule = Sum(vec![Income]);
-//     let remaining_rule = Difference(Income, vec![Expense, Savings]);
-//
-//     assert_eq!(
-//         income_rule.evaluate(&store.hash_by_type(), Some(ValueKind::Budgeted)),
-//         Money::new_dollars(5000, Currency::SEK)
-//     );
-//     assert_eq!(
-//         remaining_rule.evaluate(&store.hash_by_type(), Some(ValueKind::Budgeted)),
-//         Money::new_dollars(1000, Currency::SEK)
-//     );
-// }
-//
-// #[test]
-// pub fn test_budeting_overview() -> anyhow::Result<()> {
-//     let rt = JoyDbBudgetRuntime::new_in_memory();
-//     let user_id = Uuid::new_v4();
-//     let bank_account_number = "1234567890".to_string();
-//     let zero_money = Money::new_dollars(0, Currency::SEK);
-//     let hundred_money = Money::new_dollars(100, Currency::SEK);
-//     let thousand_money = hundred_money.multiply(10);
-//     let fivehundred_money = hundred_money.multiply(5);
-//
-//     let (_, budget_id) = rt.create_budget("Test Budget", true, Currency::SEK, user_id)?;
-//
-//     let (_, income_id) = rt.add_item(
-//         &budget_id,
-//         "Lön T".to_string(),
-//         BudgetingType::Income,
-//         thousand_money,
-//         None,
-//         &user_id,
-//     )?;
-//
-//     let (_, rent_id) = rt.add_item(
-//         &budget_id,
-//         "Hyra".to_string(),
-//         BudgetingType::Expense,
-//         fivehundred_money,
-//         None,
-//         &user_id,
-//     )?;
-//
-//     let (_, savings_id) = rt.add_item(
-//         &budget_id,
-//         "Spara".to_string(),
-//         BudgetingType::Savings,
-//         hundred_money,
-//         None,
-//         &user_id,
-//     )?;
-//
-//     let budget = rt.materialize(&budget_id)?;
-//     let income_overview = budget
-//         .get_budgeting_overview(&BudgetingType::Income)
-//         .unwrap();
-//     assert_eq!(income_overview.budgeted_amount, thousand_money);
-//     assert_eq!(income_overview.actual_amount, zero_money);
-//     assert_eq!(
-//         income_overview.remaining_budget,
-//         fivehundred_money - hundred_money
-//     );
-//
-//     let expense_overview = budget
-//         .get_budgeting_overview(&BudgetingType::Expense)
-//         .unwrap();
-//     assert_eq!(expense_overview.budgeted_amount, fivehundred_money);
-//     assert_eq!(expense_overview.actual_amount, zero_money);
-//     assert_eq!(expense_overview.remaining_budget, fivehundred_money);
-//
-//     let savings_overview = budget
-//         .get_budgeting_overview(&BudgetingType::Savings)
-//         .unwrap();
-//     assert_eq!(savings_overview.budgeted_amount, hundred_money);
-//     assert_eq!(savings_overview.actual_amount, zero_money);
-//     assert_eq!(savings_overview.remaining_budget, hundred_money);
-//
-//     let (_, _) = rt.add_and_connect_tx(
-//         budget_id,
-//         &bank_account_number,
-//         hundred_money.multiply(9),
-//         fivehundred_money.multiply(4),
-//         "Löneinsättning",
-//         Utc::now(),
-//         income_id,
-//         user_id,
-//     )?;
-//
-//     let (_, _) = rt.add_and_connect_tx(
-//         budget_id,
-//         &bank_account_number,
-//         Money::new_dollars(450, Currency::SEK),
-//         Money::new_dollars(15000, Currency::SEK),
-//         "Bet. Hyra",
-//         Utc::now(),
-//         rent_id,
-//         user_id,
-//     )?;
-//     let (_, _) = rt.add_and_connect_tx(
-//         budget_id,
-//         &bank_account_number,
-//         Money::new_dollars(100, Currency::SEK),
-//         Money::new_dollars(15000, Currency::SEK),
-//         "Överföring sparande",
-//         Utc::now(),
-//         savings_id,
-//         user_id,
-//     )?;
-//
-//     let budget = rt.materialize(&budget_id)?;
-//     let income_overview = budget
-//         .get_budgeting_overview(&BudgetingType::Income)
-//         .unwrap();
-//     assert_eq!(income_overview.budgeted_amount, thousand_money);
-//     assert_eq!(income_overview.actual_amount, hundred_money.multiply(9));
-//     assert_eq!(
-//         income_overview.remaining_budget,
-//         fivehundred_money - hundred_money
-//     );
-//
-//     let expense_overview = budget
-//         .get_budgeting_overview(&BudgetingType::Expense)
-//         .unwrap();
-//     assert_eq!(expense_overview.budgeted_amount, fivehundred_money);
-//     assert_eq!(
-//         expense_overview.actual_amount,
-//         Money::new_dollars(-450, Currency::SEK)
-//     );
-//     assert_eq!(
-//         expense_overview.remaining_budget,
-//         Money::new_dollars(950, Currency::SEK)
-//     );
-//
-//     let savings_overview = budget
-//         .get_budgeting_overview(&BudgetingType::Savings)
-//         .unwrap();
-//     assert_eq!(savings_overview.budgeted_amount, hundred_money);
-//     assert_eq!(savings_overview.actual_amount, -hundred_money);
-//     assert_eq!(savings_overview.remaining_budget, hundred_money.multiply(2));
-//
-//     Ok(())
-// }
-//
-// #[test]
-// pub fn the_budget_periods() -> anyhow::Result<()> {
-//     let rt = JoyDbBudgetRuntime::new_in_memory();
-//     let user_id = Uuid::new_v4();
-//
-//     let (_budget, _budget_id) = rt.create_budget("Test Budget", true, Currency::SEK, user_id)?;
-//
-//     Ok(())
-// }
+
+
+#[test]
+pub fn test_budeting_overview() -> anyhow::Result<()> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let bank_account_number = "1234567890".to_string();
+    let zero_money = Money::new_dollars(0, Currency::SEK);
+    let hundred_money = Money::new_dollars(100, Currency::SEK);
+    let thousand_money = hundred_money.multiply(10);
+    let fivehundred_money = hundred_money.multiply(5);
+    let now = Utc::now();
+    let period_id = PeriodId::from_date(now, MonthBeginsOn::default());
+    
+    let (budget_id, items) = create_budget_with_items(&rt, user_id, "Test Budget", vec![
+        ("Hyra".to_string(), BudgetingType::Expense, fivehundred_money, period_id),
+        ("Lön T".to_string(), BudgetingType::Income, thousand_money, period_id),
+        ("Spara".to_string(), BudgetingType::Savings, hundred_money, period_id),
+    ])?;
+
+
+    let budget = rt.load(budget_id)?.unwrap();
+    let income_overview = budget
+        .get_budgeting_overview(BudgetingType::Income, period_id);
+    assert_eq!(income_overview.budgeted_amount, thousand_money);
+    assert_eq!(income_overview.actual_amount, zero_money);
+    assert_eq!(
+        income_overview.remaining_budget,
+        fivehundred_money - hundred_money
+    );
+
+    let expense_overview = budget
+        .get_budgeting_overview(BudgetingType::Expense, period_id);
+    assert_eq!(expense_overview.budgeted_amount, fivehundred_money);
+    assert_eq!(expense_overview.actual_amount, zero_money);
+    assert_eq!(expense_overview.remaining_budget, fivehundred_money);
+
+    let savings_overview = budget
+        .get_budgeting_overview(BudgetingType::Savings, period_id);
+    assert_eq!(savings_overview.budgeted_amount, hundred_money);
+    assert_eq!(savings_overview.actual_amount, zero_money);
+    assert_eq!(savings_overview.remaining_budget, hundred_money);
+
+    let (_, _) = rt.add_and_connect_tx(
+        user_id,
+        budget_id,
+        items[1].1,
+        &bank_account_number,
+        hundred_money.multiply(9),
+        fivehundred_money.multiply(4),
+        "Löneinsättning",
+        now,
+    )?;
+
+    let (_, _) = rt.add_and_connect_tx(
+        user_id,
+        budget_id,
+        items[0].1,
+        &bank_account_number,
+        Money::new_dollars(450, Currency::SEK),
+        Money::new_dollars(15000, Currency::SEK),
+        "Bet. Hyra",
+        now,
+    )?;
+    let (_, _) = rt.add_and_connect_tx(
+        user_id,
+        budget_id,
+        items[2].1,
+        &bank_account_number,
+        Money::new_dollars(100, Currency::SEK),
+        Money::new_dollars(15000, Currency::SEK),
+        "Överföring sparande",
+        now,
+    )?;
+
+    let budget = rt.load(budget_id)?.unwrap();
+    let income_overview = budget
+        .get_budgeting_overview(BudgetingType::Income, period_id);
+    assert_eq!(income_overview.budgeted_amount, thousand_money);
+    assert_eq!(income_overview.actual_amount, hundred_money.multiply(9));
+    assert_eq!(
+        income_overview.remaining_budget,
+        fivehundred_money - hundred_money
+    );
+
+    let expense_overview = budget
+        .get_budgeting_overview(BudgetingType::Expense, period_id);
+    assert_eq!(expense_overview.budgeted_amount, fivehundred_money);
+    assert_eq!(
+        expense_overview.actual_amount,
+        Money::new_dollars(-450, Currency::SEK)
+    );
+    assert_eq!(
+        expense_overview.remaining_budget,
+        Money::new_dollars(950, Currency::SEK)
+    );
+
+    let savings_overview = budget
+        .get_budgeting_overview(BudgetingType::Savings, period_id);
+    assert_eq!(savings_overview.budgeted_amount, hundred_money);
+    assert_eq!(savings_overview.actual_amount, -hundred_money);
+    assert_eq!(savings_overview.remaining_budget, hundred_money.multiply(2));
+
+    Ok(())
+}
+

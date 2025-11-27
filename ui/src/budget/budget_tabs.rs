@@ -10,7 +10,7 @@ pub fn BudgetTabs() -> Element {
     let budget_signal = use_context::<Signal<Option<BudgetViewModel>>>();
     match budget_signal() {
         Some(budget) => {
-            let mut overview_by_type = budget
+            let overview_by_type = budget
                 .overviews
                 .iter()
                 .enumerate()

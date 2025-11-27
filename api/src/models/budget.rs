@@ -254,20 +254,20 @@ impl Budget {
         match budgeting_type {
             BudgetingType::Expense => self
                 .get_period(period_id)
-                .map(|p| p.get_expense_overview(period_id, &self.rules))
+                .map(|p| p.get_expense_overview(&self.rules))
                 .unwrap_or_default(),
             BudgetingType::Income => self
                 .get_period(period_id)
-                .map(|p| p.get_income_overview(period_id, &self.rules))
+                .map(|p| p.get_income_overview(&self.rules))
                 .unwrap_or_default(),
             BudgetingType::Savings => self
                 .get_period(period_id)
-                .map(|p| p.get_savings_overview(period_id, &self.rules))
+                .map(|p| p.get_savings_overview(&self.rules))
                 .unwrap_or_default(),
         }
     }
 
-    pub fn set_transaction_ignored(&mut self, tx_id: Uuid, period_id: PeriodId) -> bool {
+    pub fn set_transaction_ignored(&mut self, tx_id: Uuid) -> bool {
         match self.get_transaction_mut(tx_id) {
             Some(tx) => {
                 if tx.ignored {
