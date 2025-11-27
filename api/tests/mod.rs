@@ -13,7 +13,13 @@ pub fn create_budget_test() -> anyhow::Result<()> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
     let user_id = Uuid::new_v4();
 
-    let (res, budget_id) = rt.create_budget(user_id, "Test Budget", true, MonthBeginsOn::default(), Currency::SEK)?;
+    let (res, budget_id) = rt.create_budget(
+        user_id,
+        "Test Budget",
+        true,
+        MonthBeginsOn::default(),
+        Currency::SEK,
+    )?;
     assert_eq!(res.name, "Test Budget");
     assert!(res.default_budget);
     assert_eq!(res.currency, Currency::SEK);
@@ -35,7 +41,13 @@ pub fn add_budget_item() -> anyhow::Result<()> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
     let user_id = Uuid::new_v4();
 
-    let (_, budget_id) = rt.create_budget(user_id, "Test Budget", true, MonthBeginsOn::default(), Currency::SEK)?;
+    let (_, budget_id) = rt.create_budget(
+        user_id,
+        "Test Budget",
+        true,
+        MonthBeginsOn::default(),
+        Currency::SEK,
+    )?;
 
     let (res, item_id) = rt.add_item(
         user_id,
@@ -125,7 +137,13 @@ pub fn connect_bank_transaction() -> anyhow::Result<()> {
     let hundred_money = Money::new_dollars(100, Currency::SEK);
     let zero_money = Money::new_dollars(0, Currency::SEK);
 
-    let (_res, budget_id) = rt.create_budget(user_id, "Test Budget", true, MonthBeginsOn::default(), Currency::SEK)?;
+    let (_res, budget_id) = rt.create_budget(
+        user_id,
+        "Test Budget",
+        true,
+        MonthBeginsOn::default(),
+        Currency::SEK,
+    )?;
 
     let (_res, item_id) = rt.add_item(
         user_id,
@@ -166,7 +184,13 @@ pub fn add_bank_transaction() -> anyhow::Result<()> {
     let user_id = Uuid::new_v4();
     let bank_account_number = "1234567890".to_string();
 
-    let (_, budget_id) = rt.create_budget(user_id, "Test Budget", true, MonthBeginsOn::default(), Currency::SEK)?;
+    let (_, budget_id) = rt.create_budget(
+        user_id,
+        "Test Budget",
+        true,
+        MonthBeginsOn::default(),
+        Currency::SEK,
+    )?;
 
     let date_str = "2025-10-26";
     let naive_date = NaiveDate::parse_from_str(&date_str, "%Y-%m-%d")?;
@@ -199,7 +223,7 @@ pub fn add_bank_transaction() -> anyhow::Result<()> {
         .and_utc();
     let also_period_id =
         PeriodId::from_date(also_now, MonthBeginsOn::PreviousMonthWorkDayBefore(25));
-    
+
     let res = rt
         .add_transaction(
             user_id,
@@ -226,7 +250,13 @@ pub fn test_import_from_skandia_excel() -> anyhow::Result<()> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
     let user_id = Uuid::new_v4();
 
-    let (_, budget_id) = rt.create_budget(user_id, "Test Budget", true, MonthBeginsOn::default(), Currency::SEK)?;
+    let (_, budget_id) = rt.create_budget(
+        user_id,
+        "Test Budget",
+        true,
+        MonthBeginsOn::default(),
+        Currency::SEK,
+    )?;
 
     let (imported, _, _) =
         import_from_skandia_excel(&rt, user_id, budget_id, "./tests/unit-test-data.xlsx")?;
@@ -237,103 +267,112 @@ pub fn test_import_from_skandia_excel() -> anyhow::Result<()> {
 
     assert_eq!(not_imported, 295);
     assert_eq!(omp, 0);
-    
+
     let res = rt.load(budget_id)?.unwrap();
 
     assert_eq!(res.all_transactions().len(), 295);
-    
+
     Ok(())
 }
-//
-// #[test]
-// pub fn reconnect_bank_transaction() -> anyhow::Result<()> {
-//     let rt = JoyDbBudgetRuntime::new_in_memory();
-//     let user_id = Uuid::new_v4();
-//     let bank_account_number = "1234567890".to_string();
-//
-//     let (_res, budget_id) = rt.create_budget("Test Budget", true, Currency::SEK, user_id)?;
-//
-//     let (_res, original_item_id) = rt.add_item(
-//         &budget_id,
-//         "Utgifter".to_string(),
-//         BudgetingType::Expense,
-//         Money::new_dollars(100, Currency::SEK),
-//         None,
-//         &user_id,
-//     )?;
-//
-//     let (_res, new_item_id) = rt.add_item(
-//         &budget_id,
-//         "Savings".to_string(),
-//         BudgetingType::Savings,
-//         Money::new_dollars(100, Currency::SEK),
-//         None,
-//         &user_id,
-//     )?;
-//
-//     let now = Utc::now();
-//
-//     let (_res, tx_id) = rt.add_transaction(
-//         budget_id,
-//         &bank_account_number,
-//         Money::new_dollars(100, Currency::SEK),
-//         Money::new_dollars(100, Currency::SEK),
-//         "Test Transaction",
-//         now,
-//         user_id,
-//     )?;
-//
-//     let (res, _returned_tx_id) =
-//         rt.connect_transaction(&budget_id, &tx_id, &original_item_id, &user_id)?;
-//
-//     let expected_money = Money::new_dollars(100, Currency::SEK);
-//
-//     assert_eq!(
-//         res.get_budgeted_by_type(&BudgetingType::Expense)
-//             .expect("Expect the budgeted amount for Expenses"),
-//         &expected_money
-//     );
-//     assert_eq!(
-//         res.get_actual_by_type(&BudgetingType::Expense)
-//             .expect("Expect the spent amount for Expenses"),
-//         &-expected_money
-//     );
-//     assert_eq!(
-//         res.get_budgeted_by_type(&BudgetingType::Savings)
-//             .expect("Expect the budgeted amount for Savings"),
-//         &expected_money
-//     );
-//     assert_eq!(
-//         res.get_actual_by_type(&BudgetingType::Savings)
-//             .expect("Expect the default amount for Savings"),
-//         &Money::default()
-//     );
-//
-//     let (res, _tx_id) = rt.connect_transaction(&budget_id, &tx_id, &new_item_id, &user_id)?;
-//
-//     assert_eq!(
-//         res.get_budgeted_by_type(&BudgetingType::Expense)
-//             .expect("Expect the spent amount for Expenses"),
-//         &expected_money
-//     );
-//     assert_eq!(
-//         res.get_actual_by_type(&BudgetingType::Expense)
-//             .expect("Expect the default spent amount for Expenses"),
-//         &Money::default()
-//     );
-//     assert_eq!(
-//         res.get_budgeted_by_type(&BudgetingType::Savings)
-//             .expect("Expect the budgeted amount for Savings"),
-//         &expected_money
-//     );
-//     assert_eq!(
-//         res.get_actual_by_type(&BudgetingType::Savings)
-//             .expect("Expect the correct spent amount for Savings"),
-//         &-expected_money
-//     );
-//
-//     Ok(())
-// }
+
+#[test]
+pub fn reconnect_bank_transaction() -> anyhow::Result<()> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let bank_account_number = "1234567890".to_string();
+    let now = Utc::now();
+    let period_id = PeriodId::from_date(now, MonthBeginsOn::default());
+    let (_res, budget_id) = rt.create_budget(
+        user_id,
+        "Test Budget",
+        true,
+        MonthBeginsOn::default(),
+        Currency::SEK,
+    )?;
+
+    let (_res, original_item_id) = rt.add_item(
+        user_id,
+        budget_id,
+        "Utgifter".to_string(),
+        BudgetingType::Expense,
+    )?;
+
+    let (_res, new_item_id) = rt.add_item(
+        user_id,
+        budget_id,
+        "Savings".to_string(),
+        BudgetingType::Savings,
+    )?;
+
+    let (_res, original_id) = rt.add_actual(
+        user_id,
+        budget_id,
+        original_item_id,
+        Money::new_dollars(100, Currency::SEK),
+        period_id,
+    )?;
+    let (_res, new_id) = rt.add_actual(
+        user_id,
+        budget_id,
+        new_item_id,
+        Money::new_dollars(100, Currency::SEK),
+        period_id,
+    )?;
+
+
+    let (_res, tx_id) = rt.add_transaction(
+        user_id,
+        budget_id,
+        &bank_account_number,
+        Money::new_dollars(100, Currency::SEK),
+        Money::new_dollars(100, Currency::SEK),
+        "Test Transaction",
+        now,
+    )?;
+
+    let (res, _returned_tx_id) =
+        rt.connect_transaction(user_id, budget_id, tx_id, original_id)?;
+
+    let expected_money = Money::new_dollars(100, Currency::SEK);
+
+    assert_eq!(
+        res.get_budgeted_by_type(&BudgetingType::Expense, period_id),
+        expected_money
+    );
+    assert_eq!(
+        res.get_actual_by_type(&BudgetingType::Expense, period_id),
+        -expected_money
+    );
+    assert_eq!(
+        res.get_budgeted_by_type(&BudgetingType::Savings, period_id),
+        expected_money
+    );
+    assert_eq!(
+        res.get_actual_by_type(&BudgetingType::Savings, period_id),
+        Money::default()
+    );
+
+    let (res, _tx_id) = rt.connect_transaction(user_id, budget_id, tx_id, new_id)?;
+
+    assert_eq!(
+        res.get_budgeted_by_type(&BudgetingType::Expense, period_id),
+        expected_money
+    );
+    assert_eq!(
+        res.get_actual_by_type(&BudgetingType::Expense, period_id),
+        Money::default()
+    );
+    assert_eq!(
+        res.get_budgeted_by_type(&BudgetingType::Savings, period_id),
+        expected_money
+    );
+    assert_eq!(
+        res.get_actual_by_type(&BudgetingType::Savings, period_id),
+        -expected_money
+    );
+
+    Ok(())
+}
 //
 // #[test]
 // pub fn reallocate_item_funds() -> anyhow::Result<()> {
