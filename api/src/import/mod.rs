@@ -15,7 +15,7 @@ pub fn import_from_path(
     user_id: Uuid,
     budget_id: Uuid,
     runtime: &JoyDbBudgetRuntime,
-) -> anyhow::Result<u64> {
+) -> anyhow::Result<(u64, u64, u64)> {
     let p = Path::new(path);
     debug!("Importing from path: {}", path);
     if p.exists() {
@@ -23,6 +23,8 @@ pub fn import_from_path(
         if p.is_dir() {
             debug!("Path is a dir!");
             let mut imported = 0u64;
+            let mut not_imported = 0u64;
+            let mut total_rows = 0u64;
             for entry in p.read_dir()? {
                 let path = entry?.path();
                 if path.is_file() {
@@ -32,8 +34,10 @@ pub fn import_from_path(
                         budget_id,
                         path.to_str().unwrap(),
                     ) {
-                        Ok(i) => {
+                        Ok((i, ni, t)) => {
                             imported += i;
+                            not_imported += ni;
+                            total_rows += t;
                         }
                         Err(err) => {
                             error!(error = %err, "Failed to import from path");
@@ -41,13 +45,11 @@ pub fn import_from_path(
                     }
                 }
             }
-            { 
-                Ok(imported)
-            }
+            Ok((imported, not_imported, total_rows))
         } else {
             match import_from_skandia_excel(runtime, user_id, budget_id, path ) {
-                Ok(imported) => { 
-                    Ok(imported)
+                Ok((imported, not_imported, total_rows)) => { 
+                    Ok((imported, not_imported, total_rows))
                 },
                 Err(e) => {
                     error!(error = %e, "Failed to import from path");
@@ -65,7 +67,7 @@ pub fn import_from_skandia_excel(
     user_id: Uuid,
     budget_id: Uuid,
     path: &str,
-) -> anyhow::Result<u64> {
+) -> anyhow::Result<(u64, u64, u64)> {
     let mut excel: Xlsx<_> = open_workbook(path)?;
     let mut imported = 0u64;
     let mut not_imported = 0u64;
@@ -77,7 +79,6 @@ pub fn import_from_skandia_excel(
             if row_num == 0 {
                 account_number = Some(row[1].to_string());
             } else if row_num > 4 {
-                println!("row={:?}", row);
                 let amount =
                     Money::new_cents((row[2].as_f64().unwrap() * 100.0) as i64, Currency::SEK);
                 let balance =
@@ -125,7 +126,7 @@ pub fn import_from_skandia_excel(
         );
     }
     
-    Ok(imported)
+    Ok((imported, not_imported, total_rows))
 }
 
 // pub fn import_bank_transactions(_bytes: Vec<u8>) -> anyhow::Result<()> {

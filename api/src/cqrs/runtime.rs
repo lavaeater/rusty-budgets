@@ -16,10 +16,11 @@ impl JoyDbBudgetRuntime {
         user_id: Uuid,
         budget_name: &str,
         default_budget: bool,
+        month_begins_on: MonthBeginsOn,
         currency: Currency,
     ) -> anyhow::Result<(Budget, Uuid)> {
         self.cmd(user_id, Uuid::default(), |budget| {
-            budget.create_budget(budget_name.to_string(), user_id, default_budget, currency)
+            budget.create_budget(budget_name.to_string(), user_id, month_begins_on, default_budget, currency)
         })
     }
 

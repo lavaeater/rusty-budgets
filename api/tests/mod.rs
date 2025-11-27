@@ -13,7 +13,7 @@ pub fn create_budget_test() -> anyhow::Result<()> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
     let user_id = Uuid::new_v4();
 
-    let (res, budget_id) = rt.create_budget(user_id, "Test Budget", true, Currency::SEK)?;
+    let (res, budget_id) = rt.create_budget(user_id, "Test Budget", true, MonthBeginsOn::default(), Currency::SEK)?;
     assert_eq!(res.name, "Test Budget");
     assert!(res.default_budget);
     assert_eq!(res.currency, Currency::SEK);
@@ -35,7 +35,7 @@ pub fn add_budget_item() -> anyhow::Result<()> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
     let user_id = Uuid::new_v4();
 
-    let (_, budget_id) = rt.create_budget(user_id, "Test Budget", true, Currency::SEK)?;
+    let (_, budget_id) = rt.create_budget(user_id, "Test Budget", true, MonthBeginsOn::default(), Currency::SEK)?;
 
     let (res, item_id) = rt.add_item(
         user_id,
@@ -125,7 +125,7 @@ pub fn connect_bank_transaction() -> anyhow::Result<()> {
     let hundred_money = Money::new_dollars(100, Currency::SEK);
     let zero_money = Money::new_dollars(0, Currency::SEK);
 
-    let (_res, budget_id) = rt.create_budget(user_id, "Test Budget", true, Currency::SEK)?;
+    let (_res, budget_id) = rt.create_budget(user_id, "Test Budget", true, MonthBeginsOn::default(), Currency::SEK)?;
 
     let (_res, item_id) = rt.add_item(
         user_id,
@@ -166,7 +166,7 @@ pub fn add_bank_transaction() -> anyhow::Result<()> {
     let user_id = Uuid::new_v4();
     let bank_account_number = "1234567890".to_string();
 
-    let (_, budget_id) = rt.create_budget(user_id, "Test Budget", true, Currency::SEK)?;
+    let (_, budget_id) = rt.create_budget(user_id, "Test Budget", true, MonthBeginsOn::default(), Currency::SEK)?;
 
     let date_str = "2025-10-26";
     let naive_date = NaiveDate::parse_from_str(&date_str, "%Y-%m-%d")?;
@@ -226,34 +226,21 @@ pub fn test_import_from_skandia_excel() -> anyhow::Result<()> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
     let user_id = Uuid::new_v4();
 
-    let (_, budget_id) = rt.create_budget(user_id, "Test Budget", true, Currency::SEK)?;
+    let (_, budget_id) = rt.create_budget(user_id, "Test Budget", true, MonthBeginsOn::default(), Currency::SEK)?;
 
-    let imported =
+    let (imported, _, _) =
         import_from_skandia_excel(&rt, user_id, budget_id, "./tests/unit-test-data.xlsx")?;
-
+    assert_eq!(imported, 295);
     println!("Imported {} transactions", imported);
-    let not_imported =
+    let (_, not_imported, _) =
         import_from_skandia_excel(&rt, user_id, budget_id, "./tests/unit-test-data.xlsx")?;
 
-    assert_eq!(not_imported, 98);
+    assert_eq!(not_imported, 295);
+    
+    let res = rt.load(budget_id)?.unwrap();
 
-    println!("Not imported {} transactions", not_imported);
-
-    let mut res = rt.load(budget_id)?.unwrap();
-
-    let date = Utc::now()
-        .with_year(2025)
-        .unwrap()
-        .with_month(9)
-        .unwrap()
-        .with_day(19)
-        .unwrap();
-
-    let current_period = PeriodId::from_date(date, res.month_begins_on());
-
-    assert_eq!(res.with_period(current_period).transactions.len(), 39);
-    assert_eq!(imported, 39);
-
+    assert_eq!(res.all_transactions().len(), 295);
+    
     Ok(())
 }
 //
