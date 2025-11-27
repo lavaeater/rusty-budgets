@@ -8,18 +8,6 @@ use once_cell::sync::Lazy;
 use uuid::Uuid;
 use crate::models::actual_item::ActualItem;
 
-#[derive(Default, Debug, Clone, Serialize, Deserialize)]
-pub struct BankTransactionStore {
-    hashes: HashSet<u64>,                  // uniqueness check
-    by_id: HashMap<Uuid, BankTransaction>, // fast lookup
-    ignored: HashMap<Uuid, BankTransaction>
-}
-
-impl BankTransactionStore {
-    pub fn list_ignored_transactions(&self) -> Vec<BankTransaction> {
-        self.ignored.values().cloned().collect()
-    }
-}
 
 impl BankTransactionStore {
     pub fn list_transactions_for_actual(&self, actual_id: Uuid, sorted: bool) -> Vec<&BankTransaction> {

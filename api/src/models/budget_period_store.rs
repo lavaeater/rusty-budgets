@@ -17,7 +17,7 @@ use uuid::Uuid;
 use crate::view_models::{BudgetingTypeOverview, Rule, ValueKind};
 
 // Custom serialization for HashMap<BudgetPeriodId, BudgetPeriod>
-mod budget_period_map_serde {
+pub mod budget_period_map_serde {
     use crate::models::budget_period::BudgetPeriod;
     use crate::models::budget_period_id::PeriodId;
     use serde::{Deserialize, Deserializer, Serialize, Serializer};

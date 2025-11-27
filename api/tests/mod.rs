@@ -233,7 +233,7 @@ pub fn test_import_from_skandia_excel() -> anyhow::Result<()> {
         &rt,
         user_id,
         budget_id,
-        "../test_data/unit-test-data.xlsx",
+        "./tests/unit-test-data.xlsx",
     )?;
 
     println!("Imported {} transactions", imported);
@@ -241,12 +241,14 @@ pub fn test_import_from_skandia_excel() -> anyhow::Result<()> {
         &rt,
         user_id,
         budget_id,
-        "../test_data/91594824853_2025-09-25-2025-10-07.xlsx",
+        "./tests/unit-test-data.xlsx",
     )?;
+    
+    assert_eq!(not_imported, 98);
 
     println!("Not imported {} transactions", not_imported);
 
-    let mut res = rt.load(&budget_id)?.unwrap();
+    let res = rt.load(budget_id)?.unwrap();
 
     let date = Utc::now()
         .with_year(2025)
@@ -255,12 +257,11 @@ pub fn test_import_from_skandia_excel() -> anyhow::Result<()> {
         .unwrap()
         .with_day(19)
         .unwrap();
-
-    res.set_current_period(&date);
-
-    assert_eq!(res.list_all_bank_transactions().len(), 39);
+    
+    let current_period = PeriodId::from_date(date, res.month_begins_on());
+    
+    assert_eq!(res.list_bank_transactions(current_period).len(), 39);
     assert_eq!(imported, 39);
-    assert_eq!(not_imported, 0);
 
     Ok(())
 }

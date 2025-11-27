@@ -54,9 +54,7 @@ impl TransactionAddedHandler for Budget {
         date: DateTime<Utc>,
     ) -> Result<TransactionAdded, CommandError> {
         let hash = get_transaction_hash(&amount, &balance, &account_number, &description, &date);
-        let info = format!("{}|{}|{}|{}|{} - {}", account_number, amount, balance, description, date, hash);
-        tracing::debug!("Adding transaction: {}", info);
-
+        
         if self.can_insert_transaction(&hash) {
             Ok(TransactionAdded {
                 budget_id: self.id,
