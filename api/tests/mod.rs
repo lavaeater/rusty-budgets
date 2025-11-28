@@ -13,23 +13,19 @@ pub fn create_budget_test() -> anyhow::Result<()> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
     let user_id = Uuid::new_v4();
 
-    let (res, budget_id) = rt.create_budget(
+    let budget_id = rt.create_budget(
         user_id,
         "Test Budget",
         true,
         MonthBeginsOn::default(),
         Currency::SEK,
     )?;
-    assert_eq!(res.name, "Test Budget");
-    assert!(res.default_budget);
-    assert_eq!(res.currency, Currency::SEK);
-
     let res = rt.materialize(budget_id)?;
     assert_eq!(res.name, "Test Budget");
     assert!(res.default_budget);
-    assert_eq!(res.version, 1);
     assert_eq!(res.currency, Currency::SEK);
-
+    assert_eq!(res.version, 1);
+    
     let ser = serde_json::to_string(&res)?;
     let _: Budget = serde_json::from_str(&ser)?;
 
@@ -41,7 +37,7 @@ pub fn add_budget_item() -> anyhow::Result<()> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
     let user_id = Uuid::new_v4();
 
-    let (_, budget_id) = rt.create_budget(
+    let budget_id = rt.create_budget(
         user_id,
         "Test Budget",
         true,
@@ -49,13 +45,14 @@ pub fn add_budget_item() -> anyhow::Result<()> {
         Currency::SEK,
     )?;
 
-    let (res, item_id) = rt.add_item(
+    let item_id = rt.add_item(
         user_id,
         budget_id,
         "Utgifter".to_string(),
         BudgetingType::Expense,
     )?;
 
+    let res = rt.materialize(budget_id)?;
     let item = res.get_item(item_id).unwrap();
     assert_eq!(item.name, "Utgifter");
     assert_eq!(item.budgeting_type, BudgetingType::Expense);

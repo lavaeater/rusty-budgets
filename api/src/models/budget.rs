@@ -80,11 +80,10 @@ impl Default for Budget {
 
 impl Budget {
     pub fn new(id: Uuid) -> Self {
-        let today = Utc::now();
         Self {
             id,
             periods: vec![BudgetPeriod::new(PeriodId::from_date(
-                today,
+                Utc::now(),
                 MonthBeginsOn::default(),
             ))],
             ..Default::default()
