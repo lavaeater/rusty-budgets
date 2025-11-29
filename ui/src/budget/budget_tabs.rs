@@ -10,7 +10,7 @@ pub fn BudgetTabs() -> Element {
     let budget_signal = use_context::<Signal<Option<BudgetViewModel>>>();
     match budget_signal() {
         Some(budget) => {
-            let mut overview_by_type = budget
+            let overview_by_type = budget
                 .overviews
                 .iter()
                 .enumerate()
@@ -34,7 +34,7 @@ pub fn BudgetTabs() -> Element {
                     default_value: overview_by_type.first().unwrap().1.to_string(),
                     horizontal: true,
                     TabList {
-                        for (index , budgeting_type , overview,_ ) in &overview_by_type {
+                        for (index , budgeting_type , overview , _) in &overview_by_type {
                             TabTrigger {
                                 value: budgeting_type.to_string(),
                                 index: *index,

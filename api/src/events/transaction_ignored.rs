@@ -31,12 +31,12 @@ impl TransactionIgnoredHandler for Budget {
         // First, extract all the data we need from the transaction (immutable borrow)
         let tx = self.get_transaction(event.tx_id).unwrap();
         let tx_amount = tx.amount;
-        let previous_actual_id = tx.actual_item_id;
+        let previous_actual_id = tx.actual_id;
         let period_id = PeriodId::from_date(tx.date, self.month_begins_on());
         
         if let Some(previous_actual_id) = previous_actual_id {
             let previous_actual = self.with_period(period_id).get_actual(previous_actual_id).unwrap();
-            let bt = previous_actual.budgeting_type();
+            let bt = previous_actual.budgeting_type;
             self.with_period_mut(period_id).mutate_actual(previous_actual_id, |a| {
                 let adjusted_amount = if cost_types.contains(&bt) {
                     -tx_amount
@@ -47,7 +47,7 @@ impl TransactionIgnoredHandler for Budget {
             });
         }
 
-        self.with_period_mut(period_id).transactions.ignore_transaction(event.tx_id);
+        self.set_transaction_ignored(event.tx_id);
         event.tx_id
     }
 
@@ -61,7 +61,7 @@ impl TransactionIgnoredHandler for Budget {
                 tx_id,
             })
         } else {
-            let bork = &self.list_all_bank_transactions();
+            let bork = &self.all_transactions();
             tracing::error!("These are the transactions: {:?}", bork);
             Err(CommandError::Validation(
                 format!("Transaction {} does not exist", tx_id),

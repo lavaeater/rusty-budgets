@@ -1,108 +1,22 @@
-use crate::models::bank_transaction_store::BankTransactionStore;
 use crate::models::budget_period_id::PeriodId;
-use crate::models::{ActualItem, BudgetItem, MatchRule};
+use crate::models::rule_packages::RulePackages;
+use crate::models::BudgetingType::{Expense, Income, Savings};
+use crate::models::{ActualItem, BankTransaction, BudgetItem, BudgetingType, MatchRule, Money};
+use crate::view_models::{BudgetingTypeOverview, ValueKind};
 use core::fmt::Display;
+use iter_tools::Itertools;
 use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeStruct;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::{HashMap, HashSet};
 use std::fmt;
 use uuid::Uuid;
-#[derive(Debug, Clone)]
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BudgetPeriod {
     pub id: PeriodId,
-    pub actual_items: HashMap<Uuid, ActualItem>,
-    pub transactions: BankTransactionStore,
-}
-
-impl Serialize for BudgetPeriod {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut state = serializer.serialize_struct("BudgetPeriod", 3)?;
-        state.serialize_field("id", &self.id)?;
-        let actual_items: HashMap<String, ActualItem> = self
-            .actual_items
-            .iter()
-            .map(|(k, v)| (k.to_string(), v.clone()))
-            .collect();
-        state.serialize_field("actual_items", &actual_items)?;
-        state.serialize_field("transactions", &self.transactions)?;
-        state.end()
-    }
-}
-
-impl<'de> Deserialize<'de> for BudgetPeriod {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        #[derive(Deserialize)]
-        #[serde(field_identifier, rename_all = "snake_case")]
-        enum Field {
-            Id,
-            ActualItems,
-            Transactions,
-        }
-
-        struct BudgetPeriodVisitor;
-
-        impl<'de> Visitor<'de> for BudgetPeriodVisitor {
-            type Value = BudgetPeriod;
-
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                formatter.write_str("struct BudgetPeriod")
-            }
-
-            fn visit_map<V>(self, mut map: V) -> Result<BudgetPeriod, V::Error>
-            where
-                V: MapAccess<'de>,
-            {
-                let mut id = None;
-                let mut actual_items = None;
-                let mut transactions = None;
-
-                while let Some(key) = map.next_key()? {
-                    match key {
-                        Field::Id => {
-                            if id.is_some() {
-                                return Err(de::Error::duplicate_field("id"));
-                            }
-                            id = Some(map.next_value()?);
-                        }
-                        Field::ActualItems => {
-                            if actual_items.is_some() {
-                                return Err(de::Error::duplicate_field("actual_items"));
-                            }
-                            actual_items = Some(map.next_value()?);
-                        }
-                        Field::Transactions => {
-                            if transactions.is_some() {
-                                return Err(de::Error::duplicate_field("transactions"));
-                            }
-                            transactions = Some(map.next_value()?);
-                        }
-                    }
-                }
-
-                let id = id.ok_or_else(|| de::Error::missing_field("id"))?;
-                let actual_items =
-                    actual_items.ok_or_else(|| de::Error::missing_field("actual_items"))?;
-                let transactions =
-                    transactions.ok_or_else(|| de::Error::missing_field("transactions"))?;
-
-                Ok(BudgetPeriod {
-                    id,
-                    actual_items,
-                    transactions,
-                })
-            }
-        }
-
-        const FIELDS: &[&str] = &["id", "actual_items", "transactions"];
-        deserializer.deserialize_struct("BudgetPeriod", FIELDS, BudgetPeriodVisitor)
-    }
+    pub actual_items: Vec<ActualItem>,
+    pub transactions: Vec<BankTransaction>,
 }
 
 impl BudgetPeriod {
@@ -111,27 +25,156 @@ impl BudgetPeriod {
             mutator(actual);
         }
     }
+
+    pub fn update_actuals_from_item(&mut self, item: &BudgetItem) {
+        for actual in self.actual_items.iter_mut() {
+            if actual.budget_item_id == item.id {
+                actual.item_name = item.name.clone();
+                actual.budgeting_type = item.budgeting_type;
+            }
+        }
+    }
     pub fn get_actual(&self, id: Uuid) -> Option<&ActualItem> {
-        self.actual_items.get(&id)
+        self.actual_items.iter().find(|i| i.id == id)
+    }
+
+    pub fn ignored_transactions(&self) -> Vec<&BankTransaction> {
+        self.transactions.iter().filter(|t| t.ignored).collect()
+    }
+
+    pub fn items_by_type(
+        &self,
+        rules: &RulePackages,
+    ) -> Vec<(usize, BudgetingType, BudgetingTypeOverview, Vec<ActualItem>)> {
+        self.actual_items
+            .iter()
+            .group_by(|item| item.budgeting_type)
+            .into_iter()
+            .enumerate()
+            .map(|(index, (group, items))| {
+                let overview = match group {
+                    Income => self.get_income_overview(rules),
+                    Expense => self.get_expense_overview(rules),
+                    Savings => self.get_savings_overview(rules),
+                };
+                (index, group, overview, items.cloned().collect::<Vec<_>>())
+            })
+            .collect::<Vec<_>>()
+    }
+
+    pub fn budgeted_for_type(&self, budgeting_type: BudgetingType) -> Money {
+        self.actual_items
+            .iter()
+            .filter(|item| item.budgeting_type == budgeting_type)
+            .map(|item| item.budgeted_amount)
+            .sum()
+    }
+
+    pub fn spent_for_type(&self, budgeting_type: BudgetingType) -> Money {
+        self.actual_items
+            .iter()
+            .filter(|item| item.budgeting_type == budgeting_type)
+            .map(|item| item.actual_amount)
+            .sum()
+    }
+
+    pub fn get_income_overview(
+        &self,
+        rules: &RulePackages,
+    ) -> BudgetingTypeOverview {
+        let rules = &rules
+            .rule_packages
+            .iter()
+            .find(|p| p.budgeting_type == Income)
+            .unwrap();
+       
+        let budgeted_income = rules
+            .budgeted_rule
+            .evaluate(&self.actual_items, Some(ValueKind::Budgeted));
+        
+        let spent_income = rules.actual_rule.evaluate(&self.actual_items, Some(ValueKind::Spent));
+        
+        let remaining_income = rules
+            .remaining_rule
+            .evaluate(&self.actual_items, Some(ValueKind::Budgeted));
+
+        BudgetingTypeOverview {
+            budgeting_type: Income,
+            budgeted_amount: budgeted_income,
+            actual_amount: spent_income,
+            remaining_budget: remaining_income,
+            is_ok: remaining_income == Money::zero(remaining_income.currency()),
+        }
+    }
+
+    pub fn get_expense_overview(
+        &self,
+        rules: &RulePackages,
+    ) -> BudgetingTypeOverview {
+        let rules = &rules
+            .rule_packages
+            .iter()
+            .find(|p| p.budgeting_type == Expense)
+            .unwrap();
+        let budgeted_expenses = rules
+            .budgeted_rule
+            .evaluate(&self.actual_items, Some(ValueKind::Budgeted));
+        let spent_expenses = rules.actual_rule.evaluate(&self.actual_items, Some(ValueKind::Spent));
+        let self_diff = rules.remaining_rule.evaluate(&self.actual_items, None);
+
+        BudgetingTypeOverview {
+            budgeting_type: Expense,
+            budgeted_amount: budgeted_expenses,
+            actual_amount: spent_expenses,
+            remaining_budget: self_diff,
+            is_ok: self_diff < Money::zero(self_diff.currency()),
+        }
+    }
+
+    pub fn get_savings_overview(
+        &self,
+        rules: &RulePackages,
+    ) -> BudgetingTypeOverview {
+        let rules = &rules
+            .rule_packages
+            .iter()
+            .find(|p| p.budgeting_type == Savings)
+            .unwrap();
+        let budgeted_savings = rules
+            .budgeted_rule
+            .evaluate(&self.actual_items, Some(ValueKind::Budgeted));
+        let spent_savings = rules.actual_rule.evaluate(&self.actual_items, Some(ValueKind::Spent));
+        let self_diff = rules.remaining_rule.evaluate(&self.actual_items, None);
+
+        BudgetingTypeOverview {
+            budgeting_type: Savings,
+            budgeted_amount: budgeted_savings,
+            actual_amount: spent_savings,
+            remaining_budget: self_diff,
+            is_ok: self_diff < Money::zero(self_diff.currency()),
+        }
     }
 
     pub fn get_actual_mut(&mut self, id: Uuid) -> Option<&mut ActualItem> {
-        self.actual_items.get_mut(&id)
+        self.actual_items.iter_mut().find(|i| i.id == id)
     }
-
     pub fn add_actual(&mut self, actual_item: ActualItem) {
-        self.actual_items.insert(actual_item.id, actual_item);
+        self.actual_items.push(actual_item);
     }
     pub fn contains_actual_for_item(&self, item_id: Uuid) -> bool {
         self.actual_items
-            .values()
+            .iter()
             .any(|i| i.budget_item_id == item_id)
     }
 
     pub fn contains_actual(&self, actual_id: Uuid) -> bool {
-        self.actual_items.contains_key(&actual_id)
+        self.actual_items.iter().any(|i| i.id == actual_id)
     }
-    
+
+    pub fn insert_transaction(&mut self, tx: BankTransaction) {
+        self.transactions.push(tx);
+    }
+
     fn clear_hashmaps_and_transactions(&mut self) {
         self.transactions.clear();
     }
@@ -141,20 +184,24 @@ impl BudgetPeriod {
         period.clear_hashmaps_and_transactions();
         period
     }
-    pub fn new_for(id: PeriodId) -> Self {
+    pub fn new(id: PeriodId) -> Self {
         let mut period = Self {
             id,
-            actual_items: HashMap::new(),
-            transactions: BankTransactionStore::default(),
+            actual_items: Vec::new(),
+            transactions: Vec::new(),
         };
         period.clear_hashmaps_and_transactions();
         period
     }
 
-    pub fn evaluate_rules(&self, rules: &HashSet<MatchRule>, items: &[BudgetItem]) -> Vec<(Uuid, Option<Uuid>, Option<Uuid>)> {
+    pub fn evaluate_rules(
+        &self,
+        rules: &HashSet<MatchRule>,
+        items: &[BudgetItem],
+    ) -> Vec<(Uuid, Option<Uuid>, Option<Uuid>)> {
         let mut matched_transactions = Vec::new();
-        let actuals = self.actual_items.values().collect::<Vec<_>>();
-        for transaction in self.transactions.list_transactions_for_connection() {
+        let actuals = self.actual_items.iter().collect::<Vec<_>>();
+        for transaction in self.transactions.iter() {
             for rule in rules {
                 if rule.matches_transaction(&transaction) {
                     if let Some(actual_id) = self.get_actual_id_for_rule(rule, &actuals) {
@@ -170,15 +217,33 @@ impl BudgetPeriod {
         matched_transactions
     }
 
-    pub fn get_actual_id_for_rule(&self, rule: &MatchRule, actuals: &Vec<&ActualItem>) -> Option<Uuid> {
-        actuals.iter().find(|i| rule.matches_actual(i)).map(|i| i.id)
+    pub fn get_actual_id_for_rule(
+        &self,
+        rule: &MatchRule,
+        actuals: &Vec<&ActualItem>,
+    ) -> Option<Uuid> {
+        actuals
+            .iter()
+            .find(|i| rule.matches_actual(i))
+            .map(|i| i.id)
+    }
+
+    pub fn transactions_for_actual(&self, actual_id: Uuid, sorted: bool) -> Vec<&BankTransaction> {
+        let mut transactions = self.transactions
+            .iter()
+            .filter(|i| i.actual_id == Some(actual_id))
+            .collect::<Vec<_>>();
+        if sorted {
+            transactions.sort_by_key(|tx| tx.date);
+        }
+        transactions
     }
 
     pub fn get_item_id_for_rule(&self, rule: &MatchRule, items: &[BudgetItem]) -> Option<Uuid> {
         items.iter().find(|i| rule.matches_item(i)).map(|i| i.id)
     }
-    
-    pub fn all_actual_items(&self) -> Vec<ActualItem> {
-        self.actual_items.values().cloned().collect()
+
+    pub fn all_actuals(&self) -> Vec<&ActualItem> {
+        self.actual_items.iter().collect()
     }
 }

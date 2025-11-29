@@ -43,7 +43,10 @@ pub fn NewBudgetItem(budgeting_type: BudgetingType, tx_id: Option<Uuid>, close_s
                         r#type: "button",
                         "data-style": "primary",
                         onclick: move |_| async move {
-                            info!("Add New Actual Item with: {}, {}, {}, {:#?}, {}", new_item_name(), budgeting_type, new_item_amount(), tx_id, period_id);
+                            info!(
+                                "Add New Actual Item with: {}, {}, {}, {:#?}, {}", new_item_name(),
+                                budgeting_type, new_item_amount(), tx_id, period_id
+                            );
                             if let Ok(updated_budget) = api::add_new_actual_item(
                                     budget_id,
                                     new_item_name(),

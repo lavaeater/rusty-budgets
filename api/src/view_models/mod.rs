@@ -2,10 +2,20 @@ use crate::models::{
     ActualItem, BankTransaction, Budget, BudgetItem, BudgetingType, Currency, Money, MonthBeginsOn,
     PeriodId,
 };
+use crate::view_models::BudgetItemStatus::{Balanced, NotBudgeted, OverBudget, UnderBudget};
 use chrono::{DateTime, Utc};
 use dioxus::logger::tracing;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+pub enum BudgetItemStatus {
+    Balanced,
+    OverBudget,
+    #[default]
+    NotBudgeted,
+    UnderBudget,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct BudgetItemViewModel {
@@ -16,14 +26,14 @@ pub struct BudgetItemViewModel {
     pub budgeted_amount: Money,
     pub actual_amount: Money,
     pub remaining_budget: Money,
-    pub is_over_budget: bool,
+    pub status: BudgetItemStatus,
     pub transactions: Vec<TransactionViewModel>,
 }
 
 impl BudgetItemViewModel {
     pub fn from_item(
         budget_item: &BudgetItem,
-        actual_items: &[ActualItem],
+        actual_items: &[&ActualItem],
         currency: Currency,
         transactions: &Vec<&BankTransaction>,
     ) -> Self {
@@ -33,18 +43,29 @@ impl BudgetItemViewModel {
         if let Some(actual_item) = actual_item {
             let transactions = transactions
                 .iter()
-                .filter(|tx| tx.actual_item_id == Some(actual_item.id))
+                .filter(|tx| tx.actual_id == Some(actual_item.id))
                 .map(|tx| TransactionViewModel::from_transaction(tx))
                 .collect::<Vec<_>>();
+
+            let status = if actual_item.budgeted_amount.is_zero() {
+                NotBudgeted
+            } else if actual_item.actual_amount > actual_item.budgeted_amount {
+                OverBudget
+            } else if actual_item.actual_amount < actual_item.budgeted_amount {
+                UnderBudget
+            } else {
+                Balanced
+            };
+
             Self {
                 item_id: actual_item.budget_item_id,
                 actual_id: Some(actual_item.id),
-                name: actual_item.item_name().clone(),
-                budgeting_type: actual_item.budgeting_type(),
+                name: actual_item.item_name.clone(),
+                budgeting_type: actual_item.budgeting_type,
                 budgeted_amount: actual_item.budgeted_amount,
                 actual_amount: actual_item.actual_amount,
                 remaining_budget: actual_item.budgeted_amount - actual_item.actual_amount,
-                is_over_budget: actual_item.budgeted_amount < actual_item.actual_amount,
+                status,
                 transactions,
             }
         } else {
@@ -56,7 +77,7 @@ impl BudgetItemViewModel {
                 budgeted_amount: Money::zero(currency),
                 actual_amount: Money::zero(currency),
                 remaining_budget: Money::zero(currency),
-                is_over_budget: false,
+                status: NotBudgeted,
                 transactions: Vec::new(),
             }
         }
@@ -79,7 +100,7 @@ impl TransactionViewModel {
             amount: tx.amount,
             description: tx.description.clone(),
             date: tx.date,
-            actual_item_id: tx.actual_item_id,
+            actual_item_id: tx.actual_id,
         }
     }
 }
@@ -99,19 +120,11 @@ pub struct BudgetViewModel {
 
 impl BudgetViewModel {
     pub fn from_budget(budget: &Budget, period_id: PeriodId) -> Self {
-        let actual_items = budget
-            .get_period(period_id)
-            .map(|p| p.all_actual_items())
-            .unwrap_or_default();
-        let budget_items = budget.list_all_items_inner();
-        let transactions = budget.list_transactions_for_connection(period_id);
-        let ignored_transactions = budget.list_ignored_transactions(period_id);
-        let all_connected_transactions = budget
-            .list_bank_transactions(period_id)
-            .iter()
-            .copied()
-            .filter(|tx| tx.actual_item_id.is_some() && !tx.ignored)
-            .collect::<Vec<_>>();
+        let actual_items = budget.all_actuals(period_id);
+        let budget_items = budget.all_items();
+        let transactions = budget.unconnected_transactions(period_id);
+        let ignored_transactions = budget.ignored_transactions(period_id);
+        let connected_transactions = budget.connected_transactions(period_id);
 
         let items = budget_items
             .iter()
@@ -120,17 +133,17 @@ impl BudgetViewModel {
                     bi,
                     &actual_items,
                     budget.currency,
-                    &all_connected_transactions,
+                    &connected_transactions,
                 )
             })
             .collect::<Vec<_>>();
         let to_connect = transactions
             .iter()
-            .map(TransactionViewModel::from_transaction)
+            .map(|tx| TransactionViewModel::from_transaction(tx))
             .collect::<Vec<_>>();
         let ignored_transactions = ignored_transactions
             .iter()
-            .map(TransactionViewModel::from_transaction)
+            .map(|tx| TransactionViewModel::from_transaction(tx))
             .collect::<Vec<_>>();
         let mut overviews = vec![
             budget.get_budgeting_overview(BudgetingType::Income, period_id),
@@ -184,7 +197,7 @@ impl ValueKind {
 }
 
 impl Rule {
-    pub fn evaluate(&self, store: &Vec<&ActualItem>, kind: Option<ValueKind>) -> Money {
+    pub fn evaluate(&self, store: &Vec<ActualItem>, kind: Option<ValueKind>) -> Money {
         match self {
             Rule::Sum(types) => types
                 .iter()
@@ -209,10 +222,10 @@ impl Rule {
         }
     }
 
-    pub fn get_sum(store: &Vec<&ActualItem>, kind: &ValueKind, base: &BudgetingType) -> Money {
+    pub fn get_sum(store: &Vec<ActualItem>, kind: &ValueKind, base: &BudgetingType) -> Money {
         store
             .iter()
-            .filter(|i| i.budgeting_type() == *base)
+            .filter(|i| i.budgeting_type == *base)
             .map(|i| kind.pick(i))
             .sum::<Money>()
     }
@@ -225,60 +238,57 @@ fn test_calculate_rules() {
     use std::sync::{Arc, Mutex};
     use Rule::*;
     let period_id = PeriodId::new(2025, 12);
-    let budget_items = [Arc::new(Mutex::new(BudgetItem::new(
-            Uuid::new_v4(),
-            "Lön",
-            Income,
-        ))),
-        Arc::new(Mutex::new(BudgetItem::new(
-            Uuid::new_v4(),
-            "Hyra",
-            Expense,
-        ))),
-        Arc::new(Mutex::new(BudgetItem::new(
-            Uuid::new_v4(),
-            "Spara",
-            Savings,
-        )))];
+    let budget_items = [
+        BudgetItem::new(Uuid::new_v4(), "Lön", Income),
+        BudgetItem::new(Uuid::new_v4(), "Hyra", Expense),
+        BudgetItem::new(Uuid::new_v4(), "Spara", Savings),
+    ];
 
-    let mut store = Vec::new();
-    store.push(ActualItem::new(
-        Uuid::new_v4(),
-        budget_items[0].clone(),
-        period_id,
-        Money::new_dollars(5000, Currency::SEK),
-        Money::new_dollars(4000, Currency::SEK),
-        None,
-        vec![],
-    ));
-    store.push(ActualItem::new(
-        Uuid::new_v4(),
-        budget_items[1].clone(),
-        period_id,
-        Money::new_dollars(3000, Currency::SEK),
-        Money::new_dollars(2000, Currency::SEK),
-        None,
-        vec![],
-    ));
-    store.push(ActualItem::new(
-        Uuid::new_v4(),
-        budget_items[2].clone(),
-        period_id,
-        Money::new_dollars(1000, Currency::SEK),
-        Money::new_dollars(500, Currency::SEK),
-        None,
-        vec![],
-    ));
+    let store = vec![
+        ActualItem::new(
+            Uuid::new_v4(),
+            &budget_items[0].name,
+            budget_items[0].id,
+            budget_items[0].budgeting_type,
+            period_id,
+            Money::new_dollars(5000, Currency::SEK),
+            Money::new_dollars(4000, Currency::SEK),
+            None,
+            vec![],
+        ),
+        ActualItem::new(
+            Uuid::new_v4(),
+            &budget_items[1].name,
+            budget_items[1].id,
+            budget_items[1].budgeting_type,
+            period_id,
+            Money::new_dollars(3000, Currency::SEK),
+            Money::new_dollars(2000, Currency::SEK),
+            None,
+            vec![],
+        ),
+        ActualItem::new(
+            Uuid::new_v4(),
+            &budget_items[2].name,
+            budget_items[2].id,
+            budget_items[2].budgeting_type,
+            period_id,
+            Money::new_dollars(1000, Currency::SEK),
+            Money::new_dollars(500, Currency::SEK),
+            None,
+            vec![],
+        ),
+    ];
 
     let income_rule = Sum(vec![Income]);
     let remaining_rule = Difference(Income, vec![Expense, Savings]);
 
     assert_eq!(
-        income_rule.evaluate(&store.iter().collect::<Vec<_>>(), Some(ValueKind::Budgeted)),
+        income_rule.evaluate(&store, Some(ValueKind::Budgeted)),
         Money::new_dollars(5000, Currency::SEK)
     );
     assert_eq!(
-        remaining_rule.evaluate(&store.iter().collect::<Vec<_>>(), Some(ValueKind::Budgeted)),
+        remaining_rule.evaluate(&store, Some(ValueKind::Budgeted)),
         Money::new_dollars(1000, Currency::SEK)
     );
 }

@@ -57,15 +57,19 @@ pub fn TransactionsView(ignored: bool) -> Element {
                                                             item.item_id,
                                                             budget.period_id,
                                                         )
-                                                        .await {
-                                                            Ok(bv) => {
-                                                                info!("Connected transaction {} to item {}", tx.tx_id, item.item_id);
-                                                                budget_signal.set(Some(bv));
-                                                            }
-                                                            Err(e) => {
-                                                                error!("Failed to connect transaction {} to item {}: {}", tx.tx_id, item.item_id, e);
-                                                            }
-                                                        } 
+                                                        .await
+                                                    {
+                                                        Ok(bv) => {
+                                                            info!("Connected transaction {} to item {}", tx.tx_id, item.item_id);
+                                                            budget_signal.set(Some(bv));
+                                                        }
+                                                        Err(e) => {
+                                                            error!(
+                                                                "Failed to connect transaction {} to item {}: {}", tx.tx_id, item
+                                                                .item_id, e
+                                                            );
+                                                        }
+                                                    }
                                                 }
                                             },
                                         }

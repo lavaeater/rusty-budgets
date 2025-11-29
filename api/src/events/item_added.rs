@@ -19,8 +19,7 @@ impl ItemAddedHandler for Budget {
     fn apply_add_item(&mut self, event: &ItemAdded) -> Uuid {
         let new_item = BudgetItem::new(event.item_id, &event.name, event.item_type);
 
-        self.budget_items.insert(event.item_id, Arc::new(Mutex::new(new_item)));
-
+        self.insert_item(new_item);
         event.item_id
     }
 

@@ -6,10 +6,10 @@ mod budget_item;
 mod bank_transaction;
 mod budgeting_type;
 mod budget_period;
-mod bank_transaction_store;
-mod budget_period_store;
 mod budget_period_id;
 mod actual_item;
+mod rule_packages;
+mod match_rule;
 
 pub use user::*;
 pub use month_begins_on::*;
@@ -17,10 +17,9 @@ pub use budget::*;
 pub use money::*;
 pub use budget_item::*;
 pub use budgeting_type::*;
-pub use bank_transaction_store::*;
 pub use bank_transaction::*;
 pub use budget_period_id::*;
 pub use budget_period::*;
-pub use budget_period_store::*;
 pub use actual_item::*;
+pub use match_rule::*;
 

@@ -32,6 +32,12 @@ pub struct Money {
 }
 
 impl Money {
+    pub fn is_zero(&self) -> bool {
+        self.cents == 0
+    }
+}
+
+impl Money {
     pub fn multiply(&self, rhs: i64) -> Money {
         Money::new_cents(self.cents * rhs, self.currency)
     }

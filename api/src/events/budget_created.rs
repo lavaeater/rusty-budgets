@@ -2,7 +2,7 @@ use uuid::Uuid;
 use serde::{Deserialize, Serialize};
 use cqrs_macros::DomainEvent;
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
-use crate::models::Budget;
+use crate::models::{Budget, MonthBeginsOn};
 use crate::models::Currency;
 
 #[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]
@@ -12,6 +12,7 @@ pub struct BudgetCreated {
     pub budget_id: Uuid,
     pub name: String,
     pub user_id: Uuid,
+    pub month_begins_on: MonthBeginsOn,
     pub default_budget: bool,
     pub currency: Currency,
 }
@@ -30,6 +31,7 @@ impl BudgetCreatedHandler for Budget {
         &self,
         name: String,
         user_id: Uuid,
+        month_begins_on: MonthBeginsOn,
         default_budget: bool,
         currency: Currency,
     ) -> Result<BudgetCreated, CommandError> {
@@ -38,6 +40,7 @@ impl BudgetCreatedHandler for Budget {
                 budget_id: Uuid::new_v4(),
                 name,
                 user_id,
+                month_begins_on,
                 default_budget,
                 currency,
             })
