@@ -214,8 +214,7 @@ pub mod db {
         name: String,
         item_type: BudgetingType,
     ) -> anyhow::Result<Uuid> {
-        with_runtime(None).add_item(user_id, budget_id, name, item_type)?;
-        Ok(budget_id)
+        with_runtime(None).add_item(user_id, budget_id, name, item_type)
     }
 
     pub fn evaluate_rules(user_id: Uuid, budget_id: Uuid) -> anyhow::Result<Uuid> {

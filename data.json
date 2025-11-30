@@ -1,0 +1,120 @@
+{
+  "StoredBudgetEvent": [
+    {
+      "id": "8a3b7a29-5ce7-4c45-8cb9-3107cc6a578a",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764495399149371276,
+      "created_at": "2025-11-30T09:36:39.149371276Z",
+      "data": {
+        "BudgetCreated": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "name": "Familj",
+          "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930",
+          "month_begins_on": {
+            "PreviousMonthWorkDayBefore": 25
+          },
+          "default_budget": true,
+          "currency": "SEK"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "98ef9436-52dc-405d-8c0f-baf758f1364f",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764495408971454095,
+      "created_at": "2025-11-30T09:36:48.971454095Z",
+      "data": {
+        "ItemAdded": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "item_id": "c8a630ca-26d0-4148-9fc1-59ff8b87404e",
+          "name": "Lön",
+          "item_type": "Income"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "d4d454ce-722a-4a21-8a96-f2e951a908a4",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764495408971558618,
+      "created_at": "2025-11-30T09:36:48.971558618Z",
+      "data": {
+        "ActualAdded": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "actual_id": "44b03e5b-6a96-40ad-ad83-310352092d26",
+          "item_id": "c8a630ca-26d0-4148-9fc1-59ff8b87404e",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 5200000,
+            "currency": "SEK"
+          }
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "ea896262-240b-4acd-91a1-22ce321508a6",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764495419209868537,
+      "created_at": "2025-11-30T09:36:59.209868537Z",
+      "data": {
+        "ItemAdded": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "item_id": "63aa6edb-4021-454a-8ad4-f0782678d54b",
+          "name": "Livsmedel",
+          "item_type": "Expense"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "e8291f89-5659-47e8-94fc-14dc56b644a7",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764495419210107347,
+      "created_at": "2025-11-30T09:36:59.210107347Z",
+      "data": {
+        "ActualAdded": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "actual_id": "2a18ce42-c9a6-45f6-9246-f11031f01099",
+          "item_id": "63aa6edb-4021-454a-8ad4-f0782678d54b",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 1100000,
+            "currency": "SEK"
+          }
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    }
+  ],
+  "Budget": [],
+  "User": [
+    {
+      "id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930",
+      "user_name": "tommie",
+      "email": "tommie.nygren@gmail.com",
+      "first_name": "Tommie",
+      "last_name": "Nygren",
+      "phone": "0704382781",
+      "birthday": "1973-05-12"
+    }
+  ],
+  "UserBudgets": [
+    {
+      "id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930",
+      "budgets": [
+        [
+          "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          true
+        ]
+      ]
+    }
+  ]
+}
