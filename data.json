@@ -92,9 +92,833 @@
         }
       },
       "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "3df535a3-c481-4cb5-8ac5-34f3945a817c",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764506559272009632,
+      "created_at": "2025-11-30T12:42:39.272009632Z",
+      "data": {
+        "ItemAdded": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "item_id": "b4458b60-e823-409c-83fc-e843be9b8778",
+          "name": "Bostadslån",
+          "item_type": "Expense"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "50c6dddb-0700-455e-aca0-a410f1f50578",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764506559272216048,
+      "created_at": "2025-11-30T12:42:39.272216048Z",
+      "data": {
+        "ActualAdded": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "actual_id": "c1c9ce8f-3f88-47a2-8388-a3f630937195",
+          "item_id": "b4458b60-e823-409c-83fc-e843be9b8778",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 540000,
+            "currency": "SEK"
+          }
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "5ebbb819-be5e-4639-9b23-a29b59c84005",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764506572584114504,
+      "created_at": "2025-11-30T12:42:52.584114504Z",
+      "data": {
+        "ItemAdded": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "item_id": "6d036a59-0b65-48a4-99db-453aac3d49c7",
+          "name": "Telefoni",
+          "item_type": "Expense"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "5951f186-0ba7-42cf-b9bd-dbae60b66e36",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764506572584317674,
+      "created_at": "2025-11-30T12:42:52.584317674Z",
+      "data": {
+        "ActualAdded": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "actual_id": "44962b5e-9d89-4eab-9a8e-90995db70706",
+          "item_id": "6d036a59-0b65-48a4-99db-453aac3d49c7",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 150000,
+            "currency": "SEK"
+          }
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "2f36922f-f858-4b87-806b-b54c1086ad3d",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764506582649047993,
+      "created_at": "2025-11-30T12:43:02.649047993Z",
+      "data": {
+        "ItemAdded": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "item_id": "9d273cee-f31a-44f2-8d3a-85945f195205",
+          "name": "Internet",
+          "item_type": "Expense"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "4f59db7a-4ccc-44dc-817f-10dcc81d1e1d",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764506582649215736,
+      "created_at": "2025-11-30T12:43:02.649215736Z",
+      "data": {
+        "ActualAdded": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "actual_id": "bc5692e6-9e03-49ef-83b5-8a4fd3eb6781",
+          "item_id": "9d273cee-f31a-44f2-8d3a-85945f195205",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 80000,
+            "currency": "SEK"
+          }
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "2e9c78c7-0887-4341-a5eb-6689359145af",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764506614053383872,
+      "created_at": "2025-11-30T12:43:34.053383872Z",
+      "data": {
+        "ItemAdded": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "item_id": "6cd94d46-2e91-4af7-a5f3-23da00f5be9d",
+          "name": "Bilavsättning",
+          "item_type": "Savings"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "57f20517-1fb9-4514-98b3-1194c123fda8",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764506614053633871,
+      "created_at": "2025-11-30T12:43:34.053633871Z",
+      "data": {
+        "ActualAdded": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "actual_id": "867a18ff-8060-4790-b449-8597d2c98248",
+          "item_id": "6cd94d46-2e91-4af7-a5f3-23da00f5be9d",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 550000,
+            "currency": "SEK"
+          }
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "24c41767-8cf3-473b-945b-138ed6538260",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764506622925338400,
+      "created_at": "2025-11-30T12:43:42.925338400Z",
+      "data": {
+        "ItemAdded": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "item_id": "82d44e0b-4b36-433b-b09f-39a14b7bbd11",
+          "name": "Japanresa",
+          "item_type": "Savings"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "834628e9-d05f-40d7-bd91-05f33c40e8a6",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764506622925459867,
+      "created_at": "2025-11-30T12:43:42.925459867Z",
+      "data": {
+        "ActualAdded": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "actual_id": "4d92b80b-9d3d-4a10-98c8-7226af733fa1",
+          "item_id": "82d44e0b-4b36-433b-b09f-39a14b7bbd11",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 500000,
+            "currency": "SEK"
+          }
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "3d83ea69-2ed2-4c40-be30-f3aba83ebbf6",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764506638417840219,
+      "created_at": "2025-11-30T12:43:58.417840219Z",
+      "data": {
+        "ItemAdded": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "item_id": "6351a192-48df-43f8-a4b1-cd78dffa33ee",
+          "name": "Lån Elisabeth",
+          "item_type": "Expense"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "52a0e999-0d89-4666-88c3-3a8d0f273e93",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764506638417955154,
+      "created_at": "2025-11-30T12:43:58.417955154Z",
+      "data": {
+        "ActualAdded": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "actual_id": "716acb32-2393-4312-9add-67a287731b15",
+          "item_id": "6351a192-48df-43f8-a4b1-cd78dffa33ee",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 500000,
+            "currency": "SEK"
+          }
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "c458df49-0836-40e0-8b38-0c587d4ffd89",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764506652190928955,
+      "created_at": "2025-11-30T12:44:12.190928955Z",
+      "data": {
+        "ItemAdded": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "item_id": "232be4e2-c211-4c00-a5f7-88bb36586203",
+          "name": "Vård",
+          "item_type": "Expense"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "a4776209-7825-48f3-8e95-fbbdfa78f2b6",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764506652191052455,
+      "created_at": "2025-11-30T12:44:12.191052455Z",
+      "data": {
+        "ActualAdded": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "actual_id": "532f8dbf-e382-4231-b692-6c6f06b5f5a2",
+          "item_id": "232be4e2-c211-4c00-a5f7-88bb36586203",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 250000,
+            "currency": "SEK"
+          }
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "23b18c54-463c-43b3-96f8-c96172794dec",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764506660903817246,
+      "created_at": "2025-11-30T12:44:20.903817246Z",
+      "data": {
+        "ItemAdded": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "item_id": "41b64ae1-5579-45a0-8bc8-43753ce56497",
+          "name": "Bil",
+          "item_type": "Expense"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "dee25113-f08e-44e9-875c-8aa0e3f48ffa",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764506660904012650,
+      "created_at": "2025-11-30T12:44:20.904012650Z",
+      "data": {
+        "ActualAdded": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "actual_id": "97cf852a-40ce-4331-b71b-0ec4b8c4e750",
+          "item_id": "41b64ae1-5579-45a0-8bc8-43753ce56497",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 350000,
+            "currency": "SEK"
+          }
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "4c9810fc-c83c-4078-af6e-b047b114cec7",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764506678906691377,
+      "created_at": "2025-11-30T12:44:38.906691377Z",
+      "data": {
+        "ItemAdded": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "item_id": "83e2f422-84ca-40a4-868a-b74f5c5b0dd0",
+          "name": "El",
+          "item_type": "Expense"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "edbbbb1e-6139-4498-b97e-5b3198c52d4f",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764506678906955193,
+      "created_at": "2025-11-30T12:44:38.906955193Z",
+      "data": {
+        "ActualAdded": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "actual_id": "0b3bfb7b-049c-4c38-afad-9bf1a956b18b",
+          "item_id": "83e2f422-84ca-40a4-868a-b74f5c5b0dd0",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 350000,
+            "currency": "SEK"
+          }
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "e51e7a1e-ca36-4a1d-9789-9d49c74d0bf4",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764506691220138427,
+      "created_at": "2025-11-30T12:44:51.220138427Z",
+      "data": {
+        "ItemAdded": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "item_id": "3221f5c9-5a8f-4dcf-a669-254cd4d3712c",
+          "name": "Transport",
+          "item_type": "Expense"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "54e8699e-89b6-48e1-b19b-2a16d69d8c5d",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764506691220329777,
+      "created_at": "2025-11-30T12:44:51.220329777Z",
+      "data": {
+        "ActualAdded": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "actual_id": "5a695a16-0435-4048-8b5c-634c563886c5",
+          "item_id": "3221f5c9-5a8f-4dcf-a669-254cd4d3712c",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 50000,
+            "currency": "SEK"
+          }
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "7f903e62-0743-47f0-ad67-9e064ba31dc9",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764506700962619531,
+      "created_at": "2025-11-30T12:45:00.962619531Z",
+      "data": {
+        "ItemAdded": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "item_id": "4eb8bd07-d8cd-4588-a0c1-c7183b18ecaa",
+          "name": "Äta ute",
+          "item_type": "Expense"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "a2b29102-ed8b-4529-b870-916ce966924c",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764506700962740049,
+      "created_at": "2025-11-30T12:45:00.962740049Z",
+      "data": {
+        "ActualAdded": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "actual_id": "0d9e2ae8-c47e-4c4f-8e2b-33f6e13bb59c",
+          "item_id": "4eb8bd07-d8cd-4588-a0c1-c7183b18ecaa",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 350000,
+            "currency": "SEK"
+          }
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "3aa695f1-c12d-4fe0-a835-3aa7e638c9b9",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764506722785880254,
+      "created_at": "2025-11-30T12:45:22.785880254Z",
+      "data": {
+        "ItemAdded": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "item_id": "39f7c4b4-17c0-4086-8ec2-fa3187e6626e",
+          "name": "Årsbuffert",
+          "item_type": "Savings"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "b453900b-a792-4e75-928a-510b1ffd0388",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764506722786078331,
+      "created_at": "2025-11-30T12:45:22.786078331Z",
+      "data": {
+        "ActualAdded": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "actual_id": "b79f722b-9c43-4cbb-90dd-57d92faeff67",
+          "item_id": "39f7c4b4-17c0-4086-8ec2-fa3187e6626e",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 100000,
+            "currency": "SEK"
+          }
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "92a65a91-5c1b-4825-beda-f1bb9ab29bfd",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764506747362769187,
+      "created_at": "2025-11-30T12:45:47.362769187Z",
+      "data": {
+        "ItemAdded": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "item_id": "d9112072-55ec-4f21-ae8f-ee1376d75826",
+          "name": "Shopping",
+          "item_type": "Expense"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "84e2e03d-d768-4d62-86be-30a46c55b93f",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764506747362929883,
+      "created_at": "2025-11-30T12:45:47.362929883Z",
+      "data": {
+        "ActualAdded": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "actual_id": "e7f907c1-d166-4cf2-902b-d361f6f16389",
+          "item_id": "d9112072-55ec-4f21-ae8f-ee1376d75826",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 330000,
+            "currency": "SEK"
+          }
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
     }
   ],
-  "Budget": [],
+  "Budget": [
+    {
+      "id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "name": "Familj",
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930",
+      "items": [
+        {
+          "id": "c8a630ca-26d0-4148-9fc1-59ff8b87404e",
+          "name": "Lön",
+          "budgeting_type": "Income"
+        },
+        {
+          "id": "63aa6edb-4021-454a-8ad4-f0782678d54b",
+          "name": "Livsmedel",
+          "budgeting_type": "Expense"
+        },
+        {
+          "id": "b4458b60-e823-409c-83fc-e843be9b8778",
+          "name": "Bostadslån",
+          "budgeting_type": "Expense"
+        },
+        {
+          "id": "6d036a59-0b65-48a4-99db-453aac3d49c7",
+          "name": "Telefoni",
+          "budgeting_type": "Expense"
+        },
+        {
+          "id": "9d273cee-f31a-44f2-8d3a-85945f195205",
+          "name": "Internet",
+          "budgeting_type": "Expense"
+        },
+        {
+          "id": "6cd94d46-2e91-4af7-a5f3-23da00f5be9d",
+          "name": "Bilavsättning",
+          "budgeting_type": "Savings"
+        },
+        {
+          "id": "82d44e0b-4b36-433b-b09f-39a14b7bbd11",
+          "name": "Japanresa",
+          "budgeting_type": "Savings"
+        },
+        {
+          "id": "6351a192-48df-43f8-a4b1-cd78dffa33ee",
+          "name": "Lån Elisabeth",
+          "budgeting_type": "Expense"
+        },
+        {
+          "id": "232be4e2-c211-4c00-a5f7-88bb36586203",
+          "name": "Vård",
+          "budgeting_type": "Expense"
+        },
+        {
+          "id": "41b64ae1-5579-45a0-8bc8-43753ce56497",
+          "name": "Bil",
+          "budgeting_type": "Expense"
+        },
+        {
+          "id": "83e2f422-84ca-40a4-868a-b74f5c5b0dd0",
+          "name": "El",
+          "budgeting_type": "Expense"
+        }
+      ],
+      "month_begins_on": {
+        "PreviousMonthWorkDayBefore": 25
+      },
+      "periods": [
+        {
+          "id": {
+            "year": 2025,
+            "month": 12
+          },
+          "actual_items": [
+            {
+              "id": "44b03e5b-6a96-40ad-ad83-310352092d26",
+              "item_name": "Lön",
+              "budget_item_id": "c8a630ca-26d0-4148-9fc1-59ff8b87404e",
+              "budgeting_type": "Income",
+              "period_id": {
+                "year": 2025,
+                "month": 12
+              },
+              "budgeted_amount": {
+                "cents": 5200000,
+                "currency": "SEK"
+              },
+              "actual_amount": {
+                "cents": 0,
+                "currency": "SEK"
+              },
+              "notes": null,
+              "tags": []
+            },
+            {
+              "id": "2a18ce42-c9a6-45f6-9246-f11031f01099",
+              "item_name": "Livsmedel",
+              "budget_item_id": "63aa6edb-4021-454a-8ad4-f0782678d54b",
+              "budgeting_type": "Expense",
+              "period_id": {
+                "year": 2025,
+                "month": 12
+              },
+              "budgeted_amount": {
+                "cents": 1100000,
+                "currency": "SEK"
+              },
+              "actual_amount": {
+                "cents": 0,
+                "currency": "SEK"
+              },
+              "notes": null,
+              "tags": []
+            },
+            {
+              "id": "c1c9ce8f-3f88-47a2-8388-a3f630937195",
+              "item_name": "Bostadslån",
+              "budget_item_id": "b4458b60-e823-409c-83fc-e843be9b8778",
+              "budgeting_type": "Expense",
+              "period_id": {
+                "year": 2025,
+                "month": 12
+              },
+              "budgeted_amount": {
+                "cents": 540000,
+                "currency": "SEK"
+              },
+              "actual_amount": {
+                "cents": 0,
+                "currency": "SEK"
+              },
+              "notes": null,
+              "tags": []
+            },
+            {
+              "id": "44962b5e-9d89-4eab-9a8e-90995db70706",
+              "item_name": "Telefoni",
+              "budget_item_id": "6d036a59-0b65-48a4-99db-453aac3d49c7",
+              "budgeting_type": "Expense",
+              "period_id": {
+                "year": 2025,
+                "month": 12
+              },
+              "budgeted_amount": {
+                "cents": 150000,
+                "currency": "SEK"
+              },
+              "actual_amount": {
+                "cents": 0,
+                "currency": "SEK"
+              },
+              "notes": null,
+              "tags": []
+            },
+            {
+              "id": "bc5692e6-9e03-49ef-83b5-8a4fd3eb6781",
+              "item_name": "Internet",
+              "budget_item_id": "9d273cee-f31a-44f2-8d3a-85945f195205",
+              "budgeting_type": "Expense",
+              "period_id": {
+                "year": 2025,
+                "month": 12
+              },
+              "budgeted_amount": {
+                "cents": 80000,
+                "currency": "SEK"
+              },
+              "actual_amount": {
+                "cents": 0,
+                "currency": "SEK"
+              },
+              "notes": null,
+              "tags": []
+            },
+            {
+              "id": "867a18ff-8060-4790-b449-8597d2c98248",
+              "item_name": "Bilavsättning",
+              "budget_item_id": "6cd94d46-2e91-4af7-a5f3-23da00f5be9d",
+              "budgeting_type": "Savings",
+              "period_id": {
+                "year": 2025,
+                "month": 12
+              },
+              "budgeted_amount": {
+                "cents": 550000,
+                "currency": "SEK"
+              },
+              "actual_amount": {
+                "cents": 0,
+                "currency": "SEK"
+              },
+              "notes": null,
+              "tags": []
+            },
+            {
+              "id": "4d92b80b-9d3d-4a10-98c8-7226af733fa1",
+              "item_name": "Japanresa",
+              "budget_item_id": "82d44e0b-4b36-433b-b09f-39a14b7bbd11",
+              "budgeting_type": "Savings",
+              "period_id": {
+                "year": 2025,
+                "month": 12
+              },
+              "budgeted_amount": {
+                "cents": 500000,
+                "currency": "SEK"
+              },
+              "actual_amount": {
+                "cents": 0,
+                "currency": "SEK"
+              },
+              "notes": null,
+              "tags": []
+            },
+            {
+              "id": "716acb32-2393-4312-9add-67a287731b15",
+              "item_name": "Lån Elisabeth",
+              "budget_item_id": "6351a192-48df-43f8-a4b1-cd78dffa33ee",
+              "budgeting_type": "Expense",
+              "period_id": {
+                "year": 2025,
+                "month": 12
+              },
+              "budgeted_amount": {
+                "cents": 500000,
+                "currency": "SEK"
+              },
+              "actual_amount": {
+                "cents": 0,
+                "currency": "SEK"
+              },
+              "notes": null,
+              "tags": []
+            },
+            {
+              "id": "532f8dbf-e382-4231-b692-6c6f06b5f5a2",
+              "item_name": "Vård",
+              "budget_item_id": "232be4e2-c211-4c00-a5f7-88bb36586203",
+              "budgeting_type": "Expense",
+              "period_id": {
+                "year": 2025,
+                "month": 12
+              },
+              "budgeted_amount": {
+                "cents": 250000,
+                "currency": "SEK"
+              },
+              "actual_amount": {
+                "cents": 0,
+                "currency": "SEK"
+              },
+              "notes": null,
+              "tags": []
+            },
+            {
+              "id": "97cf852a-40ce-4331-b71b-0ec4b8c4e750",
+              "item_name": "Bil",
+              "budget_item_id": "41b64ae1-5579-45a0-8bc8-43753ce56497",
+              "budgeting_type": "Expense",
+              "period_id": {
+                "year": 2025,
+                "month": 12
+              },
+              "budgeted_amount": {
+                "cents": 350000,
+                "currency": "SEK"
+              },
+              "actual_amount": {
+                "cents": 0,
+                "currency": "SEK"
+              },
+              "notes": null,
+              "tags": []
+            }
+          ],
+          "transactions": []
+        }
+      ],
+      "rules": {
+        "rule_packages": [
+          {
+            "budgeting_type": "Income",
+            "budgeted_rule": {
+              "Sum": [
+                "Income"
+              ]
+            },
+            "actual_rule": {
+              "Sum": [
+                "Income"
+              ]
+            },
+            "remaining_rule": {
+              "Difference": [
+                "Income",
+                [
+                  "Expense",
+                  "Savings"
+                ]
+              ]
+            }
+          },
+          {
+            "budgeting_type": "Expense",
+            "budgeted_rule": {
+              "Sum": [
+                "Expense"
+              ]
+            },
+            "actual_rule": {
+              "Sum": [
+                "Expense"
+              ]
+            },
+            "remaining_rule": {
+              "SelfDiff": "Expense"
+            }
+          },
+          {
+            "budgeting_type": "Savings",
+            "budgeted_rule": {
+              "Sum": [
+                "Savings"
+              ]
+            },
+            "actual_rule": {
+              "Sum": [
+                "Savings"
+              ]
+            },
+            "remaining_rule": {
+              "SelfDiff": "Savings"
+            }
+          }
+        ]
+      },
+      "transaction_hashes": [],
+      "match_rules": [],
+      "created_at": "2025-11-30T09:36:39.149371276Z",
+      "updated_at": "2025-11-30T12:44:38.906691377Z",
+      "default_budget": true,
+      "last_event": 1764506678906691377,
+      "version": 22,
+      "currency": "SEK"
+    }
+  ],
   "User": [
     {
       "id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930",
