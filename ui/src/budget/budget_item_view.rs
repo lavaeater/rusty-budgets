@@ -166,10 +166,11 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
         // }
     } else if edit_item() {
         rsx! {
-            label { "Edit item" }
+            label { {{item.name}} }
+            label { "Budgeted amount" }
             input {
                 r#type: "number",
-                value: budgeted_amount().to_string(),
+                value: budgeted_amount().amount_in_dollars(),
                 oninput: move |e| {
                     match e.value().parse() {
                         Ok(v) => {
@@ -189,9 +190,7 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                             budget.period_id,
                             Some(budgeted_amount()),
                             None,
-                        )
-                        // TODO: Show error
-                        .await
+                        ).await
                     {
                         Ok(updated_budget) => {
                             budget_signal.set(Some(updated_budget));

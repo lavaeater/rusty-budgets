@@ -9296,6 +9296,1470 @@
         }
       },
       "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "21b4bb05-6e70-4e18-a90d-388d9e31e3b0",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796183552460447,
+      "created_at": "2025-12-03T21:09:43.552460447Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "990bc64c-3461-4f6f-a729-268b13f062a4",
+          "actual_id": "532f8dbf-e382-4231-b692-6c6f06b5f5a2"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "8e8bf2b5-da16-4014-a899-9c71db45a699",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796183552908169,
+      "created_at": "2025-12-03T21:09:43.552908169Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "70327caf-8f14-417c-ab71-0ea560f1516e",
+          "actual_id": "5a695a16-0435-4048-8b5c-634c563886c5"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "24469c17-aa3f-42fb-99fc-0d4256a74d38",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796183553298348,
+      "created_at": "2025-12-03T21:09:43.553298348Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "c6cd9dda-a1ab-4c13-99c0-e1938dec210a",
+          "actual_id": "e7f907c1-d166-4cf2-902b-d361f6f16389"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "952f2945-4199-4b65-97fb-0e03620d2d17",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796183553771503,
+      "created_at": "2025-12-03T21:09:43.553771503Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "0702df63-7452-4cf4-91ca-809a8afb9472",
+          "actual_id": "2a18ce42-c9a6-45f6-9246-f11031f01099"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "69086528-0d7e-4c72-a27b-db5c850d20d9",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796183553970506,
+      "created_at": "2025-12-03T21:09:43.553970506Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "473d53ac-a867-4eca-b0a5-92c549dab765",
+          "actual_id": "2a18ce42-c9a6-45f6-9246-f11031f01099"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "a94ae982-d691-4276-9591-a31698aeeb4e",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796183554182741,
+      "created_at": "2025-12-03T21:09:43.554182741Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "bc55f831-7bdf-4583-886a-5d1954699477",
+          "actual_id": "97cf852a-40ce-4331-b71b-0ec4b8c4e750"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "2018ec27-0a64-40b5-bd9f-239ee865fc61",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796183554388843,
+      "created_at": "2025-12-03T21:09:43.554388843Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "78b4a5e6-614c-4a82-93aa-1a929955f96c",
+          "actual_id": "44b03e5b-6a96-40ad-ad83-310352092d26"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "ae9cc2e8-5e9d-40cd-9f4d-8573701a9cf0",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796183554645190,
+      "created_at": "2025-12-03T21:09:43.554645190Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "83c03dde-79e3-4b01-9d5c-0aa96f892a2d",
+          "actual_id": "5a1193d3-0df4-4ee3-8062-d7852d71027e"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "3a469fe0-6b9f-4b0a-87a6-485669887760",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796183554908020,
+      "created_at": "2025-12-03T21:09:43.554908020Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "7b75b4be-624b-4b1d-b99a-8eb0e0f359ff",
+          "actual_id": "e7f907c1-d166-4cf2-902b-d361f6f16389"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "ba52a8ff-cb67-4974-a20d-b6f4a85a2879",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796183555223990,
+      "created_at": "2025-12-03T21:09:43.555223990Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "c9e23e63-0eaa-4de1-a566-b8e518a14e73",
+          "actual_id": "e7f907c1-d166-4cf2-902b-d361f6f16389"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "f5f9d7ee-fd42-46ae-9d7a-10ef765bab35",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796183555534246,
+      "created_at": "2025-12-03T21:09:43.555534246Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "ce5a6498-ebf8-406d-ba9e-3740a7f1e932",
+          "actual_id": "0d9e2ae8-c47e-4c4f-8e2b-33f6e13bb59c"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "2e58c9ec-456c-47ba-ad07-8f49977a99c9",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796183555795914,
+      "created_at": "2025-12-03T21:09:43.555795914Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "0653270b-a0a1-4782-9e60-4155d4522c52",
+          "actual_id": "2a18ce42-c9a6-45f6-9246-f11031f01099"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "3972832d-acfa-46ac-b35c-41d6b5951e82",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796183556109309,
+      "created_at": "2025-12-03T21:09:43.556109309Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "efa3ec25-0af3-4187-b6e8-669bfbc4c5b0",
+          "actual_id": "e7f907c1-d166-4cf2-902b-d361f6f16389"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "08ed469f-e2c8-42bb-a78f-745ee616c7ea",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796183556466460,
+      "created_at": "2025-12-03T21:09:43.556466460Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "6a311c15-be0b-438f-847d-2b383dbc0d69",
+          "actual_id": "e7f907c1-d166-4cf2-902b-d361f6f16389"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "713a2fda-834b-4a4e-ada5-bba0f2704423",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796183556973279,
+      "created_at": "2025-12-03T21:09:43.556973279Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "2d4a08bb-60c9-47f5-a6bb-aed3768eef38",
+          "actual_id": "532f8dbf-e382-4231-b692-6c6f06b5f5a2"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "5c01acad-8f39-4f68-8d60-fdd06f270b41",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796183557228004,
+      "created_at": "2025-12-03T21:09:43.557228004Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "1a08fdf4-d98a-437a-bcc6-9c66f2c2de97",
+          "actual_id": "532f8dbf-e382-4231-b692-6c6f06b5f5a2"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "ba984e9e-f48c-44ff-ad31-f3b0fa85cfd9",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796183557500958,
+      "created_at": "2025-12-03T21:09:43.557500958Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "6895f7a9-25cf-4298-be9c-92ab9e323897",
+          "actual_id": "2a18ce42-c9a6-45f6-9246-f11031f01099"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "f3a5ea2b-96c4-42fd-af78-6adf7ba859dd",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796183557807147,
+      "created_at": "2025-12-03T21:09:43.557807147Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "724464d2-733c-4927-842f-574f1a2ce68c",
+          "actual_id": "97cf852a-40ce-4331-b71b-0ec4b8c4e750"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "187f4031-978e-459a-82a0-e8574054f1fe",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796183558107938,
+      "created_at": "2025-12-03T21:09:43.558107938Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "47027988-a2a0-4a29-9724-62c3de130ad9",
+          "actual_id": "532f8dbf-e382-4231-b692-6c6f06b5f5a2"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "d5ce7599-b7c7-45f6-a83f-74ac29f24732",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796183558421028,
+      "created_at": "2025-12-03T21:09:43.558421028Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "7a3eb9c2-0117-412d-9a03-856ee08ffc78",
+          "actual_id": "532f8dbf-e382-4231-b692-6c6f06b5f5a2"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "6907d60f-f557-4a78-be48-e7cd3ac69e05",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796183558754489,
+      "created_at": "2025-12-03T21:09:43.558754489Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "390f837c-d2e0-40f5-bd0e-12f1f3a256a6",
+          "actual_id": "2a18ce42-c9a6-45f6-9246-f11031f01099"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "718a00a5-854e-43e7-9920-aa0cb32ad00d",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796183559103730,
+      "created_at": "2025-12-03T21:09:43.559103730Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "fb662ad0-4201-432e-88a8-7751a3670845",
+          "actual_id": "44b03e5b-6a96-40ad-ad83-310352092d26"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "2d780b52-6f06-40a3-aeb4-930f05c0b35b",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796183559478001,
+      "created_at": "2025-12-03T21:09:43.559478001Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "e42e0319-3480-4f4d-a62f-200ab8e3e888",
+          "actual_id": "c1c9ce8f-3f88-47a2-8388-a3f630937195"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "851f9562-7bba-422b-ad0d-1f83cf9259d0",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796183559855619,
+      "created_at": "2025-12-03T21:09:43.559855619Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "050d0f14-c95d-4f66-85e1-833f25103673",
+          "actual_id": "0b3bfb7b-049c-4c38-afad-9bf1a956b18b"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "4b3c62d5-b669-45ed-8ffd-562cf5081ce7",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796183560235450,
+      "created_at": "2025-12-03T21:09:43.560235450Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "af0435dc-9871-4d88-b6bd-d7176133de94",
+          "actual_id": "44962b5e-9d89-4eab-9a8e-90995db70706"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "aa82e843-3b9d-43d1-9670-c6cc70adfe14",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796183560770287,
+      "created_at": "2025-12-03T21:09:43.560770287Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "31cf10dc-4d84-4f32-a2be-753e72b68d1d",
+          "actual_id": "0b3bfb7b-049c-4c38-afad-9bf1a956b18b"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "9aa36110-965a-47ed-8e72-c85a05572923",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796183561040897,
+      "created_at": "2025-12-03T21:09:43.561040897Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "d7051ab7-05f2-4fa0-bcb7-06c0954b8420",
+          "actual_id": "0b3bfb7b-049c-4c38-afad-9bf1a956b18b"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "8536171a-65c2-45d7-94f2-99faef5d9fec",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796183561315775,
+      "created_at": "2025-12-03T21:09:43.561315775Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "102e79f7-b4e4-4a20-9e02-d5e1802d7028",
+          "actual_id": "867a18ff-8060-4790-b449-8597d2c98248"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "4dcfb670-1fd6-428f-a84d-100a026f8c09",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796183561609115,
+      "created_at": "2025-12-03T21:09:43.561609115Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "a01ce534-d131-4e1f-8173-a7bcdac3eb85",
+          "actual_id": "bc5692e6-9e03-49ef-83b5-8a4fd3eb6781"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "0021ec65-b52d-42fe-ab49-96f52c59fa11",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796183561919606,
+      "created_at": "2025-12-03T21:09:43.561919606Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "935e347a-ac4e-4bed-a666-ca21476fabec",
+          "actual_id": "fa9cfed2-5858-4679-af84-e83120628d7d"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "74ede0af-7e66-4c28-991a-ad4e13d432e4",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796183562243735,
+      "created_at": "2025-12-03T21:09:43.562243735Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "166e127a-0246-4a2c-a94f-4ddfa30f450c",
+          "actual_id": "532f8dbf-e382-4231-b692-6c6f06b5f5a2"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "b4d942c2-71ef-4f3b-907c-b985e3e31759",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796183562550342,
+      "created_at": "2025-12-03T21:09:43.562550342Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "142ece41-1b71-42d2-8ff8-96f580378c7d",
+          "actual_id": "b79f722b-9c43-4cbb-90dd-57d92faeff67"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "7e117c89-dc1b-4ece-8f8c-9e2851aadc47",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796210865124331,
+      "created_at": "2025-12-03T21:10:10.865124331Z",
+      "data": {
+        "ActualModified": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "actual_id": "44b03e5b-6a96-40ad-ad83-310352092d26",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 5679700,
+            "currency": "SEK"
+          },
+          "actual_amount": null,
+          "notes": null,
+          "tags": null
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "2a804053-4634-4d2e-90ba-02b52e2e27f8",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796341058504979,
+      "created_at": "2025-12-03T21:12:21.058504979Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "990bc64c-3461-4f6f-a729-268b13f062a4",
+          "actual_id": "532f8dbf-e382-4231-b692-6c6f06b5f5a2"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "a0fe9e89-aa8f-4660-ab76-2fe0f117ef65",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796341059030397,
+      "created_at": "2025-12-03T21:12:21.059030397Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "70327caf-8f14-417c-ab71-0ea560f1516e",
+          "actual_id": "5a695a16-0435-4048-8b5c-634c563886c5"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "59ef9e4b-ba5f-4ac1-ba59-a1f10f144119",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796341059587323,
+      "created_at": "2025-12-03T21:12:21.059587323Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "c6cd9dda-a1ab-4c13-99c0-e1938dec210a",
+          "actual_id": "e7f907c1-d166-4cf2-902b-d361f6f16389"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "c8d44775-2250-46a4-bc48-afe41ef731fd",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796341060200538,
+      "created_at": "2025-12-03T21:12:21.060200538Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "0702df63-7452-4cf4-91ca-809a8afb9472",
+          "actual_id": "2a18ce42-c9a6-45f6-9246-f11031f01099"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "98f731a3-dd75-4802-91fc-270d43784715",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796341060468557,
+      "created_at": "2025-12-03T21:12:21.060468557Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "473d53ac-a867-4eca-b0a5-92c549dab765",
+          "actual_id": "2a18ce42-c9a6-45f6-9246-f11031f01099"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "fe9cacb1-047a-40ab-8af8-31ef3ed254be",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796341060756512,
+      "created_at": "2025-12-03T21:12:21.060756512Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "bc55f831-7bdf-4583-886a-5d1954699477",
+          "actual_id": "97cf852a-40ce-4331-b71b-0ec4b8c4e750"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "4dc62246-8664-4094-8020-6956aa7f478b",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796341061037894,
+      "created_at": "2025-12-03T21:12:21.061037894Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "78b4a5e6-614c-4a82-93aa-1a929955f96c",
+          "actual_id": "44b03e5b-6a96-40ad-ad83-310352092d26"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "12c1471d-fd66-4b86-8da9-4b782397f043",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796341061391387,
+      "created_at": "2025-12-03T21:12:21.061391387Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "83c03dde-79e3-4b01-9d5c-0aa96f892a2d",
+          "actual_id": "5a1193d3-0df4-4ee3-8062-d7852d71027e"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "459471cb-e94e-4fb6-b22e-5f9fa5186bb1",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796341061980293,
+      "created_at": "2025-12-03T21:12:21.061980293Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "7b75b4be-624b-4b1d-b99a-8eb0e0f359ff",
+          "actual_id": "e7f907c1-d166-4cf2-902b-d361f6f16389"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "e89eeec8-5977-4246-8648-24ac7d4eb147",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796341062576769,
+      "created_at": "2025-12-03T21:12:21.062576769Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "c9e23e63-0eaa-4de1-a566-b8e518a14e73",
+          "actual_id": "e7f907c1-d166-4cf2-902b-d361f6f16389"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "a3d96ec2-33de-4b32-a9fc-09b593d20f46",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796341063009315,
+      "created_at": "2025-12-03T21:12:21.063009315Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "ce5a6498-ebf8-406d-ba9e-3740a7f1e932",
+          "actual_id": "0d9e2ae8-c47e-4c4f-8e2b-33f6e13bb59c"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "1c4cc585-6dec-4616-b7d0-b6be77431f2e",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796341063442273,
+      "created_at": "2025-12-03T21:12:21.063442273Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "0653270b-a0a1-4782-9e60-4155d4522c52",
+          "actual_id": "2a18ce42-c9a6-45f6-9246-f11031f01099"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "688750ec-a259-4d1b-a991-b733795439c1",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796341063842439,
+      "created_at": "2025-12-03T21:12:21.063842439Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "efa3ec25-0af3-4187-b6e8-669bfbc4c5b0",
+          "actual_id": "e7f907c1-d166-4cf2-902b-d361f6f16389"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "3c09f714-7719-4660-91e3-c4783a94efc7",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796341064228293,
+      "created_at": "2025-12-03T21:12:21.064228293Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "6a311c15-be0b-438f-847d-2b383dbc0d69",
+          "actual_id": "e7f907c1-d166-4cf2-902b-d361f6f16389"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "f9e19bc7-e886-4d5a-b8f2-d4cd08794c2d",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796341064833072,
+      "created_at": "2025-12-03T21:12:21.064833072Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "2d4a08bb-60c9-47f5-a6bb-aed3768eef38",
+          "actual_id": "532f8dbf-e382-4231-b692-6c6f06b5f5a2"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "604b9443-ebb5-4cc3-a189-aba629f2fba7",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796341065204980,
+      "created_at": "2025-12-03T21:12:21.065204980Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "1a08fdf4-d98a-437a-bcc6-9c66f2c2de97",
+          "actual_id": "532f8dbf-e382-4231-b692-6c6f06b5f5a2"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "fd5542db-dba7-4871-bee4-14814de6e6e5",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796341065486581,
+      "created_at": "2025-12-03T21:12:21.065486581Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "6895f7a9-25cf-4298-be9c-92ab9e323897",
+          "actual_id": "2a18ce42-c9a6-45f6-9246-f11031f01099"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "5d02c725-821d-4233-9d6e-7dc412a131e6",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796341065788038,
+      "created_at": "2025-12-03T21:12:21.065788038Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "724464d2-733c-4927-842f-574f1a2ce68c",
+          "actual_id": "97cf852a-40ce-4331-b71b-0ec4b8c4e750"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "3dd5fc87-d489-43f8-b191-67c7bb615cc2",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796341066086886,
+      "created_at": "2025-12-03T21:12:21.066086886Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "47027988-a2a0-4a29-9724-62c3de130ad9",
+          "actual_id": "532f8dbf-e382-4231-b692-6c6f06b5f5a2"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "2cdc1a8b-bbf6-439c-a8b8-14d349b0eccc",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796341066414636,
+      "created_at": "2025-12-03T21:12:21.066414636Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "7a3eb9c2-0117-412d-9a03-856ee08ffc78",
+          "actual_id": "532f8dbf-e382-4231-b692-6c6f06b5f5a2"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "d5667314-da27-4708-ad71-ea1076b7b41c",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796341066756648,
+      "created_at": "2025-12-03T21:12:21.066756648Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "390f837c-d2e0-40f5-bd0e-12f1f3a256a6",
+          "actual_id": "2a18ce42-c9a6-45f6-9246-f11031f01099"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "50764255-de8c-4208-b12b-c89f788edb17",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796341067096123,
+      "created_at": "2025-12-03T21:12:21.067096123Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "fb662ad0-4201-432e-88a8-7751a3670845",
+          "actual_id": "44b03e5b-6a96-40ad-ad83-310352092d26"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "f56529ed-0480-4f26-9d6a-852209d74449",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796341067444861,
+      "created_at": "2025-12-03T21:12:21.067444861Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "e42e0319-3480-4f4d-a62f-200ab8e3e888",
+          "actual_id": "c1c9ce8f-3f88-47a2-8388-a3f630937195"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "fb5f685f-1be0-411b-96ef-e1df5a57a7cf",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796341067823937,
+      "created_at": "2025-12-03T21:12:21.067823937Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "050d0f14-c95d-4f66-85e1-833f25103673",
+          "actual_id": "0b3bfb7b-049c-4c38-afad-9bf1a956b18b"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "55f5b7ab-9c95-4e8f-8e2c-6090ef1ce90f",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796341068203130,
+      "created_at": "2025-12-03T21:12:21.068203130Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "af0435dc-9871-4d88-b6bd-d7176133de94",
+          "actual_id": "44962b5e-9d89-4eab-9a8e-90995db70706"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "c6a9a518-ae95-4a31-893e-169259680631",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796341068738412,
+      "created_at": "2025-12-03T21:12:21.068738412Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "31cf10dc-4d84-4f32-a2be-753e72b68d1d",
+          "actual_id": "0b3bfb7b-049c-4c38-afad-9bf1a956b18b"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "44868881-5cbf-4b8e-93aa-c7f7a7eeccad",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796341069011744,
+      "created_at": "2025-12-03T21:12:21.069011744Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "d7051ab7-05f2-4fa0-bcb7-06c0954b8420",
+          "actual_id": "0b3bfb7b-049c-4c38-afad-9bf1a956b18b"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "8282bc70-ee72-4010-bd40-3f38be7e02d1",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796341069292133,
+      "created_at": "2025-12-03T21:12:21.069292133Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "102e79f7-b4e4-4a20-9e02-d5e1802d7028",
+          "actual_id": "867a18ff-8060-4790-b449-8597d2c98248"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "6d99ac86-1a95-496c-81c2-dd042d80bbf8",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796341069588121,
+      "created_at": "2025-12-03T21:12:21.069588121Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "a01ce534-d131-4e1f-8173-a7bcdac3eb85",
+          "actual_id": "bc5692e6-9e03-49ef-83b5-8a4fd3eb6781"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "71b3ff68-140d-4033-84b7-7fc233287ab2",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796341069904320,
+      "created_at": "2025-12-03T21:12:21.069904320Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "935e347a-ac4e-4bed-a666-ca21476fabec",
+          "actual_id": "fa9cfed2-5858-4679-af84-e83120628d7d"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "19013ea2-f2d2-4d8c-8192-38b13fcdb269",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796341070242199,
+      "created_at": "2025-12-03T21:12:21.070242199Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "166e127a-0246-4a2c-a94f-4ddfa30f450c",
+          "actual_id": "532f8dbf-e382-4231-b692-6c6f06b5f5a2"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "12832e13-f07e-4284-8fb0-83b460859f93",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796341070595853,
+      "created_at": "2025-12-03T21:12:21.070595853Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "142ece41-1b71-42d2-8ff8-96f580378c7d",
+          "actual_id": "b79f722b-9c43-4cbb-90dd-57d92faeff67"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "e22be796-557b-408d-9431-4648f5f0846f",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796609244505323,
+      "created_at": "2025-12-03T21:16:49.244505323Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "990bc64c-3461-4f6f-a729-268b13f062a4",
+          "actual_id": "532f8dbf-e382-4231-b692-6c6f06b5f5a2"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "ce8c3f83-bb32-4f7c-8e7d-0e12a2371ff3",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796609246269511,
+      "created_at": "2025-12-03T21:16:49.246269511Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "70327caf-8f14-417c-ab71-0ea560f1516e",
+          "actual_id": "5a695a16-0435-4048-8b5c-634c563886c5"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "eb4b83dc-bb5e-4738-b801-415b7b476071",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796609249233423,
+      "created_at": "2025-12-03T21:16:49.249233423Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "c6cd9dda-a1ab-4c13-99c0-e1938dec210a",
+          "actual_id": "e7f907c1-d166-4cf2-902b-d361f6f16389"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "f42f8dec-2a91-489e-8306-070d4975c612",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796609249890300,
+      "created_at": "2025-12-03T21:16:49.249890300Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "0702df63-7452-4cf4-91ca-809a8afb9472",
+          "actual_id": "2a18ce42-c9a6-45f6-9246-f11031f01099"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "02fae262-f69e-4818-857a-09f3eeec897e",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796609250697293,
+      "created_at": "2025-12-03T21:16:49.250697293Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "473d53ac-a867-4eca-b0a5-92c549dab765",
+          "actual_id": "2a18ce42-c9a6-45f6-9246-f11031f01099"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "2da6b2a7-1df0-424c-be75-094e517315cf",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796609251123514,
+      "created_at": "2025-12-03T21:16:49.251123514Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "bc55f831-7bdf-4583-886a-5d1954699477",
+          "actual_id": "97cf852a-40ce-4331-b71b-0ec4b8c4e750"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "9239b62f-e639-4eae-8943-56a3cd02c640",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796609251457621,
+      "created_at": "2025-12-03T21:16:49.251457621Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "78b4a5e6-614c-4a82-93aa-1a929955f96c",
+          "actual_id": "44b03e5b-6a96-40ad-ad83-310352092d26"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "c38456fb-b632-4a7a-af7b-a8735322c079",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796609251796397,
+      "created_at": "2025-12-03T21:16:49.251796397Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "83c03dde-79e3-4b01-9d5c-0aa96f892a2d",
+          "actual_id": "5a1193d3-0df4-4ee3-8062-d7852d71027e"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "ab798f87-fe9d-44af-9d04-6e71e5bb453c",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796609252115078,
+      "created_at": "2025-12-03T21:16:49.252115078Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "7b75b4be-624b-4b1d-b99a-8eb0e0f359ff",
+          "actual_id": "e7f907c1-d166-4cf2-902b-d361f6f16389"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "a07bbdf4-0683-4ab7-8599-ef67fcbcd401",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796609252453412,
+      "created_at": "2025-12-03T21:16:49.252453412Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "c9e23e63-0eaa-4de1-a566-b8e518a14e73",
+          "actual_id": "e7f907c1-d166-4cf2-902b-d361f6f16389"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "bca7b673-4b6f-494c-a803-c997a27abb52",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796609252939177,
+      "created_at": "2025-12-03T21:16:49.252939177Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "ce5a6498-ebf8-406d-ba9e-3740a7f1e932",
+          "actual_id": "0d9e2ae8-c47e-4c4f-8e2b-33f6e13bb59c"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "82013368-50aa-46b7-8096-993e86db1f90",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796609253436354,
+      "created_at": "2025-12-03T21:16:49.253436354Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "0653270b-a0a1-4782-9e60-4155d4522c52",
+          "actual_id": "2a18ce42-c9a6-45f6-9246-f11031f01099"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "205488b0-2654-4918-bbac-63017f6b9073",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796609253940376,
+      "created_at": "2025-12-03T21:16:49.253940376Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "efa3ec25-0af3-4187-b6e8-669bfbc4c5b0",
+          "actual_id": "e7f907c1-d166-4cf2-902b-d361f6f16389"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "8d7b5c13-88be-444b-8d3f-45c58ff6f88b",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796609254368058,
+      "created_at": "2025-12-03T21:16:49.254368058Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "6a311c15-be0b-438f-847d-2b383dbc0d69",
+          "actual_id": "e7f907c1-d166-4cf2-902b-d361f6f16389"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "7b1dfae3-1ce3-4dae-b35b-ebeec9fb7ce1",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796609254810300,
+      "created_at": "2025-12-03T21:16:49.254810300Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "2d4a08bb-60c9-47f5-a6bb-aed3768eef38",
+          "actual_id": "532f8dbf-e382-4231-b692-6c6f06b5f5a2"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "bbef2563-5dd5-44cd-89fb-bf724889a598",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796609255383280,
+      "created_at": "2025-12-03T21:16:49.255383280Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "1a08fdf4-d98a-437a-bcc6-9c66f2c2de97",
+          "actual_id": "532f8dbf-e382-4231-b692-6c6f06b5f5a2"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "22ed5ef4-b87d-4429-a927-d2695af95b8d",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796609255716957,
+      "created_at": "2025-12-03T21:16:49.255716957Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "6895f7a9-25cf-4298-be9c-92ab9e323897",
+          "actual_id": "2a18ce42-c9a6-45f6-9246-f11031f01099"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "7de89b12-b872-498f-9475-e49cbbf5f0ef",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796609256016616,
+      "created_at": "2025-12-03T21:16:49.256016616Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "724464d2-733c-4927-842f-574f1a2ce68c",
+          "actual_id": "97cf852a-40ce-4331-b71b-0ec4b8c4e750"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "e36ff1fe-eb72-4f84-bcec-1f821153c92d",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796609256327853,
+      "created_at": "2025-12-03T21:16:49.256327853Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "47027988-a2a0-4a29-9724-62c3de130ad9",
+          "actual_id": "532f8dbf-e382-4231-b692-6c6f06b5f5a2"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "8d7e2397-0191-4975-b3fc-da0385d0d58c",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796609256704724,
+      "created_at": "2025-12-03T21:16:49.256704724Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "7a3eb9c2-0117-412d-9a03-856ee08ffc78",
+          "actual_id": "532f8dbf-e382-4231-b692-6c6f06b5f5a2"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "d5addbb1-582c-4d64-87f4-aff76994cd9a",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796609257072275,
+      "created_at": "2025-12-03T21:16:49.257072275Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "390f837c-d2e0-40f5-bd0e-12f1f3a256a6",
+          "actual_id": "2a18ce42-c9a6-45f6-9246-f11031f01099"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "8ae3342f-e0b1-4b46-bd4c-1c76fdbe3acc",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796609257456507,
+      "created_at": "2025-12-03T21:16:49.257456507Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "fb662ad0-4201-432e-88a8-7751a3670845",
+          "actual_id": "44b03e5b-6a96-40ad-ad83-310352092d26"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "e83b0a7a-c08a-41ea-ab6b-5005dcb225e4",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796609257901827,
+      "created_at": "2025-12-03T21:16:49.257901827Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "e42e0319-3480-4f4d-a62f-200ab8e3e888",
+          "actual_id": "c1c9ce8f-3f88-47a2-8388-a3f630937195"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "b4bef91e-aa0d-4513-a1db-a56002311b7d",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796609258466829,
+      "created_at": "2025-12-03T21:16:49.258466829Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "050d0f14-c95d-4f66-85e1-833f25103673",
+          "actual_id": "0b3bfb7b-049c-4c38-afad-9bf1a956b18b"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "e2a314de-2a72-4809-9419-787334d09456",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796609259200884,
+      "created_at": "2025-12-03T21:16:49.259200884Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "af0435dc-9871-4d88-b6bd-d7176133de94",
+          "actual_id": "44962b5e-9d89-4eab-9a8e-90995db70706"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "65da4940-052d-4314-921c-514c49b851ae",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796609260099732,
+      "created_at": "2025-12-03T21:16:49.260099732Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "31cf10dc-4d84-4f32-a2be-753e72b68d1d",
+          "actual_id": "0b3bfb7b-049c-4c38-afad-9bf1a956b18b"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "1535580f-5ba5-45fb-aa71-cdd506b1929d",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796609261025169,
+      "created_at": "2025-12-03T21:16:49.261025169Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "d7051ab7-05f2-4fa0-bcb7-06c0954b8420",
+          "actual_id": "0b3bfb7b-049c-4c38-afad-9bf1a956b18b"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "d861fa58-4a67-4b31-9a2f-77fcb9b13a27",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796609261691923,
+      "created_at": "2025-12-03T21:16:49.261691923Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "102e79f7-b4e4-4a20-9e02-d5e1802d7028",
+          "actual_id": "867a18ff-8060-4790-b449-8597d2c98248"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "07b2a45e-3581-4064-8813-1fa1d470281d",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796609262307563,
+      "created_at": "2025-12-03T21:16:49.262307563Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "a01ce534-d131-4e1f-8173-a7bcdac3eb85",
+          "actual_id": "bc5692e6-9e03-49ef-83b5-8a4fd3eb6781"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "abbddded-3a09-4623-ae21-e397138c6cad",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796609262752607,
+      "created_at": "2025-12-03T21:16:49.262752607Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "935e347a-ac4e-4bed-a666-ca21476fabec",
+          "actual_id": "fa9cfed2-5858-4679-af84-e83120628d7d"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "2ed51f27-f6a2-4bdf-9c15-70c8d5923817",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796609263136198,
+      "created_at": "2025-12-03T21:16:49.263136198Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "166e127a-0246-4a2c-a94f-4ddfa30f450c",
+          "actual_id": "532f8dbf-e382-4231-b692-6c6f06b5f5a2"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "17ab1c67-03e9-4f3d-a5e5-e8dadbf45de2",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796609263518639,
+      "created_at": "2025-12-03T21:16:49.263518639Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "tx_id": "142ece41-1b71-42d2-8ff8-96f580378c7d",
+          "actual_id": "b79f722b-9c43-4cbb-90dd-57d92faeff67"
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "e9207a08-a8b9-42da-b462-75dad95baa74",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796694371634558,
+      "created_at": "2025-12-03T21:18:14.371634558Z",
+      "data": {
+        "ActualModified": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "actual_id": "c1c9ce8f-3f88-47a2-8388-a3f630937195",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 508700,
+            "currency": "SEK"
+          },
+          "actual_amount": null,
+          "notes": null,
+          "tags": null
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "53a2afb9-2dc2-4bcf-a22c-54df5d9f7409",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796705821989756,
+      "created_at": "2025-12-03T21:18:25.821989756Z",
+      "data": {
+        "ActualModified": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "actual_id": "c1c9ce8f-3f88-47a2-8388-a3f630937195",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 508400,
+            "currency": "SEK"
+          },
+          "actual_amount": null,
+          "notes": null,
+          "tags": null
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "2c8e3af0-1c0e-4cd1-b42e-d500ee45c4b7",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796725104138418,
+      "created_at": "2025-12-03T21:18:45.104138418Z",
+      "data": {
+        "ActualModified": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "actual_id": "532f8dbf-e382-4231-b692-6c6f06b5f5a2",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 361600,
+            "currency": "SEK"
+          },
+          "actual_amount": null,
+          "notes": null,
+          "tags": null
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
+    },
+    {
+      "id": "8d984e06-b3d8-4980-958c-b90d4438c3fc",
+      "aggregate_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+      "timestamp": 1764796743564417849,
+      "created_at": "2025-12-03T21:19:03.564417849Z",
+      "data": {
+        "ActualModified": {
+          "budget_id": "7eb3a872-e55a-474c-b141-c3faa9fce6b7",
+          "actual_id": "0b3bfb7b-049c-4c38-afad-9bf1a956b18b",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 462800,
+            "currency": "SEK"
+          },
+          "actual_amount": null,
+          "notes": null,
+          "tags": null
+        }
+      },
+      "user_id": "c9b2d7f8-9d44-4b03-aa30-25d8c7b1c930"
     }
   ],
   "Budget": [
@@ -9410,7 +10874,7 @@
                 "month": 12
               },
               "budgeted_amount": {
-                "cents": 5200000,
+                "cents": 5679700,
                 "currency": "SEK"
               },
               "actual_amount": {
@@ -10316,7 +11780,7 @@
                 "cents": 2000066,
                 "currency": "SEK"
               },
-              "ignored": false
+              "ignored": true
             }
           ]
         }
@@ -10380,63 +11844,53 @@
         ]
       },
       "transaction_hashes": [
-        4531925623408819072,
-        18369593869700754512,
-        8834975170318422727,
-        9000922626809347621,
-        17958395191241316646,
-        4348856578571966145,
-        11437063573231666110,
-        16244974044378321209,
         3219909298297634585,
-        13672244357156447854,
-        5589400317235799928,
-        15444554242061847551,
-        8870038410017067525,
-        16518370340706261585,
+        2994136002072529305,
+        11206559750139184896,
+        8834975170318422727,
+        3129194112039990893,
+        4965500977607099670,
+        9000922626809347621,
+        17189724647720982549,
+        17958395191241316646,
+        3025415385163326735,
+        13467237790884517547,
+        16244974044378321209,
         6586889840178917235,
         17458592217889369906,
-        12662115357647514282,
-        13467237790884517547,
-        2994136002072529305,
-        8779838079624980897,
-        12182061232725790744,
-        16961847027345207416,
-        17189724647720982549,
-        4965500977607099670,
-        5292887278421991866,
-        12560867396635990496,
-        3025415385163326735,
-        11206559750139184896,
-        12406333633617114583,
+        4531925623408819072,
         13664004112204038899,
-        3129194112039990893,
-        3308765373607599428,
+        13672244357156447854,
+        4348856578571966145,
         5344492576498233917,
-        7131333689674298867,
         4652219070462354227,
-        5623087265432465601
+        12182061232725790744,
+        8779838079624980897,
+        5292887278421991866,
+        5623087265432465601,
+        16961847027345207416,
+        12406333633617114583,
+        3308765373607599428,
+        15444554242061847551,
+        18369593869700754512,
+        8870038410017067525,
+        16518370340706261585,
+        12560867396635990496,
+        12662115357647514282,
+        5589400317235799928,
+        11437063573231666110,
+        7131333689674298867
       ],
       "match_rules": [
         {
           "transaction_key": [
-            "uhbilservice,",
-            "lindesberg"
+            "överf.",
+            "l.",
+            "leffler",
+            "peura"
           ],
           "item_key": [
-            "bil"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "ica",
-            "supermarket",
-            "trivselko,",
-            "guldsmedshytt"
-          ],
-          "item_key": [
-            "livsmedel"
+            "lön"
           ],
           "always_apply": true
         },
@@ -10454,34 +11908,25 @@
         },
         {
           "transaction_key": [
-            "sostrene",
-            "grene",
-            "drottningg,",
+            "ica",
+            "supermarket",
+            "trivselko,",
+            "guldsmedshytt"
+          ],
+          "item_key": [
+            "livsmedel"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "kappahl",
+            "örebro",
+            "city,",
             "örebro"
           ],
           "item_key": [
-            "shopping"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "överf.",
-            "l.",
-            "leffler",
-            "peura"
-          ],
-          "item_key": [
-            "lön"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "bilavsättning"
-          ],
-          "item_key": [
-            "bilavsättning"
+            "kläder"
           ],
           "always_apply": true
         },
@@ -10497,41 +11942,20 @@
         },
         {
           "transaction_key": [
-            "lön"
-          ],
-          "item_key": [
-            "lön"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "new",
-            "china",
-            "trading,"
-          ],
-          "item_key": [
-            "shopping"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "avibetalning",
-            "9152-2305078"
-          ],
-          "item_key": [
-            "bostadslån"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
             "lådan,",
             "kopparberg"
           ],
           "item_key": [
             "livsmedel"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "bilavsättning"
+          ],
+          "item_key": [
+            "bilavsättning"
           ],
           "always_apply": true
         },
@@ -10543,29 +11967,6 @@
           ],
           "item_key": [
             "bil"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "kronans",
-            "apotek",
-            "ab,",
-            "kopparberg"
-          ],
-          "item_key": [
-            "vård"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "e.on",
-            "kundsupport",
-            "sverige"
-          ],
-          "item_key": [
-            "el"
           ],
           "always_apply": true
         },
@@ -10585,48 +11986,6 @@
         },
         {
           "transaction_key": [
-            "telia",
-            "sverige",
-            "ab"
-          ],
-          "item_key": [
-            "telefoni"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "lanstrafiken",
-            "se,"
-          ],
-          "item_key": [
-            "transport"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "kappahl",
-            "örebro",
-            "city,",
-            "örebro"
-          ],
-          "item_key": [
-            "kläder"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "akavia"
-          ],
-          "item_key": [
-            "fackförbund"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
             "granit",
             "40435,",
             "drottninggata"
@@ -10638,12 +11997,11 @@
         },
         {
           "transaction_key": [
-            "$hléns",
-            "örebro,",
-            "örebro"
+            "avibetalning",
+            "9152-2305078"
           ],
           "item_key": [
-            "shopping"
+            "bostadslån"
           ],
           "always_apply": true
         },
@@ -10660,10 +12018,10 @@
         },
         {
           "transaction_key": [
-            "kronans",
-            "apotek",
-            "ab,",
-            "örebro"
+            "pg",
+            "region",
+            "örebro",
+            "län"
           ],
           "item_key": [
             "vård"
@@ -10683,10 +12041,19 @@
         },
         {
           "transaction_key": [
-            "pg",
-            "region",
-            "örebro",
-            "län"
+            "bredband2"
+          ],
+          "item_key": [
+            "internet"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "kronans",
+            "apotek",
+            "ab,",
+            "örebro"
           ],
           "item_key": [
             "vård"
@@ -10707,11 +12074,22 @@
         },
         {
           "transaction_key": [
-            "buffert",
-            "årliga"
+            "new",
+            "china",
+            "trading,"
           ],
           "item_key": [
-            "årsbuffert"
+            "shopping"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "lanstrafiken",
+            "se,"
+          ],
+          "item_key": [
+            "transport"
           ],
           "always_apply": true
         },
@@ -10728,19 +12106,105 @@
         },
         {
           "transaction_key": [
-            "bredband2"
+            "uhbilservice,",
+            "lindesberg"
           ],
           "item_key": [
-            "internet"
+            "bil"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "telia",
+            "sverige",
+            "ab"
+          ],
+          "item_key": [
+            "telefoni"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "sostrene",
+            "grene",
+            "drottningg,",
+            "örebro"
+          ],
+          "item_key": [
+            "shopping"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "$hléns",
+            "örebro,",
+            "örebro"
+          ],
+          "item_key": [
+            "shopping"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "e.on",
+            "kundsupport",
+            "sverige"
+          ],
+          "item_key": [
+            "el"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "lön"
+          ],
+          "item_key": [
+            "lön"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "akavia"
+          ],
+          "item_key": [
+            "fackförbund"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "kronans",
+            "apotek",
+            "ab,",
+            "kopparberg"
+          ],
+          "item_key": [
+            "vård"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "buffert",
+            "årliga"
+          ],
+          "item_key": [
+            "årsbuffert"
           ],
           "always_apply": true
         }
       ],
       "created_at": "2025-11-30T09:36:39.149371276Z",
-      "updated_at": "2025-11-30T12:55:05.093073235Z",
+      "updated_at": "2025-12-03T21:16:49.260099732Z",
       "default_budget": true,
-      "last_event": 1764507305093073235,
-      "version": 605,
+      "last_event": 1764796609260099732,
+      "version": 704,
       "currency": "SEK"
     }
   ],
