@@ -1,7 +1,7 @@
 use crate::budget::ItemSelector;
 use crate::Button;
 use api::ignore_transaction;
-use api::models::BudgetingType;
+use api::models::{BudgetingType, Money};
 use api::view_models::*;
 use dioxus::prelude::*;
 use lucide_dioxus::Pen;
@@ -15,6 +15,7 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
 
     let mut edit_item = use_signal(|| false);
     let item_name = use_signal(|| item.name.clone());
+    let mut budgeted_amount = use_signal(|| item.budgeted_amount);
 
     // State for selected transaction IDs and the target item for moving
     let mut selected_transactions = use_signal(HashSet::<Uuid>::new);
@@ -163,6 +164,47 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
             }
         }
         // }
+    } else if edit_item() {
+        rsx! {
+            label { "Edit item" }
+            input {
+                r#type: "number",
+                value: budgeted_amount().to_string(),
+                oninput: move |e| {
+                    match e.value().parse() {
+                        Ok(v) => {
+                            budgeted_amount.set(Money::new_dollars(v, budget.currency));
+                        }
+                        _ => {
+                            budgeted_amount.set(Money::zero(budget.currency));
+                        }
+                    }
+                },
+            }
+            Button {
+                onclick: move |_| async move {
+                    match api::modify_actual(
+                            budget_id,
+                            item.actual_id.unwrap(),
+                            budget.period_id,
+                            Some(budgeted_amount()),
+                            None,
+                        )
+                        // TODO: Show error
+                        .await
+                    {
+                        Ok(updated_budget) => {
+                            budget_signal.set(Some(updated_budget));
+                            edit_item.set(false)
+                        }
+                        Err(_) => {
+                            edit_item.set(false);
+                        }
+                    }
+                },
+                "Save"
+            }
+        }
     } else {
         rsx! {
             div { class: "budget-item",
@@ -211,6 +253,7 @@ pub fn BudgetItemStatusView(item: BudgetItemViewModel) -> Element {
                             onclick: move |_| async move {
                                 let actual_id = item.actual_id.unwrap();
                                 let shortage = shortage;
+
         
                                 match api::modify_actual(
                                         budget_id,
