@@ -254,7 +254,7 @@ pub fn BudgetItemStatusView(item: BudgetItemViewModel) -> Element {
                             class: "auto-adjust-button",
                             onclick: move |_| async move {
                                 let actual_id = item.actual_id.unwrap();
-                                let shortage = shortage;
+                                let new_budegeted_amount = item.actual_amount;
 
         
                                 match api::modify_actual(
@@ -274,7 +274,7 @@ pub fn BudgetItemStatusView(item: BudgetItemViewModel) -> Element {
                                     }
                                 }
                             },
-                            "Auto-Adjust (+{shortage})"
+                            "Auto-Adjust Budgeted Amount (+{shortage})"
                         }
                     }
                 }
@@ -286,7 +286,7 @@ pub fn BudgetItemStatusView(item: BudgetItemViewModel) -> Element {
             }
         }
         BudgetItemStatus::UnderBudget => {
-            let shortage = item.budgeted_amount - item.actual_amount;
+            let shortage = item.actual_amount - item.budgeted_amount;
             let can_auto_adjust = true;
             rsx! {
                 span { class: "over-budget-indicator", "Under Budget" }
@@ -294,7 +294,7 @@ pub fn BudgetItemStatusView(item: BudgetItemViewModel) -> Element {
                     class: "auto-adjust-button",
                     onclick: move |_| async move {
                         let actual_id = item.actual_id.unwrap();
-                        let shortage = shortage;
+                        let shortage = item.actual_amount;
 
                         match api::modify_actual(
                                 budget_id,
@@ -313,7 +313,7 @@ pub fn BudgetItemStatusView(item: BudgetItemViewModel) -> Element {
                             }
                         }
                     },
-                    "Auto-Adjust (+{shortage})"
+                    "Auto-Adjust Budgeted Amount (-{shortage})"
                 }
             }
         }
