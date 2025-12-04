@@ -76,9 +76,10 @@ pub fn import_from_skandia_excel(
         let mut account_number: Option<String> = None;
 
         for (row_num, row) in r.rows().enumerate() {
+            tracing::debug!("Row data: {:#?}", row);
             if row_num == 0 {
                 account_number = Some(row[1].to_string());
-            } else if row_num > 4 {
+            } else if row_num > 3 && row.len() > 3 {
                 let amount =
                     Money::new_cents((row[2].as_f64().unwrap() * 100.0) as i64, Currency::SEK);
                 let balance =
