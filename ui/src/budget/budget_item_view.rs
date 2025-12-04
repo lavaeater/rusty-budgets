@@ -7,6 +7,9 @@ use dioxus::prelude::*;
 use lucide_dioxus::Pen;
 use std::collections::HashSet;
 use uuid::Uuid;
+use api::view_models::BudgetItemStatus;
+use api::view_models::BudgetItemViewModel;
+use api::view_models::BudgetViewModel;
 
 #[component]
 pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {

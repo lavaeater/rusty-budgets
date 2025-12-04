@@ -10,9 +10,9 @@ pub mod time_delta;
 pub mod view_models;
 
 use crate::models::*;
-use crate::view_models::BudgetItemViewModel;
-use crate::view_models::BudgetViewModel;
-use crate::view_models::TransactionViewModel;
+use view_models::BudgetItemViewModel;
+use view_models::BudgetViewModel;
+use view_models::TransactionViewModel;
 use chrono::Utc;
 
 #[cfg(feature = "server")]

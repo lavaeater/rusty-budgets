@@ -4,6 +4,9 @@ use api::view_models::*;
 use api::models::*;
 use dioxus::prelude::*;
 use uuid::Uuid;
+use api::view_models::BudgetItemViewModel;
+use api::view_models::BudgetViewModel;
+use api::view_models::BudgetingTypeOverview;
 
 #[component]
 pub fn BudgetTabs() -> Element {

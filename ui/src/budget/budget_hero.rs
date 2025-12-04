@@ -1,5 +1,5 @@
 use api::models::*;
-use crate::budget::{TransactionsView, BudgetTabs};
+use crate::budget::{BudgetTabs, TransactionsView};
 use crate::file_chooser::*;
 use crate::{Button, Input};
 use api::{get_budget, import_transactions};
@@ -10,6 +10,7 @@ use dioxus_primitives::label::Label;
 use std::future::Future;
 use uuid::Uuid;
 use api::view_models::*;
+use api::view_models::BudgetViewModel;
 
 const HERO_CSS: Asset = asset!("assets/styling/budget-hero-a.css");
 #[component]

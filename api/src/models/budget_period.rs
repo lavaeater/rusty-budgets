@@ -2,15 +2,15 @@ use crate::models::budget_period_id::PeriodId;
 use crate::models::rule_packages::RulePackages;
 use crate::models::BudgetingType::{Expense, Income, Savings};
 use crate::models::{ActualItem, BankTransaction, BudgetItem, BudgetingType, MatchRule, Money};
-use crate::view_models::{BudgetingTypeOverview, ValueKind};
+use crate::view_models::value_kind::ValueKind;
 use core::fmt::Display;
 use iter_tools::Itertools;
 use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeStruct;
-use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
-use std::collections::{HashMap, HashSet};
-use std::fmt;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use std::collections::HashSet;
 use uuid::Uuid;
+use crate::view_models::BudgetingTypeOverview;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BudgetPeriod {
