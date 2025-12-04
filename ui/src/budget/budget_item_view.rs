@@ -6,6 +6,7 @@ use api::view_models::*;
 use dioxus::prelude::*;
 use lucide_dioxus::Pen;
 use std::collections::HashSet;
+use dioxus::logger::tracing;
 use uuid::Uuid;
 use api::view_models::BudgetItemStatus;
 use api::view_models::BudgetItemViewModel;
@@ -82,26 +83,26 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                             r#type: "button",
                             "data-style": "destructive",
                             onclick: move |_| async move {
-                                let mut success = true;
+                                let mut updated_budget: Option<BudgetViewModel> = None;
                                 let selected_ids: Vec<Uuid> = selected_transactions().into_iter().collect();
 
                                 for tx_id in selected_ids {
                                     // Refresh the budget data
-                                    if let Err(_) = ignore_transaction(budget_id, tx_id, budget.period_id).await
+                                    if let Ok(ub) = ignore_transaction(budget_id, tx_id, budget.period_id).await
                                     {
-                                        success = false;
+                                        updated_budget = Some(ub);
+                                    } else {
+                                        updated_budget = None;
                                         break;
                                     }
                                 }
-                                if success {
-                                    if let Ok(updated_budget) = api::get_budget(
-                                            Some(budget_id),
-                                            budget.period_id,
-                                        )
-                                        .await
-                                    {
-                                        budget_signal.set(updated_budget);
-                                    }
+                                if let Some(updated_budget) = updated_budget {
+                                    info!("Transactions ignored, budget updated");
+                                    selected_transactions.set(HashSet::new());
+                                    show_move_selector.set(false);
+                                    budget_signal.set(Some(updated_budget));
+                                } else {
+                                    error!("Transactions ignored, budget not updated");
                                     selected_transactions.set(HashSet::new());
                                     show_move_selector.set(false);
                                 }
@@ -150,10 +151,13 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                                                     )
                                                     .await
                                                 {
+                                                    selected_transactions.set(HashSet::new());
+                                                    show_move_selector.set(false);
                                                     budget_signal.set(updated_budget);
+                                                } else {
+                                                    show_move_selector.set(false);
+                                                    error!("Transactions moved, budget not updated");
                                                 }
-                                                selected_transactions.set(HashSet::new());
-                                                show_move_selector.set(false);
                                             }
                                         } else {
                                             show_move_selector.set(false);
@@ -169,8 +173,8 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
         // }
     } else if edit_item() {
         rsx! {
-            label { {{item.name}} }
-            label { "Budgeted amount" }
+            label { {{ item.name }} }
+            label { "Budgeterad belopp" }
             input {
                 r#type: "number",
                 value: budgeted_amount().amount_in_dollars(),
@@ -193,7 +197,8 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                             budget.period_id,
                             Some(budgeted_amount()),
                             None,
-                        ).await
+                        )
+                        .await
                     {
                         Ok(updated_budget) => {
                             budget_signal.set(Some(updated_budget));
@@ -204,7 +209,13 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                         }
                     }
                 },
-                "Save"
+                "Spara"
+            }
+            Button {
+                onclick: move |_| {
+                    edit_item.set(false);
+                },
+                "Avbryt"
             }
         }
     } else {
@@ -239,7 +250,7 @@ pub fn BudgetItemStatusView(item: BudgetItemViewModel) -> Element {
         }
         BudgetItemStatus::OverBudget => {
             rsx! {
-                span { class: "over-budget-indicator", "Over Budget" }
+                span { class: "over-budget-indicator", "Över Budget" }
                 {
                     let shortage = item.actual_amount - item.budgeted_amount;
                     let can_auto_adjust = item.budgeting_type == BudgetingType::Income
@@ -271,7 +282,7 @@ pub fn BudgetItemStatusView(item: BudgetItemViewModel) -> Element {
                                     }
                                 }
                             },
-                            "Auto-Adjust Budgeted Amount (+{shortage})"
+                            "Auto-justera budgetbelopp (+{shortage})"
                         }
                     }
                 }
@@ -279,19 +290,19 @@ pub fn BudgetItemStatusView(item: BudgetItemViewModel) -> Element {
         }
         BudgetItemStatus::NotBudgeted => {
             rsx! {
-                span { class: "over-budget-indicator", "Not Budgeted" }
+                span { class: "over-budget-indicator", "Ej budgeterad" }
             }
         }
         BudgetItemStatus::UnderBudget => {
             let shortage = item.budgeted_amount - item.actual_amount;
             let can_auto_adjust = true;
             rsx! {
-                span { class: "over-budget-indicator", "Under Budget" }
+                span { class: "over-budget-indicator", "Under budget" }
                 button {
                     class: "auto-adjust-button",
                     onclick: move |_| async move {
                         let actual_id = item.actual_id.unwrap();
-                       
+
                         match api::modify_actual(
                                 budget_id,
                                 actual_id,
@@ -309,7 +320,7 @@ pub fn BudgetItemStatusView(item: BudgetItemViewModel) -> Element {
                             }
                         }
                     },
-                    "Auto-Adjust Budgeted Amount (-{shortage})"
+                    "Auto-justera budgetbelopp (-{shortage})"
                 }
             }
         }
