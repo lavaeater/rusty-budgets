@@ -2,15 +2,15 @@ use crate::models::budget_period_id::PeriodId;
 use crate::models::rule_packages::RulePackages;
 use crate::models::BudgetingType::{Expense, Income, Savings};
 use crate::models::{ActualItem, BankTransaction, BudgetItem, BudgetingType, MatchRule, Money};
-use crate::view_models::{BudgetingTypeOverview, ValueKind};
+use crate::view_models::value_kind::ValueKind;
 use core::fmt::Display;
 use iter_tools::Itertools;
 use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeStruct;
-use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
-use std::collections::{HashMap, HashSet};
-use std::fmt;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use std::collections::HashSet;
 use uuid::Uuid;
+use crate::view_models::BudgetingTypeOverview;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BudgetPeriod {
@@ -201,7 +201,7 @@ impl BudgetPeriod {
     ) -> Vec<(Uuid, Option<Uuid>, Option<Uuid>)> {
         let mut matched_transactions = Vec::new();
         let actuals = self.actual_items.iter().collect::<Vec<_>>();
-        for transaction in self.transactions.iter() {
+        for transaction in self.transactions.iter().filter(|tx| !tx.ignored && tx.actual_id.is_none()) {
             for rule in rules {
                 if rule.matches_transaction(&transaction) {
                     if let Some(actual_id) = self.get_actual_id_for_rule(rule, &actuals) {

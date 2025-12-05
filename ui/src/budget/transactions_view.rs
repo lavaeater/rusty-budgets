@@ -3,7 +3,8 @@ use api::models::{BankTransaction, Budget, BudgetItem, BudgetingType};
 use dioxus::prelude::*;
 use uuid::Uuid;
 use api::connect_transaction;
-use api::view_models::{BudgetItemViewModel, BudgetViewModel};
+use api::view_models::BudgetViewModel;
+use api::view_models::BudgetItemViewModel;
 use crate::{Button, PopoverContent, PopoverRoot, PopoverTrigger};
 
 #[component]

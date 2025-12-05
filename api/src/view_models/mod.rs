@@ -1,242 +1,32 @@
 use crate::models::{
-    ActualItem, BankTransaction, Budget, BudgetItem, BudgetingType, Currency, Money, MonthBeginsOn,
+    ActualItem, BudgetItem, Currency, Money,
     PeriodId,
 };
-use crate::view_models::BudgetItemStatus::{Balanced, NotBudgeted, OverBudget, UnderBudget};
-use chrono::{DateTime, Utc};
-use dioxus::logger::tracing;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+mod budget_item_view_model;
+mod budget_item_status;
+mod transaction_view_model;
+mod budget_view_model;
+mod budgeting_type_overview;
+pub mod rule;
+pub mod value_kind;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-pub enum BudgetItemStatus {
-    Balanced,
-    OverBudget,
-    #[default]
-    NotBudgeted,
-    UnderBudget,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-pub struct BudgetItemViewModel {
-    pub item_id: Uuid,
-    pub actual_id: Option<Uuid>,
-    pub name: String,
-    pub budgeting_type: BudgetingType,
-    pub budgeted_amount: Money,
-    pub actual_amount: Money,
-    pub remaining_budget: Money,
-    pub status: BudgetItemStatus,
-    pub transactions: Vec<TransactionViewModel>,
-}
-
-impl BudgetItemViewModel {
-    pub fn from_item(
-        budget_item: &BudgetItem,
-        actual_items: &[&ActualItem],
-        currency: Currency,
-        transactions: &Vec<&BankTransaction>,
-    ) -> Self {
-        let actual_item = actual_items
-            .iter()
-            .find(|ai| ai.budget_item_id == budget_item.id);
-        if let Some(actual_item) = actual_item {
-            let transactions = transactions
-                .iter()
-                .filter(|tx| tx.actual_id == Some(actual_item.id))
-                .map(|tx| TransactionViewModel::from_transaction(tx))
-                .collect::<Vec<_>>();
-
-            let status = if actual_item.budgeted_amount.is_zero() {
-                NotBudgeted
-            } else if actual_item.actual_amount > actual_item.budgeted_amount {
-                OverBudget
-            } else if actual_item.actual_amount < actual_item.budgeted_amount {
-                UnderBudget
-            } else {
-                Balanced
-            };
-
-            Self {
-                item_id: actual_item.budget_item_id,
-                actual_id: Some(actual_item.id),
-                name: actual_item.item_name.clone(),
-                budgeting_type: actual_item.budgeting_type,
-                budgeted_amount: actual_item.budgeted_amount,
-                actual_amount: actual_item.actual_amount,
-                remaining_budget: actual_item.budgeted_amount - actual_item.actual_amount,
-                status,
-                transactions,
-            }
-        } else {
-            Self {
-                item_id: budget_item.id,
-                actual_id: None,
-                name: budget_item.name.clone(),
-                budgeting_type: budget_item.budgeting_type,
-                budgeted_amount: Money::zero(currency),
-                actual_amount: Money::zero(currency),
-                remaining_budget: Money::zero(currency),
-                status: NotBudgeted,
-                transactions: Vec::new(),
-            }
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-pub struct TransactionViewModel {
-    pub tx_id: Uuid,
-    pub amount: Money,
-    pub description: String,
-    pub date: DateTime<Utc>,
-    pub actual_item_id: Option<Uuid>,
-}
-
-impl TransactionViewModel {
-    pub fn from_transaction(tx: &BankTransaction) -> Self {
-        Self {
-            tx_id: tx.id,
-            amount: tx.amount,
-            description: tx.description.clone(),
-            date: tx.date,
-            actual_item_id: tx.actual_id,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-pub struct BudgetViewModel {
-    pub id: Uuid,
-    pub name: String,
-    pub month_begins_on: MonthBeginsOn,
-    pub period_id: PeriodId,
-    pub overviews: Vec<BudgetingTypeOverview>,
-    pub items: Vec<BudgetItemViewModel>,
-    pub to_connect: Vec<TransactionViewModel>,
-    pub ignored_transactions: Vec<TransactionViewModel>,
-    pub currency: Currency,
-}
-
-impl BudgetViewModel {
-    pub fn from_budget(budget: &Budget, period_id: PeriodId) -> Self {
-        let actual_items = budget.all_actuals(period_id);
-        let budget_items = budget.all_items();
-        let transactions = budget.unconnected_transactions(period_id);
-        let ignored_transactions = budget.ignored_transactions(period_id);
-        let connected_transactions = budget.connected_transactions(period_id);
-
-        let items = budget_items
-            .iter()
-            .map(|bi| {
-                BudgetItemViewModel::from_item(
-                    bi,
-                    &actual_items,
-                    budget.currency,
-                    &connected_transactions,
-                )
-            })
-            .collect::<Vec<_>>();
-        let to_connect = transactions
-            .iter()
-            .map(|tx| TransactionViewModel::from_transaction(tx))
-            .collect::<Vec<_>>();
-        let ignored_transactions = ignored_transactions
-            .iter()
-            .map(|tx| TransactionViewModel::from_transaction(tx))
-            .collect::<Vec<_>>();
-        let mut overviews = vec![
-            budget.get_budgeting_overview(BudgetingType::Income, period_id),
-            budget.get_budgeting_overview(BudgetingType::Expense, period_id),
-            budget.get_budgeting_overview(BudgetingType::Savings, period_id),
-        ];
-        overviews.sort_by_key(|ov| ov.budgeting_type);
-        Self {
-            id: budget.id,
-            name: budget.name.clone(),
-            month_begins_on: budget.month_begins_on(),
-            period_id,
-            overviews,
-            items,
-            to_connect,
-            ignored_transactions,
-            currency: budget.currency,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Copy, Default, Hash, PartialEq, Eq)]
-pub struct BudgetingTypeOverview {
-    pub budgeting_type: BudgetingType,
-    pub budgeted_amount: Money,
-    pub actual_amount: Money,
-    pub remaining_budget: Money,
-    pub is_ok: bool,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum Rule {
-    Sum(Vec<BudgetingType>),
-    Difference(BudgetingType, Vec<BudgetingType>),
-    SelfDiff(BudgetingType),
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum ValueKind {
-    Budgeted,
-    Spent,
-}
-
-impl ValueKind {
-    fn pick(&self, item: &ActualItem) -> Money {
-        match self {
-            ValueKind::Budgeted => item.budgeted_amount,
-            ValueKind::Spent => item.actual_amount,
-        }
-    }
-}
-
-impl Rule {
-    pub fn evaluate(&self, store: &Vec<ActualItem>, kind: Option<ValueKind>) -> Money {
-        match self {
-            Rule::Sum(types) => types
-                .iter()
-                .map(|t| Self::get_sum(store, kind.as_ref().unwrap(), t))
-                .sum(),
-            Rule::Difference(base, subtracts) => {
-                tracing::info!("Base: {:?}", base);
-                tracing::info!("Subtracts: {:?}", subtracts);
-                tracing::info!("Kind: {:?}", kind);
-                let base_sum = Self::get_sum(store, kind.as_ref().unwrap(), base);
-                let subtract_sum: Money = subtracts
-                    .iter()
-                    .map(|t| Self::get_sum(store, kind.as_ref().unwrap(), t))
-                    .sum();
-                base_sum - subtract_sum
-            }
-            Rule::SelfDiff(base) => {
-                let budget_sum = Self::get_sum(store, &ValueKind::Budgeted, base);
-                let spent_sum = Self::get_sum(store, &ValueKind::Spent, base);
-                budget_sum - spent_sum
-            }
-        }
-    }
-
-    pub fn get_sum(store: &Vec<ActualItem>, kind: &ValueKind, base: &BudgetingType) -> Money {
-        store
-            .iter()
-            .filter(|i| i.budgeting_type == *base)
-            .map(|i| kind.pick(i))
-            .sum::<Money>()
-    }
-}
+pub use budgeting_type_overview::BudgetingTypeOverview;
+pub use rule::Rule;
+pub use value_kind::ValueKind;
+pub use budget_item_view_model::BudgetItemViewModel;
+pub use transaction_view_model::TransactionViewModel;
+pub use budget_view_model::BudgetViewModel;
+pub use budget_item_status::BudgetItemStatus;
 
 #[cfg(test)]
 #[test]
 fn test_calculate_rules() {
     use crate::models::BudgetingType::*;
     use std::sync::{Arc, Mutex};
-    use Rule::*;
+    use rule::Rule::*;
+    use value_kind::ValueKind;
     let period_id = PeriodId::new(2025, 12);
     let budget_items = [
         BudgetItem::new(Uuid::new_v4(), "Lön", Income),
