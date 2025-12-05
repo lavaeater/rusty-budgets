@@ -299,8 +299,8 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
         }
         let version = budget.version - version;
         tracing::info!("Loaded budget has {} events since last snapshot", version);
-        if version > 10 { // more than 10 events since last snapshot
-            tracing::info!("More than 10 events since last snapshot, snapshotting");
+        if version > 3 { // more than 3 events since last snapshot
+            tracing::info!("More than 3 events since last snapshot, snapshotting");
             self.snapshot(&budget)?;
         }
         Ok(Some(budget))
