@@ -32,7 +32,7 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
             div { class: "flex flex-col p-2 border-b border-gray-200 text-sm",
                 // Header with item name and amount
                 div { class: "flex justify-between items-center",
-                    // onclick: move |_| { edit_item.set(!edit_item()) },
+                    onclick: move |_| { expanded.set(false) },
                     div { class: "font-large", "{item_name()}" }
                     div { class: "text-gray-700",
                         "{item.actual_amount.to_string()} / {item.budgeted_amount.to_string()}"
@@ -173,13 +173,21 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
         // }
     } else if edit_item() {
         rsx! {
-            label { {{ item.name }} }
-            label { "Budgeterad belopp" }
-            input {
-                r#type: "number",
-                value: budgeted_amount().amount_in_dollars(),
-                oninput: move |e| {
-                    match e.value().parse() {
+            div { class: "flex flex-col p-2 border-b border-gray-200 text-sm",
+                div { class: "flex justify-between items-center",
+                    onclick: move |_| { expanded.set(false) },
+                    div { class: "font-large", "{item_name()}" }
+                    div { class: "text-gray-700",
+                        "{item.actual_amount.to_string()} / {item.budgeted_amount.to_string()}"
+                    }
+                }
+
+                label { "Budgeterat belopp" }
+                input {
+                    r#type: "number",
+                    value: budgeted_amount().amount_in_dollars(),
+                    oninput: move |e| {
+                        match e.value().parse() {
                         Ok(v) => {
                             budgeted_amount.set(Money::new_dollars(v, budget.currency));
                         }
@@ -218,6 +226,7 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                 "Avbryt"
             }
         }
+            }
     } else {
         rsx! {
             div { class: "budget-item",
