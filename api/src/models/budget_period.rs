@@ -201,7 +201,7 @@ impl BudgetPeriod {
     ) -> Vec<(Uuid, Option<Uuid>, Option<Uuid>)> {
         let mut matched_transactions = Vec::new();
         let actuals = self.actual_items.iter().collect::<Vec<_>>();
-        for transaction in self.transactions.iter() {
+        for transaction in self.transactions.iter().filter(|tx| !tx.ignored && tx.actual_id.is_none()) {
             for rule in rules {
                 if rule.matches_transaction(&transaction) {
                     if let Some(actual_id) = self.get_actual_id_for_rule(rule, &actuals) {

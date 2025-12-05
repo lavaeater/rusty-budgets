@@ -166,6 +166,2525 @@
         }
       },
       "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "e1292144-0d5a-48a9-9320-ffe8bd6b7524",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972034995863668,
+      "created_at": "2025-12-05T22:00:34.995863668Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "afb3f20e-adf9-414e-adaf-bfa9f8070882",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -16369,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 2961507,
+            "currency": "SEK"
+          },
+          "description": "2025-11-28 MAXI ICA STORMARKNAD ESKI, ESKILSTUNA",
+          "date": "2025-12-01T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "32f9cc60-592f-4472-883a-b5f24d40ff86",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972034996379789,
+      "created_at": "2025-12-05T22:00:34.996379789Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "f6a9b767-4b78-4f27-b306-9b6839f4453b",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -43860,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 2977877,
+            "currency": "SEK"
+          },
+          "description": "2025-11-28 APOTEK HJARTAT ICA MAXI E, ESKILSTUNA",
+          "date": "2025-12-01T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "3b2fdfe1-dc94-440e-903f-d176817c1445",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972034996834605,
+      "created_at": "2025-12-05T22:00:34.996834605Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "d1472025-c539-49b5-9f8e-0ece19fe80bb",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -4900,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 3021737,
+            "currency": "SEK"
+          },
+          "description": "2025-11-28 LANSTRAFIKEN SE, OREBRO",
+          "date": "2025-12-01T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "6deebb8d-ae4d-4b5e-8642-cc3056a8af04",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972034997449739,
+      "created_at": "2025-12-05T22:00:34.997449739Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "9f65eb7c-770a-47f2-87bf-b4165adaeaad",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -7900,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 3026637,
+            "currency": "SEK"
+          },
+          "description": "2025-11-28 BUTIKEN I RONDELLEN, ESKILSTUNA",
+          "date": "2025-12-01T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "ed0c63f0-378d-4053-9017-fa608067f693",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972034997812457,
+      "created_at": "2025-12-05T22:00:34.997812457Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "a487c726-a27c-4c32-a499-644316fbc435",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -65000,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 3034537,
+            "currency": "SEK"
+          },
+          "description": "2025-11-28 ICA SUPERMARKET KOPPARHAL, KOPPARBERG",
+          "date": "2025-12-01T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "d64f3997-ecd8-4102-be5d-a48b7ea41d84",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972034998236447,
+      "created_at": "2025-12-05T22:00:34.998236447Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "eded01c1-90ce-41aa-bca3-f53acd0fcc4a",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -34920,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 3099537,
+            "currency": "SEK"
+          },
+          "description": "2025-11-27 LÅDAN, KOPPARBERG",
+          "date": "2025-11-28T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "2d4cb5a7-fcd5-4680-b4e0-156822fa4e23",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972034998647847,
+      "created_at": "2025-12-05T22:00:34.998647847Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "6820a802-1f3e-4630-97f1-9a783480d1fb",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -4500,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 3134457,
+            "currency": "SEK"
+          },
+          "description": "2025-11-27 EasyPark AB, Stockholm",
+          "date": "2025-11-28T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "700a16b8-4323-408a-8617-47cbda63cb22",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972034999163251,
+      "created_at": "2025-12-05T22:00:34.999163251Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "5c1227fa-15aa-426b-8d80-e73b98ab81fc",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": 2000000,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 3138957,
+            "currency": "SEK"
+          },
+          "description": "Överf. L. Leffler Peura",
+          "date": "2025-11-28T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "84191a29-0eeb-4561-9fb8-5c63ad33be83",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972034999552632,
+      "created_at": "2025-12-05T22:00:34.999552632Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "dc6ecc0b-2d53-41c5-bf48-7c069d8f56e0",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -62790,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 1138957,
+            "currency": "SEK"
+          },
+          "description": "2025-11-26 KappAhl Örebro City, Örebro",
+          "date": "2025-11-27T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "4011eca8-d1c0-41f9-ac72-1cd29667d402",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972034999958581,
+      "created_at": "2025-12-05T22:00:34.999958581Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "cd4e0461-3540-47eb-b680-378eeb4c15ad",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -18440,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 1201747,
+            "currency": "SEK"
+          },
+          "description": "2025-11-26 SOSTRENE GRENE DROTTNINGG, ÖREBRO",
+          "date": "2025-11-27T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "80f94f65-096c-48ec-94ba-ed26824601a9",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972035000381809,
+      "created_at": "2025-12-05T22:00:35.000381809Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "89ae28e7-9bf6-4970-8e87-d19a4ce2b322",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -3390,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 1220187,
+            "currency": "SEK"
+          },
+          "description": "2025-11-26 NEW CHINA TRADING, OREBRO",
+          "date": "2025-11-27T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "1c2e771d-6771-4138-b14c-a760a17836b2",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972035000863178,
+      "created_at": "2025-12-05T22:00:35.000863178Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "ede3bc25-9dfc-488f-81e5-9d6b38cd856b",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -8500,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 1223577,
+            "currency": "SEK"
+          },
+          "description": "2025-11-26 MCDOREBROVASTHAGA, OREBRO",
+          "date": "2025-11-27T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "303ae528-15b8-4b16-a19b-e5c08f8eb976",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972035001227687,
+      "created_at": "2025-12-05T22:00:35.001227687Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "7a3383f2-890d-49d4-acfc-1216a1ba8978",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -5985,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 1232077,
+            "currency": "SEK"
+          },
+          "description": "2025-11-26 ICA SUPERMARKET EKERSHALL, OREBRO",
+          "date": "2025-11-27T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "c053561f-95ab-4913-b43e-21b2c3f478b2",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972035001626454,
+      "created_at": "2025-12-05T22:00:35.001626454Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "42eff40a-2006-43f7-b5ce-233357a877ae",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -40960,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 1238062,
+            "currency": "SEK"
+          },
+          "description": "2025-11-26 Granit 40435, Drottninggata",
+          "date": "2025-11-27T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "b39cb598-a1b3-4b2b-b1d3-01cb8fa11c12",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972035002099066,
+      "created_at": "2025-12-05T22:00:35.002099066Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "01f9b808-5d6e-43b6-b708-d2de19c00850",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -43360,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 1279022,
+            "currency": "SEK"
+          },
+          "description": "2025-11-26 $HLÉNS Örebro, Örebro",
+          "date": "2025-11-27T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "c672df32-a2bb-4935-bd94-01dff3a0a0a3",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972035002643149,
+      "created_at": "2025-12-05T22:00:35.002643149Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "a7373111-0fb0-47f8-bd64-ad3ed853ddda",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -27900,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 1322382,
+            "currency": "SEK"
+          },
+          "description": "2025-11-26 APOTEK HJARTAT JARNTORGET, OREBRO",
+          "date": "2025-11-27T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "66ff5550-73c7-490e-ad35-797ee69cb9f3",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972035003028639,
+      "created_at": "2025-12-05T22:00:35.003028639Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "6aadd8a0-b15a-4a54-ac75-9594f955355c",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -52803,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 1350282,
+            "currency": "SEK"
+          },
+          "description": "2025-11-26 Kronans Apotek AB, Örebro",
+          "date": "2025-11-27T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "bad9eee2-68a8-4958-95cf-de076900d64b",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972035003462157,
+      "created_at": "2025-12-05T22:00:35.003462157Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "47d54bf4-fbb9-40c2-850d-9247bbb6afc8",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -83350,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 1403085,
+            "currency": "SEK"
+          },
+          "description": "2025-11-25 LÅDAN, KOPPARBERG",
+          "date": "2025-11-26T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "2fae6710-49e5-4892-9414-afa4e62de8c9",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972035003838129,
+      "created_at": "2025-12-05T22:00:35.003838129Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "872cfaf0-dd5b-4c1a-a51d-8ea2f66183b1",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -269500,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 1486435,
+            "currency": "SEK"
+          },
+          "description": "2025-11-25 UHBILSERVICE, LINDESBERG",
+          "date": "2025-11-26T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "08684638-56c5-45a1-86a8-d266d269560d",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972035004315450,
+      "created_at": "2025-12-05T22:00:35.004315450Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "7eb461c7-179d-4972-9f95-87f1041cff9b",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -26689,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 1755934,
+            "currency": "SEK"
+          },
+          "description": "2025-11-24 Kronans Apotek AB, Kopparberg",
+          "date": "2025-11-25T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "30a7696b-eec1-46e3-a3a5-861dd8a857d7",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972035004632142,
+      "created_at": "2025-12-05T22:00:35.004632142Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "3df70d69-4fdf-4486-8b62-737240115d79",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -158400,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 1782625,
+            "currency": "SEK"
+          },
+          "description": "2025-11-24 Kronans Apotek AB, Kopparberg",
+          "date": "2025-11-25T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "7b067811-7f83-43d5-88c0-8a3271f2fee9",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972035004995383,
+      "created_at": "2025-12-05T22:00:35.004995383Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "4709b997-969b-40c3-a09c-197ea4ebd8a3",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -10360,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 1941025,
+            "currency": "SEK"
+          },
+          "description": "2025-11-24 ICA SUPERMARKET TRIVSELKO, GULDSMEDSHYTT",
+          "date": "2025-11-25T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "f660ee3d-804d-4256-a5f4-e78e101f6a6f",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972035005402707,
+      "created_at": "2025-12-05T22:00:35.005402707Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "a63367f5-0b69-4685-80e2-8e4140f62c38",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -50000,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 1951384,
+            "currency": "SEK"
+          },
+          "description": "Överföring 9159 9449015",
+          "date": "2025-11-25T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "afe78f2c-5c6b-4ebe-a913-b96ca840dc35",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972035005865315,
+      "created_at": "2025-12-05T22:00:35.005865315Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "9766d239-d65b-42b7-a155-5279a5b5f541",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -40000,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 2001384,
+            "currency": "SEK"
+          },
+          "description": "Överföring 9150 5507725",
+          "date": "2025-11-25T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "2d019b5c-2cf2-4711-b2c6-7e4d9584500b",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972035006245772,
+      "created_at": "2025-12-05T22:00:35.006245772Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "b23b3dc1-7aac-4a57-9042-c37178ad0b65",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -2000000,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 2041384,
+            "currency": "SEK"
+          },
+          "description": "Räkningar",
+          "date": "2025-11-25T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "ed2cb268-2851-47e4-afa4-3c01f3693090",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972035006617050,
+      "created_at": "2025-12-05T22:00:35.006617050Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "14b5a5d2-5ad3-4fe6-8e98-f2703d98d914",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": 3679700,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 4041385,
+            "currency": "SEK"
+          },
+          "description": "LÖN",
+          "date": "2025-11-25T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "0276d4ab-9feb-4f1d-a8d4-554a7f57b556",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972035014377978,
+      "created_at": "2025-12-05T22:00:35.014377978Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "662232a5-6108-41bd-8be1-2fd25e451d0d",
+          "account_number": "9159-753.087-7",
+          "amount": {
+            "cents": -59900,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 115466,
+            "currency": "SEK"
+          },
+          "description": "Bahnhof",
+          "date": "2025-12-01T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "90d2b9a7-bd47-4425-bfe0-52f557c02280",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972035015211834,
+      "created_at": "2025-12-05T22:00:35.015211834Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "6fc03adf-1783-4281-81cb-cedae7c9e0ed",
+          "account_number": "9159-753.087-7",
+          "amount": {
+            "cents": -508400,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 175366,
+            "currency": "SEK"
+          },
+          "description": "Avibetalning 9152-2305078",
+          "date": "2025-11-28T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "e5e939ba-610b-4116-a8f4-296c6eb5f8ff",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972035015634189,
+      "created_at": "2025-12-05T22:00:35.015634189Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "23f4cc37-5da9-4163-9c0f-1254a65c1d94",
+          "account_number": "9159-753.087-7",
+          "amount": {
+            "cents": -28900,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 683766,
+            "currency": "SEK"
+          },
+          "description": "E.ON Kundsupport Sverige",
+          "date": "2025-11-28T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "5cc7308b-5789-447f-9a86-9cc02bd09f32",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972035015984884,
+      "created_at": "2025-12-05T22:00:35.015984884Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "e4afd4aa-3c20-453c-8c8a-c8570f64547e",
+          "account_number": "9159-753.087-7",
+          "amount": {
+            "cents": -57800,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 712666,
+            "currency": "SEK"
+          },
+          "description": "Telia Sverige AB",
+          "date": "2025-11-28T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "c5954d05-f6da-43de-a741-fa2187bd4682",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972035016434389,
+      "created_at": "2025-12-05T22:00:35.016434389Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "2f2bdeb4-d18b-40fa-80d9-690f314440d0",
+          "account_number": "9159-753.087-7",
+          "amount": {
+            "cents": -258800,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 770466,
+            "currency": "SEK"
+          },
+          "description": "Ellevio (publ) AB",
+          "date": "2025-11-28T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "2a7a62f6-cca7-4702-a70d-a10a2c7ea78d",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972035016894577,
+      "created_at": "2025-12-05T22:00:35.016894577Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "65a9c3b9-56cc-4ea5-bb8c-65c97e9b689a",
+          "account_number": "9159-753.087-7",
+          "amount": {
+            "cents": -175100,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 1029266,
+            "currency": "SEK"
+          },
+          "description": "E.ON Kundsupport Sverige",
+          "date": "2025-11-28T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "96c0fb47-4353-47da-a8df-309fa3fc6a41",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972035017252237,
+      "created_at": "2025-12-05T22:00:35.017252237Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "b74690d9-9e46-4cfe-b94c-5688ad112d59",
+          "account_number": "9159-753.087-7",
+          "amount": {
+            "cents": -550000,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 1204366,
+            "currency": "SEK"
+          },
+          "description": "Bilavsättning",
+          "date": "2025-11-28T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "5352686d-b0bd-46af-98ea-59fbfae47822",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972035017588324,
+      "created_at": "2025-12-05T22:00:35.017588324Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "8a28f1e2-a162-4415-b3b7-c81b000d5b7a",
+          "account_number": "9159-753.087-7",
+          "amount": {
+            "cents": -46700,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 1754366,
+            "currency": "SEK"
+          },
+          "description": "Autogiro Bredband2",
+          "date": "2025-11-27T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "bc90cb04-3f6c-43bd-a29e-b4f0a37ec98b",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972035017935351,
+      "created_at": "2025-12-05T22:00:35.017935351Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "09f53770-cec3-4e11-999d-010f1c4d7277",
+          "account_number": "9159-753.087-7",
+          "amount": {
+            "cents": -47000,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 1801066,
+            "currency": "SEK"
+          },
+          "description": "Akavia",
+          "date": "2025-11-27T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "f27e80bf-396b-4aad-be58-c9192ce9290e",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972035018427293,
+      "created_at": "2025-12-05T22:00:35.018427293Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "f3e2d95b-c0c1-4a45-90b9-8815bf5df32f",
+          "account_number": "9159-753.087-7",
+          "amount": {
+            "cents": -52000,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 1848066,
+            "currency": "SEK"
+          },
+          "description": "PG 48070015 REGION ÖREBRO LÄN",
+          "date": "2025-11-26T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "2855bca5-76a1-4cdb-a079-c0e0ab02e8af",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972035018832424,
+      "created_at": "2025-12-05T22:00:35.018832424Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "dd549f4c-0eb8-4283-86ce-07837e2829cf",
+          "account_number": "9159-753.087-7",
+          "amount": {
+            "cents": -100000,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 1900066,
+            "currency": "SEK"
+          },
+          "description": "Buffert årliga",
+          "date": "2025-11-25T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "872efc45-ad6f-4d86-a044-a62c9bd0e56f",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972035019343107,
+      "created_at": "2025-12-05T22:00:35.019343107Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "abf9ca11-ee57-4aba-b084-7966ba76e079",
+          "account_number": "9159-753.087-7",
+          "amount": {
+            "cents": 2000000,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 2000066,
+            "currency": "SEK"
+          },
+          "description": "Räkningar",
+          "date": "2025-11-25T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "fce6703b-f366-4dec-950d-dfa851a63a81",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972074385222497,
+      "created_at": "2025-12-05T22:01:14.385222497Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "5c1227fa-15aa-426b-8d80-e73b98ab81fc",
+          "actual_id": "c0e4bdf1-2b66-4361-8e43-e6c33f4b7343"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "e3a1a29b-7ba6-40b3-8620-467e0ab5803a",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972074386311438,
+      "created_at": "2025-12-05T22:01:14.386311438Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "överf.",
+            "l.",
+            "leffler",
+            "peura"
+          ],
+          "item_key": [
+            "lön"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "144a30b4-5515-4031-8ee9-4d10091e25e9",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972093987222739,
+      "created_at": "2025-12-05T22:01:33.987222739Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "14b5a5d2-5ad3-4fe6-8e98-f2703d98d914",
+          "actual_id": "c0e4bdf1-2b66-4361-8e43-e6c33f4b7343"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "45291132-4a0f-4d8b-9f2c-0588671276cc",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972093987901128,
+      "created_at": "2025-12-05T22:01:33.987901128Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "lön"
+          ],
+          "item_key": [
+            "lön"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "576b2d56-c925-4841-bd3a-ff28d7f9359a",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972101112623698,
+      "created_at": "2025-12-05T22:01:41.112623698Z",
+      "data": {
+        "ActualModified": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "actual_id": "c0e4bdf1-2b66-4361-8e43-e6c33f4b7343",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 5679700,
+            "currency": "SEK"
+          },
+          "actual_amount": null,
+          "notes": null,
+          "tags": null
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "0bfa786f-d813-4d85-b567-53c6ef367499",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972111053259087,
+      "created_at": "2025-12-05T22:01:51.053259087Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "afb3f20e-adf9-414e-adaf-bfa9f8070882",
+          "actual_id": "af5a0a14-e10b-4d2a-8b55-024fab5f8a21"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "17fd3e0b-0606-4bc3-b432-62b020a3e6e2",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972111054109748,
+      "created_at": "2025-12-05T22:01:51.054109748Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "maxi",
+            "ica",
+            "stormarknad",
+            "eski,",
+            "eskilstuna"
+          ],
+          "item_key": [
+            "livsmedel"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "cc50b47b-a3ab-407c-9d47-820a2b6f5d42",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972124805999212,
+      "created_at": "2025-12-05T22:02:04.805999212Z",
+      "data": {
+        "ItemAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "item_id": "d6f4ff9a-6985-497e-b206-4c6aca11e5fb",
+          "name": "Vård",
+          "item_type": "Expense"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "bdaf425b-737e-477c-9d5f-d448fc842b1b",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972124806624818,
+      "created_at": "2025-12-05T22:02:04.806624818Z",
+      "data": {
+        "ActualAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "actual_id": "c3879061-0747-4927-91a5-e2ac016ae8cd",
+          "item_id": "d6f4ff9a-6985-497e-b206-4c6aca11e5fb",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 150000,
+            "currency": "SEK"
+          }
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "6b1ebc63-b64f-4ab3-8e97-84958d86976c",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972124807319535,
+      "created_at": "2025-12-05T22:02:04.807319535Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "f6a9b767-4b78-4f27-b306-9b6839f4453b",
+          "actual_id": "c3879061-0747-4927-91a5-e2ac016ae8cd"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "43be7f1b-7bd0-4e86-8845-1bb0d31956c6",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972124808093412,
+      "created_at": "2025-12-05T22:02:04.808093412Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "apotek",
+            "hjartat",
+            "ica",
+            "maxi",
+            "e,",
+            "eskilstuna"
+          ],
+          "item_key": [
+            "vård"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "03f9a1d5-171e-43e8-b3dd-3e73b09fb91c",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972136308087239,
+      "created_at": "2025-12-05T22:02:16.308087239Z",
+      "data": {
+        "ItemAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "item_id": "1485a8c9-0812-45d7-9e29-e14c37032aa4",
+          "name": "Transport",
+          "item_type": "Expense"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "e36088ed-0b57-4331-878a-16f52332169d",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972136308698275,
+      "created_at": "2025-12-05T22:02:16.308698275Z",
+      "data": {
+        "ActualAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "actual_id": "7317b3f6-11f0-41fa-8d2c-12754fcae0d0",
+          "item_id": "1485a8c9-0812-45d7-9e29-e14c37032aa4",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 25000,
+            "currency": "SEK"
+          }
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "29e5c601-7f8b-450b-a9c0-d913aa8b9257",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972136309532216,
+      "created_at": "2025-12-05T22:02:16.309532216Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "d1472025-c539-49b5-9f8e-0ece19fe80bb",
+          "actual_id": "7317b3f6-11f0-41fa-8d2c-12754fcae0d0"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "00bde060-7fb7-41d1-80be-3d126db5bd61",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972136310671995,
+      "created_at": "2025-12-05T22:02:16.310671995Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "lanstrafiken",
+            "se,"
+          ],
+          "item_key": [
+            "transport"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "468ef164-9bac-4650-a83d-366ae91bebfb",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972149642046483,
+      "created_at": "2025-12-05T22:02:29.642046483Z",
+      "data": {
+        "ItemAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "item_id": "72a5149e-0d45-47a2-ac8d-962539957716",
+          "name": "Shopping",
+          "item_type": "Expense"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "acf7aac1-5aaa-42ea-b7ce-5f367ea9d786",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972149642630326,
+      "created_at": "2025-12-05T22:02:29.642630326Z",
+      "data": {
+        "ActualAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "actual_id": "6c92c18a-908f-4249-b61e-5aa15fdb36a8",
+          "item_id": "72a5149e-0d45-47a2-ac8d-962539957716",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 500000,
+            "currency": "SEK"
+          }
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "48bfd34f-b0f6-4d30-9867-79cab6637bf5",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972149643390099,
+      "created_at": "2025-12-05T22:02:29.643390099Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "9f65eb7c-770a-47f2-87bf-b4165adaeaad",
+          "actual_id": "6c92c18a-908f-4249-b61e-5aa15fdb36a8"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "cd64b888-983f-42b4-8e25-3256878293d4",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972149644769620,
+      "created_at": "2025-12-05T22:02:29.644769620Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "butiken",
+            "i",
+            "rondellen,",
+            "eskilstuna"
+          ],
+          "item_key": [
+            "shopping"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "af2e6ac0-0fcf-4707-bb1a-d5c08c3f7884",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972152835907785,
+      "created_at": "2025-12-05T22:02:32.835907785Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "a487c726-a27c-4c32-a499-644316fbc435",
+          "actual_id": "af5a0a14-e10b-4d2a-8b55-024fab5f8a21"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "e2fc8842-2cb7-4f77-aab2-caf5ebf82b63",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972152836828885,
+      "created_at": "2025-12-05T22:02:32.836828885Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "ica",
+            "supermarket",
+            "kopparhal,",
+            "kopparberg"
+          ],
+          "item_key": [
+            "livsmedel"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "23d140c2-b4af-4170-9981-27e40b2d3178",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972156622011640,
+      "created_at": "2025-12-05T22:02:36.622011640Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "eded01c1-90ce-41aa-bca3-f53acd0fcc4a",
+          "actual_id": "af5a0a14-e10b-4d2a-8b55-024fab5f8a21"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "50c23bc7-016e-4fd6-9d8e-03575bb65b47",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972156622892229,
+      "created_at": "2025-12-05T22:02:36.622892229Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "lådan,",
+            "kopparberg"
+          ],
+          "item_key": [
+            "livsmedel"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "eaff82eb-6d17-4b8c-8751-739d041ed690",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972156629021477,
+      "created_at": "2025-12-05T22:02:36.629021477Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "47d54bf4-fbb9-40c2-850d-9247bbb6afc8",
+          "actual_id": "af5a0a14-e10b-4d2a-8b55-024fab5f8a21"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "195a1e47-6207-4568-9d31-b172754a07e3",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972161171648546,
+      "created_at": "2025-12-05T22:02:41.171648546Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "6820a802-1f3e-4630-97f1-9a783480d1fb",
+          "actual_id": "e1c2155d-94d3-4131-ae82-039b6fd29cab"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "b66370fe-307e-4b1c-b853-6ce67be089b7",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972161173115847,
+      "created_at": "2025-12-05T22:02:41.173115847Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "easypark",
+            "ab,",
+            "stockholm"
+          ],
+          "item_key": [
+            "bil"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "67e87d1a-269e-46f5-b075-63ede3c33253",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972165774263648,
+      "created_at": "2025-12-05T22:02:45.774263648Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "dc6ecc0b-2d53-41c5-bf48-7c069d8f56e0",
+          "actual_id": "6c92c18a-908f-4249-b61e-5aa15fdb36a8"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "aba69368-05e5-4925-b019-7bff19442f9d",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972165775232960,
+      "created_at": "2025-12-05T22:02:45.775232960Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "kappahl",
+            "örebro",
+            "city,",
+            "örebro"
+          ],
+          "item_key": [
+            "shopping"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "297b56df-26bb-4a51-ad6e-f86dc21c64b0",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972169314373410,
+      "created_at": "2025-12-05T22:02:49.314373410Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "cd4e0461-3540-47eb-b680-378eeb4c15ad",
+          "actual_id": "6c92c18a-908f-4249-b61e-5aa15fdb36a8"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "973753fe-fc56-48c9-aece-a04b7fc84ad5",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972169315317145,
+      "created_at": "2025-12-05T22:02:49.315317145Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "sostrene",
+            "grene",
+            "drottningg,",
+            "örebro"
+          ],
+          "item_key": [
+            "shopping"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "e915e218-aa05-49d5-949f-27276f90cef3",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972173154278489,
+      "created_at": "2025-12-05T22:02:53.154278489Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "89ae28e7-9bf6-4970-8e87-d19a4ce2b322",
+          "actual_id": "6c92c18a-908f-4249-b61e-5aa15fdb36a8"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "744553ca-b15c-4553-8478-2e25ee6591a4",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972173155513055,
+      "created_at": "2025-12-05T22:02:53.155513055Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "new",
+            "china",
+            "trading,"
+          ],
+          "item_key": [
+            "shopping"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "116f5e4b-d7b0-4e7b-95a9-ee9489c1e82b",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972186172964489,
+      "created_at": "2025-12-05T22:03:06.172964489Z",
+      "data": {
+        "ItemAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "item_id": "77256ac6-84aa-429f-8e0f-0b58d4e07ef4",
+          "name": "Äta ute",
+          "item_type": "Expense"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "324dd791-c38e-442c-931e-6824f295ccd2",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972186173517416,
+      "created_at": "2025-12-05T22:03:06.173517416Z",
+      "data": {
+        "ActualAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "actual_id": "46021ec6-90c9-4462-a62d-06817ab9dfb6",
+          "item_id": "77256ac6-84aa-429f-8e0f-0b58d4e07ef4",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 350000,
+            "currency": "SEK"
+          }
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "692fd7da-724d-42cb-98de-913cf84e6d10",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972186173825379,
+      "created_at": "2025-12-05T22:03:06.173825379Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "ede3bc25-9dfc-488f-81e5-9d6b38cd856b",
+          "actual_id": "46021ec6-90c9-4462-a62d-06817ab9dfb6"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "9f2d1402-7dbf-413c-b4f1-168dd566855e",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972186174622272,
+      "created_at": "2025-12-05T22:03:06.174622272Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "mcdorebrovasthaga,"
+          ],
+          "item_key": [
+            "äta",
+            "ute"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "3cf6f33d-a6ef-40fa-86f1-92aa40919fc6",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972189638916916,
+      "created_at": "2025-12-05T22:03:09.638916916Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "7a3383f2-890d-49d4-acfc-1216a1ba8978",
+          "actual_id": "af5a0a14-e10b-4d2a-8b55-024fab5f8a21"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "2da6b012-856f-47c1-8c4d-b46201ee6c8b",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972189640402441,
+      "created_at": "2025-12-05T22:03:09.640402441Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "ica",
+            "supermarket",
+            "ekershall,"
+          ],
+          "item_key": [
+            "livsmedel"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "5b8fceac-b21d-4c9d-86f0-1b16fdfd526e",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972220742882538,
+      "created_at": "2025-12-05T22:03:40.742882538Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "42eff40a-2006-43f7-b5ce-233357a877ae",
+          "actual_id": "6c92c18a-908f-4249-b61e-5aa15fdb36a8"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "b0168df1-9fc6-4d72-8cba-58a6c881ab0e",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972220743945378,
+      "created_at": "2025-12-05T22:03:40.743945378Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "granit",
+            "40435,",
+            "drottninggata"
+          ],
+          "item_key": [
+            "shopping"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "b7f2efdc-aa9c-46dd-8b6d-f3d67ac28fcb",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972225202308545,
+      "created_at": "2025-12-05T22:03:45.202308545Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "01f9b808-5d6e-43b6-b708-d2de19c00850",
+          "actual_id": "6c92c18a-908f-4249-b61e-5aa15fdb36a8"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "4d72c415-1811-44d9-aaab-6724f66b337c",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972225203415074,
+      "created_at": "2025-12-05T22:03:45.203415074Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "$hléns",
+            "örebro,",
+            "örebro"
+          ],
+          "item_key": [
+            "shopping"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "e229a283-594c-4a1c-9618-006540dcfb7c",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972228278046110,
+      "created_at": "2025-12-05T22:03:48.278046110Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "a7373111-0fb0-47f8-bd64-ad3ed853ddda",
+          "actual_id": "c3879061-0747-4927-91a5-e2ac016ae8cd"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "63dba643-21a9-49bc-aa0b-f9353880cc0a",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972228279493916,
+      "created_at": "2025-12-05T22:03:48.279493916Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "apotek",
+            "hjartat",
+            "jarntorget,"
+          ],
+          "item_key": [
+            "vård"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "8cb23991-b07e-4eda-a655-16559e15ba47",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972231526551760,
+      "created_at": "2025-12-05T22:03:51.526551760Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "6aadd8a0-b15a-4a54-ac75-9594f955355c",
+          "actual_id": "c3879061-0747-4927-91a5-e2ac016ae8cd"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "036cd519-be3c-4082-a1a9-7c76b33ece96",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972231527799883,
+      "created_at": "2025-12-05T22:03:51.527799883Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "kronans",
+            "apotek",
+            "ab,",
+            "örebro"
+          ],
+          "item_key": [
+            "vård"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "a637b98d-3c48-4725-9574-c96459cd73c6",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972234687420894,
+      "created_at": "2025-12-05T22:03:54.687420894Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "872cfaf0-dd5b-4c1a-a51d-8ea2f66183b1",
+          "actual_id": "e1c2155d-94d3-4131-ae82-039b6fd29cab"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "ff4c55ae-029b-4b4c-85f2-a93fcdf06e0f",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972234687766489,
+      "created_at": "2025-12-05T22:03:54.687766489Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "uhbilservice,",
+            "lindesberg"
+          ],
+          "item_key": [
+            "bil"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "f8763f22-81ea-4b38-b7c1-e5606f1889fe",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972239776736721,
+      "created_at": "2025-12-05T22:03:59.776736721Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "7eb461c7-179d-4972-9f95-87f1041cff9b",
+          "actual_id": "c3879061-0747-4927-91a5-e2ac016ae8cd"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "009f240f-2049-43ba-af66-03232a56d3b5",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972239778267397,
+      "created_at": "2025-12-05T22:03:59.778267397Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "kronans",
+            "apotek",
+            "ab,",
+            "kopparberg"
+          ],
+          "item_key": [
+            "vård"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "f63fa3d3-cb99-4e96-b3fe-075d0961f0f7",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972239787496245,
+      "created_at": "2025-12-05T22:03:59.787496245Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "3df70d69-4fdf-4486-8b62-737240115d79",
+          "actual_id": "c3879061-0747-4927-91a5-e2ac016ae8cd"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "121685b1-66ac-47e8-b2fb-bc851c08f013",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972245426011167,
+      "created_at": "2025-12-05T22:04:05.426011167Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "4709b997-969b-40c3-a09c-197ea4ebd8a3",
+          "actual_id": "af5a0a14-e10b-4d2a-8b55-024fab5f8a21"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "674ccffb-b8c0-43a6-8112-1b2ee0a67580",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972245427124865,
+      "created_at": "2025-12-05T22:04:05.427124865Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "ica",
+            "supermarket",
+            "trivselko,",
+            "guldsmedshytt"
+          ],
+          "item_key": [
+            "livsmedel"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "efe8eab8-eac3-4151-8172-34f184c6a521",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972247831363607,
+      "created_at": "2025-12-05T22:04:07.831363607Z",
+      "data": {
+        "TransactionIgnored": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "a63367f5-0b69-4685-80e2-8e4140f62c38"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "79019e67-ab83-489b-86c4-0d82c8f7567b",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972249607935953,
+      "created_at": "2025-12-05T22:04:09.607935953Z",
+      "data": {
+        "TransactionIgnored": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "9766d239-d65b-42b7-a155-5279a5b5f541"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "ed193198-6a9d-4200-a06f-1a9d15ddf3ae",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972251232899746,
+      "created_at": "2025-12-05T22:04:11.232899746Z",
+      "data": {
+        "TransactionIgnored": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "b23b3dc1-7aac-4a57-9042-c37178ad0b65"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "1c7bdc11-6ac7-4013-a9f6-1a1b9c105f9a",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972266019771466,
+      "created_at": "2025-12-05T22:04:26.019771466Z",
+      "data": {
+        "ItemAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "item_id": "98fa111c-6c33-4276-8cc2-6c20ed29aaa2",
+          "name": "Internet",
+          "item_type": "Expense"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "5dfde7f7-7c87-4a78-bd7a-fc928c6efec4",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972266020821959,
+      "created_at": "2025-12-05T22:04:26.020821959Z",
+      "data": {
+        "ActualAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "actual_id": "1a708ad5-59b2-4173-bb88-9cb7bc1fa883",
+          "item_id": "98fa111c-6c33-4276-8cc2-6c20ed29aaa2",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 90000,
+            "currency": "SEK"
+          }
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "bc507ca6-da10-4f0d-abe9-43ba04790d0c",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972266021488531,
+      "created_at": "2025-12-05T22:04:26.021488531Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "662232a5-6108-41bd-8be1-2fd25e451d0d",
+          "actual_id": "1a708ad5-59b2-4173-bb88-9cb7bc1fa883"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "b14dda1f-8948-41a2-97b1-660e1455d980",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972266022779130,
+      "created_at": "2025-12-05T22:04:26.022779130Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "bahnhof"
+          ],
+          "item_key": [
+            "internet"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "4c6920ec-6a2e-4f94-8a0a-71e525ee49a7",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972272058804593,
+      "created_at": "2025-12-05T22:04:32.058804593Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "6fc03adf-1783-4281-81cb-cedae7c9e0ed",
+          "actual_id": "c235e5a9-a2ae-4202-9f8d-ae81e0c8e919"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "7a62a766-777e-4ed7-a287-9865ab2efa1d",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972272059865738,
+      "created_at": "2025-12-05T22:04:32.059865738Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "avibetalning",
+            "9152-2305078"
+          ],
+          "item_key": [
+            "bostadslån"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "119db8ba-fce6-42c2-ab9f-2e9d135919a6",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972282764863091,
+      "created_at": "2025-12-05T22:04:42.764863091Z",
+      "data": {
+        "ItemAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "item_id": "3c6b93ff-c500-42cb-a69c-77fbe68199ef",
+          "name": "El",
+          "item_type": "Expense"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "d13167e2-6c58-4165-a36d-e49c262a3b68",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972282765534703,
+      "created_at": "2025-12-05T22:04:42.765534703Z",
+      "data": {
+        "ActualAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "actual_id": "4bcb07b2-802c-4f74-90fd-9c2c89f7c186",
+          "item_id": "3c6b93ff-c500-42cb-a69c-77fbe68199ef",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 360000,
+            "currency": "SEK"
+          }
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "9775ce1b-9309-4c56-8fec-57e04fbffb7c",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972282766197362,
+      "created_at": "2025-12-05T22:04:42.766197362Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "23f4cc37-5da9-4163-9c0f-1254a65c1d94",
+          "actual_id": "4bcb07b2-802c-4f74-90fd-9c2c89f7c186"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "11322226-a486-484d-99b1-4f6c77fc49a2",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972282767700880,
+      "created_at": "2025-12-05T22:04:42.767700880Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "e.on",
+            "kundsupport",
+            "sverige"
+          ],
+          "item_key": [
+            "el"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "ce839f1a-caf5-44fa-aca1-aeab77e08c4c",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972282773609147,
+      "created_at": "2025-12-05T22:04:42.773609147Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "65a9c3b9-56cc-4ea5-bb8c-65c97e9b689a",
+          "actual_id": "4bcb07b2-802c-4f74-90fd-9c2c89f7c186"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "b676a612-7fe1-4edb-8bd8-ec4d4e0c6f57",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972295276760082,
+      "created_at": "2025-12-05T22:04:55.276760082Z",
+      "data": {
+        "ItemAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "item_id": "b9ec09b4-23f3-4d41-828c-8cf312f96b5c",
+          "name": "Telefoni",
+          "item_type": "Expense"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "1b65300f-6f6a-4563-8779-c6293cbbac12",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972295277270830,
+      "created_at": "2025-12-05T22:04:55.277270830Z",
+      "data": {
+        "ActualAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "actual_id": "b5b8177c-a8b5-4074-89d0-04c3af73b1e8",
+          "item_id": "b9ec09b4-23f3-4d41-828c-8cf312f96b5c",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 150000,
+            "currency": "SEK"
+          }
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "33e360da-92b5-411d-bf5c-af2a24997cf7",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972295277937200,
+      "created_at": "2025-12-05T22:04:55.277937200Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "e4afd4aa-3c20-453c-8c8a-c8570f64547e",
+          "actual_id": "b5b8177c-a8b5-4074-89d0-04c3af73b1e8"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "50cb0a39-42d9-48a4-8a4c-d76408c7a916",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972295278915355,
+      "created_at": "2025-12-05T22:04:55.278915355Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "telia",
+            "sverige",
+            "ab"
+          ],
+          "item_key": [
+            "telefoni"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "a42baa97-95f5-4254-812f-baf7af1b54ca",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972297495791386,
+      "created_at": "2025-12-05T22:04:57.495791386Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "2f2bdeb4-d18b-40fa-80d9-690f314440d0",
+          "actual_id": "e1c2155d-94d3-4131-ae82-039b6fd29cab"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "85cea908-12cc-439d-8e43-cc8bbfaa9552",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972297497251505,
+      "created_at": "2025-12-05T22:04:57.497251505Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "ellevio",
+            "(publ)",
+            "ab"
+          ],
+          "item_key": [
+            "bil"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "771d3865-0526-4a8f-a014-e0104ac52346",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972313935796153,
+      "created_at": "2025-12-05T22:05:13.935796153Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "2f2bdeb4-d18b-40fa-80d9-690f314440d0",
+          "actual_id": "4bcb07b2-802c-4f74-90fd-9c2c89f7c186"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "a95e060d-6ea8-44d2-a9b2-924e44cf311f",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972313936249653,
+      "created_at": "2025-12-05T22:05:13.936249653Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "ellevio",
+            "(publ)",
+            "ab"
+          ],
+          "item_key": [
+            "el"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "2d1d730f-f157-488c-bd23-c77a335825e8",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972342719025065,
+      "created_at": "2025-12-05T22:05:42.719025065Z",
+      "data": {
+        "ItemAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "item_id": "cb25cd81-6c19-4a17-8fc1-73b8254ee038",
+          "name": "Bilavsättning",
+          "item_type": "Savings"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "95c19915-6a41-42a1-a6ca-532fd7d7ae09",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972342719688799,
+      "created_at": "2025-12-05T22:05:42.719688799Z",
+      "data": {
+        "ActualAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "actual_id": "1093f550-f003-45f7-83d2-0e378ddad077",
+          "item_id": "cb25cd81-6c19-4a17-8fc1-73b8254ee038",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 550000,
+            "currency": "SEK"
+          }
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "a9e8a12c-fa98-4eeb-9f00-0e1efbc96bda",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972342720666716,
+      "created_at": "2025-12-05T22:05:42.720666716Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "b74690d9-9e46-4cfe-b94c-5688ad112d59",
+          "actual_id": "1093f550-f003-45f7-83d2-0e378ddad077"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "12d7aa30-4782-4b9a-a583-05f542fb33c6",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972342721605581,
+      "created_at": "2025-12-05T22:05:42.721605581Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "bilavsättning"
+          ],
+          "item_key": [
+            "bilavsättning"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "714bcab0-5134-452c-9c3e-fea98baf338e",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972347266822511,
+      "created_at": "2025-12-05T22:05:47.266822511Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "8a28f1e2-a162-4415-b3b7-c81b000d5b7a",
+          "actual_id": "1a708ad5-59b2-4173-bb88-9cb7bc1fa883"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "938257b5-44ac-42ac-84ec-64c46c2f6fe6",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972347267912187,
+      "created_at": "2025-12-05T22:05:47.267912187Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "bredband2"
+          ],
+          "item_key": [
+            "internet"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "e2990644-1b16-43e6-9d94-52d0a8313303",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972362612447812,
+      "created_at": "2025-12-05T22:06:02.612447812Z",
+      "data": {
+        "ItemAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "item_id": "0c9a8837-3293-4cee-ad05-33a218a1b5d5",
+          "name": "Fackförbudn",
+          "item_type": "Expense"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "0f2c8024-c94e-4a26-957f-7990ab6e3740",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972362612977461,
+      "created_at": "2025-12-05T22:06:02.612977461Z",
+      "data": {
+        "ActualAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "actual_id": "1f4b6b09-9765-4fe9-b30f-276a3a7a7b04",
+          "item_id": "0c9a8837-3293-4cee-ad05-33a218a1b5d5",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 47000,
+            "currency": "SEK"
+          }
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "a609ea50-ddef-4caa-9fbc-422b87b7d0aa",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972362613565346,
+      "created_at": "2025-12-05T22:06:02.613565346Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "09f53770-cec3-4e11-999d-010f1c4d7277",
+          "actual_id": "1f4b6b09-9765-4fe9-b30f-276a3a7a7b04"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "d482b2fb-0c5e-4a99-a363-bf03faa0520a",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972362614822654,
+      "created_at": "2025-12-05T22:06:02.614822654Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "akavia"
+          ],
+          "item_key": [
+            "fackförbudn"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "098a96fc-b9e2-4269-a09f-37087cdb1f73",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972366461716975,
+      "created_at": "2025-12-05T22:06:06.461716975Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "f3e2d95b-c0c1-4a45-90b9-8815bf5df32f",
+          "actual_id": "c3879061-0747-4927-91a5-e2ac016ae8cd"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "f63a13c6-be80-4240-8270-612734030e04",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972366462941475,
+      "created_at": "2025-12-05T22:06:06.462941475Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "pg",
+            "region",
+            "örebro",
+            "län"
+          ],
+          "item_key": [
+            "vård"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "6140d0bc-1a13-45ac-b569-a98d3fc1fb4a",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972376146174182,
+      "created_at": "2025-12-05T22:06:16.146174182Z",
+      "data": {
+        "ItemAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "item_id": "0e2571ee-ad15-4f6a-b14c-67f7de6aa936",
+          "name": "Årlig buffert",
+          "item_type": "Savings"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "97f75022-a4fe-4613-9cca-b8389dacc84d",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972376146747979,
+      "created_at": "2025-12-05T22:06:16.146747979Z",
+      "data": {
+        "ActualAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "actual_id": "05ee937b-7a90-43b5-bb47-66e0890189ae",
+          "item_id": "0e2571ee-ad15-4f6a-b14c-67f7de6aa936",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 100000,
+            "currency": "SEK"
+          }
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "f86d620b-e071-43b5-900f-36ee1827be59",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972376147430856,
+      "created_at": "2025-12-05T22:06:16.147430856Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "dd549f4c-0eb8-4283-86ce-07837e2829cf",
+          "actual_id": "05ee937b-7a90-43b5-bb47-66e0890189ae"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "0f6c3909-ab1b-4b0c-b884-1c2191d6af75",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972376148860694,
+      "created_at": "2025-12-05T22:06:16.148860694Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "buffert",
+            "årliga"
+          ],
+          "item_key": [
+            "årlig",
+            "buffert"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "9a1e81d9-7ab5-4dcf-a7cf-cf889637af45",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1764972379714610420,
+      "created_at": "2025-12-05T22:06:19.714610420Z",
+      "data": {
+        "TransactionIgnored": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "abf9ca11-ee57-4aba-b084-7966ba76e079"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
     }
   ],
   "Budget": [
@@ -193,6 +2712,56 @@
           "id": "a80b7b06-a71c-46ee-8849-ea8a77e10f46",
           "name": "Bil",
           "budgeting_type": "Expense"
+        },
+        {
+          "id": "d6f4ff9a-6985-497e-b206-4c6aca11e5fb",
+          "name": "Vård",
+          "budgeting_type": "Expense"
+        },
+        {
+          "id": "1485a8c9-0812-45d7-9e29-e14c37032aa4",
+          "name": "Transport",
+          "budgeting_type": "Expense"
+        },
+        {
+          "id": "72a5149e-0d45-47a2-ac8d-962539957716",
+          "name": "Shopping",
+          "budgeting_type": "Expense"
+        },
+        {
+          "id": "77256ac6-84aa-429f-8e0f-0b58d4e07ef4",
+          "name": "Äta ute",
+          "budgeting_type": "Expense"
+        },
+        {
+          "id": "98fa111c-6c33-4276-8cc2-6c20ed29aaa2",
+          "name": "Internet",
+          "budgeting_type": "Expense"
+        },
+        {
+          "id": "3c6b93ff-c500-42cb-a69c-77fbe68199ef",
+          "name": "El",
+          "budgeting_type": "Expense"
+        },
+        {
+          "id": "b9ec09b4-23f3-4d41-828c-8cf312f96b5c",
+          "name": "Telefoni",
+          "budgeting_type": "Expense"
+        },
+        {
+          "id": "cb25cd81-6c19-4a17-8fc1-73b8254ee038",
+          "name": "Bilavsättning",
+          "budgeting_type": "Savings"
+        },
+        {
+          "id": "0c9a8837-3293-4cee-ad05-33a218a1b5d5",
+          "name": "Fackförbudn",
+          "budgeting_type": "Expense"
+        },
+        {
+          "id": "0e2571ee-ad15-4f6a-b14c-67f7de6aa936",
+          "name": "Årlig buffert",
+          "budgeting_type": "Savings"
         }
       ],
       "month_begins_on": {
@@ -215,11 +2784,11 @@
                 "month": 12
               },
               "budgeted_amount": {
-                "cents": 5500000,
+                "cents": 5679700,
                 "currency": "SEK"
               },
               "actual_amount": {
-                "cents": 0,
+                "cents": 5679700,
                 "currency": "SEK"
               },
               "notes": null,
@@ -239,7 +2808,7 @@
                 "currency": "SEK"
               },
               "actual_amount": {
-                "cents": 0,
+                "cents": 508400,
                 "currency": "SEK"
               },
               "notes": null,
@@ -259,6 +2828,226 @@
                 "currency": "SEK"
               },
               "actual_amount": {
+                "cents": 215984,
+                "currency": "SEK"
+              },
+              "notes": null,
+              "tags": []
+            },
+            {
+              "id": "e1c2155d-94d3-4131-ae82-039b6fd29cab",
+              "item_name": "Bil",
+              "budget_item_id": "a80b7b06-a71c-46ee-8849-ea8a77e10f46",
+              "budgeting_type": "Expense",
+              "period_id": {
+                "year": 2025,
+                "month": 12
+              },
+              "budgeted_amount": {
+                "cents": 250000,
+                "currency": "SEK"
+              },
+              "actual_amount": {
+                "cents": 274000,
+                "currency": "SEK"
+              },
+              "notes": null,
+              "tags": []
+            },
+            {
+              "id": "c3879061-0747-4927-91a5-e2ac016ae8cd",
+              "item_name": "Vård",
+              "budget_item_id": "d6f4ff9a-6985-497e-b206-4c6aca11e5fb",
+              "budgeting_type": "Expense",
+              "period_id": {
+                "year": 2025,
+                "month": 12
+              },
+              "budgeted_amount": {
+                "cents": 150000,
+                "currency": "SEK"
+              },
+              "actual_amount": {
+                "cents": 361652,
+                "currency": "SEK"
+              },
+              "notes": null,
+              "tags": []
+            },
+            {
+              "id": "7317b3f6-11f0-41fa-8d2c-12754fcae0d0",
+              "item_name": "Transport",
+              "budget_item_id": "1485a8c9-0812-45d7-9e29-e14c37032aa4",
+              "budgeting_type": "Expense",
+              "period_id": {
+                "year": 2025,
+                "month": 12
+              },
+              "budgeted_amount": {
+                "cents": 25000,
+                "currency": "SEK"
+              },
+              "actual_amount": {
+                "cents": 4900,
+                "currency": "SEK"
+              },
+              "notes": null,
+              "tags": []
+            },
+            {
+              "id": "6c92c18a-908f-4249-b61e-5aa15fdb36a8",
+              "item_name": "Shopping",
+              "budget_item_id": "72a5149e-0d45-47a2-ac8d-962539957716",
+              "budgeting_type": "Expense",
+              "period_id": {
+                "year": 2025,
+                "month": 12
+              },
+              "budgeted_amount": {
+                "cents": 500000,
+                "currency": "SEK"
+              },
+              "actual_amount": {
+                "cents": 176840,
+                "currency": "SEK"
+              },
+              "notes": null,
+              "tags": []
+            },
+            {
+              "id": "46021ec6-90c9-4462-a62d-06817ab9dfb6",
+              "item_name": "Äta ute",
+              "budget_item_id": "77256ac6-84aa-429f-8e0f-0b58d4e07ef4",
+              "budgeting_type": "Expense",
+              "period_id": {
+                "year": 2025,
+                "month": 12
+              },
+              "budgeted_amount": {
+                "cents": 350000,
+                "currency": "SEK"
+              },
+              "actual_amount": {
+                "cents": 8500,
+                "currency": "SEK"
+              },
+              "notes": null,
+              "tags": []
+            },
+            {
+              "id": "1a708ad5-59b2-4173-bb88-9cb7bc1fa883",
+              "item_name": "Internet",
+              "budget_item_id": "98fa111c-6c33-4276-8cc2-6c20ed29aaa2",
+              "budgeting_type": "Expense",
+              "period_id": {
+                "year": 2025,
+                "month": 12
+              },
+              "budgeted_amount": {
+                "cents": 90000,
+                "currency": "SEK"
+              },
+              "actual_amount": {
+                "cents": 106600,
+                "currency": "SEK"
+              },
+              "notes": null,
+              "tags": []
+            },
+            {
+              "id": "4bcb07b2-802c-4f74-90fd-9c2c89f7c186",
+              "item_name": "El",
+              "budget_item_id": "3c6b93ff-c500-42cb-a69c-77fbe68199ef",
+              "budgeting_type": "Expense",
+              "period_id": {
+                "year": 2025,
+                "month": 12
+              },
+              "budgeted_amount": {
+                "cents": 360000,
+                "currency": "SEK"
+              },
+              "actual_amount": {
+                "cents": 462800,
+                "currency": "SEK"
+              },
+              "notes": null,
+              "tags": []
+            },
+            {
+              "id": "b5b8177c-a8b5-4074-89d0-04c3af73b1e8",
+              "item_name": "Telefoni",
+              "budget_item_id": "b9ec09b4-23f3-4d41-828c-8cf312f96b5c",
+              "budgeting_type": "Expense",
+              "period_id": {
+                "year": 2025,
+                "month": 12
+              },
+              "budgeted_amount": {
+                "cents": 150000,
+                "currency": "SEK"
+              },
+              "actual_amount": {
+                "cents": 57800,
+                "currency": "SEK"
+              },
+              "notes": null,
+              "tags": []
+            },
+            {
+              "id": "1093f550-f003-45f7-83d2-0e378ddad077",
+              "item_name": "Bilavsättning",
+              "budget_item_id": "cb25cd81-6c19-4a17-8fc1-73b8254ee038",
+              "budgeting_type": "Savings",
+              "period_id": {
+                "year": 2025,
+                "month": 12
+              },
+              "budgeted_amount": {
+                "cents": 550000,
+                "currency": "SEK"
+              },
+              "actual_amount": {
+                "cents": 550000,
+                "currency": "SEK"
+              },
+              "notes": null,
+              "tags": []
+            },
+            {
+              "id": "1f4b6b09-9765-4fe9-b30f-276a3a7a7b04",
+              "item_name": "Fackförbudn",
+              "budget_item_id": "0c9a8837-3293-4cee-ad05-33a218a1b5d5",
+              "budgeting_type": "Expense",
+              "period_id": {
+                "year": 2025,
+                "month": 12
+              },
+              "budgeted_amount": {
+                "cents": 47000,
+                "currency": "SEK"
+              },
+              "actual_amount": {
+                "cents": 47000,
+                "currency": "SEK"
+              },
+              "notes": null,
+              "tags": []
+            },
+            {
+              "id": "05ee937b-7a90-43b5-bb47-66e0890189ae",
+              "item_name": "Årlig buffert",
+              "budget_item_id": "0e2571ee-ad15-4f6a-b14c-67f7de6aa936",
+              "budgeting_type": "Savings",
+              "period_id": {
+                "year": 2025,
+                "month": 12
+              },
+              "budgeted_amount": {
+                "cents": 100000,
+                "currency": "SEK"
+              },
+              "actual_amount": {
                 "cents": 0,
                 "currency": "SEK"
               },
@@ -266,7 +3055,616 @@
               "tags": []
             }
           ],
-          "transactions": []
+          "transactions": [
+            {
+              "id": "afb3f20e-adf9-414e-adaf-bfa9f8070882",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -16369,
+                "currency": "SEK"
+              },
+              "description": "2025-11-28 MAXI ICA STORMARKNAD ESKI, ESKILSTUNA",
+              "date": "2025-12-01T00:00:00Z",
+              "actual_id": "af5a0a14-e10b-4d2a-8b55-024fab5f8a21",
+              "balance": {
+                "cents": 2961507,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "f6a9b767-4b78-4f27-b306-9b6839f4453b",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -43860,
+                "currency": "SEK"
+              },
+              "description": "2025-11-28 APOTEK HJARTAT ICA MAXI E, ESKILSTUNA",
+              "date": "2025-12-01T00:00:00Z",
+              "actual_id": "c3879061-0747-4927-91a5-e2ac016ae8cd",
+              "balance": {
+                "cents": 2977877,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "d1472025-c539-49b5-9f8e-0ece19fe80bb",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -4900,
+                "currency": "SEK"
+              },
+              "description": "2025-11-28 LANSTRAFIKEN SE, OREBRO",
+              "date": "2025-12-01T00:00:00Z",
+              "actual_id": "7317b3f6-11f0-41fa-8d2c-12754fcae0d0",
+              "balance": {
+                "cents": 3021737,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "9f65eb7c-770a-47f2-87bf-b4165adaeaad",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -7900,
+                "currency": "SEK"
+              },
+              "description": "2025-11-28 BUTIKEN I RONDELLEN, ESKILSTUNA",
+              "date": "2025-12-01T00:00:00Z",
+              "actual_id": "6c92c18a-908f-4249-b61e-5aa15fdb36a8",
+              "balance": {
+                "cents": 3026637,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "a487c726-a27c-4c32-a499-644316fbc435",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -65000,
+                "currency": "SEK"
+              },
+              "description": "2025-11-28 ICA SUPERMARKET KOPPARHAL, KOPPARBERG",
+              "date": "2025-12-01T00:00:00Z",
+              "actual_id": "af5a0a14-e10b-4d2a-8b55-024fab5f8a21",
+              "balance": {
+                "cents": 3034537,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "eded01c1-90ce-41aa-bca3-f53acd0fcc4a",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -34920,
+                "currency": "SEK"
+              },
+              "description": "2025-11-27 LÅDAN, KOPPARBERG",
+              "date": "2025-11-28T00:00:00Z",
+              "actual_id": "af5a0a14-e10b-4d2a-8b55-024fab5f8a21",
+              "balance": {
+                "cents": 3099537,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "6820a802-1f3e-4630-97f1-9a783480d1fb",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -4500,
+                "currency": "SEK"
+              },
+              "description": "2025-11-27 EasyPark AB, Stockholm",
+              "date": "2025-11-28T00:00:00Z",
+              "actual_id": "e1c2155d-94d3-4131-ae82-039b6fd29cab",
+              "balance": {
+                "cents": 3134457,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "5c1227fa-15aa-426b-8d80-e73b98ab81fc",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": 2000000,
+                "currency": "SEK"
+              },
+              "description": "Överf. L. Leffler Peura",
+              "date": "2025-11-28T00:00:00Z",
+              "actual_id": "c0e4bdf1-2b66-4361-8e43-e6c33f4b7343",
+              "balance": {
+                "cents": 3138957,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "dc6ecc0b-2d53-41c5-bf48-7c069d8f56e0",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -62790,
+                "currency": "SEK"
+              },
+              "description": "2025-11-26 KappAhl Örebro City, Örebro",
+              "date": "2025-11-27T00:00:00Z",
+              "actual_id": "6c92c18a-908f-4249-b61e-5aa15fdb36a8",
+              "balance": {
+                "cents": 1138957,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "cd4e0461-3540-47eb-b680-378eeb4c15ad",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -18440,
+                "currency": "SEK"
+              },
+              "description": "2025-11-26 SOSTRENE GRENE DROTTNINGG, ÖREBRO",
+              "date": "2025-11-27T00:00:00Z",
+              "actual_id": "6c92c18a-908f-4249-b61e-5aa15fdb36a8",
+              "balance": {
+                "cents": 1201747,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "89ae28e7-9bf6-4970-8e87-d19a4ce2b322",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -3390,
+                "currency": "SEK"
+              },
+              "description": "2025-11-26 NEW CHINA TRADING, OREBRO",
+              "date": "2025-11-27T00:00:00Z",
+              "actual_id": "6c92c18a-908f-4249-b61e-5aa15fdb36a8",
+              "balance": {
+                "cents": 1220187,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "ede3bc25-9dfc-488f-81e5-9d6b38cd856b",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -8500,
+                "currency": "SEK"
+              },
+              "description": "2025-11-26 MCDOREBROVASTHAGA, OREBRO",
+              "date": "2025-11-27T00:00:00Z",
+              "actual_id": "46021ec6-90c9-4462-a62d-06817ab9dfb6",
+              "balance": {
+                "cents": 1223577,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "7a3383f2-890d-49d4-acfc-1216a1ba8978",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -5985,
+                "currency": "SEK"
+              },
+              "description": "2025-11-26 ICA SUPERMARKET EKERSHALL, OREBRO",
+              "date": "2025-11-27T00:00:00Z",
+              "actual_id": "af5a0a14-e10b-4d2a-8b55-024fab5f8a21",
+              "balance": {
+                "cents": 1232077,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "42eff40a-2006-43f7-b5ce-233357a877ae",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -40960,
+                "currency": "SEK"
+              },
+              "description": "2025-11-26 Granit 40435, Drottninggata",
+              "date": "2025-11-27T00:00:00Z",
+              "actual_id": "6c92c18a-908f-4249-b61e-5aa15fdb36a8",
+              "balance": {
+                "cents": 1238062,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "01f9b808-5d6e-43b6-b708-d2de19c00850",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -43360,
+                "currency": "SEK"
+              },
+              "description": "2025-11-26 $HLÉNS Örebro, Örebro",
+              "date": "2025-11-27T00:00:00Z",
+              "actual_id": "6c92c18a-908f-4249-b61e-5aa15fdb36a8",
+              "balance": {
+                "cents": 1279022,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "a7373111-0fb0-47f8-bd64-ad3ed853ddda",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -27900,
+                "currency": "SEK"
+              },
+              "description": "2025-11-26 APOTEK HJARTAT JARNTORGET, OREBRO",
+              "date": "2025-11-27T00:00:00Z",
+              "actual_id": "c3879061-0747-4927-91a5-e2ac016ae8cd",
+              "balance": {
+                "cents": 1322382,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "6aadd8a0-b15a-4a54-ac75-9594f955355c",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -52803,
+                "currency": "SEK"
+              },
+              "description": "2025-11-26 Kronans Apotek AB, Örebro",
+              "date": "2025-11-27T00:00:00Z",
+              "actual_id": "c3879061-0747-4927-91a5-e2ac016ae8cd",
+              "balance": {
+                "cents": 1350282,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "47d54bf4-fbb9-40c2-850d-9247bbb6afc8",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -83350,
+                "currency": "SEK"
+              },
+              "description": "2025-11-25 LÅDAN, KOPPARBERG",
+              "date": "2025-11-26T00:00:00Z",
+              "actual_id": "af5a0a14-e10b-4d2a-8b55-024fab5f8a21",
+              "balance": {
+                "cents": 1403085,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "872cfaf0-dd5b-4c1a-a51d-8ea2f66183b1",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -269500,
+                "currency": "SEK"
+              },
+              "description": "2025-11-25 UHBILSERVICE, LINDESBERG",
+              "date": "2025-11-26T00:00:00Z",
+              "actual_id": "e1c2155d-94d3-4131-ae82-039b6fd29cab",
+              "balance": {
+                "cents": 1486435,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "7eb461c7-179d-4972-9f95-87f1041cff9b",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -26689,
+                "currency": "SEK"
+              },
+              "description": "2025-11-24 Kronans Apotek AB, Kopparberg",
+              "date": "2025-11-25T00:00:00Z",
+              "actual_id": "c3879061-0747-4927-91a5-e2ac016ae8cd",
+              "balance": {
+                "cents": 1755934,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "3df70d69-4fdf-4486-8b62-737240115d79",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -158400,
+                "currency": "SEK"
+              },
+              "description": "2025-11-24 Kronans Apotek AB, Kopparberg",
+              "date": "2025-11-25T00:00:00Z",
+              "actual_id": "c3879061-0747-4927-91a5-e2ac016ae8cd",
+              "balance": {
+                "cents": 1782625,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "4709b997-969b-40c3-a09c-197ea4ebd8a3",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -10360,
+                "currency": "SEK"
+              },
+              "description": "2025-11-24 ICA SUPERMARKET TRIVSELKO, GULDSMEDSHYTT",
+              "date": "2025-11-25T00:00:00Z",
+              "actual_id": "af5a0a14-e10b-4d2a-8b55-024fab5f8a21",
+              "balance": {
+                "cents": 1941025,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "a63367f5-0b69-4685-80e2-8e4140f62c38",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -50000,
+                "currency": "SEK"
+              },
+              "description": "Överföring 9159 9449015",
+              "date": "2025-11-25T00:00:00Z",
+              "actual_id": null,
+              "balance": {
+                "cents": 1951384,
+                "currency": "SEK"
+              },
+              "ignored": true
+            },
+            {
+              "id": "9766d239-d65b-42b7-a155-5279a5b5f541",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -40000,
+                "currency": "SEK"
+              },
+              "description": "Överföring 9150 5507725",
+              "date": "2025-11-25T00:00:00Z",
+              "actual_id": null,
+              "balance": {
+                "cents": 2001384,
+                "currency": "SEK"
+              },
+              "ignored": true
+            },
+            {
+              "id": "b23b3dc1-7aac-4a57-9042-c37178ad0b65",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -2000000,
+                "currency": "SEK"
+              },
+              "description": "Räkningar",
+              "date": "2025-11-25T00:00:00Z",
+              "actual_id": null,
+              "balance": {
+                "cents": 2041384,
+                "currency": "SEK"
+              },
+              "ignored": true
+            },
+            {
+              "id": "14b5a5d2-5ad3-4fe6-8e98-f2703d98d914",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": 3679700,
+                "currency": "SEK"
+              },
+              "description": "LÖN",
+              "date": "2025-11-25T00:00:00Z",
+              "actual_id": "c0e4bdf1-2b66-4361-8e43-e6c33f4b7343",
+              "balance": {
+                "cents": 4041385,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "662232a5-6108-41bd-8be1-2fd25e451d0d",
+              "account_number": "9159-753.087-7",
+              "amount": {
+                "cents": -59900,
+                "currency": "SEK"
+              },
+              "description": "Bahnhof",
+              "date": "2025-12-01T00:00:00Z",
+              "actual_id": "1a708ad5-59b2-4173-bb88-9cb7bc1fa883",
+              "balance": {
+                "cents": 115466,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "6fc03adf-1783-4281-81cb-cedae7c9e0ed",
+              "account_number": "9159-753.087-7",
+              "amount": {
+                "cents": -508400,
+                "currency": "SEK"
+              },
+              "description": "Avibetalning 9152-2305078",
+              "date": "2025-11-28T00:00:00Z",
+              "actual_id": "c235e5a9-a2ae-4202-9f8d-ae81e0c8e919",
+              "balance": {
+                "cents": 175366,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "23f4cc37-5da9-4163-9c0f-1254a65c1d94",
+              "account_number": "9159-753.087-7",
+              "amount": {
+                "cents": -28900,
+                "currency": "SEK"
+              },
+              "description": "E.ON Kundsupport Sverige",
+              "date": "2025-11-28T00:00:00Z",
+              "actual_id": "4bcb07b2-802c-4f74-90fd-9c2c89f7c186",
+              "balance": {
+                "cents": 683766,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "e4afd4aa-3c20-453c-8c8a-c8570f64547e",
+              "account_number": "9159-753.087-7",
+              "amount": {
+                "cents": -57800,
+                "currency": "SEK"
+              },
+              "description": "Telia Sverige AB",
+              "date": "2025-11-28T00:00:00Z",
+              "actual_id": "b5b8177c-a8b5-4074-89d0-04c3af73b1e8",
+              "balance": {
+                "cents": 712666,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "2f2bdeb4-d18b-40fa-80d9-690f314440d0",
+              "account_number": "9159-753.087-7",
+              "amount": {
+                "cents": -258800,
+                "currency": "SEK"
+              },
+              "description": "Ellevio (publ) AB",
+              "date": "2025-11-28T00:00:00Z",
+              "actual_id": "4bcb07b2-802c-4f74-90fd-9c2c89f7c186",
+              "balance": {
+                "cents": 770466,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "65a9c3b9-56cc-4ea5-bb8c-65c97e9b689a",
+              "account_number": "9159-753.087-7",
+              "amount": {
+                "cents": -175100,
+                "currency": "SEK"
+              },
+              "description": "E.ON Kundsupport Sverige",
+              "date": "2025-11-28T00:00:00Z",
+              "actual_id": "4bcb07b2-802c-4f74-90fd-9c2c89f7c186",
+              "balance": {
+                "cents": 1029266,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "b74690d9-9e46-4cfe-b94c-5688ad112d59",
+              "account_number": "9159-753.087-7",
+              "amount": {
+                "cents": -550000,
+                "currency": "SEK"
+              },
+              "description": "Bilavsättning",
+              "date": "2025-11-28T00:00:00Z",
+              "actual_id": "1093f550-f003-45f7-83d2-0e378ddad077",
+              "balance": {
+                "cents": 1204366,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "8a28f1e2-a162-4415-b3b7-c81b000d5b7a",
+              "account_number": "9159-753.087-7",
+              "amount": {
+                "cents": -46700,
+                "currency": "SEK"
+              },
+              "description": "Autogiro Bredband2",
+              "date": "2025-11-27T00:00:00Z",
+              "actual_id": "1a708ad5-59b2-4173-bb88-9cb7bc1fa883",
+              "balance": {
+                "cents": 1754366,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "09f53770-cec3-4e11-999d-010f1c4d7277",
+              "account_number": "9159-753.087-7",
+              "amount": {
+                "cents": -47000,
+                "currency": "SEK"
+              },
+              "description": "Akavia",
+              "date": "2025-11-27T00:00:00Z",
+              "actual_id": "1f4b6b09-9765-4fe9-b30f-276a3a7a7b04",
+              "balance": {
+                "cents": 1801066,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "f3e2d95b-c0c1-4a45-90b9-8815bf5df32f",
+              "account_number": "9159-753.087-7",
+              "amount": {
+                "cents": -52000,
+                "currency": "SEK"
+              },
+              "description": "PG 48070015 REGION ÖREBRO LÄN",
+              "date": "2025-11-26T00:00:00Z",
+              "actual_id": "c3879061-0747-4927-91a5-e2ac016ae8cd",
+              "balance": {
+                "cents": 1848066,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "dd549f4c-0eb8-4283-86ce-07837e2829cf",
+              "account_number": "9159-753.087-7",
+              "amount": {
+                "cents": -100000,
+                "currency": "SEK"
+              },
+              "description": "Buffert årliga",
+              "date": "2025-11-25T00:00:00Z",
+              "actual_id": null,
+              "balance": {
+                "cents": 1900066,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "abf9ca11-ee57-4aba-b084-7966ba76e079",
+              "account_number": "9159-753.087-7",
+              "amount": {
+                "cents": 2000000,
+                "currency": "SEK"
+              },
+              "description": "Räkningar",
+              "date": "2025-11-25T00:00:00Z",
+              "actual_id": null,
+              "balance": {
+                "cents": 2000066,
+                "currency": "SEK"
+              },
+              "ignored": false
+            }
+          ]
         }
       ],
       "rules": {
@@ -327,13 +3725,393 @@
           }
         ]
       },
-      "transaction_hashes": [],
-      "match_rules": [],
+      "transaction_hashes": [
+        5623087265432465601,
+        2994136002072529305,
+        16244974044378321209,
+        16961847027345207416,
+        4965500977607099670,
+        12662115357647514282,
+        4348856578571966145,
+        13467237790884517547,
+        17189724647720982549,
+        17458592217889369906,
+        18369593869700754512,
+        15444554242061847551,
+        11632617484442036626,
+        16518370340706261585,
+        3025415385163326735,
+        4531925623408819072,
+        8870038410017067525,
+        13664004112204038899,
+        8834975170318422727,
+        6586889840178917235,
+        2138193553395401733,
+        11437063573231666110,
+        8779838079624980897,
+        12560867396635990496,
+        13672244357156447854,
+        12182061232725790744,
+        11206559750139184896,
+        4652219070462354227,
+        17958395191241316646,
+        5344492576498233917,
+        9000922626809347621,
+        7131333689674298867,
+        5292887278421991866,
+        3308765373607599428,
+        3129194112039990893,
+        3219909298297634585,
+        12406333633617114583,
+        5589400317235799928
+      ],
+      "match_rules": [
+        {
+          "transaction_key": [
+            "lön"
+          ],
+          "item_key": [
+            "lön"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "kappahl",
+            "örebro",
+            "city,",
+            "örebro"
+          ],
+          "item_key": [
+            "shopping"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "bahnhof"
+          ],
+          "item_key": [
+            "internet"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "telia",
+            "sverige",
+            "ab"
+          ],
+          "item_key": [
+            "telefoni"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "apotek",
+            "hjartat",
+            "ica",
+            "maxi",
+            "e,",
+            "eskilstuna"
+          ],
+          "item_key": [
+            "vård"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "maxi",
+            "ica",
+            "stormarknad",
+            "eski,",
+            "eskilstuna"
+          ],
+          "item_key": [
+            "livsmedel"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "easypark",
+            "ab,",
+            "stockholm"
+          ],
+          "item_key": [
+            "bil"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "mcdorebrovasthaga,"
+          ],
+          "item_key": [
+            "äta",
+            "ute"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "new",
+            "china",
+            "trading,"
+          ],
+          "item_key": [
+            "shopping"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "pg",
+            "region",
+            "örebro",
+            "län"
+          ],
+          "item_key": [
+            "vård"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "ellevio",
+            "(publ)",
+            "ab"
+          ],
+          "item_key": [
+            "bil"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "bilavsättning"
+          ],
+          "item_key": [
+            "bilavsättning"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "uhbilservice,",
+            "lindesberg"
+          ],
+          "item_key": [
+            "bil"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "avibetalning",
+            "9152-2305078"
+          ],
+          "item_key": [
+            "bostadslån"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "e.on",
+            "kundsupport",
+            "sverige"
+          ],
+          "item_key": [
+            "el"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "bredband2"
+          ],
+          "item_key": [
+            "internet"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "ica",
+            "supermarket",
+            "kopparhal,",
+            "kopparberg"
+          ],
+          "item_key": [
+            "livsmedel"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "sostrene",
+            "grene",
+            "drottningg,",
+            "örebro"
+          ],
+          "item_key": [
+            "shopping"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "överf.",
+            "l.",
+            "leffler",
+            "peura"
+          ],
+          "item_key": [
+            "lön"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "butiken",
+            "i",
+            "rondellen,",
+            "eskilstuna"
+          ],
+          "item_key": [
+            "shopping"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "kronans",
+            "apotek",
+            "ab,",
+            "örebro"
+          ],
+          "item_key": [
+            "vård"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "ica",
+            "supermarket",
+            "trivselko,",
+            "guldsmedshytt"
+          ],
+          "item_key": [
+            "livsmedel"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "granit",
+            "40435,",
+            "drottninggata"
+          ],
+          "item_key": [
+            "shopping"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "lanstrafiken",
+            "se,"
+          ],
+          "item_key": [
+            "transport"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "ica",
+            "supermarket",
+            "ekershall,"
+          ],
+          "item_key": [
+            "livsmedel"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "akavia"
+          ],
+          "item_key": [
+            "fackförbudn"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "kronans",
+            "apotek",
+            "ab,",
+            "kopparberg"
+          ],
+          "item_key": [
+            "vård"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "lådan,",
+            "kopparberg"
+          ],
+          "item_key": [
+            "livsmedel"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "$hléns",
+            "örebro,",
+            "örebro"
+          ],
+          "item_key": [
+            "shopping"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "apotek",
+            "hjartat",
+            "jarntorget,"
+          ],
+          "item_key": [
+            "vård"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "ellevio",
+            "(publ)",
+            "ab"
+          ],
+          "item_key": [
+            "el"
+          ],
+          "always_apply": true
+        }
+      ],
       "created_at": "2025-12-05T15:52:39.534026542Z",
-      "updated_at": "2025-12-05T15:55:21.678476477Z",
+      "updated_at": "2025-12-05T22:06:16.146747979Z",
       "default_budget": true,
-      "last_event": 1764950121678476477,
-      "version": 8,
+      "last_event": 1764972376146747979,
+      "version": 136,
       "currency": "SEK"
     }
   ],
