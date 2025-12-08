@@ -7,7 +7,7 @@ edition = "2021"
 dioxus = { workspace = true }
 dioxus-primitives = { workspace = true }
 api = { workspace = true }
-uuid = { version = "1.18.1", features = ["v4"] }
+uuid = { workspace = true  }
 strum = { workspace = true }
 chrono = {workspace = true}
 lucide-dioxus = { workspace = true }

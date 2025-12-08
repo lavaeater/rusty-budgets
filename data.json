@@ -49704,6 +49704,889 @@
         }
       },
       "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "9362b1dc-7998-4116-9a5e-8447a7626fe3",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765192867252705180,
+      "created_at": "2025-12-08T11:21:07.252705180Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "e86fef8a-1c3e-4ef6-b367-cb76a33142c0",
+          "account_number": "9159-797.770-7",
+          "amount": {
+            "cents": -500000,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 883902,
+            "currency": "SEK"
+          },
+          "description": "Överföring 8327 9744684557",
+          "date": "2025-12-04T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "e28099d2-185d-4d8d-a7b3-a689e8d70c8c",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765192867253398109,
+      "created_at": "2025-12-08T11:21:07.253398109Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "11b13274-13e8-4725-82aa-bde811274009",
+          "account_number": "9159-797.770-7",
+          "amount": {
+            "cents": 550000,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 1383902,
+            "currency": "SEK"
+          },
+          "description": "Bilavsättning",
+          "date": "2025-11-28T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "0af701f9-115f-4fd6-a0c7-e7c359336e71",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765192867253843224,
+      "created_at": "2025-12-08T11:21:07.253843224Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "63fbce7f-56b9-4876-bc21-ba97c52445c4",
+          "account_number": "9159-797.770-7",
+          "amount": {
+            "cents": 100000,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 833902,
+            "currency": "SEK"
+          },
+          "description": "Buffert årliga",
+          "date": "2025-11-25T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "bca07039-a1cc-44d6-8345-4f6d92bf736e",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765192867257588897,
+      "created_at": "2025-12-08T11:21:07.257588897Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "af551b02-4ba6-454e-a524-dce7b7a66894",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -2000,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 1975200,
+            "currency": "SEK"
+          },
+          "description": "Månadsavgift BankkortExtra",
+          "date": "2025-12-08T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "50ae322f-7c8d-493d-b312-7c79167b8494",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765192867257985812,
+      "created_at": "2025-12-08T11:21:07.257985812Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "e8ccd98a-b5fc-44d6-927e-7714ca5ef3ec",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -2000,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 1977200,
+            "currency": "SEK"
+          },
+          "description": "Månadsavgift Bankkort",
+          "date": "2025-12-08T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "8acacc3a-d890-47ba-9711-47769443a488",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765192867258668251,
+      "created_at": "2025-12-08T11:21:07.258668251Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "88eaa37a-52ac-4ccd-80ec-1f1a222b2e67",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -25800,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 1979200,
+            "currency": "SEK"
+          },
+          "description": "2025-12-06 KANANS BLOMSTERHANDEL, NORA",
+          "date": "2025-12-08T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "55c7ae7f-3eea-480d-a5d2-71e38828193f",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765192867259126972,
+      "created_at": "2025-12-08T11:21:07.259126972Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "13ddfa26-1590-414b-b985-70db604cadfe",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -4680,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 2005000,
+            "currency": "SEK"
+          },
+          "description": "2025-12-06 WH NORA PRASTGATAN, NORA",
+          "date": "2025-12-08T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "fa7c2e3b-57b5-45de-aed5-744f869b111e",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765192867259528094,
+      "created_at": "2025-12-08T11:21:07.259528094Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "f0904a38-f40c-4667-aeea-1fac624aab32",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -65200,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 2009680,
+            "currency": "SEK"
+          },
+          "description": "2025-12-06 ZETTLE_*JENNYS BAGERI, NORA",
+          "date": "2025-12-08T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "a43c606b-0e36-45c2-9bde-58187464174e",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765192867259938714,
+      "created_at": "2025-12-08T11:21:07.259938714Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "baa7609c-47e8-4d93-8ce4-e2746c885345",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -4990,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 2074880,
+            "currency": "SEK"
+          },
+          "description": "2025-12-05 ICA SUPERMARKET KOPPARHAL, KOPPARBERG",
+          "date": "2025-12-08T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "2c7961ff-46fa-4818-8de8-fa884b8e7831",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765192867260605113,
+      "created_at": "2025-12-08T11:21:07.260605113Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "387da9c2-69fc-4584-aed0-87c8e1d382d7",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -8800,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 2079870,
+            "currency": "SEK"
+          },
+          "description": "2025-12-04 LANSTRAFIKEN SE, OREBRO",
+          "date": "2025-12-05T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "5e061fbe-6405-42a0-822c-c6fc6b3f3143",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765192867261030691,
+      "created_at": "2025-12-08T11:21:07.261030691Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "13685e2e-8312-4cae-986e-d32545feaa37",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -63812,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 2088670,
+            "currency": "SEK"
+          },
+          "description": "2025-12-05 Digital Charging Solution, Berlin",
+          "date": "2025-12-05T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "ae692678-239a-42c1-9268-835974f49e59",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765192867261470817,
+      "created_at": "2025-12-08T11:21:07.261470817Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "d32155b8-dc42-46a3-b87e-6b32408b44e2",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -3542,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 2152482,
+            "currency": "SEK"
+          },
+          "description": "2025-12-03 EasyPark AB, Stockholm",
+          "date": "2025-12-04T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "cb252848-345d-4d6b-9231-ae64d027e88f",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765192867261881076,
+      "created_at": "2025-12-08T11:21:07.261881076Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "4e1944c1-177a-4ade-8784-c2f2a6ef2830",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -42478,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 2156024,
+            "currency": "SEK"
+          },
+          "description": "2025-12-03 ICA SUPERMARKET EKERSHALL, OREBRO",
+          "date": "2025-12-04T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "1176ebd6-a559-4f6d-9902-6a979a2bc320",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765192867262547185,
+      "created_at": "2025-12-08T11:21:07.262547185Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "8c262532-cdc2-48d8-a132-48c34445e48e",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -109610,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 2198502,
+            "currency": "SEK"
+          },
+          "description": "2025-12-03 WILLYS OREBRO VASTHA, OREBRO",
+          "date": "2025-12-04T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "ff67764f-fde8-46fa-b84d-6a12bd8356cb",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765192867262981549,
+      "created_at": "2025-12-08T11:21:07.262981549Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_id": "a5e57e3e-caa5-4cce-b8cf-f780686bf856",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -23750,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 2308113,
+            "currency": "SEK"
+          },
+          "description": "2025-12-03 ICA SUPERMARKET TRIVSELKO, GULDSMEDSHYTT",
+          "date": "2025-12-04T00:00:00Z"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "95d376df-8f62-464b-9833-44142036e1c5",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765192867561997391,
+      "created_at": "2025-12-08T11:21:07.561997391Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "e86fef8a-1c3e-4ef6-b367-cb76a33142c0",
+          "actual_id": "05ee937b-7a90-43b5-bb47-66e0890189ae"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "03e04ca8-a23a-44da-9869-d80dea703296",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765192867562446583,
+      "created_at": "2025-12-08T11:21:07.562446583Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "11b13274-13e8-4725-82aa-bde811274009",
+          "actual_id": "1093f550-f003-45f7-83d2-0e378ddad077"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "d002e418-6504-4d2e-9daa-c28f32c0e952",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765192867563210265,
+      "created_at": "2025-12-08T11:21:07.563210265Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "63fbce7f-56b9-4876-bc21-ba97c52445c4",
+          "actual_id": "05ee937b-7a90-43b5-bb47-66e0890189ae"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "f0da0bdd-3343-48e6-be97-53b205aa8d26",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765192867563646483,
+      "created_at": "2025-12-08T11:21:07.563646483Z",
+      "data": {
+        "ActualAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "actual_id": "08570cf6-9c46-4e87-8221-5715c902f014",
+          "item_id": "1377969f-f54f-4a44-b452-30d69e7ab227",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 0,
+            "currency": "SEK"
+          }
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "b177a0ba-f291-42df-88af-3809eb187518",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765192867564048337,
+      "created_at": "2025-12-08T11:21:07.564048337Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "af551b02-4ba6-454e-a524-dce7b7a66894",
+          "actual_id": "08570cf6-9c46-4e87-8221-5715c902f014"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "4bdca60c-e4f7-4ffa-a658-1e1e85e7ded1",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765192867565075463,
+      "created_at": "2025-12-08T11:21:07.565075463Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "baa7609c-47e8-4d93-8ce4-e2746c885345",
+          "actual_id": "af5a0a14-e10b-4d2a-8b55-024fab5f8a21"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "c2298e42-2ecd-47ae-846d-523c3590c944",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765192867565821712,
+      "created_at": "2025-12-08T11:21:07.565821712Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "387da9c2-69fc-4584-aed0-87c8e1d382d7",
+          "actual_id": "7317b3f6-11f0-41fa-8d2c-12754fcae0d0"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "1b47783c-751e-4386-a000-60580f2ab864",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765192867566293837,
+      "created_at": "2025-12-08T11:21:07.566293837Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "13685e2e-8312-4cae-986e-d32545feaa37",
+          "actual_id": "e1c2155d-94d3-4131-ae82-039b6fd29cab"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "77f3d0d2-a1a1-4685-aa4a-f64a71871d7b",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765192867566751045,
+      "created_at": "2025-12-08T11:21:07.566751045Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "d32155b8-dc42-46a3-b87e-6b32408b44e2",
+          "actual_id": "e1c2155d-94d3-4131-ae82-039b6fd29cab"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "f4776f9c-c089-4f23-9a6a-11e2e65e13cf",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765192867567200618,
+      "created_at": "2025-12-08T11:21:07.567200618Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "4e1944c1-177a-4ade-8784-c2f2a6ef2830",
+          "actual_id": "af5a0a14-e10b-4d2a-8b55-024fab5f8a21"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "c08cc629-9935-4582-b85c-a051bee369ca",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765192867567953399,
+      "created_at": "2025-12-08T11:21:07.567953399Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "8c262532-cdc2-48d8-a132-48c34445e48e",
+          "actual_id": "af5a0a14-e10b-4d2a-8b55-024fab5f8a21"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "46f98ad4-7aa3-4a6f-8492-e17e9bbd8156",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765192867568389187,
+      "created_at": "2025-12-08T11:21:07.568389187Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "a5e57e3e-caa5-4cce-b8cf-f780686bf856",
+          "actual_id": "af5a0a14-e10b-4d2a-8b55-024fab5f8a21"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "0ce7cb5b-ab59-44b1-a63c-0a979f46d8e3",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765192988392516939,
+      "created_at": "2025-12-08T11:23:08.392516939Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "e8ccd98a-b5fc-44d6-927e-7714ca5ef3ec",
+          "actual_id": "08570cf6-9c46-4e87-8221-5715c902f014"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "98cf10bf-7539-42ec-8d3d-3e81b906c0ae",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765192996226447714,
+      "created_at": "2025-12-08T11:23:16.226447714Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "88eaa37a-52ac-4ccd-80ec-1f1a222b2e67",
+          "actual_id": "6c92c18a-908f-4249-b61e-5aa15fdb36a8"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "75906068-0ba7-4c30-8311-710bdb37f0e6",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765192996227824986,
+      "created_at": "2025-12-08T11:23:16.227824986Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "kanans",
+            "blomsterhandel,",
+            "nora"
+          ],
+          "item_key": [
+            "shopping"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "2e040fbd-cad6-40c0-97d4-95ab0a8d9b5a",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765193002969442586,
+      "created_at": "2025-12-08T11:23:22.969442586Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "f0904a38-f40c-4667-aeea-1fac624aab32",
+          "actual_id": "46021ec6-90c9-4462-a62d-06817ab9dfb6"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "f8a0fe37-1393-47bc-ae90-b56663535ef2",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765193002970189195,
+      "created_at": "2025-12-08T11:23:22.970189195Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "zettle_*jennys",
+            "bageri,",
+            "nora"
+          ],
+          "item_key": [
+            "äta",
+            "ute"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "75bde9da-ac48-4a7a-a017-9470d75d012b",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765193009089447589,
+      "created_at": "2025-12-08T11:23:29.089447589Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "13ddfa26-1590-414b-b985-70db604cadfe",
+          "actual_id": "6c92c18a-908f-4249-b61e-5aa15fdb36a8"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "67f5aaae-6cb8-44c4-9526-faaf13be4269",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765193009090485896,
+      "created_at": "2025-12-08T11:23:29.090485896Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [
+            "wh",
+            "nora",
+            "prastgatan,",
+            "nora"
+          ],
+          "item_key": [
+            "shopping"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "997f45f0-e4b1-4c5b-8aa3-99d2dd3c4199",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765193025237515645,
+      "created_at": "2025-12-08T11:23:45.237515645Z",
+      "data": {
+        "ActualModified": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "actual_id": "e1c2155d-94d3-4131-ae82-039b6fd29cab",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 362650,
+            "currency": "SEK"
+          },
+          "actual_amount": null,
+          "notes": null,
+          "tags": null
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "d02fefb4-f012-4e51-8fe1-b453b7e665dd",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765193047489696208,
+      "created_at": "2025-12-08T11:24:07.489696208Z",
+      "data": {
+        "ActualModified": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "actual_id": "6c92c18a-908f-4249-b61e-5aa15fdb36a8",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 600895,
+            "currency": "SEK"
+          },
+          "actual_amount": null,
+          "notes": null,
+          "tags": null
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "d3c42f41-44f4-46ee-9a17-d7a93ee09b8d",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765193051539267325,
+      "created_at": "2025-12-08T11:24:11.539267325Z",
+      "data": {
+        "ActualModified": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "actual_id": "46021ec6-90c9-4462-a62d-06817ab9dfb6",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 115700,
+            "currency": "SEK"
+          },
+          "actual_amount": null,
+          "notes": null,
+          "tags": null
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "9398b7c2-523d-4f98-a353-1dbfe9488c02",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765193055609139325,
+      "created_at": "2025-12-08T11:24:15.609139325Z",
+      "data": {
+        "ActualModified": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "actual_id": "b5b8177c-a8b5-4074-89d0-04c3af73b1e8",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 73700,
+            "currency": "SEK"
+          },
+          "actual_amount": null,
+          "notes": null,
+          "tags": null
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "17f66899-9041-4952-8399-242c05601479",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765193059113941659,
+      "created_at": "2025-12-08T11:24:19.113941659Z",
+      "data": {
+        "ActualModified": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "actual_id": "b4d65ab9-01da-4cc3-8122-24c315845fe5",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 9548,
+            "currency": "SEK"
+          },
+          "actual_amount": null,
+          "notes": null,
+          "tags": null
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "6c93625a-66a7-4c7d-9276-26249f901e57",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765193061482299347,
+      "created_at": "2025-12-08T11:24:21.482299347Z",
+      "data": {
+        "ActualModified": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "actual_id": "c412ff7e-e583-4d00-96a7-0ed5223359e3",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 25900,
+            "currency": "SEK"
+          },
+          "actual_amount": null,
+          "notes": null,
+          "tags": null
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "cdbbd63f-3086-426a-8bfb-742e31411461",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765193077228800090,
+      "created_at": "2025-12-08T11:24:37.228800090Z",
+      "data": {
+        "TransactionIgnored": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "11b13274-13e8-4725-82aa-bde811274009"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "f07d1574-3715-48f0-8909-0942d8e2bf03",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765193124963264488,
+      "created_at": "2025-12-08T11:25:24.963264488Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "e86fef8a-1c3e-4ef6-b367-cb76a33142c0",
+          "actual_id": "077973f3-1ab7-49f6-9d65-52a28d235daf"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "d268c213-114a-47d4-acc8-8e58fe505f07",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765193124963983175,
+      "created_at": "2025-12-08T11:25:24.963983175Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "transaction_key": [],
+          "item_key": [
+            "lån",
+            "elisabeth"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "4e040d1a-0d9f-4180-98bf-a1becfe0a3f2",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765193133625771904,
+      "created_at": "2025-12-08T11:25:33.625771904Z",
+      "data": {
+        "TransactionIgnored": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "tx_id": "63fbce7f-56b9-4876-bc21-ba97c52445c4"
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "eb03e79b-4ee3-45af-a4b1-2aea3c8f37d1",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765193138271767767,
+      "created_at": "2025-12-08T11:25:38.271767767Z",
+      "data": {
+        "ActualModified": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "actual_id": "d1f67ba6-3e9f-4219-9790-2856f4416805",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 0,
+            "currency": "SEK"
+          },
+          "actual_amount": null,
+          "notes": null,
+          "tags": null
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
     }
   ],
   "Budget": [
@@ -49902,7 +50785,7 @@
                 "currency": "SEK"
               },
               "actual_amount": {
-                "cents": 337408,
+                "cents": 518236,
                 "currency": "SEK"
               },
               "notes": null,
@@ -49918,11 +50801,11 @@
                 "month": 12
               },
               "budgeted_amount": {
-                "cents": 295296,
+                "cents": 362650,
                 "currency": "SEK"
               },
               "actual_amount": {
-                "cents": 295296,
+                "cents": 362650,
                 "currency": "SEK"
               },
               "notes": null,
@@ -49962,7 +50845,7 @@
                 "currency": "SEK"
               },
               "actual_amount": {
-                "cents": 4900,
+                "cents": 13700,
                 "currency": "SEK"
               },
               "notes": null,
@@ -49978,11 +50861,11 @@
                 "month": 12
               },
               "budgeted_amount": {
-                "cents": 679800,
+                "cents": 600895,
                 "currency": "SEK"
               },
               "actual_amount": {
-                "cents": 570415,
+                "cents": 600895,
                 "currency": "SEK"
               },
               "notes": null,
@@ -49998,11 +50881,11 @@
                 "month": 12
               },
               "budgeted_amount": {
-                "cents": 50500,
+                "cents": 115700,
                 "currency": "SEK"
               },
               "actual_amount": {
-                "cents": 50500,
+                "cents": 115700,
                 "currency": "SEK"
               },
               "notes": null,
@@ -50058,7 +50941,7 @@
                 "month": 12
               },
               "budgeted_amount": {
-                "cents": 150000,
+                "cents": 73700,
                 "currency": "SEK"
               },
               "actual_amount": {
@@ -50138,7 +51021,7 @@
                 "month": 12
               },
               "budgeted_amount": {
-                "cents": 25000,
+                "cents": 9548,
                 "currency": "SEK"
               },
               "actual_amount": {
@@ -50158,7 +51041,7 @@
                 "month": 12
               },
               "budgeted_amount": {
-                "cents": 35000,
+                "cents": 25900,
                 "currency": "SEK"
               },
               "actual_amount": {
@@ -50198,7 +51081,7 @@
                 "month": 12
               },
               "budgeted_amount": {
-                "cents": 650000,
+                "cents": 0,
                 "currency": "SEK"
               },
               "actual_amount": {
@@ -50222,7 +51105,27 @@
                 "currency": "SEK"
               },
               "actual_amount": {
+                "cents": 500000,
+                "currency": "SEK"
+              },
+              "notes": null,
+              "tags": []
+            },
+            {
+              "id": "08570cf6-9c46-4e87-8221-5715c902f014",
+              "item_name": "Bankavgifter",
+              "budget_item_id": "1377969f-f54f-4a44-b452-30d69e7ab227",
+              "budgeting_type": "Expense",
+              "period_id": {
+                "year": 2025,
+                "month": 12
+              },
+              "budgeted_amount": {
                 "cents": 0,
+                "currency": "SEK"
+              },
+              "actual_amount": {
+                "cents": 4000,
                 "currency": "SEK"
               },
               "notes": null,
@@ -51109,6 +52012,246 @@
                 "currency": "SEK"
               },
               "ignored": false
+            },
+            {
+              "id": "e86fef8a-1c3e-4ef6-b367-cb76a33142c0",
+              "account_number": "9159-797.770-7",
+              "amount": {
+                "cents": -500000,
+                "currency": "SEK"
+              },
+              "description": "Överföring 8327 9744684557",
+              "date": "2025-12-04T00:00:00Z",
+              "actual_id": "077973f3-1ab7-49f6-9d65-52a28d235daf",
+              "balance": {
+                "cents": 883902,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "11b13274-13e8-4725-82aa-bde811274009",
+              "account_number": "9159-797.770-7",
+              "amount": {
+                "cents": 550000,
+                "currency": "SEK"
+              },
+              "description": "Bilavsättning",
+              "date": "2025-11-28T00:00:00Z",
+              "actual_id": "1093f550-f003-45f7-83d2-0e378ddad077",
+              "balance": {
+                "cents": 1383902,
+                "currency": "SEK"
+              },
+              "ignored": true
+            },
+            {
+              "id": "63fbce7f-56b9-4876-bc21-ba97c52445c4",
+              "account_number": "9159-797.770-7",
+              "amount": {
+                "cents": 100000,
+                "currency": "SEK"
+              },
+              "description": "Buffert årliga",
+              "date": "2025-11-25T00:00:00Z",
+              "actual_id": "05ee937b-7a90-43b5-bb47-66e0890189ae",
+              "balance": {
+                "cents": 833902,
+                "currency": "SEK"
+              },
+              "ignored": true
+            },
+            {
+              "id": "af551b02-4ba6-454e-a524-dce7b7a66894",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -2000,
+                "currency": "SEK"
+              },
+              "description": "Månadsavgift BankkortExtra",
+              "date": "2025-12-08T00:00:00Z",
+              "actual_id": "08570cf6-9c46-4e87-8221-5715c902f014",
+              "balance": {
+                "cents": 1975200,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "e8ccd98a-b5fc-44d6-927e-7714ca5ef3ec",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -2000,
+                "currency": "SEK"
+              },
+              "description": "Månadsavgift Bankkort",
+              "date": "2025-12-08T00:00:00Z",
+              "actual_id": "08570cf6-9c46-4e87-8221-5715c902f014",
+              "balance": {
+                "cents": 1977200,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "88eaa37a-52ac-4ccd-80ec-1f1a222b2e67",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -25800,
+                "currency": "SEK"
+              },
+              "description": "2025-12-06 KANANS BLOMSTERHANDEL, NORA",
+              "date": "2025-12-08T00:00:00Z",
+              "actual_id": "6c92c18a-908f-4249-b61e-5aa15fdb36a8",
+              "balance": {
+                "cents": 1979200,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "13ddfa26-1590-414b-b985-70db604cadfe",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -4680,
+                "currency": "SEK"
+              },
+              "description": "2025-12-06 WH NORA PRASTGATAN, NORA",
+              "date": "2025-12-08T00:00:00Z",
+              "actual_id": "6c92c18a-908f-4249-b61e-5aa15fdb36a8",
+              "balance": {
+                "cents": 2005000,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "f0904a38-f40c-4667-aeea-1fac624aab32",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -65200,
+                "currency": "SEK"
+              },
+              "description": "2025-12-06 ZETTLE_*JENNYS BAGERI, NORA",
+              "date": "2025-12-08T00:00:00Z",
+              "actual_id": "46021ec6-90c9-4462-a62d-06817ab9dfb6",
+              "balance": {
+                "cents": 2009680,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "baa7609c-47e8-4d93-8ce4-e2746c885345",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -4990,
+                "currency": "SEK"
+              },
+              "description": "2025-12-05 ICA SUPERMARKET KOPPARHAL, KOPPARBERG",
+              "date": "2025-12-08T00:00:00Z",
+              "actual_id": "af5a0a14-e10b-4d2a-8b55-024fab5f8a21",
+              "balance": {
+                "cents": 2074880,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "387da9c2-69fc-4584-aed0-87c8e1d382d7",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -8800,
+                "currency": "SEK"
+              },
+              "description": "2025-12-04 LANSTRAFIKEN SE, OREBRO",
+              "date": "2025-12-05T00:00:00Z",
+              "actual_id": "7317b3f6-11f0-41fa-8d2c-12754fcae0d0",
+              "balance": {
+                "cents": 2079870,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "13685e2e-8312-4cae-986e-d32545feaa37",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -63812,
+                "currency": "SEK"
+              },
+              "description": "2025-12-05 Digital Charging Solution, Berlin",
+              "date": "2025-12-05T00:00:00Z",
+              "actual_id": "e1c2155d-94d3-4131-ae82-039b6fd29cab",
+              "balance": {
+                "cents": 2088670,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "d32155b8-dc42-46a3-b87e-6b32408b44e2",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -3542,
+                "currency": "SEK"
+              },
+              "description": "2025-12-03 EasyPark AB, Stockholm",
+              "date": "2025-12-04T00:00:00Z",
+              "actual_id": "e1c2155d-94d3-4131-ae82-039b6fd29cab",
+              "balance": {
+                "cents": 2152482,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "4e1944c1-177a-4ade-8784-c2f2a6ef2830",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -42478,
+                "currency": "SEK"
+              },
+              "description": "2025-12-03 ICA SUPERMARKET EKERSHALL, OREBRO",
+              "date": "2025-12-04T00:00:00Z",
+              "actual_id": "af5a0a14-e10b-4d2a-8b55-024fab5f8a21",
+              "balance": {
+                "cents": 2156024,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "8c262532-cdc2-48d8-a132-48c34445e48e",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -109610,
+                "currency": "SEK"
+              },
+              "description": "2025-12-03 WILLYS OREBRO VASTHA, OREBRO",
+              "date": "2025-12-04T00:00:00Z",
+              "actual_id": "af5a0a14-e10b-4d2a-8b55-024fab5f8a21",
+              "balance": {
+                "cents": 2198502,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "a5e57e3e-caa5-4cce-b8cf-f780686bf856",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -23750,
+                "currency": "SEK"
+              },
+              "description": "2025-12-03 ICA SUPERMARKET TRIVSELKO, GULDSMEDSHYTT",
+              "date": "2025-12-04T00:00:00Z",
+              "actual_id": "af5a0a14-e10b-4d2a-8b55-024fab5f8a21",
+              "balance": {
+                "cents": 2308113,
+                "currency": "SEK"
+              },
+              "ignored": false
             }
           ]
         },
@@ -51428,7 +52571,7 @@
                 "month": 11
               },
               "budgeted_amount": {
-                "cents": 150000,
+                "cents": 80985,
                 "currency": "SEK"
               },
               "actual_amount": {
@@ -51508,7 +52651,7 @@
                 "month": 11
               },
               "budgeted_amount": {
-                "cents": 50000,
+                "cents": 406200,
                 "currency": "SEK"
               },
               "actual_amount": {
@@ -51548,7 +52691,7 @@
                 "month": 11
               },
               "budgeted_amount": {
-                "cents": 28900,
+                "cents": 37900,
                 "currency": "SEK"
               },
               "actual_amount": {
@@ -74872,1373 +76015,1342 @@
         ]
       },
       "transaction_hashes": [
-        17539301525438266068,
-        1461028314195735153,
-        17370615105772309493,
-        15399711672027894419,
-        6883949289611672418,
-        16227165668486993439,
-        15769285950943149424,
-        16066180323977335505,
-        14892960314220890081,
-        4131640911871864892,
-        8230129324524724827,
-        10310029114253114717,
-        12187332037007839788,
-        11407934598314848905,
-        12704991022739024197,
-        8877489628524061859,
-        1496032429364024318,
-        10502122049873546472,
-        7709488969134417545,
-        11815542462514435419,
-        1849435568600956931,
-        1610068512091448931,
-        11193352513523819339,
-        18376474232492638127,
-        5857325382809370992,
-        8243984411199018467,
-        1357496610815194980,
-        17836947755422140568,
-        4458921372181230910,
-        14804690377244142769,
-        9358901088271678595,
-        4826723981387204665,
-        10794146155756180877,
-        17205363376316278417,
-        7906030989733453554,
-        1074502548944805087,
-        15058189453693770382,
-        11255232373703096588,
-        7515663864609376021,
-        17725110223127248190,
-        13811289892584018903,
-        11726731754757498887,
-        17729380624011243024,
-        5427278391970475879,
-        16360384781088409646,
-        11683756692737684405,
-        14764245364017829990,
-        2016425828759236726,
-        16438667275824171721,
-        6348238536840263209,
-        17907054413610807246,
-        62867836583025425,
-        6108783577371251695,
-        12066060229101581233,
-        10241562795201407181,
-        3595411481941253402,
-        16963588391001423572,
-        17616324770576503974,
-        15182047344395978456,
-        11676548934964466140,
-        13910990017229873899,
-        7079812826997779099,
-        6899480542094586633,
-        74358081762872891,
-        9057288561287009305,
-        5554885275330101434,
-        3674137977970827988,
-        9000922626809347621,
-        6069058066191398928,
-        6512268413007360431,
-        18184203736084911219,
-        2748070261683176101,
-        10676158233756221253,
-        1807761036164863469,
-        10660905485654716096,
-        9112769891086098173,
-        10037155689044687650,
-        8728315837638086314,
-        17662803733891336514,
-        573012165799045663,
-        9324821520364162935,
-        11673590804747123306,
-        515732279377569418,
-        13605842809147472273,
-        2945699385102269274,
-        18091059963686886458,
-        1533580019015733467,
-        4880516161450277196,
-        96089425536665493,
-        3667462577369843864,
-        1410682803705256132,
-        15761159886280406417,
-        10110824351266561983,
-        8188667292501476750,
-        2191295524160886937,
-        15444554242061847551,
-        17521243114378208460,
-        11001675556398245593,
-        4184238945983244219,
-        5599811440028498533,
-        10554724591755673784,
-        9621604209656053647,
-        8062994520069169587,
-        6127418284666360290,
-        13162573305502336726,
-        3016418063882202051,
-        12637320486969046196,
-        10270617448173772760,
-        13636607501531733249,
-        9994549741679218413,
-        7289559696133109610,
-        729570202156110172,
-        5089067620770047548,
-        16460303063872498489,
-        16961847027345207416,
-        19425215894537239,
-        9524104766492635168,
-        11625089854776138994,
-        12182061232725790744,
-        2784241828162942072,
-        159717658442789195,
-        10919497449073113230,
-        6255334796813160565,
-        3041831457948692587,
-        7389386831668666644,
-        1882155037278256477,
-        5813096585022080936,
-        1233241884928055040,
-        8737498579616614155,
-        9959361538377683554,
-        3224993274134957894,
-        2475778781909551357,
-        1744300905407662089,
-        17892932545793071394,
-        8855179303990716561,
-        15861082784657491872,
-        6848774207972707284,
-        5700500874784381274,
-        2768730174887810489,
-        1263730410908549025,
-        522865904079041452,
-        7543042822891183944,
-        11700805803298236738,
-        12349537946825560199,
-        1758924617673876566,
-        2341403831563848555,
-        10624378288210809264,
-        14883898432402863447,
-        8685277326738745557,
-        11727652667296634415,
-        3219909298297634585,
-        11117743527238464346,
-        11751534698692072337,
-        3076625619039135058,
-        9374132584374052871,
-        11452634500915387178,
-        2655698348841676660,
-        8579016813965651600,
-        16163268925449467807,
-        13574505794526881177,
-        2138193553395401733,
-        7914444695325205757,
-        16818139394503565607,
-        6286197456500924114,
-        5607624758055772660,
-        17147366222770779611,
-        3025415385163326735,
-        2342565596192884602,
-        440486321658826526,
-        13672244357156447854,
-        3504667399185086078,
-        1616873806920645038,
-        9652182103733723774,
-        14881781077168560079,
-        3633766598429754858,
-        12952685125374488309,
-        558238302680389538,
-        7225652235958710622,
-        3971486954162015185,
-        9233209897539701929,
-        15922758586578722133,
-        17926227448078733485,
-        3655224408711369934,
-        1558736046838776635,
-        8926410408275935967,
-        17189724647720982549,
-        5792602424843576353,
-        4858344383205730985,
-        17799336154972415997,
-        2582651812821834089,
-        892209342326750343,
-        9046257624698527021,
-        12440134442786086107,
-        4965500977607099670,
-        14199144412227923419,
-        3523336923763644530,
-        10250816183140202429,
-        6427227826603591360,
-        948852481122112456,
-        9057581168336205741,
-        7822571692551225497,
-        6244828314230524180,
-        15441792261726989809,
-        8421863655766808593,
-        416104190951507283,
-        10095995690507104582,
-        7004790986824041296,
-        2784944947088715167,
-        12385336818670805799,
-        13360875504424011368,
-        7837492539393293499,
-        13288733855960881573,
-        14605612044818654840,
-        6014644706908998065,
-        4964803179725041594,
-        7223551086696095834,
-        15784284012690083057,
-        4235577600792565579,
-        14603960418945325925,
-        2127568012151256801,
-        4540521355748027185,
-        1719842961983462417,
-        7329065191459942690,
-        8192181563449913207,
-        1764916745593490751,
-        11120636549923735899,
-        13763222844973739761,
-        16901577028091884901,
-        5218236247773601733,
-        4985895619134242988,
-        8765164576585842515,
-        11011253229152980670,
-        1093383826529742855,
-        18326711829909351453,
-        2624328500737412662,
-        8779838079624980897,
-        10986307960078706018,
-        5344492576498233917,
-        11446050625916973243,
-        442502460792129877,
-        13467237790884517547,
-        17616210008351693053,
-        3064404372696833148,
-        16360994223860740804,
-        17419433649552691859,
-        17601224691041974532,
-        13074281794060764813,
-        6443258881901889703,
-        17215898089240339093,
-        9529600383280355479,
-        7335168985792001372,
-        12371120416192157289,
-        6630707167849012942,
-        6079461368284259076,
-        6359422380991655216,
-        3745165859676988575,
-        18170878229100682585,
-        1599259814079568390,
-        135340079844197994,
-        4024574990007805519,
-        13361739757226883339,
-        15887168010044636188,
-        10729070977642448032,
-        3823930837247952883,
-        7033732909943162291,
-        439903622207066224,
-        8069538687150118417,
-        8270121301130462391,
-        6694581464776216052,
-        2392553585467416766,
-        12560867396635990496,
-        9609752953000569450,
-        8065434889901249807,
-        5929051940805722354,
-        4228652841031597073,
-        14486270446211627562,
-        3261297416557740734,
-        9121773632892591939,
-        7032216285770667104,
-        16922880609290148848,
-        17434049590989106197,
-        16043476167524680843,
-        2366955339227457325,
-        10540352168224237652,
-        5052078464018469586,
-        11308560477289957594,
-        10154680911359178543,
-        18301448991161935050,
-        8037571895649344441,
-        15580703929816946564,
-        6022727276715232211,
-        3168749305579236276,
-        5486465542593864166,
-        2165448357631661079,
-        12811893713958936527,
-        1173502591976308440,
-        3370494612962293598,
-        2115411051864096604,
-        4034516991815355131,
-        4091072560284783159,
-        18014216911297678365,
-        13256672454337640717,
-        1390001824319190864,
-        5541431155535736932,
-        3855936934992840412,
-        170397525856385544,
-        9843045310453332163,
-        13388593466558904143,
-        16206023201086755280,
-        3752351850533926796,
-        1549802253245785778,
-        487621655250966287,
-        10221936512376442325,
-        15366515895726166774,
-        7008882691032179334,
-        2100397465346265304,
-        16214860561876842705,
-        16527775363951882682,
-        18086086083423243507,
-        7124277929768775349,
-        5749962048549672269,
-        5332365801314874180,
-        15902325913163498770,
-        1310782386182583601,
-        3011814616269110459,
-        9014865552118534045,
-        2345739913486959979,
-        14805141041256141191,
-        9558362752910685152,
-        17625378746115192261,
-        5864346175172371313,
-        4392812851524295973,
-        5589400317235799928,
-        16611374569525985801,
-        12955483134083385738,
-        15558672652105073339,
-        12169832552631986389,
-        11821141142926699487,
-        17556427905242296936,
-        10441086847620249119,
-        17861472591889341226,
-        1330938607317294414,
-        8422115977656622849,
-        3126492862084174517,
-        11363056899392898913,
-        7598288568559203400,
-        8854509785546608507,
-        14167450555081523966,
-        10320397960735251748,
-        15916681279425930648,
-        17614351324269444964,
-        7948528212723433346,
-        17407379751389224223,
-        10938180182744879812,
-        18035267536267241744,
-        17433318804551641668,
-        14086611174573795278,
-        14558068926255627228,
-        12065591585829470195,
-        4419235348224672819,
-        17379799217174207287,
-        9174077271882772189,
-        8571313548015227391,
-        16586406174614503272,
-        17458592217889369906,
-        9506481074721380509,
-        1542128979709622639,
-        15698781505729612132,
-        4447779618099143923,
-        5690924161198761159,
-        6750731015873590236,
-        14637732331107308363,
-        3529427036566983790,
-        3949208916524135367,
-        6202963338883049430,
-        1743019807951681623,
-        18369593869700754512,
-        15616700485369977541,
-        9929876936309742703,
-        13790283271564008107,
-        18373970911347911339,
-        6622794277060609551,
-        6001546209028258044,
-        11308349829460012663,
-        14814601504196751570,
-        11962834499440837098,
-        245891980879954804,
-        3755583379483978276,
-        7298743090633900674,
-        5846630257477364214,
-        16519575340465746469,
-        11791789570511898663,
-        3768085259632956236,
-        17622444999925197441,
-        16094899235899259240,
-        13040390798945802677,
-        1491735179994290873,
-        9749148451992046519,
-        6588737770796014703,
-        9605997153950880772,
-        5781454047449007372,
-        10436655468315510121,
-        8468096137486421320,
-        18100236493211875351,
-        17559628417844251968,
-        2651789311221759177,
-        3019983686156175904,
-        16429901575606069587,
-        7743359517947286591,
-        332850665780564035,
-        16312887671528273006,
-        5691590152344760079,
-        8384074024782811905,
-        13917706686558384087,
-        7561106668760875415,
-        14400685152126288757,
-        3129194112039990893,
-        4222595864112171096,
-        9023307361338606297,
-        9684442666387370931,
-        13212303827657585403,
-        14010213833066766154,
-        3337798942511716901,
-        2434573820934056465,
-        10944834364413381565,
-        12720216896121094806,
-        7784397396862342548,
-        13522113697109432176,
-        10266460117447079896,
-        10230176614586453844,
-        3670368550605391623,
-        6347228144561101414,
-        17573017399904586808,
-        14515514101147942941,
-        5640363172567721211,
-        6373629446202308190,
-        15223019690064870413,
-        13750297469085237693,
-        11767907457516715680,
-        9465037721295875521,
-        2833444246981881413,
-        13512717575841292772,
-        218707254986743323,
-        5451276082678454453,
-        9663312907529640906,
-        480833470280868083,
-        12473166530545311501,
-        17619040462892979557,
-        5807422141889316006,
-        4026837967653843423,
-        17958395191241316646,
-        17313588858661540456,
-        9803827514807228078,
-        13497779211688998973,
-        8000082182332930547,
-        15058644801881607916,
-        13061555053685779936,
-        11036558336360142467,
-        5531006678378052816,
-        2715156298594834276,
-        15577749423113479818,
-        1254883480252117954,
-        4177248213764579778,
-        15602843009431558621,
-        3684971421693272129,
-        5785786342112047509,
-        162662052977400374,
-        10291505574040606246,
-        1919609699091410928,
-        7797095026839914194,
-        2388586161633784125,
-        11783424676724373795,
-        10634179924841141163,
-        15249417725619730287,
-        15818853944857432878,
-        16079172058901011317,
-        1839780363861692636,
-        17274101819944264215,
-        16095070525837798739,
-        9726982830913089269,
-        16674791622459609119,
-        3468956554337122837,
-        15909940138251690204,
-        3120927645525398895,
-        7206231267660485762,
-        6458329640708476629,
-        3472807149850835407,
-        12008343323744607990,
-        17274893544448700656,
-        14429871999356592543,
-        17705801978419144289,
-        16096922591397428755,
-        9599194369465925877,
-        13468423769630496199,
-        10037325252528998941,
-        16828107434508340696,
-        15202611499632372212,
-        13910684293178494770,
-        16581466655614329835,
-        10910911489022704858,
-        18170334146301722393,
-        17082234251421587105,
-        4218948907894899262,
-        3949012089524230671,
-        8874510730733156845,
-        13006924910797674722,
-        5622335378075386148,
-        6366144569861079308,
-        1106473283289078676,
-        12091976676581953470,
-        18118987561001148526,
-        15513784074763925921,
-        13196705978204591695,
-        706900408634456744,
-        1067373939543676352,
-        3907979902925208829,
-        11050010960522307509,
-        16604315571172261470,
-        15589452469092125720,
-        7880483578335930596,
-        11869604159938994046,
-        16735797027181608574,
-        4862247366192088164,
-        1510126944823824553,
-        17653375076418816060,
-        8271104454146332119,
-        16530203484338498281,
-        4079091076373548621,
-        9635590327480640061,
-        3609782592165737265,
-        13268471005733118639,
-        9563634024651815345,
-        13907389493656555667,
-        13010083858380183373,
-        17115954972551650239,
-        3106546497344345606,
-        14856552824707202681,
-        7207771061417183442,
-        10840980175902728492,
-        2419251661177475166,
-        5676998063821882236,
-        4958010532144498602,
-        2088461057782417276,
-        15548512997184974859,
-        8167803477315360754,
-        8602366134964759739,
-        10265864355964225498,
-        14684062548527726636,
-        13592591176048830434,
-        8134014140893611333,
-        9982181100295228949,
-        1871410127584051052,
-        7079122598752639359,
-        11406250523406684802,
-        2669602557492351115,
-        5995688276537550277,
-        3658881384645240631,
-        6904859232810484341,
-        564172405334800141,
-        11567020006884879486,
-        4652522040223093319,
-        2963096079311261360,
-        4478081193513292592,
-        14401891673730112948,
-        14450508629365528773,
-        2748189223161610424,
-        7923103588034540462,
-        681846597250190437,
-        8319706944020489019,
-        7749499741428262864,
-        4737425310489826222,
-        13936479226532455726,
-        14572169686311336042,
-        7131333689674298867,
-        11871285041729374837,
-        9653874664165580395,
-        2819898493963175494,
-        17101881554838765914,
-        2747165531337600415,
-        4710952943830623816,
-        12217944974243838638,
-        5392136322068146809,
-        5308127905807428992,
-        8732215480987267963,
-        9757593234348249942,
-        7935178199579472104,
-        13846782692998628366,
-        5687686781395948889,
-        12095840571041592999,
-        17554737445817988674,
-        5688551610928413009,
-        17595570408160960765,
-        17013879197266057814,
-        8022636927129351144,
-        11006316975089846845,
-        6738288143019033530,
-        1039905245430020044,
-        10907661337001206130,
-        3199688223218877373,
-        11043217006304563528,
-        4619314360393972411,
-        10189978098763528021,
-        1534924073260496496,
-        16824502064242268529,
-        14673236999733211478,
-        8070450463206252413,
-        9230855043233541825,
-        2735053526387312585,
-        10690986377425573118,
-        1809530002210359082,
-        13499615671804158413,
-        16761898158174484785,
-        14106980780130511799,
-        13985987405427028345,
-        8613882308920093696,
-        16634246510136350872,
-        11420061605596675673,
-        9360929792233722895,
-        5984583064427976216,
-        15669634560881920038,
-        10991047735543735932,
-        4721364071567063077,
-        7862312845457331634,
-        6135418688516564932,
-        4378622673616853719,
-        16518370340706261585,
-        13786520491419131136,
-        2972374867898335752,
-        12026883961012764832,
-        4777596320488099946,
-        16416195921564215581,
-        5442686005120328334,
-        10834948612686284966,
-        5803925590713232735,
-        13965236646991474723,
-        7117626060225536197,
-        1399903836148760370,
-        6476678289533189032,
-        14761507289065343003,
-        17510001219039363862,
-        9884938723203652896,
-        8780763920275137585,
-        10815366638896533618,
-        10904243647183660380,
-        10127510432696206571,
-        13427218255092344744,
-        3852705840406220731,
-        13061020649939894604,
-        13314731768290582063,
-        3319546954757227726,
-        7661805243325744796,
-        16059195074709819507,
-        13829783526302527384,
-        6406156604062845201,
-        5489914716453594773,
-        4531925623408819072,
-        12972742755980248288,
-        5992086985876573309,
-        3355904684461481904,
-        8551408798802325501,
-        9438081294997634062,
-        10465003596415605880,
-        13643113434913686770,
-        17928205228263477036,
-        10399425983861006841,
-        12429941281079636145,
-        9285429733626865294,
-        3960322795707846506,
-        1814585870070464767,
-        13364625031393353021,
-        16244974044378321209,
-        11721377897260424657,
-        9306863787758282877,
-        4102427608299909592,
-        16607158198316539713,
-        3759413214992175988,
-        11177308589898387017,
-        789534961201266267,
-        10042514935199682154,
-        15539311282075515835,
-        14988146290492066095,
-        9321191201347166195,
-        10093028665722902850,
-        16176728420147899520,
-        17793088870604662026,
-        14205739723269462719,
-        4837565366905912103,
-        16946257658711826743,
-        14099930135927845492,
-        5429615866626605086,
-        4201316454913070822,
-        15633533864399393893,
-        15863924540065760112,
-        16342439872225283327,
-        14196052027662286777,
-        17189922403519459540,
-        8834975170318422727,
-        680337233142473891,
-        17806684564796590728,
-        17630340489626718289,
-        15901588057446137379,
-        16973376262093984306,
-        13021118567655484795,
-        2915354022003572508,
-        13533016152419120416,
-        2517939886534474198,
-        3340147589280374307,
-        1194058781170054036,
-        3204257019455270865,
-        1316133071163618510,
-        14583488277118418275,
-        239230240466599885,
-        4265986771367658440,
-        9576164086886672145,
-        3866829655464625467,
-        4410248999594571785,
-        17524209724652369638,
-        3804413268421329163,
-        18206488719801522977,
-        12470008462065725262,
-        8523915888983769339,
-        6536122854762008842,
-        16838386485587470081,
-        15367126861133822524,
-        3373794384689364088,
-        1258173926347473347,
-        11345117514278248669,
-        14597769503630865438,
-        3241779103490146360,
-        3445720811374930247,
-        11589004213396584925,
-        8546528924318236593,
-        18228684392515036622,
-        9568213487745640448,
-        15284682113557264387,
-        8159824233075921064,
-        3462251405609226053,
-        4933422788427475714,
-        15813001256631764485,
-        3078572990080413635,
-        17146072417883703799,
-        14634778435110626959,
-        10706515178154118180,
-        18246767039837656204,
-        12299378885658722063,
-        14806144069939784695,
-        2203062609646805486,
-        326446914651589661,
-        7320169275506415524,
-        16293978650349278870,
-        7512636897254266531,
-        1862405861719636217,
-        16058561070556879329,
-        16966471088321099413,
-        6987379145260129477,
-        9249351788990092531,
-        5266319176892522904,
-        12165654545160582007,
-        13530816183236122685,
-        5314844034566424882,
-        13860112582811769695,
-        8293670858879273977,
-        8933812704936531268,
-        403164120997645645,
-        2936855872079639501,
-        14271461434433225847,
-        5179023029325510003,
-        5379193707219766401,
-        17954649943609431278,
-        11541160502692653372,
-        5874227248925327019,
-        983567270713523332,
-        6626169156867046662,
-        8915994012409277774,
-        9391749454594864104,
-        14245279056891182936,
-        17883565739853499586,
-        2666135927025525675,
-        2700738081179218413,
-        18298549126820396851,
-        10600877525684958909,
-        13874448705809435491,
-        8777718026331448284,
-        11632617484442036626,
-        8492504918903922528,
-        8294105376399273460,
-        2019107017391584995,
-        10007308852338343947,
-        3401061244420103773,
-        5623087265432465601,
-        8870038410017067525,
-        15771011435651538966,
-        9558966028724251709,
-        4340532662294605191,
-        13294511279577594180,
-        3429825449959191335,
-        9685302065378260108,
-        5450220433330324164,
-        13781656603721911209,
-        8780686200550532078,
-        7788123008193552999,
-        129556637583735158,
-        13718899597797913561,
-        17384109217986037736,
-        13602827227507256204,
-        10328654249620000613,
-        7633300815564447797,
-        11299515218328499210,
-        17590209793950155551,
-        6876301026355304877,
-        6194148868969097424,
-        7225969152563583081,
-        3126649575474214596,
-        12973097717839322978,
-        1832431451127276460,
-        4886154665798720174,
-        12697401466283947670,
-        14905090732646468677,
-        3522232418107711854,
-        5292887278421991866,
-        12306298162265057016,
-        6873992852946887775,
-        2934622893513914234,
-        12696129738219277733,
-        5087687539649622931,
-        1063179921187403377,
-        4400082552543490687,
-        14606908343267621581,
-        10546757104992429536,
-        11437063573231666110,
-        8948857964385450072,
-        15767450350746700069,
-        5037474636814072008,
-        13969500938032004768,
-        2241696150690984900,
-        588055498770633468,
-        16010535728372217349,
-        4552502072549560748,
-        401444746884041864,
-        11736879676773818553,
-        6692901764684079300,
-        7485368744957987286,
-        3548524349413759363,
-        10797299840035793694,
-        13213972728877751722,
-        2794036656909992875,
-        12406333633617114583,
-        17279029940714174502,
-        3074562739020124404,
-        3663410936986365309,
-        14736606669710509804,
         15841450428030927493,
-        16400833137142820264,
-        6171411550670841927,
-        16891700105672072341,
-        6733846252912396357,
-        8067686613897461014,
-        1190182517733589491,
-        409370677404041980,
-        13134251095473704472,
-        4784570596234180081,
-        4480919832350797703,
-        17811791428738127828,
-        14617745471778533751,
-        11669187924478830896,
-        10007553137092089490,
-        17163446286725029386,
-        4840525529900489754,
-        2055551573795193365,
-        8148701153110045450,
-        15253593806059297235,
-        5654948308253829967,
-        8500878957128675419,
-        5708434426297764392,
-        14597729977627550102,
-        10778679921257957504,
-        13494160970250329468,
-        15505401212517605737,
-        11206559750139184896,
-        7273572508284477777,
-        1009148728729614006,
-        15580145063162001415,
-        10966996359153125234,
-        6855098123607658098,
-        13817859666603684334,
-        9893642443055593546,
-        4068074296795264498,
-        1578770478621949101,
-        17308713037943750641,
-        13177273027535535155,
-        13143214825265162124,
-        4348856578571966145,
-        12211665841887299705,
-        4488034768928716228,
-        10149182487346982783,
-        10975301264985281155,
-        9049304527021300233,
-        10201941796834956883,
-        7128317065995839977,
-        16652744647288383305,
-        18256289894173969024,
-        1352078619489902970,
-        2495338384045809001,
-        5502764665148484883,
-        13334500411843945917,
-        2962098751683210982,
-        8800604425107364756,
-        14056496720287008537,
-        6857246862386530523,
-        3517131397422316159,
-        11154549933368045219,
-        1924899605201714608,
-        12125984712757547504,
-        1702713705235714275,
-        8899834585891013579,
-        9459581283726966857,
-        8218233029171044300,
-        17860745254984334000,
-        8995177938411215427,
-        6561459129487694074,
-        13943558423121104806,
-        17424017792813904891,
-        17584207693466784495,
-        9775648617426430948,
-        8963928980871586390,
-        14765261425617536265,
-        11440983817399016474,
-        7449242829302435606,
-        4031023161393788220,
-        7985818603131664627,
-        443509232918837863,
-        8669337181230119645,
-        7565327502757411523,
-        6457611147581109802,
-        11871218031430938591,
-        12364732069207974182,
-        7791436629978326565,
-        14417897642150835373,
-        1495797752660124848,
-        983421814095562148,
-        285115064668427316,
-        214619571381943507,
-        5201745236932311162,
-        9554387150792537028,
-        15468869623786968182,
-        545465983420299626,
-        17868632326559401096,
-        9590640015357229768,
-        11128775337853750114,
-        11170509917791889560,
-        11379864392334700142,
-        1785383224853179146,
-        842055782382997307,
-        10169089603705660064,
-        17726077046903586848,
-        15215077255911160619,
-        10036806275560662813,
-        15606985540839524579,
-        14744073395167855711,
-        5167614573484147454,
-        6844868938477393562,
-        11837385420362994271,
-        8435854616487036163,
-        16968413767202920253,
-        13473890721869483341,
-        6837989938411381757,
-        731674625438461037,
-        1281854357657895910,
-        11271483006186862881,
-        15948213290492416796,
-        1450131375984991307,
-        528942793744677434,
-        2648555183552992554,
-        6405893762015466843,
-        6485111552992099057,
-        15687077156723646214,
-        17718418220719958863,
-        8182159359015375720,
-        6229311144224006958,
-        12973268851752502600,
-        10206372956067558230,
-        85668312674182920,
-        8857965330781609126,
-        6018878889329732928,
-        17059968181196301636,
-        13817251056381316144,
-        14440082915759104421,
-        2770368413562589703,
-        7415851652730492363,
-        8752116891431384414,
-        13523361462079235572,
-        5168071708198854859,
-        4688872208981105848,
-        6715355103234589969,
-        11913001436671908366,
-        14041943246519071182,
-        10610484486743865552,
-        5219585375506591981,
-        7418406078623830552,
-        17999518370129983134,
-        3223299809745611383,
-        8136189817555061931,
-        8538492542010403204,
-        6321931321825392107,
-        2994136002072529305,
-        9793872693159447274,
-        135268701648712046,
-        750768674722046714,
-        4718427320784215653,
-        3885259674867788926,
-        2297950107846957072,
-        16432736852569163833,
-        2537638373183437380,
-        15673042965797891649,
-        5629419941317370170,
-        18138896383340832140,
-        18140633128363340748,
-        1339943142046504121,
-        3800985320401716155,
-        12904516546064827264,
-        12054419384460609131,
-        2252163327647787349,
-        13699598577253795529,
-        17723882526464539330,
-        12019386444420664356,
-        18339053239114188532,
-        1930290798209827448,
-        5232495084894211023,
-        4652219070462354227,
-        8749488712640923995,
-        3472716316929654876,
-        8224461395154652794,
-        17245113533381461190,
-        6720879670490812184,
-        15765829152841976935,
-        18251284782401209414,
-        5979731840848244412,
-        7307194434174360555,
-        5961532209465325308,
-        3567647944876861191,
-        13891970038015180330,
-        5046602339943179833,
-        8181871459691403812,
-        1229667787893216980,
-        4582689956111675285,
-        3449016538356028867,
-        22291984183358116,
-        4028089961479951298,
-        3604817552143062935,
-        4419621578516702807,
-        13756374224761636497,
-        11166684142970220176,
-        10501610468467096339,
-        13761738629234020059,
-        619199101384475053,
-        13356845670557717154,
-        13096499276676537452,
-        7119894346386221168,
-        11310831851960531133,
-        5807785386110391738,
-        8392110233264046222,
-        7741862859168879409,
-        6287015982096699182,
-        5562003318891155658,
-        3758249866726650848,
-        197504627704033133,
-        15900167537909268285,
-        6375559973914690401,
-        8154982330464600519,
-        2891935760432985684,
-        12662115357647514282,
-        2090303666536235794,
-        15000800191775318906,
-        11300417212683220204,
-        14827498857334000964,
-        6203491807244633213,
-        14557904959083118323,
-        2289731239790377426,
-        1250783542072982425,
-        18391986992262512119,
-        5920246130981481194,
-        9399898251321107729,
-        2531454640458364986,
-        10913473255402591453,
-        18040546673513557627,
-        13888396751212790310,
-        9219675423093549976,
-        6446089839626917281,
-        1774272417754206489,
-        1497952954628858756,
-        13745190001992603527,
-        1830590451662999648,
-        6160116289273575457,
-        3160894648239061822,
-        4374852859461545207,
-        13192576782480762209,
-        6997777428020620054,
-        16476389870611929197,
-        7835806608419848822,
-        6872179596177459988,
-        5507637339465717119,
-        3902667346217173298,
-        2550570354697920785,
-        2039619441941585629,
-        14410100554914644240,
-        7313695316241625757,
-        15036900498536748852,
-        1655716815443185328,
-        14985985496514859405,
-        17889470333496953741,
-        3384221434620531128,
-        13651391857276485327,
-        3855098535444356492,
-        14465697290958526253,
-        17656092769886069765,
-        10886025447765203725,
-        14663599869441240849,
-        12456097801565512369,
-        3482183788787526960,
-        9465243922298058989,
-        15981461277599669798,
-        1577796827178129114,
-        14740075899644065644,
-        1231648256527189065,
-        5674693974389611382,
-        3308765373607599428,
-        7851760265965576922,
-        13125017524684496960,
-        15383488713466337908,
-        15505808153567475649,
-        7343075323592889119,
-        6276884383503158496,
-        5629862661936440366,
-        7678802244663502765,
-        11943150794956510343,
-        11738338967849442938,
-        5824579351999180403,
-        11187620487377663641,
-        12014935278684070094,
-        6586889840178917235,
-        3660230639694511465,
-        16606970087699692838,
-        3122505056950589537,
-        8707356141151026940,
-        10947668296642921329,
-        8545387901270290316,
-        265460604602028573,
-        10358305304023241281,
-        11952717820537718735,
-        11648331839499604582,
-        12398830426315883749,
-        14255845880162122345,
-        14732667566015973355,
-        3618321235037099829,
-        11768626938041676371,
-        3130878841222593622,
-        14318480118315019200,
-        13441224361350047109,
-        17658766452896138216,
-        5043635671984962753,
-        14084859920078423350,
-        4352266337542752724,
-        16453384096475951872,
-        16429417592571884526,
-        12602564121244915917,
-        8056231170081378457,
-        8401922964176469875,
-        546323890184883479,
-        4721554371169051569,
-        3946805336949707071,
-        12392683155504493744,
-        14227267052288187343,
-        3241699742223911489,
-        1002790512304883405,
-        1425864583449627441,
-        12781408180004815027,
-        11226661560416747645,
-        9576398471586309586,
-        13371484953421038539,
-        1400127910866556994,
-        7762765172298994982,
-        13205453905880197119,
-        2976691166757823846,
-        13664004112204038899,
-        16758746535188348033,
-        16428145466340447449,
-        3557809789190087099,
-        11620906365401150188,
-        16191972130749242258,
-        5444742856606934930,
-        14933333531896736041,
-        5349601803200756091,
-        4991404070162812663,
-        8268924661974287674,
-        16115517964524030719,
-        10939776102110428283,
-        3928181498375039515,
-        9471693791245380429,
-        14442031868979719658,
-        13871125007008506505,
-        9117029569002050324,
-        369043885744932837,
-        7045405179514584255,
-        4107251889790211353,
-        14242687382366327134,
-        461743943293097294,
-        11987129559520918147,
-        2479577145166496180,
-        14738864367646773449,
-        173868230129850314,
-        6302773006030758980,
-        5128242242132676887,
-        17749168803096085826,
-        4359033322526913649,
-        452747212329281934,
         1640444478821215309,
-        12366034919740095477,
-        5135600319446857794,
-        10313575153292647966,
-        4646206468362423728,
-        10268106347096738106,
-        4097559614016115664,
-        10414535130273880531,
-        5669958915291067916,
-        6355101027923865986,
-        17363031393440686081,
-        4437285774349075946,
-        4873878920842596645,
-        5502448626745345403,
-        12569173857198662575,
-        1285941283697131149,
-        16848290427524907741,
-        9760686294522674491,
-        13494933927158071985,
-        15884806626179185186,
-        17712664265219041581,
-        9696587163002070492,
-        17290882078943493939,
-        4703117261241502325,
-        10610776831066477444,
-        8409006458500362243,
-        11596974136280505293,
-        9384219852688634645,
-        9188387186812889948,
-        17585061773822532755,
-        14887893014955519541,
-        1653520224591472689,
-        9481251268269422335,
-        9928737654959621955,
-        1114536098930552212,
-        13089471968214329640,
-        13512186278940132682,
-        14388364025432634072,
-        15289567243823088666,
-        6403598699874462991,
-        15104790573826750033,
-        11483962836257711953,
-        465645377046203676,
-        16055516926121089747,
-        5960907153753601201,
-        6058993252996486060,
-        14592503164707067110,
-        14242808950889022788,
-        12140099472136278453,
-        64307667175154639,
-        3402225871603751927,
-        4105236476251542245,
-        6086999934772796786,
-        3320950919753403682,
-        9455142595132250737,
-        686442383969985266,
-        8648013743974703361,
-        8291097773947092558,
-        6104469187275281284,
-        16295002255950496403,
-        11576544555690501419,
-        8759203385968029138,
-        11829574618394978974,
-        1391461537106484679,
-        16636018071532975055,
-        18253811145960249339,
-        15541383106991724540,
-        6331283274001020726,
-        17847802684777962802,
-        7886995946621627364,
-        12634607020890033080,
-        12944550159415125155,
-        1240144968218783747,
-        10789961942462250773,
-        3065485992046292142,
-        7819185090573635863,
-        5855200841826490741,
-        2329195512935113788,
-        8858248285190152749,
-        14356705755793673179,
+        17419433649552691859,
+        5089067620770047548,
+        17868632326559401096,
+        17082234251421587105,
+        16824502064242268529,
+        2252163327647787349,
         11771583636735483264,
-        12732357565261264088,
-        18410434916391911736,
-        18271250744094422028,
-        2953666719535268173,
-        3256826819828766467,
-        827888802887226858,
+        4097559614016115664,
+        9360929792233722895,
+        1067373939543676352,
+        5507637339465717119,
+        16214860561876842705,
+        13943558423121104806,
+        13494933927158071985,
+        3076625619039135058,
+        11632617484442036626,
+        3768085259632956236,
+        3523336923763644530,
+        10600877525684958909,
+        2289731239790377426,
+        239230240466599885,
+        3759413214992175988,
+        18376474232492638127,
+        15383488713466337908,
+        11446050625916973243,
+        6229311144224006958,
+        1702713705235714275,
+        4718427320784215653,
         16057485972350510234,
+        9529600383280355479,
+        8154982330464600519,
+        16961847027345207416,
+        1655716815443185328,
+        9605997153950880772,
+        3949208916524135367,
+        1534924073260496496,
+        19425215894537239,
+        5124915134320257989,
+        7633300815564447797,
+        5450220433330324164,
+        10502122049873546472,
+        3522232418107711854,
+        11308560477289957594,
+        3106546497344345606,
         12923797935503357593,
-        14320294747059541399,
-        8333080776114079273,
-        8187606261357470566,
-        11838783743105347974,
-        13618786417464285005,
-        794131448182635340,
-        1962494691805283076,
+        5554885275330101434,
+        10037325252528998941,
+        15902325913163498770,
+        827888802887226858,
+        10110824351266561983,
+        12904516546064827264,
+        16818139394503565607,
+        15698781505729612132,
+        5607624758055772660,
+        17616324770576503974,
+        7298743090633900674,
+        16176728420147899520,
+        10660905485654716096,
+        5690924161198761159,
+        17601224691041974532,
+        5167614573484147454,
+        588055498770633468,
+        16674791622459609119,
+        439903622207066224,
+        11700805803298236738,
+        6750731015873590236,
+        15993673843372729794,
+        15289567243823088666,
+        11962834499440837098,
         17708214436640299214,
+        14242808950889022788,
+        6331283274001020726,
+        13196705978204591695,
+        8858248285190152749,
+        6058993252996486060,
+        15441792261726989809,
+        10313575153292647966,
+        16043476167524680843,
+        2891935760432985684,
+        6458329640708476629,
+        12560867396635990496,
+        12054419384460609131,
+        16244974044378321209,
+        9117029569002050324,
+        983421814095562148,
+        4488034768928716228,
+        4447779618099143923,
+        17653375076418816060,
+        13781656603721911209,
+        2945699385102269274,
+        9843045310453332163,
+        5803925590713232735,
+        16400833137142820264,
+        5864346175172371313,
+        13664004112204038899,
+        440486321658826526,
+        6286197456500924114,
+        10436655468315510121,
+        15616700485369977541,
+        18086086083423243507,
+        6018878889329732928,
+        10149182487346982783,
+        5676998063821882236,
+        2963096079311261360,
+        13817251056381316144,
+        1610068512091448931,
+        12456097801565512369,
+        8926410408275935967,
+        17433318804551641668,
+        16634246510136350872,
+        6160116289273575457,
+        14806144069939784695,
+        10358305304023241281,
+        1764916745593490751,
+        18271250744094422028,
+        13074281794060764813,
+        10840980175902728492,
+        7307194434174360555,
+        18391986992262512119,
+        3016418063882202051,
+        1002790512304883405,
+        14205739723269462719,
+        15253593806059297235,
+        3852705840406220731,
+        15202611499632372212,
+        8613882308920093696,
+        15058644801881607916,
+        10095995690507104582,
+        5218236247773601733,
+        2962098751683210982,
+        7819185090573635863,
+        13061555053685779936,
+        10910911489022704858,
+        7598288568559203400,
+        2915354022003572508,
+        15633533864399393893,
+        5541431155535736932,
+        6366144569861079308,
+        3804413268421329163,
+        842055782382997307,
+        3130878841222593622,
+        8915994012409277774,
+        13602827227507256204,
+        11952717820537718735,
+        5043635671984962753,
+        1009148728729614006,
+        12182061232725790744,
+        14597769503630865438,
+        731674625438461037,
+        8167803477315360754,
+        74358081762872891,
+        6022727276715232211,
+        5599811440028498533,
+        8737498579616614155,
+        13162573305502336726,
+        3401061244420103773,
+        8500878957128675419,
+        2342565596192884602,
+        13006924910797674722,
+        11193352513523819339,
+        7822571692551225497,
+        10944834364413381565,
+        10127510432696206571,
+        18091059963686886458,
+        10947668296642921329,
+        13177273027535535155,
+        14738864367646773449,
+        12662115357647514282,
+        10778679921257957504,
+        7079122598752639359,
+        4646206468362423728,
+        17308713037943750641,
+        15673042965797891649,
+        9321191201347166195,
+        18256289894173969024,
+        8181871459691403812,
+        8421863655766808593,
+        13817859666603684334,
+        13294511279577594180,
+        17245113533381461190,
+        8870038410017067525,
+        4826723981387204665,
+        5486465542593864166,
+        2388586161633784125,
+        11829574618394978974,
+        3557809789190087099,
+        8779838079624980897,
+        5688551610928413009,
+        11440983817399016474,
+        8707356141151026940,
+        7032216285770667104,
+        5427278391970475879,
+        10482734516112585161,
+        10904243647183660380,
+        7678802244663502765,
+        1316133071163618510,
+        10706515178154118180,
+        3199688223218877373,
+        6086999934772796786,
+        16607158198316539713,
+        7289559696133109610,
+        9391749454594864104,
+        7485368744957987286,
+        15884806626179185186,
+        17379799217174207287,
+        7225969152563583081,
+        12065591585829470195,
+        9684442666387370931,
+        1093383826529742855,
+        9233209897539701929,
+        6588737770796014703,
+        4031023161393788220,
+        2055551573795193365,
+        13860112582811769695,
+        2392553585467416766,
+        6837989938411381757,
+        4777596320488099946,
+        5674693974389611382,
+        680337233142473891,
+        3823930837247952883,
+        8268924661974287674,
+        16530203484338498281,
+        2994136002072529305,
+        14099930135927845492,
+        5960907153753601201,
+        6171411550670841927,
+        681846597250190437,
+        7273572508284477777,
+        5640363172567721211,
+        6001546209028258044,
+        7449242829302435606,
+        14084859920078423350,
+        1173502591976308440,
+        14429871999356592543,
+        706900408634456744,
+        1074502548944805087,
+        4737425310489826222,
+        11483962836257711953,
+        6255334796813160565,
+        15505401212517605737,
+        326446914651589661,
+        11783424676724373795,
+        10221936512376442325,
+        3752351850533926796,
+        15916681279425930648,
+        1719842961983462417,
+        14583488277118418275,
+        13874448705809435491,
+        13605842809147472273,
+        14442031868979719658,
+        13969500938032004768,
+        13643113434913686770,
+        11721377897260424657,
+        18206488719801522977,
+        4531925623408819072,
+        17793088870604662026,
+        17718418220719958863,
+        4105236476251542245,
+        8759203385968029138,
+        7131333689674298867,
+        17554737445817988674,
+        17521243114378208460,
+        16206023201086755280,
+        4582689956111675285,
+        3567647944876861191,
+        8192181563449913207,
+        9928737654959621955,
+        6848774207972707284,
+        9471693791245380429,
+        13364625031393353021,
+        5502764665148484883,
+        265460604602028573,
+        7985818603131664627,
+        1391461537106484679,
+        8134014140893611333,
+        1285941283697131149,
+        6738288143019033530,
+        17274101819944264215,
+        1254883480252117954,
+        14814601504196751570,
+        5629862661936440366,
+        9306863787758282877,
+        8148701153110045450,
+        11589004213396584925,
+        13499615671804158413,
+        8602366134964759739,
+        13288733855960881573,
+        8065434889901249807,
+        6375559973914690401,
+        13522113697109432176,
+        14086611174573795278,
+        17510974974841400893,
+        10241562795201407181,
+        15558672652105073339,
+        17573017399904586808,
+        15468869623786968182,
+        1928876940018363947,
+        10154680911359178543,
+        8765164576585842515,
+        13427218255092344744,
+        17189922403519459540,
+        15784284012690083057,
+        10610484486743865552,
+        16429901575606069587,
+        16342439872225283327,
+        12026883961012764832,
+        14440082915759104421,
+        2241696150690984900,
+        14764245364017829990,
+        14320294747059541399,
+        8728315837638086314,
+        11869604159938994046,
+        9803827514807228078,
+        5168071708198854859,
+        12364732069207974182,
+        17189724647720982549,
+        10690986377425573118,
+        4201316454913070822,
+        403164120997645645,
+        5349601803200756091,
+        9558966028724251709,
+        6406156604062845201,
+        12732357565261264088,
+        17954649943609431278,
+        6694581464776216052,
+        7791436629978326565,
+        14883898432402863447,
+        7543042822891183944,
+        14606908343267621581,
+        11576544555690501419,
+        11837385420362994271,
+        12217944974243838638,
+        16191972130749242258,
+        7709488969134417545,
+        515732279377569418,
+        3065485992046292142,
+        6373629446202308190,
+        16636018071532975055,
+        15887168010044636188,
+        3529427036566983790,
+        6855098123607658098,
+        14905090732646468677,
+        1919609699091410928,
+        5992086985876573309,
+        1533580019015733467,
+        15669634560881920038,
+        3204257019455270865,
+        10007553137092089490,
+        11987129559520918147,
+        12385336818670805799,
+        3129194112039990893,
+        6079461368284259076,
+        9384219852688634645,
+        17799336154972415997,
+        16581466655614329835,
+        18035267536267241744,
+        14744073395167855711,
+        3160894648239061822,
+        7835806608419848822,
+        9112769891086098173,
+        8800604425107364756,
+        401444746884041864,
+        15813001256631764485,
+        16059195074709819507,
+        16963588391001423572,
+        9465037721295875521,
+        170397525856385544,
+        619199101384475053,
+        5961532209465325308,
+        15513784074763925921,
+        9219675423093549976,
+        15769285950943149424,
+        15602843009431558621,
+        16828107434508340696,
+        14056496720287008537,
+        1039905245430020044,
+        3319546954757227726,
+        3902667346217173298,
+        528942793744677434,
+        9685302065378260108,
+        13936479226532455726,
+        9749148451992046519,
+        18138896383340832140,
+        558238302680389538,
+        8409006458500362243,
+        1832431451127276460,
+        4478081193513292592,
+        4985895619134242988,
+        11166684142970220176,
+        1495797752660124848,
+        7329065191459942690,
+        4265986771367658440,
+        6405893762015466843,
+        9563634024651815345,
+        1281854357657895910,
+        8749488712640923995,
+        5807422141889316006,
+        7948528212723433346,
+        5392136322068146809,
+        14196052027662286777,
+        5623087265432465601,
+        15771011435651538966,
+        3658881384645240631,
+        3340147589280374307,
+        5314844034566424882,
+        9455142595132250737,
+        6622794277060609551,
+        17434049590989106197,
+        5781454047449007372,
+        13360875504424011368,
+        17424017792813904891,
+        11255232373703096588,
+        2582651812821834089,
+        17590209793950155551,
+        5622335378075386148,
+        135268701648712046,
+        7223551086696095834,
+        2531454640458364986,
+        12720216896121094806,
+        13314731768290582063,
+        15577749423113479818,
+        17958395191241316646,
+        10634179924841141163,
+        5654948308253829967,
+        2495338384045809001,
+        197504627704033133,
+        6692901764684079300,
+        13672244357156447854,
+        1330938607317294414,
+        3122505056950589537,
+        11050010960522307509,
+        1194058781170054036,
+        5046602339943179833,
+        18339053239114188532,
+        9599194369465925877,
+        14617745471778533751,
+        10310029114253114717,
+        12440134442786086107,
+        16416195921564215581,
+        2341403831563848555,
+        15901588057446137379,
+        16095070525837798739,
+        12019386444420664356,
+        10441086847620249119,
+        1106473283289078676,
+        6630707167849012942,
+        14245279056891182936,
+        13371484953421038539,
+        13523361462079235572,
+        16946257658711826743,
+        11541160502692653372,
+        4652219070462354227,
+        9757593234348249942,
+        16586406174614503272,
+        15948213290492416796,
+        10938180182744879812,
+        9982181100295228949,
+        1924899605201714608,
+        8136189817555061931,
+        11128775337853750114,
+        3633766598429754858,
+        7045405179514584255,
+        3078572990080413635,
+        15909940138251690204,
+        7207771061417183442,
+        5332365801314874180,
+        3445720811374930247,
+        13592591176048830434,
+        14271461434433225847,
+        2624328500737412662,
+        16066180323977335505,
+        5807785386110391738,
+        3660230639694511465,
+        1577796827178129114,
+        10230176614586453844,
+        3025415385163326735,
+        7320169275506415524,
+        5984583064427976216,
+        12697401466283947670,
+        1882155037278256477,
+        10007308852338343947,
+        16055516926121089747,
+        2651789311221759177,
+        1962494691805283076,
+        13388593466558904143,
+        14199144412227923419,
+        22291984183358116,
+        13125017524684496960,
+        4873878920842596645,
+        12634607020890033080,
+        4710952943830623816,
+        10975301264985281155,
+        10907661337001206130,
+        2419251661177475166,
+        9621604209656053647,
+        5451276082678454453,
+        9576164086886672145,
+        15366515895726166774,
+        892209342326750343,
+        15104790573826750033,
+        3370494612962293598,
+        10399425983861006841,
+        13871125007008506505,
+        17928205228263477036,
+        4688872208981105848,
+        12972742755980248288,
+        11738338967849442938,
+        2090303666536235794,
+        17524209724652369638,
+        1250783542072982425,
+        461743943293097294,
+        6476678289533189032,
+        2735053526387312585,
+        12371120416192157289,
+        10729070977642448032,
+        7515663864609376021,
+        12952685125374488309,
+        17013879197266057814,
+        442502460792129877,
+        13497779211688998973,
+        14988146290492066095,
+        7117626060225536197,
+        4933422788427475714,
+        14255845880162122345,
+        1599259814079568390,
+        13750297469085237693,
+        14603960418945325925,
+        4184238945983244219,
+        3674137977970827988,
+        17619040462892979557,
+        6586889840178917235,
+        13636607501531733249,
+        14557904959083118323,
+        11300417212683220204,
+        5846630257477364214,
+        5502448626745345403,
+        9459581283726966857,
+        8401922964176469875,
+        9049304527021300233,
+        17584207693466784495,
+        3604817552143062935,
+        16429417592571884526,
+        1240144968218783747,
+        10291505574040606246,
+        10250816183140202429,
+        9374132584374052871,
+        5995688276537550277,
+        2972374867898335752,
+        17313588858661540456,
+        9653874664165580395,
+        13888396751212790310,
+        14242687382366327134,
+        8069538687150118417,
+        10546757104992429536,
+        17860745254984334000,
+        2345739913486959979,
+        13910684293178494770,
+        13361739757226883339,
+        16838386485587470081,
+        3745165859676988575,
+        14318480118315019200,
+        6443258881901889703,
+        4352266337542752724,
+        8000082182332930547,
+        9893642443055593546,
+        2748070261683176101,
+        6348238536840263209,
+        16476389870611929197,
+        12140099472136278453,
+        14827498857334000964,
+        13010083858380183373,
+        3472807149850835407,
+        1930290798209827448,
+        162662052977400374,
+        13530816183236122685,
+        6276884383503158496,
+        1774272417754206489,
+        6355101027923865986,
+        12211665841887299705,
+        6626169156867046662,
+        8468096137486421320,
+        11006316975089846845,
+        17458592217889369906,
+        3320950919753403682,
+        13651391857276485327,
+        1578770478621949101,
+        11120636549923735899,
+        2784241828162942072,
+        13467237790884517547,
+        11299515218328499210,
+        5442686005120328334,
+        12306298162265057016,
+        8899834585891013579,
+        11620906365401150188,
+        452747212329281934,
+        11043217006304563528,
+        10540352168224237652,
+        2936855872079639501,
+        12781408180004815027,
+        8182159359015375720,
+        129556637583735158,
+        6883949289611672418,
+        16527775363951882682,
+        17510001219039363862,
+        3755583379483978276,
+        332850665780564035,
+        4131640911871864892,
+        7749499741428262864,
+        16438667275824171721,
+        10939776102110428283,
+        11310831851960531133,
+        10320397960735251748,
+        14933333531896736041,
+        4026837967653843423,
+        6857246862386530523,
+        7008882691032179334,
+        7119894346386221168,
+        5135600319446857794,
+        11407934598314848905,
+        13965236646991474723,
+        18301448991161935050,
+        5087687539649622931,
+        6127418284666360290,
+        16606970087699692838,
+        1114536098930552212,
+        1744300905407662089,
+        9929876936309742703,
+        13763222844973739761,
+        10676158233756221253,
+        686442383969985266,
+        11727652667296634415,
+        3468956554337122837,
+        12944550159415125155,
+        6733846252912396357,
+        7906030989733453554,
+        3041831457948692587,
+        17625378746115192261,
+        4400082552543490687,
+        1496032429364024318,
+        2138193553395401733,
+        10794146155756180877,
+        10554724591755673784,
+        43324737977480530,
+        1653520224591472689,
+        6427227826603591360,
+        8752116891431384414,
+        729570202156110172,
+        7851760265965576922,
+        3224993274134957894,
+        13468423769630496199,
+        3684971421693272129,
+        7389386831668666644,
+        2016425828759236726,
+        13761738629234020059,
+        1510126944823824553,
+        3125837293096478473,
+        15367126861133822524,
+        1558736046838776635,
+        17274893544448700656,
+        4348856578571966145,
+        13790283271564008107,
+        4068074296795264498,
+        1231648256527189065,
+        11011253229152980670,
+        16010535728372217349,
+        14465697290958526253,
+        1425864583449627441,
+        17616210008351693053,
+        17115954972551650239,
+        15399711672027894419,
+        15580145063162001415,
+        546323890184883479,
+        1862405861719636217,
+        12008343323744607990,
+        62867836583025425,
+        11452634500915387178,
+        6403598699874462991,
+        11154549933368045219,
+        12169832552631986389,
+        789534961201266267,
+        11821141142926699487,
+        3548524349413759363,
+        10328654249620000613,
+        8995177938411215427,
+        16360384781088409646,
+        16293978650349278870,
+        7923103588034540462,
+        15900167537909268285,
+        11177308589898387017,
+        10465003596415605880,
+        3373794384689364088,
+        5444742856606934930,
+        2165448357631661079,
+        16891700105672072341,
+        2434573820934056465,
+        6873992852946887775,
+        3960322795707846506,
+        17407379751389224223,
+        8187606261357470566,
+        2819898493963175494,
+        7565327502757411523,
+        2794036656909992875,
+        14684062548527726636,
+        17205363376316278417,
+        12398830426315883749,
+        4359033322526913649,
+        9775648617426430948,
+        8333080776114079273,
+        8492504918903922528,
+        13811289892584018903,
+        1809530002210359082,
+        17384109217986037736,
+        8159824233075921064,
+        5749962048549672269,
+        14634778435110626959,
+        16295002255950496403,
+        5792602424843576353,
+        9057581168336205741,
+        4721554371169051569,
+        173868230129850314,
+        13699598577253795529,
+        13096499276676537452,
+        15606985540839524579,
+        369043885744932837,
+        12637320486969046196,
+        8933812704936531268,
+        12704991022739024197,
+        9324821520364162935,
+        5052078464018469586,
+        13256672454337640717,
+        1410682803705256132,
+        13756374224761636497,
+        1839780363861692636,
+        11767907457516715680,
+        3855098535444356492,
+        2784944947088715167,
+        12091976676581953470,
+        6104469187275281284,
+        2700738081179218413,
+        14805141041256141191,
+        14732667566015973355,
+        6347228144561101414,
+        12066060229101581233,
+        2297950107846957072,
+        3064404372696833148,
+        8243984411199018467,
+        3241779103490146360,
+        10414535130273880531,
+        12569173857198662575,
+        14597729977627550102,
+        1743019807951681623,
+        13040390798945802677,
+        948852481122112456,
+        16973376262093984306,
+        13494160970250329468,
+        5700500874784381274,
+        10201941796834956883,
+        12014935278684070094,
+        6997777428020620054,
+        9249351788990092531,
+        13089471968214329640,
+        522865904079041452,
+        3866829655464625467,
+        17656092769886069765,
+        13907389493656555667,
+        13212303827657585403,
+        750768674722046714,
+        9884938723203652896,
+        5179023029325510003,
+        4784570596234180081,
+        12095840571041592999,
+        6987379145260129477,
+        11871218031430938591,
+        3223299809745611383,
+        11437063573231666110,
+        3907979902925208829,
+        4228652841031597073,
+        3126649575474214596,
+        11345117514278248669,
+        7335168985792001372,
+        8732215480987267963,
+        11117743527238464346,
+        15761159886280406417,
+        7512636897254266531,
+        12811893713958936527,
+        214619571381943507,
+        12406333633617114583,
+        4837565366905912103,
+        12125984712757547504,
+        4378622673616853719,
+        8188667292501476750,
+        7225652235958710622,
+        3168749305579236276,
+        18014216911297678365,
+        13829783526302527384,
+        13356845670557717154,
+        7561106668760875415,
+        218707254986743323,
+        7661805243325744796,
+        3618321235037099829,
+        8685277326738745557,
+        15861082784657491872,
+        6194148868969097424,
+        4091072560284783159,
+        4480919832350797703,
+        1258173926347473347,
+        2666135927025525675,
+        5489914716453594773,
+        16604315571172261470,
+        13143214825265162124,
+        16094899235899259240,
+        10169089603705660064,
+        14010213833066766154,
+        17861472591889341226,
+        8062994520069169587,
+        7762765172298994982,
+        6412186984514751975,
+        11271483006186862881,
+        14761507289065343003,
+        135340079844197994,
+        7886995946621627364,
+        13334500411843945917,
+        5429615866626605086,
+        15981461277599669798,
+        96089425536665493,
+        159717658442789195,
+        17370615105772309493,
+        2329195512935113788,
+        14041943246519071182,
+        11838783743105347974,
+        8271104454146332119,
+        1758924617673876566,
+        10610776831066477444,
+        17215898089240339093,
+        12696129738219277733,
+        12366034919740095477,
+        11913001436671908366,
+        4340532662294605191,
+        8874510730733156845,
+        1542128979709622639,
+        245891980879954804,
+        5785786342112047509,
+        16735797027181608574,
+        16519575340465746469,
+        15922758586578722133,
+        12955483134083385738,
+        1491735179994290873,
+        3337798942511716901,
+        7862312845457331634,
+        2737833663889116696,
+        18251284782401209414,
+        13910990017229873899,
+        3928181498375039515,
+        2748189223161610424,
+        5920246130981481194,
+        6069058066191398928,
+        11768626938041676371,
+        3609782592165737265,
+        8854509785546608507,
+        1233241884928055040,
+        1616873806920645038,
+        9994549741679218413,
+        416104190951507283,
+        1190182517733589491,
+        5855200841826490741,
+        3655224408711369934,
+        5813096585022080936,
+        18118987561001148526,
+        10036806275560662813,
+        17999518370129983134,
+        14856552824707202681,
+        7313695316241625757,
+        8834975170318422727,
+        16163268925449467807,
+        6457611147581109802,
+        16518370340706261585,
+        8070450463206252413,
+        285115064668427316,
+        8067686613897461014,
+        11170509917791889560,
+        8145953491163911409,
+        14450508629365528773,
+        3946805336949707071,
+        18184203736084911219,
+        8648013743974703361,
+        480833470280868083,
+        16115517964524030719,
+        14400685152126288757,
+        16432736852569163833,
+        8056231170081378457,
+        5708434426297764392,
+        5201745236932311162,
+        2770368413562589703,
+        18100236493211875351,
+        1229667787893216980,
+        16460303063872498489,
+        7914444695325205757,
+        13745190001992603527,
+        13192576782480762209,
+        3126492862084174517,
+        7880483578335930596,
+        4034516991815355131,
+        10042514935199682154,
+        2934622893513914234,
+        3011814616269110459,
+        9663312907529640906,
+        6108783577371251695,
+        11815542462514435419,
+        15541383106991724540,
+        983567270713523332,
+        1390001824319190864,
+        6203491807244633213,
+        6014644706908998065,
+        13718899597797913561,
+        17630340489626718289,
+        17729380624011243024,
+        4437285774349075946,
+        17889470333496953741,
+        18170334146301722393,
+        17279029940714174502,
+        18410434916391911736,
+        5037474636814072008,
+        2479577145166496180,
+        4958010532144498602,
+        794131448182635340,
+        6446089839626917281,
+        10797299840035793694,
+        8571313548015227391,
+        16761898158174484785,
+        1063179921187403377,
+        8579016813965651600,
+        9576398471586309586,
+        14356705755793673179,
+        14592503164707067110,
+        465645377046203676,
+        4222595864112171096,
+        17749168803096085826,
+        2976691166757823846,
+        11683756692737684405,
+        2115411051864096604,
+        9481251268269422335,
+        8523915888983769339,
+        18040546673513557627,
+        6536122854762008842,
+        9590640015357229768,
+        5979731840848244412,
+        14881781077168560079,
+        2203062609646805486,
+        9057288561287009305,
+        5857325382809370992,
+        16901577028091884901,
+        3308765373607599428,
+        13985987405427028345,
+        8392110233264046222,
+        17595570408160960765,
+        4235577600792565579,
+        2537638373183437380,
+        8877489628524061859,
+        3949012089524230671,
+        9760686294522674491,
+        15505808153567475649,
+        1399903836148760370,
+        11751534698692072337,
+        10501610468467096339,
+        10886025447765203725,
+        15284682113557264387,
+        2550570354697920785,
+        14486270446211627562,
+        3429825449959191335,
         16116665423363418133,
+        15000800191775318906,
+        7797095026839914194,
+        2833444246981881413,
+        5219585375506591981,
+        11363056899392898913,
+        11669187924478830896,
+        15444554242061847551,
+        9609752953000569450,
+        2747165531337600415,
+        13533016152419120416,
         6073582306420722030,
-        5974803330791567890
+        7935178199579472104,
+        4965500977607099670,
+        6485111552992099057,
+        16966471088321099413,
+        9399898251321107729,
+        8435854616487036163,
+        1310782386182583601,
+        4880516161450277196,
+        9568213487745640448,
+        9465243922298058989,
+        64307667175154639,
+        13021118567655484795,
+        3758249866726650848,
+        545465983420299626,
+        4703117261241502325,
+        5379193707219766401,
+        14388364025432634072,
+        1807761036164863469,
+        12349537946825560199,
+        5589400317235799928,
+        17290882078943493939,
+        17726077046903586848,
+        4540521355748027185,
+        16848290427524907741,
+        5232495084894211023,
+        9285429733626865294,
+        6287015982096699182,
+        18246767039837656204,
+        16428145466340447449,
+        11379864392334700142,
+        14663599869441240849,
+        3241699742223911489,
+        1339943142046504121,
+        8230129324524724827,
+        11676548934964466140,
+        573012165799045663,
+        17658766452896138216,
+        3670368550605391623,
+        10189978098763528021,
+        7743359517947286591,
+        15687077156723646214,
+        2953666719535268173,
+        2039619441941585629,
+        13205453905880197119,
+        3885259674867788926,
+        2768730174887810489,
+        14401891673730112948,
+        6872179596177459988,
+        16922880609290148848,
+        11625089854776138994,
+        1871410127584051052,
+        8551408798802325501,
+        18326711829909351453,
+        5128242242132676887,
+        1357496610815194980,
+        14736606669710509804,
+        5691590152344760079,
+        16453384096475951872,
+        5308127905807428992,
+        2100397465346265304,
+        6359422380991655216,
+        10789961942462250773,
+        6715355103234589969,
+        409370677404041980,
+        6904859232810484341,
+        9558362752910685152,
+        9000922626809347621,
+        8963928980871586390,
+        15249417725619730287,
+        15182047344395978456,
+        4079091076373548621,
+        12187332037007839788,
+        7004790986824041296,
+        11206559750139184896,
+        3462251405609226053,
+        4862247366192088164,
+        5531006678378052816,
+        5344492576498233917,
+        10266460117447079896,
+        8270121301130462391,
+        12973268851752502600,
+        443509232918837863,
+        4619314360393972411,
+        8022636927129351144,
+        13441224361350047109,
+        9174077271882772189,
+        9358901088271678595,
+        5292887278421991866,
+        4458921372181230910,
+        4218948907894899262,
+        9014865552118534045,
+        8855179303990716561,
+        15265925871856129877,
+        4964803179725041594,
+        2366955339227457325,
+        4392812851524295973,
+        9230855043233541825,
+        1549802253245785778,
+        9121773632892591939,
+        17556427905242296936,
+        13268471005733118639,
+        16360994223860740804,
+        1785383224853179146,
+        3663410936986365309,
+        11726731754757498887,
+        18298549126820396851,
+        3855936934992840412,
+        4840525529900489754,
+        11036558336360142467,
+        11596974136280505293,
+        1352078619489902970,
+        10991047735543735932,
+        5929051940805722354,
+        14515514101147942941,
+        17883565739853499586,
+        12602564121244915917,
+        6321931321825392107,
+        17614351324269444964,
+        16227165668486993439,
+        2517939886534474198,
+        13473890721869483341,
+        1849435568600956931,
+        6844868938477393562,
+        10834948612686284966,
+        9959361538377683554,
+        4374852859461545207,
+        16611374569525985801,
+        7343075323592889119,
+        9726982830913089269,
+        18373970911347911339,
+        3019983686156175904,
+        13574505794526881177,
+        3504667399185086078,
+        4410248999594571785,
+        16652744647288383305,
+        15539311282075515835,
+        8293670858879273977,
+        3384221434620531128,
+        12165654545160582007,
+        6512268413007360431,
+        4028089961479951298,
+        14765261425617536265,
+        4721364071567063077,
+        17926227448078733485,
+        9793872693159447274,
+        4419621578516702807,
+        15215077255911160619,
+        2648555183552992554,
+        17836947755422140568,
+        9506481074721380509,
+        6561459129487694074,
+        15580703929816946564,
+        14892960314220890081,
+        17705801978419144289,
+        2191295524160886937,
+        11791789570511898663,
+        1830590451662999648,
+        4991404070162812663,
+        14227267052288187343,
+        11420061605596675673,
+        6899480542094586633,
+        16312887671528273006,
+        3445007112897725894,
+        4858344383205730985,
+        3800985320401716155,
+        7124277929768775349,
+        7784397396862342548,
+        5974803330791567890,
+        15818853944857432878,
+        3402225871603751927,
+        10966996359153125234,
+        2655698348841676660,
+        11406250523406684802,
+        17725110223127248190,
+        4419235348224672819,
+        14985985496514859405,
+        10265864355964225498,
+        15589452469092125720,
+        17723882526464539330,
+        7128317065995839977,
+        9696587163002070492,
+        17539301525438266068,
+        7788123008193552999,
+        17146072417883703799,
+        17363031393440686081,
+        11001675556398245593,
+        1400127910866556994,
+        13846782692998628366,
+        3971486954162015185,
+        11736879676773818553,
+        4552502072549560748,
+        6254301974619145235,
+        3355904684461481904,
+        9524104766492635168,
+        4652522040223093319,
+        6302773006030758980,
+        6876301026355304877,
+        14167450555081523966,
+        17059968181196301636,
+        12392683155504493744,
+        9438081294997634062,
+        9023307361338606297,
+        10270617448173772760,
+        10624378288210809264,
+        10986307960078706018,
+        4024574990007805519,
+        9652182103733723774,
+        7033732909943162291,
+        10815366638896533618,
+        16968413767202920253,
+        16058561070556879329,
+        14417897642150835373,
+        14637732331107308363,
+        4886154665798720174,
+        15767450350746700069,
+        5824579351999180403,
+        4107251889790211353,
+        8780686200550532078,
+        18170878229100682585,
+        5874227248925327019,
+        8546528924318236593,
+        4177248213764579778,
+        6202963338883049430,
+        16079172058901011317,
+        11871285041729374837,
+        3120927645525398895,
+        17163446286725029386,
+        1263730410908549025,
+        9046257624698527021,
+        2669602557492351115,
+        8037571895649344441,
+        7079812826997779099,
+        2715156298594834276,
+        13134251095473704472,
+        17622444999925197441,
+        14572169686311336042,
+        8857965330781609126,
+        12299378885658722063,
+        17907054413610807246,
+        17662803733891336514,
+        14740075899644065644,
+        10913473255402591453,
+        5687686781395948889,
+        5266319176892522904,
+        11648331839499604582,
+        9635590327480640061,
+        12473166530545311501,
+        8538492542010403204,
+        13213972728877751722,
+        13891970038015180330,
+        5629419941317370170,
+        15223019690064870413,
+        18253811145960249339,
+        7741862859168879409,
+        16758746535188348033,
+        17147366222770779611,
+        8218233029171044300,
+        18228684392515036622,
+        11567020006884879486,
+        13786520491419131136,
+        4102427608299909592,
+        6720879670490812184,
+        14887893014955519541,
+        3472716316929654876,
+        6244828314230524180,
+        9554387150792537028,
+        10093028665722902850,
+        8224461395154652794,
+        17712664265219041581,
+        7418406078623830552,
+        17892932545793071394,
+        3074562739020124404,
+        13618786417464285005,
+        3219909298297634585,
+        14804690377244142769,
+        1461028314195735153,
+        12470008462065725262,
+        4662393990347759383,
+        8384074024782811905,
+        7837492539393293499,
+        10919497449073113230,
+        3667462577369843864,
+        10037155689044687650,
+        3517131397422316159,
+        564172405334800141,
+        16096922591397428755,
+        11943150794956510343,
+        8780763920275137585,
+        1814585870070464767,
+        2019107017391584995,
+        13061020649939894604,
+        17367530251790857033,
+        17811791428738127828,
+        10206372956067558230,
+        1497952954628858756,
+        10268106347096738106,
+        14673236999733211478,
+        5669958915291067916,
+        14106980780130511799,
+        1450131375984991307,
+        15058189453693770382,
+        11308349829460012663,
+        85668312674182920,
+        7415851652730492363,
+        15765829152841976935,
+        15036900498536748852,
+        13512717575841292772,
+        14558068926255627228,
+        8948857964385450072,
+        12973097717839322978,
+        3256826819828766467,
+        8422115977656622849,
+        18369593869700754512,
+        3482183788787526960,
+        8545387901270290316,
+        17101881554838765914,
+        2127568012151256801,
+        8319706944020489019,
+        3449016538356028867,
+        11226661560416747645,
+        12429941281079636145,
+        2088461057782417276,
+        8777718026331448284,
+        14605612044818654840,
+        8291097773947092558,
+        17585061773822532755,
+        7206231267660485762,
+        487621655250966287,
+        3261297416557740734,
+        13512186278940132682,
+        9188387186812889948,
+        11673590804747123306,
+        8294105376399273460,
+        2475778781909551357,
+        11187620487377663641,
+        14410100554914644240,
+        13917706686558384087,
+        17806684564796590728,
+        18140633128363340748,
+        15863924540065760112,
+        17559628417844251968,
+        17847802684777962802,
+        6135418688516564932,
+        3595411481941253402,
+        8669337181230119645,
+        5562003318891155658,
+        15548512997184974859
       ],
       "match_rules": [
         {
           "transaction_key": [
-            "kronans",
-            "apotek",
-            "ab,",
-            "örebro"
-          ],
-          "item_key": [
-            "vård"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "lön"
-          ],
-          "item_key": [
-            "lön"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "xl-bygg",
-            "kopparb,",
-            "kopparberg"
-          ],
-          "item_key": [
-            "huset"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "apotek",
-            "hjartat",
-            "ica",
-            "maxi",
-            "o,"
-          ],
-          "item_key": [
-            "vård"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "hausmann's",
-            "flughafen,",
-            "frankfurt"
+            "mcdenkoping,",
+            "enkoping"
           ],
           "item_key": [
             "äta",
@@ -76248,50 +77360,57 @@
         },
         {
           "transaction_key": [
-            "månadsavgift",
-            "bankkortextra"
+            "ellevio",
+            "(publ)",
+            "ab"
           ],
           "item_key": [
-            "bankavgifter"
+            "bil"
           ],
           "always_apply": true
         },
         {
           "transaction_key": [
-            "hallon,",
-            "stockholm",
-            "-",
-            "g"
+            "circle",
+            "k",
+            "enkoping",
+            "salatul,",
+            "enkoping"
           ],
           "item_key": [
-            "telefoni"
+            "bil"
           ],
           "always_apply": true
         },
         {
           "transaction_key": [
-            "k*",
-            "klarna"
+            "john",
+            "scotts",
+            "pub,",
+            "kopparberg"
           ],
           "item_key": [
-            "media"
+            "äta",
+            "ute"
           ],
           "always_apply": true
         },
         {
           "transaction_key": [
-            "lanstrafiken",
-            "se,"
+            "willys",
+            "baronb,"
           ],
           "item_key": [
-            "transport"
+            "livsmedel"
           ],
           "always_apply": true
         },
         {
           "transaction_key": [
-            "zettle_*wesomnia,",
-            "saltsjobaden"
+            "kjell",
+            "&",
+            "co",
+            "39,"
           ],
           "item_key": [
             "shopping"
@@ -76311,224 +77430,6 @@
         },
         {
           "transaction_key": [
-            "laxbrogym",
-            "ab,",
-            "kopparberg"
-          ],
-          "item_key": [
-            "träning"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "hoyoverse,",
-            "singapore"
-          ],
-          "item_key": [
-            "media"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "mcdkarlskoga,",
-            "karlskoga"
-          ],
-          "item_key": [
-            "äta",
-            "ute"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "digital",
-            "charging",
-            "solution,",
-            "berlin"
-          ],
-          "item_key": [
-            "bil"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "sostrene",
-            "grene",
-            "drottningg,",
-            "örebro"
-          ],
-          "item_key": [
-            "shopping"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "perssons",
-            "magasin,",
-            "kopparberg"
-          ],
-          "item_key": [
-            "shopping"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "loomisp*kopparbergsmac,",
-            "kopparberg"
-          ],
-          "item_key": [
-            "bil"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "google",
-            "*google",
-            "one,",
-            "g.co/helppayæ"
-          ],
-          "item_key": [
-            "tjänster"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "söderbärke",
-            "pizzeria",
-            "ab,",
-            "söderbärke"
-          ],
-          "item_key": [
-            "äta",
-            "ute"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "aso",
-            "konditori",
-            "ab,",
-            "stockholm"
-          ],
-          "item_key": [
-            "äta",
-            "ute"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "vitasunn",
-            "ltd,",
-            "newry"
-          ],
-          "item_key": [
-            "vård"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "sp",
-            "vaistoa.com,",
-            "vesilahti"
-          ],
-          "item_key": [
-            "kläder"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "ellos",
-            "ab,",
-            "boras"
-          ],
-          "item_key": [
-            "kläder"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "dozapotek245,",
-            "malmö"
-          ],
-          "item_key": [
-            "vård"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "pg",
-            "region",
-            "örebro",
-            "län"
-          ],
-          "item_key": [
-            "vård"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "casualfood,",
-            "frankfurt",
-            "am"
-          ],
-          "item_key": [
-            "äta",
-            "ute"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "innside",
-            "palma",
-            "center,",
-            "palma",
-            "mallorc"
-          ],
-          "item_key": [
-            "shopping"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "dressmann",
-            "marieberg",
-            "c,",
-            "örebro"
-          ],
-          "item_key": [
-            "kläder"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "granit",
-            "40435,",
-            "drottninggata"
-          ],
-          "item_key": [
-            "shopping"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
             "bg",
             "489-6338",
             "ludvikasotarn",
@@ -76536,30 +77437,6 @@
           ],
           "item_key": [
             "huset"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "apotek",
-            "hjartat",
-            "jarntorget,"
-          ],
-          "item_key": [
-            "vård"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "ikea",
-            "barkarby",
-            "hfb",
-            "main,",
-            "barkarby"
-          ],
-          "item_key": [
-            "shopping"
           ],
           "always_apply": true
         },
@@ -76578,8 +77455,31 @@
         },
         {
           "transaction_key": [
-            "mcdenkoping,",
-            "enkoping"
+            "kronans",
+            "apotek",
+            "ab,",
+            "örebro"
+          ],
+          "item_key": [
+            "vård"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "perssons",
+            "magasin,",
+            "kopparberg"
+          ],
+          "item_key": [
+            "shopping"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "mcdsthlmarlandaskycity,",
+            "stockholm"
           ],
           "item_key": [
             "äta",
@@ -76589,15 +77489,314 @@
         },
         {
           "transaction_key": [
-            "sko",
-            "dig",
-            "i",
-            "örebro",
+            "ellos",
             "ab,",
+            "boras"
+          ],
+          "item_key": [
+            "kläder"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "forex",
+            "sky",
+            "city,",
+            "arlanda"
+          ],
+          "item_key": [
+            "shopping"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "månadsavgift",
+            "bankkort"
+          ],
+          "item_key": [
+            "bankavgifter"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "apcoa",
+            "flow",
+            "se,",
+            "stockholm"
+          ],
+          "item_key": [
+            "bil"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "bg",
+            "5925-2619",
+            "ljusnarsberg",
+            "vr"
+          ],
+          "item_key": [
+            "huset"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "bilavsättning"
+          ],
+          "item_key": [
+            "bilavsättning"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "cecosa",
+            "supermercados",
+            "s.l.,",
+            "palma"
+          ],
+          "item_key": [
+            "livsmedel"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "ikea",
+            "if",
+            "customer",
+            "r,"
+          ],
+          "item_key": [
+            "äta",
+            "ute"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "pen",
+            "store,",
+            "stockholm"
+          ],
+          "item_key": [
+            "shopping"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "ellevio",
+            "(publ)",
+            "ab"
+          ],
+          "item_key": [
+            "el"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "mcdkarlskoga,",
+            "karlskoga"
+          ],
+          "item_key": [
+            "äta",
+            "ute"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "hoyoverse,",
+            "singapore"
+          ],
+          "item_key": [
+            "media"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "google",
+            "*google",
+            "play",
+            "ap,",
+            "g.co/helppayæ"
+          ],
+          "item_key": [
+            "tjänster"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "mcdorebrovasthaga,"
+          ],
+          "item_key": [
+            "äta",
+            "ute"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "kopparberg",
+            "konditori,",
+            "kopparberg"
+          ],
+          "item_key": [
+            "äta",
+            "ute"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "månadsavgift",
+            "bankkortextra"
+          ],
+          "item_key": [
+            "bankavgifter"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "mcdorebromarieberg,"
+          ],
+          "item_key": [
+            "äta",
+            "ute"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [],
+          "item_key": [
+            "årlig",
+            "buffert"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "bredband2"
+          ],
+          "item_key": [
+            "internet"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "maxi",
+            "ica",
+            "stormarknad",
+            "univ,"
+          ],
+          "item_key": [
+            "livsmedel"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "sp",
+            "vaistoa.com,",
+            "vesilahti"
+          ],
+          "item_key": [
+            "kläder"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "ikea",
+            "barkarby",
+            "hfb",
+            "main,",
+            "barkarby"
+          ],
+          "item_key": [
+            "shopping"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "hallon,",
+            "stockholm",
+            "-",
+            "g"
+          ],
+          "item_key": [
+            "telefoni"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "dressmann",
+            "marieberg",
+            "c,",
             "örebro"
           ],
           "item_key": [
             "kläder"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "innside",
+            "palma",
+            "center,",
+            "palma",
+            "mallorc"
+          ],
+          "item_key": [
+            "shopping"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "lanstrafiken",
+            "se,"
+          ],
+          "item_key": [
+            "transport"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "systembolaget,",
+            "kopparberg"
+          ],
+          "item_key": [
+            "alkohol"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "nabu",
+            "casa",
+            "-",
+            "ha",
+            "cloud,",
+            "nabucasa.com"
+          ],
+          "item_key": [
+            "tjänster"
           ],
           "always_apply": true
         },
@@ -76615,19 +77814,18 @@
         },
         {
           "transaction_key": [
-            "ica",
-            "supermarket",
-            "trivselko,",
-            "guldsmedshytt"
+            "$hléns",
+            "örebro,",
+            "örebro"
           ],
           "item_key": [
-            "livsmedel"
+            "shopping"
           ],
           "always_apply": true
         },
         {
           "transaction_key": [
-            "bredband2"
+            "bahnhof"
           ],
           "item_key": [
             "internet"
@@ -76636,56 +77834,34 @@
         },
         {
           "transaction_key": [
-            "mcdorebrovasthaga,"
+            "easypark",
+            "ab,",
+            "stockholm"
           ],
           "item_key": [
-            "äta",
-            "ute"
+            "bil"
           ],
           "always_apply": true
         },
         {
           "transaction_key": [
-            "aws",
-            "emea,",
-            "aws.amazon.co"
+            "kappahl",
+            "örebro",
+            "city,",
+            "örebro"
           ],
           "item_key": [
-            "tjänster"
+            "shopping"
           ],
           "always_apply": true
         },
         {
           "transaction_key": [
-            "lådan,",
-            "kopparberg"
+            "zettle_*wesomnia,",
+            "saltsjobaden"
           ],
           "item_key": [
-            "livsmedel"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "systembolaget,",
-            "kopparberg"
-          ],
-          "item_key": [
-            "alkohol"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "apotek",
-            "hjartat",
-            "ica",
-            "maxi",
-            "e,",
-            "eskilstuna"
-          ],
-          "item_key": [
-            "vård"
+            "shopping"
           ],
           "always_apply": true
         },
@@ -76700,8 +77876,34 @@
         },
         {
           "transaction_key": [
-            "mcdsthlmarlandaskycity,",
+            "normal",
+            "stockholm",
+            "centrals,",
             "stockholm"
+          ],
+          "item_key": [
+            "shopping"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "hausmann's",
+            "flughafen,",
+            "frankfurt"
+          ],
+          "item_key": [
+            "äta",
+            "ute"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "söderbärke",
+            "pizzeria",
+            "ab,",
+            "söderbärke"
           ],
           "item_key": [
             "äta",
@@ -76722,31 +77924,24 @@
         },
         {
           "transaction_key": [
-            "willys",
-            "vastha,"
-          ],
-          "item_key": [
-            "livsmedel"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "värdshuset",
-            "älgen,",
-            "kopparberg"
-          ],
-          "item_key": [
-            "äta",
-            "ute"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "easypark",
+            "sko",
+            "dig",
+            "i",
+            "örebro",
             "ab,",
-            "stockholm"
+            "örebro"
+          ],
+          "item_key": [
+            "kläder"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "digital",
+            "charging",
+            "solution,",
+            "berlin"
           ],
           "item_key": [
             "bil"
@@ -76755,129 +77950,40 @@
         },
         {
           "transaction_key": [
-            "spotify,",
-            "stockholm"
-          ],
-          "item_key": [
-            "media"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "vasttrafikblipp,",
-            "skovde"
-          ],
-          "item_key": [
-            "transport"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "jysk",
-            "ludvika",
-            "s639,",
-            "ludvika"
-          ],
-          "item_key": [
-            "shopping"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "telia",
-            "sverige",
-            "ab"
-          ],
-          "item_key": [
-            "telefoni"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "rice",
-            "and",
-            "noodles",
-            "vasthaga,"
-          ],
-          "item_key": [
-            "äta",
-            "ute"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "nabu",
-            "casa",
-            "-",
-            "ha",
-            "cloud,",
-            "nabucasa.com"
-          ],
-          "item_key": [
-            "tjänster"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "pen",
-            "store,",
-            "stockholm"
-          ],
-          "item_key": [
-            "shopping"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "månadsavgift",
-            "bankkort"
-          ],
-          "item_key": [
-            "bankavgifter"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "normal",
-            "stockholm",
-            "centrals,",
-            "stockholm"
-          ],
-          "item_key": [
-            "shopping"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "normal",
-            "marieberg",
-            "galleria,",
+            "gsp",
+            "restaurang",
+            "ab,",
             "örebro"
           ],
           "item_key": [
-            "shopping"
+            "äta",
+            "ute"
           ],
           "always_apply": true
         },
         {
           "transaction_key": [
-            "john",
-            "scotts",
-            "pub,",
-            "kopparberg"
+            "casualfood,",
+            "frankfurt",
+            "am"
           ],
           "item_key": [
             "äta",
             "ute"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "apotek",
+            "hjartat",
+            "ica",
+            "maxi",
+            "e,",
+            "eskilstuna"
+          ],
+          "item_key": [
+            "vård"
           ],
           "always_apply": true
         },
@@ -76894,83 +78000,23 @@
         },
         {
           "transaction_key": [
-            "bg",
-            "5925-2619",
-            "ljusnarsberg",
-            "vr"
+            "pg",
+            "region",
+            "örebro",
+            "län"
           ],
           "item_key": [
-            "huset"
+            "vård"
           ],
           "always_apply": true
         },
         {
           "transaction_key": [
-            "uhbilservice,",
-            "lindesberg"
+            "spotify,",
+            "stockholm"
           ],
           "item_key": [
-            "bil"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "kjell",
-            "&",
-            "co",
-            "39,"
-          ],
-          "item_key": [
-            "shopping"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "kopparberg",
-            "konditori,",
-            "kopparberg"
-          ],
-          "item_key": [
-            "äta",
-            "ute"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "ica",
-            "supermarket",
-            "kopparhal,",
-            "kopparberg"
-          ],
-          "item_key": [
-            "livsmedel"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "coop",
-            "forum",
-            "marieberg,"
-          ],
-          "item_key": [
-            "livsmedel"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "circle",
-            "k",
-            "enkoping",
-            "salatul,",
-            "enkoping"
-          ],
-          "item_key": [
-            "bil"
+            "media"
           ],
           "always_apply": true
         },
@@ -76979,150 +78025,6 @@
             "buffert",
             "årliga"
           ],
-          "item_key": [
-            "årlig",
-            "buffert"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "cecosa",
-            "supermercados",
-            "s.l.,",
-            "palma"
-          ],
-          "item_key": [
-            "livsmedel"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "bahnhof"
-          ],
-          "item_key": [
-            "internet"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "avibetalning",
-            "9152-2305078"
-          ],
-          "item_key": [
-            "bostadslån"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "yazen,",
-            "lund"
-          ],
-          "item_key": [
-            "vård"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "apcoa",
-            "flow",
-            "se,",
-            "stockholm"
-          ],
-          "item_key": [
-            "bil"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "kronans",
-            "apotek",
-            "ab,",
-            "kopparberg"
-          ],
-          "item_key": [
-            "vård"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "maxi",
-            "ica",
-            "stormarknad",
-            "eski,",
-            "eskilstuna"
-          ],
-          "item_key": [
-            "livsmedel"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "ellevio",
-            "(publ)",
-            "ab"
-          ],
-          "item_key": [
-            "el"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "$hléns",
-            "örebro,",
-            "örebro"
-          ],
-          "item_key": [
-            "shopping"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "ikea",
-            "hfb",
-            "eco,"
-          ],
-          "item_key": [
-            "shopping"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "ikea",
-            "if",
-            "customer",
-            "r,"
-          ],
-          "item_key": [
-            "äta",
-            "ute"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "butiken",
-            "i",
-            "rondellen,",
-            "eskilstuna"
-          ],
-          "item_key": [
-            "shopping"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [],
           "item_key": [
             "årlig",
             "buffert"
@@ -77143,11 +78045,32 @@
         },
         {
           "transaction_key": [
-            "google",
-            "*google",
-            "play",
-            "ap,",
-            "g.co/helppayæ"
+            "överf.",
+            "l.",
+            "leffler",
+            "peura"
+          ],
+          "item_key": [
+            "lön"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "laxbrogym",
+            "ab,",
+            "kopparberg"
+          ],
+          "item_key": [
+            "träning"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "aws",
+            "emea,",
+            "aws.amazon.co"
           ],
           "item_key": [
             "tjänster"
@@ -77156,10 +78079,405 @@
         },
         {
           "transaction_key": [
-            "kappahl",
-            "örebro",
-            "city,",
+            "ica",
+            "supermarket",
+            "trivselko,",
+            "guldsmedshytt"
+          ],
+          "item_key": [
+            "livsmedel"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "uhbilservice,",
+            "lindesberg"
+          ],
+          "item_key": [
+            "bil"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "willys",
+            "vastha,"
+          ],
+          "item_key": [
+            "livsmedel"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "kronans",
+            "apotek",
+            "ab,",
+            "kopparberg"
+          ],
+          "item_key": [
+            "vård"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "zettle_*jennys",
+            "bageri,",
+            "nora"
+          ],
+          "item_key": [
+            "äta",
+            "ute"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "värdshuset",
+            "älgen,",
+            "kopparberg"
+          ],
+          "item_key": [
+            "äta",
+            "ute"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "apotek",
+            "hjartat",
+            "ica",
+            "maxi",
+            "o,"
+          ],
+          "item_key": [
+            "vård"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "avibetalning",
+            "9152-2305078"
+          ],
+          "item_key": [
+            "bostadslån"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "butiken",
+            "i",
+            "rondellen,",
+            "eskilstuna"
+          ],
+          "item_key": [
+            "shopping"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "vitasunn",
+            "ltd,",
+            "newry"
+          ],
+          "item_key": [
+            "vård"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "rusta",
+            "ludvika,",
+            "ludvika"
+          ],
+          "item_key": [
+            "shopping"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "granit",
+            "40435,",
+            "drottninggata"
+          ],
+          "item_key": [
+            "shopping"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "loomisp*kopparbergsmac,",
+            "kopparberg"
+          ],
+          "item_key": [
+            "bil"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "kanans",
+            "blomsterhandel,",
+            "nora"
+          ],
+          "item_key": [
+            "shopping"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "ica",
+            "supermarket",
+            "kopparhal,",
+            "kopparberg"
+          ],
+          "item_key": [
+            "livsmedel"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "akavia"
+          ],
+          "item_key": [
+            "fackförbudn"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "k*",
+            "klarna"
+          ],
+          "item_key": [
+            "media"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "yazen,",
+            "lund"
+          ],
+          "item_key": [
+            "vård"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "wh",
+            "nora",
+            "prastgatan,",
+            "nora"
+          ],
+          "item_key": [
+            "shopping"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "sostrene",
+            "grene",
+            "drottningg,",
             "örebro"
+          ],
+          "item_key": [
+            "shopping"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "lådan,",
+            "kopparberg"
+          ],
+          "item_key": [
+            "livsmedel"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "jysk",
+            "ludvika",
+            "s639,",
+            "ludvika"
+          ],
+          "item_key": [
+            "shopping"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "vasttrafikblipp,",
+            "skovde"
+          ],
+          "item_key": [
+            "transport"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [],
+          "item_key": [
+            "lån",
+            "elisabeth"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "lön"
+          ],
+          "item_key": [
+            "lön"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "rice",
+            "and",
+            "noodles",
+            "vasthaga,"
+          ],
+          "item_key": [
+            "äta",
+            "ute"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "xl-bygg",
+            "kopparb,",
+            "kopparberg"
+          ],
+          "item_key": [
+            "huset"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "gjensidige"
+          ],
+          "item_key": [
+            "livförsäkring"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "aso",
+            "konditori",
+            "ab,",
+            "stockholm"
+          ],
+          "item_key": [
+            "äta",
+            "ute"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "telia",
+            "sverige",
+            "ab"
+          ],
+          "item_key": [
+            "telefoni"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "dozapotek245,",
+            "malmö"
+          ],
+          "item_key": [
+            "vård"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "coop",
+            "forum",
+            "marieberg,"
+          ],
+          "item_key": [
+            "livsmedel"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "normal",
+            "marieberg",
+            "galleria,",
+            "örebro"
+          ],
+          "item_key": [
+            "shopping"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "maxi",
+            "ica",
+            "stormarknad",
+            "eski,",
+            "eskilstuna"
+          ],
+          "item_key": [
+            "livsmedel"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "ica",
+            "supermarket",
+            "ekershall,"
+          ],
+          "item_key": [
+            "livsmedel"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "sp",
+            "fantagraphics,",
+            "fantagraphics"
+          ],
+          "item_key": [
+            "presenter"
+          ],
+          "always_apply": true
+        },
+        {
+          "transaction_key": [
+            "ikea",
+            "hfb",
+            "eco,"
           ],
           "item_key": [
             "shopping"
@@ -77178,150 +78496,33 @@
         },
         {
           "transaction_key": [
-            "rusta",
-            "ludvika,",
-            "ludvika"
+            "apotek",
+            "hjartat",
+            "jarntorget,"
           ],
           "item_key": [
-            "shopping"
+            "vård"
           ],
           "always_apply": true
         },
         {
           "transaction_key": [
-            "maxi",
-            "ica",
-            "stormarknad",
-            "univ,"
+            "google",
+            "*google",
+            "one,",
+            "g.co/helppayæ"
           ],
           "item_key": [
-            "livsmedel"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "överf.",
-            "l.",
-            "leffler",
-            "peura"
-          ],
-          "item_key": [
-            "lön"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "mcdorebromarieberg,"
-          ],
-          "item_key": [
-            "äta",
-            "ute"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "ellevio",
-            "(publ)",
-            "ab"
-          ],
-          "item_key": [
-            "bil"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "ica",
-            "supermarket",
-            "ekershall,"
-          ],
-          "item_key": [
-            "livsmedel"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "bilavsättning"
-          ],
-          "item_key": [
-            "bilavsättning"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "forex",
-            "sky",
-            "city,",
-            "arlanda"
-          ],
-          "item_key": [
-            "shopping"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "gsp",
-            "restaurang",
-            "ab,",
-            "örebro"
-          ],
-          "item_key": [
-            "äta",
-            "ute"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "sp",
-            "fantagraphics,",
-            "fantagraphics"
-          ],
-          "item_key": [
-            "presenter"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "gjensidige"
-          ],
-          "item_key": [
-            "livförsäkring"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "willys",
-            "baronb,"
-          ],
-          "item_key": [
-            "livsmedel"
-          ],
-          "always_apply": true
-        },
-        {
-          "transaction_key": [
-            "akavia"
-          ],
-          "item_key": [
-            "fackförbudn"
+            "tjänster"
           ],
           "always_apply": true
         }
       ],
       "created_at": "2025-12-05T15:52:39.534026542Z",
-      "updated_at": "2025-12-06T18:38:31.354831328Z",
+      "updated_at": "2025-12-08T11:25:38.271767767Z",
       "default_budget": true,
-      "last_event": 1765046311354831328,
-      "version": 2420,
+      "last_event": 1765193138271767767,
+      "version": 2468,
       "currency": "SEK"
     }
   ],

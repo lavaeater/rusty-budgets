@@ -14,13 +14,12 @@ anyhow = { workspace = true }
 joydb = { features = ["ron"], workspace = true }
 once_cell = { version = "1.21.3", features = ["parking_lot"] }
 cqrs_macros = { workspace = true }
-csv = "1.4.0"
-calamine = "0.31.0"
+calamine = "0.32.0"
 strum_macros = "0.27.2"
 strum = { workspace = true, features = ["derive"] }
 sum = "0.1.7"
 duration-extender = "0.5.0"
-iter_tools = "0.42.0"
+iter_tools = "0.43.0"
 
 [features]
 server = ["dioxus/server", "tokio"]

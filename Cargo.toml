@@ -9,10 +9,10 @@ members = [
 ]
 
 [workspace.dependencies]
-dioxus = { version = "0.7.1", features = ["fullstack"] }
+dioxus = { version = "0.7.2", features = ["fullstack"] }
 dioxus-primitives = { git = "https://github.com/DioxusLabs/components" }
-lucide-dioxus = { version = "2.15.0", features = ["all-icons"] }
-uuid = { version = "1.18.1", features = ["v4", "js", "serde"] }
+lucide-dioxus = { version = "2.46.0", features = ["all-icons"] }
+uuid = { version = "1.19.0", features = ["v4", "js", "serde"] }
 chrono = { version = "0.4.42", features = ["serde"] }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = { version = "1.0.145" }
