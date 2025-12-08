@@ -8,81 +8,32 @@ pub fn BudgetingTypeOverviewView(
     budgeting_type: BudgetingType,
     overview: BudgetingTypeOverview,
 ) -> Element {
-            match budgeting_type {
-                BudgetingType::Income => {
-                    rsx! {
-                        div {
-                            h2 { {budgeting_type.to_string()} }
-                            div {
-                                p {
-                                    "Budgeterat "
-                                    {overview.budgeted_amount.to_string()}
+            rsx! {
+                div { class: format!("overview-card {}", if !overview.is_ok { "over-budget" } else { "" }),
+                                h3 { 
+                                    class: if !overview.is_ok { "warning" } else { "" },
+                                    {budgeting_type.to_string()}
+                                }
+                                div { class: "card-stats",
+                                    div { class: "stat",
+                                        span { class: "stat-label", "Budgeterat" }
+                                        span { class: "stat-value",
+                                            {overview.budgeted_amount.to_string()}
+                                        }
+                                    }
+                                    div { class: "stat",
+                                        span { class: "stat-label", "Faktiskt" }
+                                        span { class: "stat-value",
+                                            {overview.actual_amount.to_string()}
+                                        }
+                                    }
+                                    div { class: "stat",
+                                        span { class: "stat-label", "Återstår" }
+                                        span { class: "stat-value stat-remaining",
+                                            {overview.remaining_budget.to_string()}
+                                        }
+                                    }
                                 }
                             }
-                            div {
-                                p {
-                                    "Återstår: "
-                                    {overview.remaining_budget.to_string()}
-                                }
-                            }
-                            div {
-                                p {
-                                    "Inkommet: "
-                                    {overview.actual_amount.to_string()}
-                                }
-                            }
-                        }
-                    }
-                }
-                BudgetingType::Expense => {
-                    rsx! {
-                        div {
-                            h2 { {budgeting_type.to_string()} }
-                            div {
-                                p {
-                                    "Budgeterat "
-                                    {overview.budgeted_amount.to_string()}
-                                }
-                            }
-                            div {
-                                p {
-                                    "Återstår: "
-                                    {overview.remaining_budget.to_string()}
-                                }
-                            }
-                            div {
-                                p {
-                                    "Spenderat: "
-                                    {overview.actual_amount.to_string()}
-                                }
-                            }
-                        }
-                    }
-                }
-                BudgetingType::Savings => {
-                    rsx! {
-                        div {
-                            h2 { {budgeting_type.to_string()} }
-                            div {
-                                p {
-                                    "Budgeterat "
-                                    {overview.budgeted_amount.to_string()}
-                                }
-                            }
-                            div {
-                                p {
-                                    "Återstår: "
-                                    {overview.remaining_budget.to_string()}
-                                }
-                            }
-                            div {
-                                p {
-                                    "Inkommet: "
-                                    {overview.actual_amount.to_string()}
-                                }
-                            }
-                        }
-                    }
-                }
-            }            
+            }
         }
