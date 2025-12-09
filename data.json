@@ -50747,6 +50747,126 @@
         }
       },
       "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "1804c9fe-d1eb-44e3-9cb2-ed0cb4774583",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765310252406708673,
+      "created_at": "2025-12-09T19:57:32.406708673Z",
+      "data": {
+        "ActualModified": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "actual_id": "91c1cb10-22c7-4db5-b4af-7eddcd1bf439",
+          "period_id": {
+            "year": 2025,
+            "month": 11
+          },
+          "budgeted_amount": {
+            "cents": 1239095,
+            "currency": "SEK"
+          },
+          "actual_amount": null,
+          "notes": null,
+          "tags": null
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "5efef26e-ceb6-49bf-92a0-d426bab653f8",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765310258355993690,
+      "created_at": "2025-12-09T19:57:38.355993690Z",
+      "data": {
+        "ActualModified": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "actual_id": "e45bb786-f28c-49f8-990e-c87454290842",
+          "period_id": {
+            "year": 2025,
+            "month": 11
+          },
+          "budgeted_amount": {
+            "cents": 875809,
+            "currency": "SEK"
+          },
+          "actual_amount": null,
+          "notes": null,
+          "tags": null
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "7ff8fb66-012d-47a9-b393-bd82cb55df93",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765310260606498639,
+      "created_at": "2025-12-09T19:57:40.606498639Z",
+      "data": {
+        "ActualModified": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "actual_id": "27a8e00d-2ad4-4238-8816-3b2bf5499ef2",
+          "period_id": {
+            "year": 2025,
+            "month": 11
+          },
+          "budgeted_amount": {
+            "cents": 410596,
+            "currency": "SEK"
+          },
+          "actual_amount": null,
+          "notes": null,
+          "tags": null
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "99ae38a7-671c-439e-b1d3-87249e305667",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765310265708938793,
+      "created_at": "2025-12-09T19:57:45.708938793Z",
+      "data": {
+        "ActualModified": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "actual_id": "92b41ee5-8c18-4675-90d8-ab6dcb6ce165",
+          "period_id": {
+            "year": 2025,
+            "month": 11
+          },
+          "budgeted_amount": {
+            "cents": 91518,
+            "currency": "SEK"
+          },
+          "actual_amount": null,
+          "notes": null,
+          "tags": null
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
+    },
+    {
+      "id": "0c55df56-2a1c-4ae4-80f9-6b18e4e0dc4d",
+      "aggregate_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+      "timestamp": 1765310278014260397,
+      "created_at": "2025-12-09T19:57:58.014260397Z",
+      "data": {
+        "ActualModified": {
+          "budget_id": "2984920f-c6f7-41ff-be8f-7e05b452ff24",
+          "actual_id": "df848ba1-b780-45ec-b774-f107e83a8c80",
+          "period_id": {
+            "year": 2025,
+            "month": 11
+          },
+          "budgeted_amount": {
+            "cents": 257124,
+            "currency": "SEK"
+          },
+          "actual_amount": null,
+          "notes": null,
+          "tags": null
+        }
+      },
+      "user_id": "1cbcb442-7f5a-4899-b647-a6d96f1c0336"
     }
   ],
   "Budget": [
@@ -51301,7 +51421,7 @@
                 "month": 12
               },
               "budgeted_amount": {
-                "cents": 708500,
+                "cents": 350000,
                 "currency": "SEK"
               },
               "actual_amount": {
@@ -51322,6 +51442,46 @@
               },
               "budgeted_amount": {
                 "cents": 0,
+                "currency": "SEK"
+              },
+              "actual_amount": {
+                "cents": 0,
+                "currency": "SEK"
+              },
+              "notes": null,
+              "tags": []
+            },
+            {
+              "id": "269f43bf-4823-469d-918b-69a3136f3fe7",
+              "item_name": "Kläder",
+              "budget_item_id": "5b3e4120-3a9b-4f5c-9a24-70c7a4bd6a36",
+              "budgeting_type": "Expense",
+              "period_id": {
+                "year": 2025,
+                "month": 12
+              },
+              "budgeted_amount": {
+                "cents": 100000,
+                "currency": "SEK"
+              },
+              "actual_amount": {
+                "cents": 0,
+                "currency": "SEK"
+              },
+              "notes": null,
+              "tags": []
+            },
+            {
+              "id": "64a17693-d892-41d0-8160-f4bf1871bbbc",
+              "item_name": "Huset",
+              "budget_item_id": "1419f78c-da96-435d-ab5b-484b769251b7",
+              "budgeting_type": "Expense",
+              "period_id": {
+                "year": 2025,
+                "month": 12
+              },
+              "budgeted_amount": {
+                "cents": 250000,
                 "currency": "SEK"
               },
               "actual_amount": {
@@ -52471,7 +52631,7 @@
                 "month": 11
               },
               "budgeted_amount": {
-                "cents": 993214,
+                "cents": 1239095,
                 "currency": "SEK"
               },
               "actual_amount": {
@@ -52711,7 +52871,7 @@
                 "month": 11
               },
               "budgeted_amount": {
-                "cents": 9500,
+                "cents": 91518,
                 "currency": "SEK"
               },
               "actual_amount": {
@@ -52791,7 +52951,7 @@
                 "month": 11
               },
               "budgeted_amount": {
-                "cents": 410500,
+                "cents": 410596,
                 "currency": "SEK"
               },
               "actual_amount": {
@@ -52831,7 +52991,7 @@
                 "month": 11
               },
               "budgeted_amount": {
-                "cents": 138200,
+                "cents": 257124,
                 "currency": "SEK"
               },
               "actual_amount": {
@@ -52871,7 +53031,7 @@
                 "month": 11
               },
               "budgeted_amount": {
-                "cents": 875800,
+                "cents": 875809,
                 "currency": "SEK"
               },
               "actual_amount": {
@@ -78719,10 +78879,10 @@
         }
       ],
       "created_at": "2025-12-05T15:52:39.534026542Z",
-      "updated_at": "2025-12-09T19:55:05.669573126Z",
+      "updated_at": "2025-12-09T19:57:58.014260397Z",
       "default_budget": true,
-      "last_event": 1765310105669573126,
-      "version": 2472,
+      "last_event": 1765310278014260397,
+      "version": 2480,
       "currency": "SEK"
     }
   ],
