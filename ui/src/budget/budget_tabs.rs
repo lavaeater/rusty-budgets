@@ -34,6 +34,7 @@ pub fn BudgetTabs() -> Element {
 
             rsx! {
                 Tabs {
+                    class: "dashboard-cards",
                     default_value: overview_by_type.first().unwrap().1.to_string(),
                     horizontal: true,
                     TabList {
