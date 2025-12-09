@@ -31,7 +31,8 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
         rsx! {
             div { class: "flex flex-col p-2 border-b border-gray-200 text-sm",
                 // Header with item name and amount
-                div { class: "flex justify-between items-center",
+                div {
+                    class: "flex justify-between items-center",
                     onclick: move |_| { expanded.set(false) },
                     div { class: "font-large", "{item_name()}" }
                     div { class: "text-gray-700",
@@ -174,7 +175,8 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
     } else if edit_item() {
         rsx! {
             div { class: "flex flex-col p-2 border-b border-gray-200 text-sm",
-                div { class: "flex justify-between items-center",
+                div {
+                    class: "flex justify-between items-center",
                     onclick: move |_| { expanded.set(false) },
                     div { class: "font-large", "{item_name()}" }
                     div { class: "text-gray-700",
@@ -188,45 +190,64 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                     value: budgeted_amount().amount_in_dollars(),
                     oninput: move |e| {
                         match e.value().parse() {
-                        Ok(v) => {
-                            budgeted_amount.set(Money::new_dollars(v, budget.currency));
+                            Ok(v) => {
+                                budgeted_amount.set(Money::new_dollars(v, budget.currency));
+                            }
+                            _ => {
+                                budgeted_amount.set(Money::zero(budget.currency));
+                            }
                         }
-                        _ => {
-                            budgeted_amount.set(Money::zero(budget.currency));
+                    },
+                }
+                Button {
+                    onclick: move |_| async move {
+                        if item.actual_id.is_none() {
+                            match api::add_actual(
+                                    budget_id,
+                                    item.item_id,
+                                    budgeted_amount(),
+                                    budget.period_id,
+                                )
+                                .await
+                            {
+                                Ok(updated_budget) => {
+                                    budget_signal.set(Some(updated_budget));
+                                    edit_item.set(false)
+                                }
+                                Err(_) => {
+                                    edit_item.set(false);
+                                }
+                            }
+                        } else {
+                            match api::modify_actual(
+                                    budget_id,
+                                    item.actual_id.unwrap(),
+                                    budget.period_id,
+                                    Some(budgeted_amount()),
+                                    None,
+                                )
+                                .await
+                            {
+                                Ok(updated_budget) => {
+                                    budget_signal.set(Some(updated_budget));
+                                    edit_item.set(false)
+                                }
+                                Err(_) => {
+                                    edit_item.set(false);
+                                }
+                            }
                         }
-                    }
-                },
-            }
-            Button {
-                onclick: move |_| async move {
-                    match api::modify_actual(
-                            budget_id,
-                            item.actual_id.unwrap(),
-                            budget.period_id,
-                            Some(budgeted_amount()),
-                            None,
-                        )
-                        .await
-                    {
-                        Ok(updated_budget) => {
-                            budget_signal.set(Some(updated_budget));
-                            edit_item.set(false)
-                        }
-                        Err(_) => {
-                            edit_item.set(false);
-                        }
-                    }
-                },
-                "Spara"
-            }
-            Button {
-                onclick: move |_| {
-                    edit_item.set(false);
-                },
-                "Avbryt"
+                    },
+                    "Spara"
+                }
+                Button {
+                    onclick: move |_| {
+                        edit_item.set(false);
+                    },
+                    "Avbryt"
+                }
             }
         }
-            }
     } else {
         rsx! {
             div { class: "budget-item",

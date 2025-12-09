@@ -37,8 +37,7 @@ pub fn BudgetTabs() -> Element {
                     class: "dashboard-cards",
                     default_value: overview_by_type.first().unwrap().1.to_string(),
                     horizontal: true,
-                    TabList {
-                        class: "dashboard-cards",
+                    TabList { class: "dashboard-cards",
                         for (index , budgeting_type , overview , _) in &overview_by_type {
                             TabTrigger {
                                 value: budgeting_type.to_string(),

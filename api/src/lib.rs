@@ -274,10 +274,7 @@ pub mod db {
         budget_amount: Money,
         period_id: PeriodId,
     ) -> anyhow::Result<Uuid> {
-        match with_runtime(None).add_actual(user_id, budget_id, item_id, budget_amount, period_id) {
-            Ok(actual_id) => Ok(actual_id),
-            Err(e) => Err(e),
-        }
+        with_runtime(None).add_actual(user_id, budget_id, item_id, budget_amount, period_id)
     }
 
     pub fn modify_item(
@@ -426,6 +423,23 @@ pub async fn create_budget(
             Err(ServerFnError::new(
                 "Could not get default budget".to_string(),
             ))
+        }
+    }
+}
+
+#[server]
+pub async fn add_actual(
+    budget_id: Uuid,
+    item_id: Uuid,
+    budgeted_amount: Money,
+    period_id: PeriodId
+) -> Result<BudgetViewModel, ServerFnError> {
+    let user = db::get_default_user(None).expect("Could not get default user");
+    match db::add_actual(user.id, budget_id, item_id, budgeted_amount, period_id) {
+        Ok(_) => Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id)?, period_id)),
+        Err(e) => {
+            error!(error = %e, "Could not add actual");
+            Err(ServerFnError::new(e.to_string()))
         }
     }
 }

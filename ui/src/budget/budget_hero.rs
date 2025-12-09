@@ -89,8 +89,7 @@ pub fn BudgetHero() -> Element {
                     div { class: "dashboard-cards",
                         for overview in budget.overviews {
                             div { class: format!("overview-card {}", if !overview.is_ok { "over-budget" } else { "" }),
-                                h3 { 
-                                    class: if !overview.is_ok { "warning" } else { "" },
+                                h3 { class: if !overview.is_ok { "warning" } else { "" },
                                     {overview.budgeting_type.to_string()}
                                 }
                                 div { class: "card-stats",
