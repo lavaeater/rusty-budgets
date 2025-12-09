@@ -407,6 +407,26 @@ pub mod db {
             }
         }
     }
+
+    pub(crate) fn auto_budget_period(user_id: Uuid, budget_id: Uuid, period_id: PeriodId) -> anyhow::Result<()> {
+        let budget = get_budget(budget_id)?;
+        let period = budget.get_period(period_id).unwrap();
+        info!("Auto budgeting period {}", period_id);
+        info!("Number of items: {}", period.actual_items.len());
+        period.actual_items.iter().for_each(|actual| {
+            let budgeted_amount = actual.budgeted_amount;
+            if budgeted_amount.is_zero() {
+                let actual_amount = actual.actual_amount;
+                match modify_actual(user_id, budget_id, actual.id, period_id, Some(actual_amount), None) {
+                    Ok(_) => {},
+                    Err(e) => {
+                        error!(error = %e, "Could not modify actual");
+                    }
+                }
+            }
+        });
+        Ok(())
+    }
 }
 
 #[server]
@@ -439,6 +459,21 @@ pub async fn add_actual(
         Ok(_) => Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id)?, period_id)),
         Err(e) => {
             error!(error = %e, "Could not add actual");
+            Err(ServerFnError::new(e.to_string()))
+        }
+    }
+}
+
+#[server]
+pub async fn auto_budget_period(
+    budget_id: Uuid,
+    period_id: PeriodId
+) -> Result<BudgetViewModel, ServerFnError> {
+    let user = db::get_default_user(None).expect("Could not get default user");
+    match db::auto_budget_period(user.id, budget_id, period_id) {
+        Ok(_) => Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id)?, period_id)),
+        Err(e) => {
+            error!(error = %e, "Could not auto-budget period");
             Err(ServerFnError::new(e.to_string()))
         }
     }

@@ -277,6 +277,7 @@ impl Budget {
                     return false;
                 }
                 tx.ignored = true;
+                tx.actual_id = None;
                 true
             }
             None => false,
