@@ -55329,6 +55329,276 @@
         }
       },
       "user_id": "8f91b478-f1b9-45da-9911-79c18cd41a5b"
+    },
+    {
+      "id": "6c2d6be6-ba5a-4f60-93b2-52c075f26944",
+      "aggregate_id": "7ebe2369-a2c1-435a-8f37-b4340d99947d",
+      "timestamp": 1765341779783600700,
+      "created_at": "2025-12-10T04:42:59.783600700Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "7ebe2369-a2c1-435a-8f37-b4340d99947d",
+          "transaction_id": "3ca76d3e-5d1e-4bb0-ada6-33b33213d3b6",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -163300,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 1763522,
+            "currency": "SEK"
+          },
+          "description": "2025-12-08 MAXI ICA STORMARKNAD UNIV, OREBRO",
+          "date": "2025-12-09T00:00:00Z"
+        }
+      },
+      "user_id": "8f91b478-f1b9-45da-9911-79c18cd41a5b"
+    },
+    {
+      "id": "5fa75a3d-9edb-4bec-902a-5149cb926f27",
+      "aggregate_id": "7ebe2369-a2c1-435a-8f37-b4340d99947d",
+      "timestamp": 1765341779786245996,
+      "created_at": "2025-12-10T04:42:59.786245996Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "7ebe2369-a2c1-435a-8f37-b4340d99947d",
+          "transaction_id": "af8ba8bc-e877-44c0-a023-a24cf44ac8b6",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -2500,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 1926822,
+            "currency": "SEK"
+          },
+          "description": "2025-12-09 EasyPark AB, Stockholm",
+          "date": "2025-12-09T00:00:00Z"
+        }
+      },
+      "user_id": "8f91b478-f1b9-45da-9911-79c18cd41a5b"
+    },
+    {
+      "id": "fb396596-5697-4580-938f-2ef21e9ce78d",
+      "aggregate_id": "7ebe2369-a2c1-435a-8f37-b4340d99947d",
+      "timestamp": 1765341779788795132,
+      "created_at": "2025-12-10T04:42:59.788795132Z",
+      "data": {
+        "TransactionAdded": {
+          "budget_id": "7ebe2369-a2c1-435a-8f37-b4340d99947d",
+          "transaction_id": "3338a189-d958-4cfb-b87f-1aa259ef54e3",
+          "account_number": "9159-482.485-3",
+          "amount": {
+            "cents": -21900,
+            "currency": "SEK"
+          },
+          "balance": {
+            "cents": 1929322,
+            "currency": "SEK"
+          },
+          "description": "2025-12-08 Spotify, Stockholm",
+          "date": "2025-12-09T00:00:00Z"
+        }
+      },
+      "user_id": "8f91b478-f1b9-45da-9911-79c18cd41a5b"
+    },
+    {
+      "id": "f62e0def-f1e0-4b13-933f-9e5cbf15d67f",
+      "aggregate_id": "7ebe2369-a2c1-435a-8f37-b4340d99947d",
+      "timestamp": 1765341780574329232,
+      "created_at": "2025-12-10T04:43:00.574329232Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7ebe2369-a2c1-435a-8f37-b4340d99947d",
+          "tx_id": "3ca76d3e-5d1e-4bb0-ada6-33b33213d3b6",
+          "actual_id": "e0084bd0-5680-4e2c-a81c-59b6d887209b"
+        }
+      },
+      "user_id": "8f91b478-f1b9-45da-9911-79c18cd41a5b"
+    },
+    {
+      "id": "167f6622-a693-49eb-a286-f57d3fb31711",
+      "aggregate_id": "7ebe2369-a2c1-435a-8f37-b4340d99947d",
+      "timestamp": 1765341780575230277,
+      "created_at": "2025-12-10T04:43:00.575230277Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7ebe2369-a2c1-435a-8f37-b4340d99947d",
+          "tx_id": "af8ba8bc-e877-44c0-a023-a24cf44ac8b6",
+          "actual_id": "f4a35330-3569-4f18-a4a5-7ab157094d58"
+        }
+      },
+      "user_id": "8f91b478-f1b9-45da-9911-79c18cd41a5b"
+    },
+    {
+      "id": "e764674e-5f32-460e-9d23-a18dec387877",
+      "aggregate_id": "7ebe2369-a2c1-435a-8f37-b4340d99947d",
+      "timestamp": 1765341780576057841,
+      "created_at": "2025-12-10T04:43:00.576057841Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7ebe2369-a2c1-435a-8f37-b4340d99947d",
+          "tx_id": "3338a189-d958-4cfb-b87f-1aa259ef54e3",
+          "actual_id": "aa2818c5-4ca2-4908-abdb-4df05c6c6d71"
+        }
+      },
+      "user_id": "8f91b478-f1b9-45da-9911-79c18cd41a5b"
+    },
+    {
+      "id": "8ce833d9-11f3-4855-b27e-ab8f1c8bef0f",
+      "aggregate_id": "7ebe2369-a2c1-435a-8f37-b4340d99947d",
+      "timestamp": 1765341824669513219,
+      "created_at": "2025-12-10T04:43:44.669513219Z",
+      "data": {
+        "ActualModified": {
+          "budget_id": "7ebe2369-a2c1-435a-8f37-b4340d99947d",
+          "actual_id": "dfe8f9dc-cfc1-42d1-9129-3aaca3180c04",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 423944,
+            "currency": "SEK"
+          },
+          "actual_amount": null,
+          "notes": null,
+          "tags": null
+        }
+      },
+      "user_id": "8f91b478-f1b9-45da-9911-79c18cd41a5b"
+    },
+    {
+      "id": "3dccef1e-9dcc-4022-a747-a4d0959c07bd",
+      "aggregate_id": "7ebe2369-a2c1-435a-8f37-b4340d99947d",
+      "timestamp": 1765341830289207917,
+      "created_at": "2025-12-10T04:43:50.289207917Z",
+      "data": {
+        "ActualModified": {
+          "budget_id": "7ebe2369-a2c1-435a-8f37-b4340d99947d",
+          "actual_id": "dfe8f9dc-cfc1-42d1-9129-3aaca3180c04",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 1100000,
+            "currency": "SEK"
+          },
+          "actual_amount": null,
+          "notes": null,
+          "tags": null
+        }
+      },
+      "user_id": "8f91b478-f1b9-45da-9911-79c18cd41a5b"
+    },
+    {
+      "id": "4de28302-1097-4859-bf8a-f9936fcf2348",
+      "aggregate_id": "7ebe2369-a2c1-435a-8f37-b4340d99947d",
+      "timestamp": 1765341835294561502,
+      "created_at": "2025-12-10T04:43:55.294561502Z",
+      "data": {
+        "ActualModified": {
+          "budget_id": "7ebe2369-a2c1-435a-8f37-b4340d99947d",
+          "actual_id": "f4a35330-3569-4f18-a4a5-7ab157094d58",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 363898,
+            "currency": "SEK"
+          },
+          "actual_amount": null,
+          "notes": null,
+          "tags": null
+        }
+      },
+      "user_id": "8f91b478-f1b9-45da-9911-79c18cd41a5b"
+    },
+    {
+      "id": "502ba179-5a06-46b2-8fec-48d134e9c356",
+      "aggregate_id": "7ebe2369-a2c1-435a-8f37-b4340d99947d",
+      "timestamp": 1765341858722564697,
+      "created_at": "2025-12-10T04:44:18.722564697Z",
+      "data": {
+        "ActualModified": {
+          "budget_id": "7ebe2369-a2c1-435a-8f37-b4340d99947d",
+          "actual_id": "aa2818c5-4ca2-4908-abdb-4df05c6c6d71",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 57348,
+            "currency": "SEK"
+          },
+          "actual_amount": null,
+          "notes": null,
+          "tags": null
+        }
+      },
+      "user_id": "8f91b478-f1b9-45da-9911-79c18cd41a5b"
+    },
+    {
+      "id": "da8a44ad-ddb6-4136-9e87-5bea0646c066",
+      "aggregate_id": "7ebe2369-a2c1-435a-8f37-b4340d99947d",
+      "timestamp": 1765341880067961991,
+      "created_at": "2025-12-10T04:44:40.067961991Z",
+      "data": {
+        "TransactionConnected": {
+          "budget_id": "7ebe2369-a2c1-435a-8f37-b4340d99947d",
+          "tx_id": "3ca76d3e-5d1e-4bb0-ada6-33b33213d3b6",
+          "actual_id": "dfe8f9dc-cfc1-42d1-9129-3aaca3180c04"
+        }
+      },
+      "user_id": "8f91b478-f1b9-45da-9911-79c18cd41a5b"
+    },
+    {
+      "id": "69b3995e-dd5f-46e4-be07-b1dffea7375c",
+      "aggregate_id": "7ebe2369-a2c1-435a-8f37-b4340d99947d",
+      "timestamp": 1765341880073465211,
+      "created_at": "2025-12-10T04:44:40.073465211Z",
+      "data": {
+        "RuleAdded": {
+          "budget_id": "7ebe2369-a2c1-435a-8f37-b4340d99947d",
+          "transaction_key": [
+            "maxi",
+            "ica",
+            "stormarknad",
+            "univ,"
+          ],
+          "item_key": [
+            "livsmedel"
+          ],
+          "always_apply": true
+        }
+      },
+      "user_id": "8f91b478-f1b9-45da-9911-79c18cd41a5b"
+    },
+    {
+      "id": "05b46c56-2039-4f30-87b5-9396ea876fb7",
+      "aggregate_id": "7ebe2369-a2c1-435a-8f37-b4340d99947d",
+      "timestamp": 1765341895425319474,
+      "created_at": "2025-12-10T04:44:55.425319474Z",
+      "data": {
+        "ActualModified": {
+          "budget_id": "7ebe2369-a2c1-435a-8f37-b4340d99947d",
+          "actual_id": "e0084bd0-5680-4e2c-a81c-59b6d887209b",
+          "period_id": {
+            "year": 2025,
+            "month": 12
+          },
+          "budgeted_amount": {
+            "cents": 62790,
+            "currency": "SEK"
+          },
+          "actual_amount": null,
+          "notes": null,
+          "tags": null
+        }
+      },
+      "user_id": "8f91b478-f1b9-45da-9911-79c18cd41a5b"
     }
   ],
   "Budget": [
@@ -55532,7 +55802,7 @@
                 "currency": "SEK"
               },
               "actual_amount": {
-                "cents": 399966,
+                "cents": 587244,
                 "currency": "SEK"
               },
               "notes": null,
@@ -55548,11 +55818,11 @@
                 "month": 12
               },
               "budgeted_amount": {
-                "cents": 361398,
+                "cents": 363898,
                 "currency": "SEK"
               },
               "actual_amount": {
-                "cents": 361398,
+                "cents": 363898,
                 "currency": "SEK"
               },
               "notes": null,
@@ -55688,11 +55958,11 @@
                 "month": 12
               },
               "budgeted_amount": {
-                "cents": 35448,
+                "cents": 57348,
                 "currency": "SEK"
               },
               "actual_amount": {
-                "cents": 35448,
+                "cents": 57348,
                 "currency": "SEK"
               },
               "notes": null,
@@ -57029,9 +57299,57 @@
               },
               "description": "2025-12-07 ICA SUPERMARKET KOPPARHAL, KOPPARBERG",
               "date": "2025-12-08T00:00:00Z",
-              "actual_id": null,
+              "actual_id": "dfe8f9dc-cfc1-42d1-9129-3aaca3180c04",
               "balance": {
                 "cents": 1951222,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "3ca76d3e-5d1e-4bb0-ada6-33b33213d3b6",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -163300,
+                "currency": "SEK"
+              },
+              "description": "2025-12-08 MAXI ICA STORMARKNAD UNIV, OREBRO",
+              "date": "2025-12-09T00:00:00Z",
+              "actual_id": "dfe8f9dc-cfc1-42d1-9129-3aaca3180c04",
+              "balance": {
+                "cents": 1763522,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "af8ba8bc-e877-44c0-a023-a24cf44ac8b6",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -2500,
+                "currency": "SEK"
+              },
+              "description": "2025-12-09 EasyPark AB, Stockholm",
+              "date": "2025-12-09T00:00:00Z",
+              "actual_id": "f4a35330-3569-4f18-a4a5-7ab157094d58",
+              "balance": {
+                "cents": 1926822,
+                "currency": "SEK"
+              },
+              "ignored": false
+            },
+            {
+              "id": "3338a189-d958-4cfb-b87f-1aa259ef54e3",
+              "account_number": "9159-482.485-3",
+              "amount": {
+                "cents": -21900,
+                "currency": "SEK"
+              },
+              "description": "2025-12-08 Spotify, Stockholm",
+              "date": "2025-12-09T00:00:00Z",
+              "actual_id": "aa2818c5-4ca2-4908-abdb-4df05c6c6d71",
+              "balance": {
+                "cents": 1929322,
                 "currency": "SEK"
               },
               "ignored": false
@@ -81603,6 +81921,7 @@
         983421814095562148,
         14744073395167855711,
         7633300815564447797,
+        11536091516917166039,
         9112769891086098173,
         7298743090633900674,
         11420061605596675673,
@@ -81711,6 +82030,7 @@
         18373970911347911339,
         15444554242061847551,
         7880483578335930596,
+        14633135220096332393,
         16096922591397428755,
         2748189223161610424,
         9384219852688634645,
@@ -82080,6 +82400,7 @@
         12955483134083385738,
         416104190951507283,
         17725110223127248190,
+        7229178701313090445,
         14827498857334000964,
         2090303666536235794,
         681846597250190437,
@@ -84286,10 +84607,10 @@
         }
       ],
       "created_at": "2025-12-09T21:44:00.360509668Z",
-      "updated_at": "2025-12-09T22:25:01.937869257Z",
+      "updated_at": "2025-12-10T04:44:40.067961991Z",
       "default_budget": true,
-      "last_event": 1765319101937869257,
-      "version": 2740,
+      "last_event": 1765341880067961991,
+      "version": 2752,
       "currency": "SEK"
     }
   ],
