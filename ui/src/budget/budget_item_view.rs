@@ -1,5 +1,5 @@
 use crate::budget::ItemSelector;
-use crate::Button;
+use crate::{Button, ButtonVariant};
 use api::ignore_transaction;
 use api::models::{BudgetingType, Money};
 use api::view_models::*;
@@ -29,66 +29,75 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
 
     if expanded() {
         rsx! {
-            div { class: "flex flex-col p-2 border-b border-gray-200 text-sm",
-                // Header with item name and amount
+            div { class: "budget-item-expanded",
                 div {
-                    class: "flex justify-between items-center",
+                    class: "budget-item-expanded-header",
                     onclick: move |_| { expanded.set(false) },
-                    div { class: "font-large", "{item_name()}" }
-                    div { class: "text-gray-700",
+                    div { class: "budget-item-expanded-name", "{item_name()}" }
+                    div { class: "budget-item-expanded-amounts",
                         "{item.actual_amount.to_string()} / {item.budgeted_amount.to_string()}"
                     }
                 }
-                // Transaction list with checkboxes
-                div { class: "mt-2",
-                    {
-                        item.transactions
-                            .iter()
-                            .map(|transaction| {
-                                let tx_id = transaction.tx_id;
-                                let is_selected = selected_transactions().contains(&tx_id);
-                                rsx! {
-                                    div { class: "flex items-center p-1 hover:bg-gray-50 rounded",
-                                        input {
-                                            r#type: "checkbox",
-                                            checked: is_selected,
-                                            onchange: move |_| {
-                                                let mut selected = selected_transactions();
-                                                if is_selected {
-                                                    selected.remove(&tx_id);
-                                                } else {
-                                                    selected.insert(tx_id);
+                if item.transactions.is_empty() {
+                    div { class: "no-transactions", "Inga transaktioner" }
+                } else {
+                    table { class: "transaction-table",
+                        thead {
+                            tr {
+                                th { class: "checkbox-cell", "" }
+                                th { "Beskrivning" }
+                                th { "Belopp" }
+                            }
+                        }
+                        tbody {
+                            {
+                                item.transactions
+                                    .iter()
+                                    .map(|transaction| {
+                                        let tx_id = transaction.tx_id;
+                                        let is_selected = selected_transactions().contains(&tx_id);
+                                        rsx! {
+                                            tr {
+                                                td { class: "checkbox-cell",
+                                                    input {
+                                                        r#type: "checkbox",
+                                                        checked: is_selected,
+                                                        onchange: move |_| {
+                                                            let mut selected = selected_transactions();
+                                                            if is_selected {
+                                                                selected.remove(&tx_id);
+                                                            } else {
+                                                                selected.insert(tx_id);
+                                                            }
+                                                            selected_transactions.set(selected);
+                                                        },
+                                                    }
                                                 }
-                                                selected_transactions.set(selected);
-                                            },
+                                                td { {transaction.description.clone()} }
+                                                td { {transaction.amount.to_string()} }
+                                            }
                                         }
-                                        {transaction.description.clone()}
-                                        {transaction.amount.to_string()}
-                                    }
-                                }
-                            })
+                                    })
+                            }
+                        }
                     }
                 }
-                // Action buttons (only show when transactions are selected)
                 if !selected_transactions().is_empty() {
-                    div { class: "mt-2 flex items-center gap-2",
+                    div { class: "transaction-actions-bar",
                         Button {
-                            r#type: "button",
-                            "data-style": "secondary",
+                            variant: ButtonVariant::Secondary,
                             onclick: move |_| {
                                 selected_transactions.set(HashSet::new());
                             },
                             "Avmarkera alla"
                         }
                         Button {
-                            r#type: "button",
-                            "data-style": "destructive",
+                            variant: ButtonVariant::Destructive,
                             onclick: move |_| async move {
                                 let mut updated_budget: Option<BudgetViewModel> = None;
                                 let selected_ids: Vec<Uuid> = selected_transactions().into_iter().collect();
 
                                 for tx_id in selected_ids {
-                                    // Refresh the budget data
                                     if let Ok(ub) = ignore_transaction(budget_id, tx_id, budget.period_id).await
                                     {
                                         updated_budget = Some(ub);
@@ -113,16 +122,15 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
 
                         if !show_move_selector() {
                             Button {
-                                r#type: "button",
-                                "data-style": "primary",
+                                variant: ButtonVariant::Primary,
                                 onclick: move |_| {
                                     show_move_selector.set(true);
                                 },
                                 "Flytta markerade"
                             }
                         } else {
-                            div { class: "flex-1 flex items-center gap-2",
-                                span { "Flytta till:" }
+                            div { class: "move-selector-container",
+                                span { class: "move-selector-label", "Flytta till:" }
                                 ItemSelector {
                                     items: budget.items.iter().filter(|i| i.item_id != item.item_id).cloned().collect(),
                                     on_change: move |target_item: Option<BudgetItemViewModel>| async move {
@@ -132,7 +140,6 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
 
                                             for tx_id in selected_ids {
                                                 if let Err(_) = api::connect_transaction(
-                                                        // Refresh the budget data
                                                         budget_id,
                                                         tx_id,
                                                         target_item.actual_id,
@@ -171,96 +178,104 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                 }
             }
         }
-        // }
     } else if edit_item() {
         rsx! {
-            div { class: "flex flex-col p-2 border-b border-gray-200 text-sm",
-                div {
-                    class: "flex justify-between items-center",
-                    onclick: move |_| { expanded.set(false) },
-                    div { class: "font-large", "{item_name()}" }
-                    div { class: "text-gray-700",
+            div { class: "budget-item-edit",
+                div { class: "budget-item-edit-header",
+                    div { class: "budget-item-edit-title", "{item_name()}" }
+                    div { class: "budget-item-edit-amounts",
                         "{item.actual_amount.to_string()} / {item.budgeted_amount.to_string()}"
                     }
                 }
 
-                label { "Budgeterat belopp" }
-                input {
-                    r#type: "number",
-                    value: budgeted_amount().amount_in_dollars(),
-                    oninput: move |e| {
-                        match e.value().parse() {
-                            Ok(v) => {
-                                budgeted_amount.set(Money::new_dollars(v, budget.currency));
-                            }
-                            _ => {
-                                budgeted_amount.set(Money::zero(budget.currency));
-                            }
+                div { class: "budget-item-edit-form",
+                    div { class: "budget-item-edit-field",
+                        label { class: "budget-item-edit-label", "Budgeterat belopp" }
+                        input {
+                            class: "budget-item-edit-input",
+                            r#type: "number",
+                            value: budgeted_amount().amount_in_dollars(),
+                            oninput: move |e| {
+                                match e.value().parse() {
+                                    Ok(v) => {
+                                        budgeted_amount.set(Money::new_dollars(v, budget.currency));
+                                    }
+                                    _ => {
+                                        budgeted_amount.set(Money::zero(budget.currency));
+                                    }
+                                }
+                            },
                         }
-                    },
-                }
-                Button {
-                    onclick: move |_| async move {
-                        if item.actual_id.is_none() {
-                            match api::add_actual(
-                                    budget_id,
-                                    item.item_id,
-                                    budgeted_amount(),
-                                    budget.period_id,
-                                )
-                                .await
-                            {
-                                Ok(updated_budget) => {
-                                    budget_signal.set(Some(updated_budget));
-                                    edit_item.set(false)
+                    }
+                    div { class: "budget-item-edit-actions",
+                        Button {
+                            variant: ButtonVariant::Primary,
+                            onclick: move |_| async move {
+                                if item.actual_id.is_none() {
+                                    match api::add_actual(
+                                            budget_id,
+                                            item.item_id,
+                                            budgeted_amount(),
+                                            budget.period_id,
+                                        )
+                                        .await
+                                    {
+                                        Ok(updated_budget) => {
+                                            budget_signal.set(Some(updated_budget));
+                                            edit_item.set(false)
+                                        }
+                                        Err(_) => {
+                                            edit_item.set(false);
+                                        }
+                                    }
+                                } else {
+                                    match api::modify_actual(
+                                            budget_id,
+                                            item.actual_id.unwrap(),
+                                            budget.period_id,
+                                            Some(budgeted_amount()),
+                                            None,
+                                        )
+                                        .await
+                                    {
+                                        Ok(updated_budget) => {
+                                            budget_signal.set(Some(updated_budget));
+                                            edit_item.set(false)
+                                        }
+                                        Err(_) => {
+                                            edit_item.set(false);
+                                        }
+                                    }
                                 }
-                                Err(_) => {
-                                    edit_item.set(false);
-                                }
-                            }
-                        } else {
-                            match api::modify_actual(
-                                    budget_id,
-                                    item.actual_id.unwrap(),
-                                    budget.period_id,
-                                    Some(budgeted_amount()),
-                                    None,
-                                )
-                                .await
-                            {
-                                Ok(updated_budget) => {
-                                    budget_signal.set(Some(updated_budget));
-                                    edit_item.set(false)
-                                }
-                                Err(_) => {
-                                    edit_item.set(false);
-                                }
-                            }
+                            },
+                            "Spara"
                         }
-                    },
-                    "Spara"
-                }
-                Button {
-                    onclick: move |_| {
-                        edit_item.set(false);
-                    },
-                    "Avbryt"
+                        Button {
+                            variant: ButtonVariant::Secondary,
+                            onclick: move |_| {
+                                edit_item.set(false);
+                            },
+                            "Avbryt"
+                        }
+                    }
                 }
             }
         }
     } else {
         rsx! {
             div { class: "budget-item",
-                // Left side: name
                 div {
-                    class: "font-large",
+                    class: "budget-item-name",
                     onclick: move |_| { expanded.set(!expanded()) },
                     "{item.name}"
                 }
-                Button { onclick: move |_| { edit_item.set(true) }, Pen {} }
+                Button {
+                    variant: ButtonVariant::Ghost,
+                    onclick: move |_| { edit_item.set(true) },
+                    Pen {}
+                }
                 BudgetItemStatusView { item: item.clone() }
-                // Right side: actual / budgeted
-                div { class: "text-gray-700",
+                div { class: "budget-item-amounts",
                     "{item.actual_amount.to_string()} / {item.budgeted_amount.to_string()}"
                 }
             }
