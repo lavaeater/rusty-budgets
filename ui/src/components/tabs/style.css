@@ -15,6 +15,14 @@
     gap: 0.25rem;
 }
 
+.tabs-list.dashboard-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 0;
+    width: 100%;
+}
+
 [data-variant="default"] .tabs-list {
     background: var(--light, var(--primary-color-3))
     var(--dark, var(--primary-color-5));
@@ -32,7 +40,7 @@
 [data-variant="default"] .tabs-trigger[data-state="active"] {
     background-color: var(--light, var(--primary-color))
     var(--dark, var(--primary-color-6));
-    box-shadow: var(--dark, inset 0 0 0 1px var(--primary-color-7))
+    box-shadow: var(--dark, inset 0 0 0 1px var(--primary-color-7));
     var(--light, 0 1px 2px rgb(0 0 0 / 18%));
 }
 
@@ -61,7 +69,8 @@
     border-radius: 0.5rem;
     background: var(--light, var(--primary-color))
     var(--dark, var(--primary-color-3));
-    box-shadow: var(--light, 0 1px 2px rgb(0 0 0 / 18%)) var(--dark, none);
+    box-shadow: var(--light, 0 1px 2px rgb(0 0 0 / 18%));
+    var(--dark, none);
 }
 
 .tabs-content[data-state="inactive"] {

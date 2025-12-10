@@ -2,7 +2,7 @@ use api::models::*;
 use crate::budget::{BudgetTabs, TransactionsView};
 use crate::file_chooser::*;
 use crate::{Button, Input};
-use api::{get_budget, import_transactions};
+use api::{auto_budget_period, get_budget, import_transactions};
 use chrono::Utc;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
@@ -12,13 +12,14 @@ use uuid::Uuid;
 use api::view_models::*;
 use api::view_models::BudgetViewModel;
 
-const HERO_CSS: Asset = asset!("assets/styling/budget-hero-a.css");
+const HERO_CSS: Asset = asset!("assets/styling/budget-hero.css");
 #[component]
 pub fn BudgetHero() -> Element {
     let mut period_id = use_signal(|| PeriodId::from_date(Utc::now(), MonthBeginsOn::default()));
     let budget_resource = use_server_future(move || get_budget(None, period_id()))?;
-
-
+    
+    let period_id_now = PeriodId::from_date(Utc::now(), MonthBeginsOn::default());
+    
     let mut budget_signal = use_signal(|| None::<BudgetViewModel>);
     use_context_provider(|| budget_signal);
 
@@ -49,6 +50,8 @@ pub fn BudgetHero() -> Element {
         Some(budget) => {
             info!("The budget signal was updated: {}", budget.id);
             budget_id.set(budget.id);
+            
+            let auto_budget_enabled = budget.period_id != period_id_now;
 
             rsx! {
                 document::Link { rel: "stylesheet", href: HERO_CSS }
@@ -62,13 +65,23 @@ pub fn BudgetHero() -> Element {
                                 onclick: move |_| {
                                     period_id.set(period_id().month_before());
                                 },
-                                "Previous period"
+                                "Föregående period"
                             }
                             Button {
                                 onclick: move |_| {
                                     period_id.set(period_id().month_after());
                                 },
-                                "Next period"
+                                "Nästa period"
+                            }
+                            if auto_budget_enabled {
+                                Button {
+                                    onclick: move |_| async move {
+                                        if let Ok(bv) = auto_budget_period(budget.id, period_id()).await {
+                                            budget_signal.set(Some(bv));
+                                        }
+                                    },
+                                    "Auto budget"
+                                }
                             }
                         }
                         div { class: "header-actions",
@@ -80,37 +93,7 @@ pub fn BudgetHero() -> Element {
                             }
                             if !budget.ignored_transactions.is_empty() {
                                 div { class: "unassigned-badge",
-                                    "{budget.ignored_transactions.len()} transaktioner att hantera"
-                                }
-                            }
-                        }
-                    }
-                    // Dashboard cards showing overview
-                    div { class: "dashboard-cards",
-                        for overview in budget.overviews {
-                            div { class: format!("overview-card {}", if !overview.is_ok { "over-budget" } else { "" }),
-                                h3 { class: if !overview.is_ok { "warning" } else { "" },
-                                    {overview.budgeting_type.to_string()}
-                                }
-                                div { class: "card-stats",
-                                    div { class: "stat",
-                                        span { class: "stat-label", "Budgeterat" }
-                                        span { class: "stat-value",
-                                            {overview.budgeted_amount.to_string()}
-                                        }
-                                    }
-                                    div { class: "stat",
-                                        span { class: "stat-label", "Faktiskt" }
-                                        span { class: "stat-value",
-                                            {overview.actual_amount.to_string()}
-                                        }
-                                    }
-                                    div { class: "stat",
-                                        span { class: "stat-label", "Återstår" }
-                                        span { class: "stat-value stat-remaining",
-                                            {overview.remaining_budget.to_string()}
-                                        }
-                                    }
+                                    "{budget.ignored_transactions.len()} ignorerade transaktioner"
                                 }
                             }
                         }

@@ -32,7 +32,7 @@ static DEFAULT_STOPWORDS: Lazy<HashSet<&'static str>> = Lazy::new(|| {
     set.insert("kontaktlös");
     set.insert("zettle");
     set.insert("zettle_*");
-    set.insert("överföring");
+    // set.insert("överföring");
     set.insert("autogiro");
     set.insert("orebro");
     set.insert("vastha");
@@ -68,12 +68,6 @@ fn is_date_pattern(s: &str) -> bool {
 
     false
 }
-
-/// Checks if a string is purely numeric (account numbers, transaction IDs, etc.)
-fn is_numeric_only(s: &str) -> bool {
-    !s.is_empty() && s.chars().all(|c| c.is_numeric())
-}
-
 /// Tokenizes a bank transaction description and filters out noise
 ///
 /// # Arguments
@@ -101,8 +95,6 @@ pub fn tokenize_description(description: &str) -> Vec<String> {
         .filter(|token| {
             // Filter out dates
             !is_date_pattern(token) &&
-                // Filter out pure numeric strings
-                !is_numeric_only(token) &&
                 // Filter out stopwords
                 !DEFAULT_STOPWORDS.contains(token.as_str())
         })
@@ -127,7 +119,6 @@ pub fn tokenize_description_with_stopwords(
         .map(|s| s.to_string())
         .filter(|token| {
             !is_date_pattern(token) &&
-                !is_numeric_only(token) &&
                 !DEFAULT_STOPWORDS.contains(token.as_str()) &&
                 !custom_stopwords.contains(token)
         })
