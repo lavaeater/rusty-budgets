@@ -98,36 +98,6 @@ pub fn BudgetHero() -> Element {
                             }
                         }
                     }
-                    // Dashboard cards showing overview
-                    div { class: "dashboard-cards",
-                        for overview in budget.overviews {
-                            div { class: format!("overview-card {}", if !overview.is_ok { "over-budget" } else { "" }),
-                                h3 { class: if !overview.is_ok { "warning" } else { "" },
-                                    {overview.budgeting_type.to_string()}
-                                }
-                                div { class: "card-stats",
-                                    div { class: "stat",
-                                        span { class: "stat-label", "Budgeterat" }
-                                        span { class: "stat-value",
-                                            {overview.budgeted_amount.to_string()}
-                                        }
-                                    }
-                                    div { class: "stat",
-                                        span { class: "stat-label", "Faktiskt" }
-                                        span { class: "stat-value",
-                                            {overview.actual_amount.to_string()}
-                                        }
-                                    }
-                                    div { class: "stat",
-                                        span { class: "stat-label", "Återstår" }
-                                        span { class: "stat-value stat-remaining",
-                                            {overview.remaining_budget.to_string()}
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
                     // Main content area with tabs
                     div { class: "budget-main-content", BudgetTabs {} }
                     // Transactions section - prominent if there are unassigned
