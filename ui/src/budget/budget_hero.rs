@@ -12,7 +12,7 @@ use uuid::Uuid;
 use api::view_models::*;
 use api::view_models::BudgetViewModel;
 
-const HERO_CSS: Asset = asset!("assets/styling/budget-hero-a.css");
+const HERO_CSS: Asset = asset!("assets/styling/budget-hero.css");
 #[component]
 pub fn BudgetHero() -> Element {
     let mut period_id = use_signal(|| PeriodId::from_date(Utc::now(), MonthBeginsOn::default()));
