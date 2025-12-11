@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use chrono::{DateTime, Utc};
-use crate::models::{BankTransaction, Money};
+use crate::models::{strip_dates, BankTransaction, Money};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct TransactionViewModel {
@@ -17,7 +17,7 @@ impl TransactionViewModel {
         Self {
             tx_id: tx.id,
             amount: tx.amount,
-            description: tx.description.clone(),
+            description: strip_dates(&tx.description),
             date: tx.date,
             actual_item_id: tx.actual_id,
         }

@@ -30,7 +30,8 @@ pub fn TransactionsView(ignored: bool) -> Element {
                     }
                     div { class: "transactions-list",
                         for tx in transactions {
-                            div { class: "transaction-card",
+                            div { class: "transaction-card", 
+                                key: "{tx.tx_id}",
                                 div { class: "transaction-info",
                                     div { class: "transaction-description",
                                         strong { {tx.description.to_string()} }

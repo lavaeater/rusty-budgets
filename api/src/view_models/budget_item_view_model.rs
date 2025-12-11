@@ -29,11 +29,12 @@ impl BudgetItemViewModel {
             .iter()
             .find(|ai| ai.budget_item_id == budget_item.id);
         if let Some(actual_item) = actual_item {
-            let transactions = transactions
+            let mut transactions = transactions
                 .iter()
                 .filter(|tx| tx.actual_id == Some(actual_item.id))
                 .map(|tx| TransactionViewModel::from_transaction(tx))
                 .collect::<Vec<_>>();
+            transactions.sort_by_key(|tx| tx.date);
 
             let status = if actual_item.budgeted_amount.is_zero() {
                 NotBudgeted

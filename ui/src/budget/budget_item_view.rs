@@ -49,6 +49,7 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                             tr {
                                 th { class: "checkbox-cell", "" }
                                 th { "Beskrivning" }
+                                th { "Datum" }
                                 th { "Belopp" }
                             }
                         }
@@ -61,6 +62,7 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                                         let is_selected = selected_transactions().contains(&tx_id);
                                         rsx! {
                                             tr {
+                                                key: "{tx_id}",
                                                 td { class: "checkbox-cell",
                                                     input {
                                                         r#type: "checkbox",
@@ -77,6 +79,7 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                                                     }
                                                 }
                                                 td { {transaction.description.clone()} }
+                                                td { {transaction.date.format("%Y-%m-%d").to_string()} }
                                                 td { {transaction.amount.to_string()} }
                                             }
                                         }
