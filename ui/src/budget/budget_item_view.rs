@@ -32,6 +32,7 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
     if expanded() {
         rsx! {
             div { class: "budget-item-expanded",
+                key: "{item.item_id}",
                 div {
                     class: "budget-item-expanded-header",
                     onclick: move |_| { expanded.set(false) },
@@ -184,6 +185,7 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
     } else if edit_item() {
         rsx! {
             div { class: "budget-item-edit",
+                                key: "{item.item_id}",
                 div { class: "budget-item-edit-header",
                     div { class: "budget-item-edit-title", "{item_name()}" }
                     div { class: "budget-item-edit-amounts",
@@ -283,6 +285,7 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
     } else {
         rsx! {
             div { class: "budget-item",
+                                key: "{item.item_id}",
                 div {
                     class: "budget-item-name",
                     onclick: move |_| { expanded.set(!expanded()) },
