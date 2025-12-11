@@ -5,4 +5,4 @@ version = "0.0.1"
 publisher = "Kid VHS Enterprises"
 # The list of files to include in the bundle. These can contain globs.
 resources = ["**/*.css", "**/*.svg"]
-identifier ="com.kidvhs.raausty_budgets"
+identifier ="com.kidvhs.rusty_budgets"
