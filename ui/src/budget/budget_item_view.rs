@@ -26,11 +26,11 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
     // State for selected transaction IDs and the target item for moving
     let mut selected_transactions = use_signal(HashSet::<Uuid>::new);
     let mut show_move_selector = use_signal(|| false);
-    let budget = budget_signal().unwrap();
-    let budget_id = budget.id;
-
-    if expanded() {
-        rsx! {
+    if let Some(budget) = budget_signal() {
+        let budget_id = budget.id;
+        let remaining_to_budget = budget.overviews.iter().find(|ov| ov.budgeting_type == BudgetingType::Income).unwrap().remaining_budget;
+        if expanded() {
+            rsx! {
             div { class: "budget-item-expanded",
                 key: "{item.item_id}",
                 div {
@@ -182,8 +182,8 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                 }
             }
         }
-    } else if edit_item() {
-        rsx! {
+        } else if edit_item() {
+            rsx! {
             div { class: "budget-item-edit",
                                 key: "{item.item_id}",
                 div { class: "budget-item-edit-header",
@@ -214,7 +214,7 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                         Slider {
                             value: SliderValue::Single(budgeted_amount().amount_in_dollars() as f64),
                             min: 0.0,
-                            max: 100000.0,
+                            max: (budgeted_amount() + remaining_to_budget).amount_in_dollars() as f64,
                             step: 1.0,
                             label: "MONEEYYY",
                             horizontal: true,
@@ -282,8 +282,8 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                 }
             }
         }
-    } else {
-        rsx! {
+        } else {
+            rsx! {
             div { class: "budget-item",
                                 key: "{item.item_id}",
                 div {
@@ -302,5 +302,11 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                 }
             }
         }
+        }    } else {
+        rsx! {
+            div { "No budget" }
+        }
     }
+
+
 }
