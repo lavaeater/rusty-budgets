@@ -7,6 +7,7 @@ mod button;
 mod dialog;
 mod select;
 mod popover;
+mod slider;
 
 pub use input::*;
 pub use accordion::*;
@@ -17,6 +18,8 @@ pub use button::*;
 pub use select::*;
 pub use dialog::*;
 pub use popover::*;
+pub use slider::*;
+
 
 
 

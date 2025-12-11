@@ -1,5 +1,5 @@
 use crate::budget::ItemSelector;
-use crate::{Button, ButtonVariant};
+use crate::{Button, ButtonVariant, Slider, SliderRange, SliderThumb, SliderTrack};
 use api::ignore_transaction;
 use api::models::{BudgetingType, Money};
 use api::view_models::*;
@@ -7,10 +7,12 @@ use dioxus::prelude::*;
 use lucide_dioxus::Pen;
 use std::collections::HashSet;
 use dioxus::logger::tracing;
+use dioxus_primitives::slider::SliderValue;
 use uuid::Uuid;
 use api::view_models::BudgetItemStatus;
 use api::view_models::BudgetItemViewModel;
 use api::view_models::BudgetViewModel;
+use crate::budget::BudgetItemStatusView;
 
 #[component]
 pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
@@ -139,7 +141,7 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                                             let selected_ids: Vec<Uuid> = selected_transactions().into_iter().collect();
 
                                             for tx_id in selected_ids {
-                                                if let Err(_) = api::connect_transaction(
+                                                if api::connect_transaction(
                                                         budget_id,
                                                         tx_id,
                                                         target_item.actual_id,
@@ -147,6 +149,7 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                                                         budget.period_id,
                                                     )
                                                     .await
+                                                    .is_err()
                                                 {
                                                     success = false;
                                                     break;
@@ -205,6 +208,22 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                                     }
                                 }
                             },
+                        }
+                        Slider {
+                            value: SliderValue::Single(budgeted_amount().amount_in_dollars() as f64),
+                            min: 0.0,
+                            max: 100000.0,
+                            step: 1.0,
+                            label: "MONEEYYY",
+                            horizontal: true,
+                            on_value_change: move |v| {
+                                let SliderValue::Single(v) = v;
+                                budgeted_amount.set(Money::new_dollars(v as i64, budget.currency));
+                            },
+                            SliderTrack {
+                                SliderRange {}
+                                SliderThumb {}
+                            }
                         }
                     }
                     div { class: "budget-item-edit-actions",
@@ -280,97 +299,5 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                 }
             }
         }
-    }
-}
-
-#[component]
-pub fn BudgetItemStatusView(item: BudgetItemViewModel) -> Element {
-    let mut budget_signal = use_context::<Signal<Option<BudgetViewModel>>>();
-
-    let budget = budget_signal().unwrap();
-    let budget_id = budget.id;
-    match item.status {
-        BudgetItemStatus::Balanced => {
-            rsx!()
-        }
-        BudgetItemStatus::OverBudget => {
-            rsx! {
-                span { class: "over-budget-indicator", "Över Budget" }
-                {
-                    let shortage = item.actual_amount - item.budgeted_amount;
-                    let can_auto_adjust = item.budgeting_type == BudgetingType::Income
-                        || budget
-                            .overviews
-                            .iter()
-                            .find(|o| o.budgeting_type == BudgetingType::Income)
-                            .map(|o| o.remaining_budget >= shortage)
-                            .unwrap_or(false);
-                    rsx! {
-                        button {
-                            class: "auto-adjust-button",
-                            disabled: !can_auto_adjust,
-                            onclick: move |_| async move {
-                                let actual_id = item.actual_id.unwrap();
-                                match api::modify_actual(
-                                        budget_id,
-                                        actual_id,
-                                        budget.period_id,
-                                        Some(item.actual_amount),
-                                        None,
-                                    )
-                                    .await
-                                {
-                                    Ok(updated_budget) => {
-                                        budget_signal.set(Some(updated_budget));
-                                    }
-                                    Err(e) => {
-                                        error!("Failed to adjust item funds: {}", e);
-                                    }
-                                }
-                            },
-                            "Auto-justera budgetbelopp (+{shortage})"
-                        }
-                    }
-                }
-            }
-        }
-        BudgetItemStatus::NotBudgeted => {
-            rsx! {
-                span { class: "over-budget-indicator", "Ej budgeterad" }
-            }
-        }
-        BudgetItemStatus::UnderBudget => {
-            let shortage = item.budgeted_amount - item.actual_amount;
-            let can_auto_adjust = true;
-            rsx! {
-                span { class: "over-budget-indicator", "Under budget" }
-                button {
-                    class: "auto-adjust-button",
-                    disabled: !can_auto_adjust,
-                    onclick: move |_| async move {
-                        let actual_id = item.actual_id.unwrap();
-
-                        match api::modify_actual(
-                                budget_id,
-                                actual_id,
-                                budget.period_id,
-                                Some(item.actual_amount),
-                                None,
-                            )
-                            .await
-                        {
-                            Ok(updated_budget) => {
-                                budget_signal.set(Some(updated_budget));
-                            }
-                            Err(e) => {
-                                error!("Failed to adjust item funds: {}", e);
-                            }
-                        }
-                    },
-                    "Auto-justera budgetbelopp (-{shortage})"
-                }
-            }
-        }
-                
     }
 }
