@@ -146,7 +146,11 @@ pub fn Tabs(props: TabsProps) -> Element {
 #[component]
 pub fn TabList(props: TabListProps) -> Element {
     rsx! {
-        tabs::TabList { class: format!("tabs-list {}", props.class), attributes: props.attributes, {props.children} }
+        tabs::TabList {
+            class: format!("tabs-list {}", props.class),
+            attributes: props.attributes,
+            {props.children}
+        }
     }
 }
 

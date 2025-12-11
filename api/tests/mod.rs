@@ -255,16 +255,16 @@ pub fn test_import_from_skandia_excel() -> anyhow::Result<()> {
 
     let (imported, _, _) =
         import_from_skandia_excel(&rt, user_id, budget_id, "./tests/unit-test-data.xlsx")?;
-    assert_eq!(imported, 295);
+    assert_eq!(imported, 296);
     println!("Imported {} transactions", imported);
     let (omp, not_imported, _) =
         import_from_skandia_excel(&rt, user_id, budget_id, "./tests/unit-test-data.xlsx")?;
 
-    assert_eq!(not_imported, 295);
+    assert_eq!(not_imported, 296);
     assert_eq!(omp, 0);
 
     let budget = rt.materialize(budget_id)?;
-    assert_eq!(budget.all_transactions().len(), 295);
+    assert_eq!(budget.all_transactions().len(), 296);
 
     Ok(())
 }

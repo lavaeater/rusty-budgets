@@ -308,6 +308,7 @@ pub fn BudgetItemStatusView(item: BudgetItemViewModel) -> Element {
                     rsx! {
                         button {
                             class: "auto-adjust-button",
+                            disabled: !can_auto_adjust,
                             onclick: move |_| async move {
                                 let actual_id = item.actual_id.unwrap();
                                 match api::modify_actual(
@@ -345,6 +346,7 @@ pub fn BudgetItemStatusView(item: BudgetItemViewModel) -> Element {
                 span { class: "over-budget-indicator", "Under budget" }
                 button {
                     class: "auto-adjust-button",
+                    disabled: !can_auto_adjust,
                     onclick: move |_| async move {
                         let actual_id = item.actual_id.unwrap();
 
