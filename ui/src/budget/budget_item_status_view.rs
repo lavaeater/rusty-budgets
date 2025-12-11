@@ -1,12 +1,11 @@
 use dioxus::prelude::*;
 use api::models::BudgetingType;
 use api::view_models::{BudgetItemStatus, BudgetItemViewModel, BudgetViewModel};
+use crate::budget::budget_hero::BudgetState;
 
 #[component]
 pub fn BudgetItemStatusView(item: BudgetItemViewModel) -> Element {
-    let mut budget_signal = use_context::<Signal<Option<BudgetViewModel>>>();
-
-    let budget = budget_signal().unwrap();
+    let budget = use_context::<BudgetState>().0();
     let budget_id = budget.id;
     match item.status {
         BudgetItemStatus::Balanced => {
@@ -40,7 +39,7 @@ pub fn BudgetItemStatusView(item: BudgetItemViewModel) -> Element {
                                     .await
                                 {
                                     Ok(updated_budget) => {
-                                        budget_signal.set(Some(updated_budget));
+                                        consume_context::<BudgetState>().0.set(updated_budget);
                                     }
                                     Err(e) => {
                                         error!("Failed to adjust item funds: {}", e);
@@ -79,7 +78,7 @@ pub fn BudgetItemStatusView(item: BudgetItemViewModel) -> Element {
                             .await
                         {
                             Ok(updated_budget) => {
-                                budget_signal.set(Some(updated_budget));
+                                consume_context::<BudgetState>().0.set(updated_budget);
                             }
                             Err(e) => {
                                 error!("Failed to adjust item funds: {}", e);

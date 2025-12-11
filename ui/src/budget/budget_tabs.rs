@@ -7,13 +7,12 @@ use uuid::Uuid;
 use api::view_models::BudgetItemViewModel;
 use api::view_models::BudgetViewModel;
 use api::view_models::BudgetingTypeOverview;
+use crate::budget::budget_hero::BudgetState;
 
 #[component]
 pub fn BudgetTabs() -> Element {
-    let budget_signal = use_context::<Signal<Option<BudgetViewModel>>>();
-    match budget_signal() {
-        Some(budget) => {
-            let overview_by_type = budget
+    let budget_signal = use_context::<BudgetState>().0;
+            let overview_by_type = budget_signal()
                 .overviews
                 .iter()
                 .enumerate()
@@ -22,7 +21,7 @@ pub fn BudgetTabs() -> Element {
                         index,
                         ov.budgeting_type,
                         ov.clone(),
-                        budget
+                        budget_signal()
                             .items
                             .iter()
                             .filter(|i| i.budgeting_type == ov.budgeting_type)
@@ -57,10 +56,3 @@ pub fn BudgetTabs() -> Element {
                 }
             }
         }
-        None => {
-            rsx! {
-                h1 { "Ingen budget - än" }
-            }
-        }
-    }
-}
