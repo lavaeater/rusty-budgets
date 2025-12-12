@@ -1,0 +1,6 @@
+# Set JAVA_HOME
+set -gx JAVA_HOME $HOME/.sdkman/candidates/java/current/
+# Set ANDROID_HOME
+set -gx ANDROID_HOME $HOME/Android/Sdk
+# Set NDK_HOME
+set -gx ANDROID_NDK_HOME $ANDROID_HOME/ndk/29.0.14206865/  
