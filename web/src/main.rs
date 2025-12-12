@@ -1,7 +1,7 @@
+use dioxus::fullstack;
 use dioxus::logger::tracing::Level;
 use dioxus::prelude::*;
 use views::Home;
-
 mod views;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
@@ -17,7 +17,10 @@ const MAIN_CSS: Asset = asset!("/assets/main.css");
 
 fn main() {
     dioxus::logger::init(Level::INFO).expect("failed to init logger");
-
+    
+    #[cfg(not(feature = "server"))]
+    fullstack::set_server_url("http://localhost");
+    
     #[cfg(feature = "server")]
     let _ = api::db::CLIENT;
 

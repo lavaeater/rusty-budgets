@@ -1,0 +1,10 @@
+services:
+  rusty-budgets:
+    build: .
+    volumes:
+      - /home/tommie/projects/rusty-budgets/data.json:/app/data/data.json
+    environment:
+      DATA_FILE: /app/data/data.json
+    container_name: rusty-budgets
+    ports:
+      - 8080:8080/tcp

@@ -6,17 +6,16 @@ use api::connect_transaction;
 use api::view_models::BudgetViewModel;
 use api::view_models::BudgetItemViewModel;
 use crate::{Button, PopoverContent, PopoverRoot, PopoverTrigger};
+use crate::budget::budget_hero::BudgetState;
 
 #[component]
 pub fn TransactionsView(ignored: bool) -> Element {
-    let mut budget_signal = use_context::<Signal<Option<BudgetViewModel>>>();
+    let budget_signal = use_context::<BudgetState>().0;
     
-    match budget_signal() {
-        Some(budget) => {
-            let transactions = if ignored {
-                budget.ignored_transactions.clone()
+    let transactions = if ignored {
+                budget_signal().ignored_transactions.clone()
             } else {
-                budget.to_connect.clone()
+                budget_signal().to_connect.clone()
             };
             rsx! {
                 div { class: "transactions-view-a",
@@ -30,7 +29,7 @@ pub fn TransactionsView(ignored: bool) -> Element {
                     }
                     div { class: "transactions-list",
                         for tx in transactions {
-                            div { class: "transaction-card",
+                            div { class: "transaction-card", key: "{tx.tx_id}",
                                 div { class: "transaction-info",
                                     div { class: "transaction-description",
                                         strong { {tx.description.to_string()} }
@@ -47,22 +46,22 @@ pub fn TransactionsView(ignored: bool) -> Element {
                                 div { class: "transaction-actions",
                                     div { class: "action-group",
                                         ItemSelector {
-                                            items: budget.items.clone(),
+                                            items: budget_signal().items.clone(),
                                             on_change: move |e: Option<BudgetItemViewModel>| async move {
                                                 if let Some(item) = e {
                                                     info!("Lets connect transaction {} to item {}", tx.tx_id, item.item_id);
                                                     match connect_transaction(
-                                                            budget.id,
+                                                            budget_signal().id,
                                                             tx.tx_id,
                                                             item.actual_id,
                                                             item.item_id,
-                                                            budget.period_id,
+                                                            budget_signal().period_id,
                                                         )
                                                         .await
                                                     {
                                                         Ok(bv) => {
                                                             info!("Connected transaction {} to item {}", tx.tx_id, item.item_id);
-                                                            budget_signal.set(Some(bv));
+                                                            consume_context::<BudgetState>().0.set(bv);
                                                         }
                                                         Err(e) => {
                                                             error!(
@@ -96,11 +95,11 @@ pub fn TransactionsView(ignored: bool) -> Element {
                                         r#type: "button",
                                         "data-style": "destructive",
                                         onclick: move |_| async move {
-                                            info!("Ignoring: {} in {}", tx.tx_id, budget.period_id);
-                                            if let Ok(bv) = api::ignore_transaction(budget.id, tx.tx_id, budget.period_id)
+                                            info!("Ignoring: {} in {}", tx.tx_id, budget_signal().period_id);
+                                            if let Ok(bv) = api::ignore_transaction(budget_signal().id, tx.tx_id, budget_signal().period_id)
                                                 .await
                                             {
-                                                budget_signal.set(Some(bv));
+                                                consume_context::<BudgetState>().0.set(bv);
                                             }
                                         },
                                         "Ignorera"
@@ -112,15 +111,6 @@ pub fn TransactionsView(ignored: bool) -> Element {
                 }
             }
         }
-        None => {
-            rsx! {
-                div { "No budget found" }
-            }
-        }
-    }
-    
-    
-}
 
 #[component]
 pub fn NewBudgetItemPopover(budgeting_type: BudgetingType, tx_id: Option<Uuid>) -> Element {

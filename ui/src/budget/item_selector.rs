@@ -12,7 +12,11 @@ pub fn ItemSelector(items: Vec<BudgetItemViewModel>, on_change: EventHandler<Opt
         .enumerate()
         .map(|(ix, it)| {
         rsx! {
-            SelectOption::<BudgetItemViewModel> { index: ix, value: it.clone(), text_value: "{it.name}",
+            SelectOption::<BudgetItemViewModel> {
+                key: "{it.item_id}",
+                index: ix,
+                value: it.clone(),
+                text_value: "{it.name}",
                 {it.name.clone()}
                 SelectItemIndicator {}
             }

@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::hash::{DefaultHasher, Hash, Hasher};
 use dioxus::logger::tracing;
+use iter_tools::Itertools;
 use once_cell::sync::Lazy;
 use uuid::Uuid;
 use crate::models::actual_item::ActualItem;
@@ -34,10 +35,23 @@ static DEFAULT_STOPWORDS: Lazy<HashSet<&'static str>> = Lazy::new(|| {
     set.insert("zettle_*");
     // set.insert("överföring");
     set.insert("autogiro");
+    set
+});
+
+// Default stopwords to filter out from tokenized descriptions
+static DEFAULT_PLACE_NAMES: Lazy<HashSet<&'static str>> = Lazy::new(|| {
+    /*
+                "orebro",
+            "vastha,",
+
+     */
+    let mut set = HashSet::new();
     set.insert("orebro");
     set.insert("vastha");
     set
 });
+
+
 
 /// Checks if a string matches a date pattern (YYYY-MM-DD or similar)
 fn is_date_pattern(s: &str) -> bool {
@@ -97,8 +111,20 @@ pub fn tokenize_description(description: &str) -> Vec<String> {
             !is_date_pattern(token) &&
                 // Filter out stopwords
                 !DEFAULT_STOPWORDS.contains(token.as_str())
+            && !DEFAULT_PLACE_NAMES.contains(token.as_str())
         })
         .collect()
+}
+
+pub fn strip_dates(description: &str) -> String {
+    description
+        .split_whitespace()
+        .map(|s| s.to_string())
+        .filter(|token| {
+            // Filter out dates
+            !is_date_pattern(token)
+        })
+        .join(" ")
 }
 
 /// Tokenizes with custom stopwords
@@ -123,6 +149,22 @@ pub fn tokenize_description_with_stopwords(
                 !custom_stopwords.contains(token)
         })
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_tokenize_description_new_china_trading() {
+        let description = "2025-11-26 NEW CHINA TRADING, OREBRO";
+        let tokens = tokenize_description(description);
+        
+        // Date "2025-11-26" should be filtered out
+        // "OREBRO" should be filtered out (stopword)
+        // Remaining tokens should be lowercase
+        assert_eq!(tokens, vec!["new", "china", "trading,"]);
+    }
 }
 
 impl MatchRule {

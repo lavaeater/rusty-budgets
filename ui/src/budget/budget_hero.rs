@@ -12,6 +12,9 @@ use uuid::Uuid;
 use api::view_models::*;
 use api::view_models::BudgetViewModel;
 
+#[derive(Clone, Copy)]
+pub struct BudgetState(pub Signal<BudgetViewModel>);
+
 const HERO_CSS: Asset = asset!("assets/styling/budget-hero.css");
 #[component]
 pub fn BudgetHero() -> Element {
@@ -20,17 +23,17 @@ pub fn BudgetHero() -> Element {
     
     let period_id_now = PeriodId::from_date(Utc::now(), MonthBeginsOn::default());
     
-    let mut budget_signal = use_signal(|| None::<BudgetViewModel>);
-    use_context_provider(|| budget_signal);
-
     let mut budget_name = use_signal(|| "".to_string());
     let mut budget_id = use_signal(|| Uuid::default());
-
+    let mut ready = use_signal(|| false);
+    let mut budget_signal = use_signal(|| BudgetViewModel::default());
     use_effect(move || {
         if let Some(Ok(Some(budget))) = budget_resource.read().as_ref() {
-            info!("We have budget: {}", budget.id);
-            budget_signal.set(Some(budget.clone()));
+            info!("We have budget: {}", budget.id); 
+            budget_signal.set(budget.clone());
+            use_context_provider(|| BudgetState(budget_signal));
             budget_name.set(budget.name.clone());
+            ready.set(true);
         }
     });
 
@@ -39,19 +42,19 @@ pub fn BudgetHero() -> Element {
         spawn(async move {
             if !file_name.is_empty() {
                 if let Ok(updated_budget) = import_transactions(budget_id(), file_name, period_id()).await {
-                    budget_signal.set(Some(updated_budget));
+                    consume_context::<BudgetState>().0.set(updated_budget);
                 }
             }
         });
     };
 
     // Handle the resource state
-    match budget_signal() {
-        Some(budget) => {
-            info!("The budget signal was updated: {}", budget.id);
-            budget_id.set(budget.id);
-            
-            let auto_budget_enabled = budget.period_id != period_id_now;
+    if ready() {
+        let budget = use_context::<BudgetState>().0();
+        info!("The budget signal was updated: {}", budget.id);
+        budget_id.set(budget.id);
+        
+        let auto_budget_enabled = budget.period_id != period_id_now;
 
             rsx! {
                 document::Link { rel: "stylesheet", href: HERO_CSS }
@@ -77,7 +80,7 @@ pub fn BudgetHero() -> Element {
                                 Button {
                                     onclick: move |_| async move {
                                         if let Ok(bv) = auto_budget_period(budget.id, period_id()).await {
-                                            budget_signal.set(Some(bv));
+                                            consume_context::<BudgetState>().0.set(bv);
                                         }
                                     },
                                     "Auto budget"
@@ -123,66 +126,11 @@ pub fn BudgetHero() -> Element {
                     }
                 }
             }
-        }
-        None => {
-            // Check if we have an error or are still loading
-            match budget_resource.read_unchecked().as_ref() {
-                Some(Err(e)) => rsx! {
-                    document::Link { rel: "stylesheet", href: HERO_CSS }
-                    div { id: "budget_hero",
-                        h4 { "Error loading budget: {e}" }
-                    }
-                },
-                None => rsx! {
-                    div { id: "budget_hero",
-                        h4 { "Laddar..." }
-                    }
-                },
-                Some(&Ok(None)) => rsx! {
-                    document::Link { rel: "stylesheet", href: HERO_CSS }
-
-                    div {
-                        display: "flex",
-                        flex_direction: "column",
-                        gap: ".5rem",
-                        h4 { "Ingen budget hittad" }
-                        Label { html_for: "name", "Skapa budget" }
-                        div {
-                            display: "flex",
-                            flex_direction: "column",
-                            width: "40%",
-                            Input {
-                                id: "name",
-                                placeholder: "Budgetnamn",
-                                oninput: move |e: FormEvent| { budget_name.set(e.value()) },
-                            }
-                        }
-                    }
-                    br {}
-                    button {
-                        class: "button",
-                        "data-style": "primary",
-                        onclick: move |_| async move {
-                            if let Ok(budget) = api::create_budget(
-                                    budget_name.to_string(),
-                                    period_id(),
-                                    Some(true),
-                                )
-                                .await
-                            {
-                                info!("UI received a budget: {budget:?}");
-                                budget_signal.set(Some(budget));
-                            }
-                        },
-                        "Skapa budget"
-                    }
-                },
-                Some(&Ok(Some(_))) => rsx! {
-                    div { id: "budget_hero",
-                        h4 { "Laddar..." }
-                    }
-                },
+        } else {
+            rsx! {
+                div { id: "budget_hero",
+                    h4 { "Laddar..." }
+                }
             }
         }
-    }
 }
