@@ -21,6 +21,7 @@ use dioxus::prelude::*;
 use models::*;
 use uuid::Uuid;
 
+
 #[cfg(feature = "server")]
 const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 
@@ -41,10 +42,19 @@ pub mod db {
     use joydb::JoydbError;
     use once_cell::sync::Lazy;
     use uuid::Uuid;
+    use std::env;
+    use std::path::PathBuf;
+
+    fn get_data_file() -> PathBuf {
+        env::var("DATA_FILE")
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| PathBuf::from("data.json"))
+    }
 
     pub static CLIENT: Lazy<JoyDbBudgetRuntime> = Lazy::new(|| {
         tracing::info!("Init DB Client");
-        let client = JoyDbBudgetRuntime::new("data.json");
+
+        let client = JoyDbBudgetRuntime::new(get_data_file());
         // Run migrations
         tracing::info!("Insert Default Data");
         match get_default_user(Some(&client.db)) {
@@ -429,7 +439,7 @@ pub mod db {
     }
 }
 
-#[server]
+#[server(endpoint = "create_budget")]
 pub async fn create_budget(
     name: String,
     period_id: PeriodId,
@@ -447,7 +457,7 @@ pub async fn create_budget(
     }
 }
 
-#[server]
+#[server(endpoint = "add_actual")]
 pub async fn add_actual(
     budget_id: Uuid,
     item_id: Uuid,
@@ -464,7 +474,7 @@ pub async fn add_actual(
     }
 }
 
-#[server]
+#[server(endpoint = "auto_budget_period")]
 pub async fn auto_budget_period(
     budget_id: Uuid,
     period_id: PeriodId
@@ -479,7 +489,7 @@ pub async fn auto_budget_period(
     }
 }
 
-#[server]
+#[server(endpoint = "add_new_actual_item")]
 pub async fn add_new_actual_item(
     budget_id: Uuid,
     name: String,
@@ -540,7 +550,7 @@ pub async fn add_new_actual_item(
     }
 }
 
-#[server]
+#[server(endpoint = "modify_item")]
 pub async fn modify_item(
     budget_id: Uuid,
     item_id: Uuid,
@@ -558,7 +568,7 @@ pub async fn modify_item(
     }
 }
 
-#[server]
+#[server(endpoint = "modify_actual")]
 pub async fn modify_actual(
     budget_id: Uuid,
     actual_id: Uuid,
@@ -583,7 +593,7 @@ pub async fn modify_actual(
     }
 }
 
-#[server]
+#[server(endpoint = "get_default_user")]
 pub async fn get_default_user() -> Result<User, ServerFnError> {
     match db::get_default_user(None) {
         Ok(b) => Ok(b),
@@ -594,7 +604,7 @@ pub async fn get_default_user() -> Result<User, ServerFnError> {
     }
 }
 
-#[server]
+#[server(endpoint = "get_budget")]
 pub async fn get_budget(
     budget_id: Option<Uuid>,
     period_id: PeriodId,
@@ -628,7 +638,7 @@ pub async fn get_budget(
     }
 }
 
-#[server]
+#[server(endpoint = "import_transactions")]
 pub async fn import_transactions(
     budget_id: Uuid,
     file_name: String,
@@ -650,7 +660,7 @@ pub async fn import_transactions(
     }
 }
 
-#[server]
+#[server(endpoint = "connect_transaction")]
 pub async fn connect_transaction(
     budget_id: Uuid,
     tx_id: Uuid,
@@ -687,7 +697,7 @@ pub async fn connect_transaction(
     }
 }
 
-#[server]
+#[server(endpoint = "ignore_transaction")]
 pub async fn ignore_transaction(
     budget_id: Uuid,
     tx_id: Uuid,
@@ -703,7 +713,7 @@ pub async fn ignore_transaction(
     }
 }
 
-#[server]
+#[server(endpoint = "adjust_actual_funds")]
 pub async fn adjust_actual_funds(
     budget_id: Uuid,
     actual_id: Uuid,
