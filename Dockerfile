@@ -17,11 +17,10 @@ RUN cargo binstall dioxus-cli --root /.cargo -y --force
 ENV PATH="/.cargo/bin:$PATH"
 
 # Create the final bundle folder. Bundle always executes in release mode with optimizations enabled
-RUN dx bundle --web
+RUN dx bundle --verbose --fullstack true --release --package web
 
 FROM chef AS runtime
-COPY --from=builder /app/target/dx/rusty-budgets/release/web/ /usr/local/app
-
+COPY --from=builder /app/target/dx/web/release/web /usr/local/app
 # set our port and make sure to listen for all connections
 ENV PORT=8080
 ENV IP=0.0.0.0
@@ -30,4 +29,4 @@ ENV IP=0.0.0.0
 EXPOSE 8080
 
 WORKDIR /usr/local/app
-ENTRYPOINT [ "/usr/local/app/server" ]
+ENTRYPOINT [ "/usr/local/app/web" ]

@@ -1,0 +1,6 @@
+services:
+  rusty-budgets:
+    image: rusty-budgets
+    container_name: rusty-budgets
+    ports:
+      - 8080:8080/tcp
