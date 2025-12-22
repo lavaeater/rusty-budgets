@@ -1,47 +1,34 @@
-use std::rc::Rc;
-use dioxus::logger::tracing;
+use dioxus::logger::tracing::info;
 use dioxus::prelude::*;
-use dioxus_primitives::dialog::{DialogContent, DialogDescription, DialogRoot, DialogTitle};
-use crate::{Button, Input};
+use rfd::AsyncFileDialog;
+use crate::Button;
 
-pub type FileChosen = Event<String>;
+#[derive(Clone, Debug)]
+pub struct FileData {
+    pub name: String,
+    pub contents: Vec<u8>,
+}
 
 #[component]
-pub fn FileDialog( on_chosen: EventHandler<FileChosen>) -> Element {
-    let mut open = use_signal(|| false);
-    let mut file_name = use_signal(|| "".to_string());
+pub fn FileDialog(on_chosen: EventHandler<FileData>) -> Element {
+    let pick_file = move |_| {
+        spawn(async move {
+            let file = AsyncFileDialog::new()
+                .add_filter("Excel", &["xlsx", "xls"])
+                .set_title("Välj en fil att importera")
+                .pick_file()
+                .await;
+
+            if let Some(handle) = file {
+                let name = handle.file_name();
+                let contents = handle.read().await;
+                info!("File picked: {} ({} bytes)", name, contents.len());
+                on_chosen.call(FileData { name, contents });
+            }
+        });
+    };
 
     rsx! {
-        Button { class: "primary", onclick: move |_| open.set(true), "Importera från bank" }
-        DialogRoot { open: open(), on_open_change: move |v| open.set(v),
-            DialogContent {
-                Input {
-                    id: "file_name",
-                    placeholder: "Filnamn",
-                    value: file_name(),
-                    oninput: move |e: FormEvent| { file_name.set(e.value().clone()) },
-                }
-                Button {
-                    class: "secondary",
-                    aria_label: "Avbryt",
-                    tabindex: if open() { "2" } else { "-1" },
-                    onclick: move |_| open.set(false),
-                    "Avbryt"
-                }
-                Button {
-                    class: "primary",
-                    r#type: "button",
-                    aria_label: "Importera",
-                    tabindex: if open() { "1" } else { "-1" },
-                    onclick: move |_| {
-                        open.set(false);
-                        on_chosen.call(FileChosen::new(Rc::new(file_name()), false));
-                    },
-                    "Importera"
-                }
-                DialogTitle { "Välj en fil att importera" }
-                DialogDescription { "Just nu finns stöd för excel-ark från Skandiabanken." }
-            }
-        }
+        Button { class: "primary", onclick: pick_file, "Importera från bank" }
     }
 }

@@ -1,13 +1,13 @@
 use crate::cqrs::framework::Runtime;
 use crate::cqrs::runtime::JoyDbBudgetRuntime;
 use crate::models::{Currency, Money};
-use calamine::{open_workbook, DataType, Reader, Xlsx, XlsxError};
+use calamine::{open_workbook, open_workbook_from_rs, DataType, Reader, Xlsx, XlsxError};
 use chrono::{DateTime, NaiveDate, ParseError, Utc};
 use dioxus::logger;
 use dioxus::logger::tracing;
 use dioxus::logger::tracing::debug;
 use dioxus::prelude::error;
-use std::io::Error;
+use std::io::{Cursor, Error};
 use std::path::Path;
 use uuid::Uuid;
 
@@ -150,6 +150,75 @@ pub fn import_from_skandia_excel(
         }
         tracing::info!(
             "Imported {} transactions, skipped {} transactions, total {} transactions",
+            imported,
+            not_imported,
+            total_rows
+        );
+    }
+
+    Ok((imported, not_imported, total_rows))
+}
+
+pub fn import_from_skandia_excel_bytes(
+    runtime: &JoyDbBudgetRuntime,
+    user_id: Uuid,
+    budget_id: Uuid,
+    bytes: Vec<u8>,
+) -> Result<(u64, u64, u64), ImportError> {
+    let mut imported = 0u64;
+    let mut not_imported = 0u64;
+    let mut total_rows = 0u64;
+    let cursor = Cursor::new(bytes);
+    let mut excel: Xlsx<_> = open_workbook_from_rs(cursor)?;
+    if let Ok(r) = excel.worksheet_range("Kontoutdrag") {
+        let mut account_number: Option<String> = None;
+
+        for (row_num, row) in r.rows().enumerate() {
+            tracing::debug!("Row data: {:#?}", row);
+            if row_num == 0 {
+                account_number = Some(row[1].to_string());
+            } else if row_num > 3 && row.len() > 3 {
+                let amount =
+                    Money::new_cents((row[2].as_f64().unwrap() * 100.0) as i64, Currency::SEK);
+                let balance =
+                    Money::new_cents((row[3].as_f64().unwrap() * 100.0) as i64, Currency::SEK);
+                let date_str = row[0].to_string();
+                let naive_date = NaiveDate::parse_from_str(&date_str, "%Y-%m-%d")?;
+
+                // Convert to midnight UTC
+                let date: DateTime<Utc> = naive_date
+                    .and_hms_opt(0, 0, 0)
+                    .unwrap()
+                    .and_utc();
+
+                let description = row[1].to_string();
+                let acct_no = if account_number.is_some() {
+                    account_number.clone().unwrap()
+                } else {
+                    return Err(ImportError::AccountNumberMissing);
+                };
+                match runtime.add_transaction(
+                    user_id,
+                    budget_id,
+                    &acct_no,
+                    amount,
+                    balance,
+                    &description,
+                    date,
+                ) {
+                    Ok(_) => {
+                        imported += 1;
+                        total_rows += 1;
+                    }
+                    Err(_) => {
+                        not_imported += 1;
+                        total_rows += 1;
+                    }
+                }
+            }
+        }
+        tracing::info!(
+            "Imported {} transactions from bytes, skipped {} transactions, total {} transactions",
             imported,
             not_imported,
             total_rows

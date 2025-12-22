@@ -34,7 +34,7 @@ pub mod db {
     use crate::cqrs::framework::{CommandError, Runtime};
     use crate::cqrs::runtime::{Db, JoyDbBudgetRuntime, UserBudgets};
     use crate::events::TransactionConnected;
-    use crate::import::{import_from_path, import_from_skandia_excel};
+    use crate::import::{import_from_path, import_from_skandia_excel, import_from_skandia_excel_bytes};
     use crate::models::*;
     use crate::models::*;
     use chrono::NaiveDate;
@@ -190,6 +190,16 @@ pub mod db {
     ) -> Result<Uuid, RustyError> {
         let runtime = with_runtime(None);
         let _ = import_from_path(file_name, user_id, budget_id, runtime)?;
+        Ok(budget_id)
+    }
+
+    pub fn import_transactions_bytes(
+        user_id: Uuid,
+        budget_id: Uuid,
+        bytes: Vec<u8>,
+    ) -> Result<Uuid, RustyError> {
+        let runtime = with_runtime(None);
+        let _ = import_from_skandia_excel_bytes(runtime, user_id, budget_id, bytes)?;
         Ok(budget_id)
     }
 
@@ -583,6 +593,21 @@ pub async fn import_transactions(
 ) -> Result<BudgetViewModel, ServerFnError> {
     let user = db::get_default_user(None)?;
     let _ = db::import_transactions(user.id, budget_id, &file_name)?;
+    let _ = db::evaluate_rules(user.id, budget_id)?;
+    Ok(BudgetViewModel::from_budget(
+        &db::get_budget(budget_id)?,
+        period_id,
+    ))
+}
+
+#[server(endpoint = "import_transactions_bytes")]
+pub async fn import_transactions_bytes(
+    budget_id: Uuid,
+    file_contents: Vec<u8>,
+    period_id: PeriodId,
+) -> Result<BudgetViewModel, ServerFnError> {
+    let user = db::get_default_user(None)?;
+    let _ = db::import_transactions_bytes(user.id, budget_id, file_contents)?;
     let _ = db::evaluate_rules(user.id, budget_id)?;
     Ok(BudgetViewModel::from_budget(
         &db::get_budget(budget_id)?,

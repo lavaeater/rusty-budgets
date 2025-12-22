@@ -1,8 +1,8 @@
 use api::models::*;
 use crate::budget::{BudgetTabs, TransactionsView};
-use crate::file_chooser::*;
-use crate::{Button, Input};
-use api::{auto_budget_period, get_budget, import_transactions};
+use crate::file_chooser::{FileData, FileDialog};
+use crate::Button;
+use api::{auto_budget_period, get_budget, import_transactions_bytes};
 use chrono::Utc;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
@@ -37,11 +37,11 @@ pub fn BudgetHero() -> Element {
         }
     });
 
-    let import_file = move |file: FileChosen| {
-        let file_name = file.data.to_string();
+    let import_file = move |file: FileData| {
+        let contents = file.contents;
         spawn(async move {
-            if !file_name.is_empty() {
-                if let Ok(updated_budget) = import_transactions(budget_id(), file_name, period_id()).await {
+            if !contents.is_empty() {
+                if let Ok(updated_budget) = import_transactions_bytes(budget_id(), contents, period_id()).await {
                     consume_context::<BudgetState>().0.set(updated_budget);
                 }
             }
