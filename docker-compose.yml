@@ -7,5 +7,5 @@ services:
       DATA_FILE: /app/data/data.json
     container_name: rusty-budgets
     ports:
-      - 8080:8080/tcp
+      - 8666:8666/tcp
     restart: unless-stopped
