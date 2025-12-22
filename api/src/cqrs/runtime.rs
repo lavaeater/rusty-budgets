@@ -1,4 +1,4 @@
-use crate::cqrs::framework::{Runtime, StoredEvent};
+use crate::cqrs::framework::{CommandError, Runtime, RuntimeError, StoredEvent};
 use crate::models::*;
 use chrono::{DateTime, Utc};
 use dioxus::logger::tracing;
@@ -18,7 +18,7 @@ impl JoyDbBudgetRuntime {
         default_budget: bool,
         month_begins_on: MonthBeginsOn,
         currency: Currency,
-    ) -> anyhow::Result<Uuid> {
+    ) -> Result<Uuid, RuntimeError> {
         self.cmd(user_id, Uuid::default(), |budget| {
             budget.create_budget(budget_name.to_string(), user_id, month_begins_on, default_budget, currency)
         })
@@ -30,7 +30,7 @@ impl JoyDbBudgetRuntime {
         budget_id: Uuid,
         item_name: String,
         item_type: BudgetingType,
-    ) -> anyhow::Result<Uuid> {
+    ) -> Result<Uuid, RuntimeError> {
         self.cmd(user_id, budget_id, |budget| {
             budget.add_item(item_name.to_string(), item_type)
         })
@@ -43,7 +43,7 @@ impl JoyDbBudgetRuntime {
         item_id: Uuid,
         amount: Money,
         period_id: PeriodId,
-    ) -> anyhow::Result<Uuid> {
+    ) -> Result<Uuid, RuntimeError> {
         self.cmd(user_id, budget_id, |budget| {
             budget.add_actual(item_id, period_id, amount)
         })
@@ -57,7 +57,7 @@ impl JoyDbBudgetRuntime {
         item_id: Uuid,
         name: Option<String>,
         item_type: Option<BudgetingType>
-    ) -> anyhow::Result<Uuid> {
+    ) -> Result<Uuid, RuntimeError> {
         self.cmd(user_id, budget_id,|budget| {
             budget.modify_item(item_id, name, item_type)
         })
@@ -72,7 +72,7 @@ impl JoyDbBudgetRuntime {
         period_id: PeriodId,
         budgeted_amount: Option<Money>,
         actual_amount: Option<Money>,
-    ) -> anyhow::Result<Uuid> {
+    ) -> Result<Uuid, RuntimeError> {
         self.cmd(user_id, budget_id,|budget| {
             budget.modify_actual(actual_id, period_id, budgeted_amount, actual_amount, None, None)
         })
@@ -89,8 +89,8 @@ impl JoyDbBudgetRuntime {
         balance: Money,
         description: &str,
         date: DateTime<Utc>
-    ) -> anyhow::Result<Uuid> {
-        if let Ok(tx_id) = self.add_transaction(
+    ) -> Result<Uuid, RuntimeError> {
+        let tx_id = self.add_transaction(
             user_id,
             budget_id,
             bank_account_number,
@@ -98,11 +98,8 @@ impl JoyDbBudgetRuntime {
             balance,
             description,
             date,
-        ) {
-            self.connect_transaction(user_id, budget_id, tx_id, actual_id)
-        } else {
-            Err(anyhow::anyhow!("Failed to add transaction"))
-        }
+        )?;
+        self.connect_transaction(user_id, budget_id, tx_id, actual_id)
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -115,7 +112,7 @@ impl JoyDbBudgetRuntime {
         balance: Money,
         description: &str,
         date: DateTime<Utc>
-    ) -> anyhow::Result<Uuid> {
+    ) -> Result<Uuid, RuntimeError> {
         self.cmd(user_id, budget_id, |budget| {
             budget.add_transaction(
                 bank_account_number.to_string(),
@@ -133,7 +130,7 @@ impl JoyDbBudgetRuntime {
         budget_id: Uuid,
         tx_id: Uuid,
         actual_id: Uuid,
-    ) -> anyhow::Result<Uuid> {
+    ) -> Result<Uuid, RuntimeError> {
         self.cmd(user_id, budget_id, |budget| {
             budget.connect_transaction(tx_id, actual_id)
         })
@@ -144,7 +141,7 @@ impl JoyDbBudgetRuntime {
         budget_id: Uuid,
         tx_id: Uuid,
         user_id: Uuid,
-    ) -> anyhow::Result<Uuid> {
+    ) -> Result<Uuid, RuntimeError> {
         self.cmd(user_id, budget_id, |budget| {
             budget.ignore_transaction(tx_id)
         })
@@ -158,7 +155,7 @@ impl JoyDbBudgetRuntime {
         from_actual_id: Uuid,
         to_actual_id: Uuid,
         amount: Money,
-    ) -> anyhow::Result<Uuid> {
+    ) -> Result<Uuid, RuntimeError> {
         self.cmd(user_id, budget_id, |budget| {
             budget.reallocate_budgeted_funds(period_id, from_actual_id, to_actual_id, amount)
         })
@@ -171,7 +168,7 @@ impl JoyDbBudgetRuntime {
         actual_id: Uuid,
         period_id: PeriodId,
         budgeted_amount: Money,
-    ) -> anyhow::Result<Uuid> {
+    ) -> Result<Uuid, RuntimeError> {
         self.cmd(user_id, budget_id, |budget| {
             budget.adjust_actual_budgeted_funds(actual_id, period_id, budgeted_amount)
         })
@@ -184,7 +181,7 @@ impl JoyDbBudgetRuntime {
         transaction_key: Vec<String>,
         item_key: Vec<String>,
         always_apply: bool,
-    ) -> anyhow::Result<Uuid> {
+    ) -> Result<Uuid, RuntimeError> {
         self.cmd(user_id, budget_id, |budget| {
             budget.add_rule(transaction_key, item_key, always_apply)
         })
@@ -244,7 +241,7 @@ impl JoyDbBudgetRuntime {
 
     /// Ergonomic command execution - eliminates all the boilerplate!
     /// Usage: rt.cmd(id, |budget| budget.create_budget(name, user_id, default))
-    pub fn cmd<F, E>(&self, user_id: Uuid, id: Uuid, command: F) -> anyhow::Result<Uuid>
+    pub fn cmd<F, E>(&self, user_id: Uuid, id: Uuid, command: F) -> Result<Uuid, RuntimeError>
     where
         F: FnOnce(&Budget) -> Result<E, crate::cqrs::framework::CommandError>,
         E: Into<BudgetEvent>,
@@ -258,7 +255,7 @@ impl JoyDbBudgetRuntime {
         &self,
         id: Uuid,
         last_timestamp: i64,
-    ) -> anyhow::Result<Vec<StoredBudgetEvent>> {
+    ) -> Result<Vec<StoredBudgetEvent>, RuntimeError> {
         let mut events: Vec<StoredBudgetEvent> = self.db.get_all_by(|e: &StoredBudgetEvent| {
             e.aggregate_id == id && e.timestamp > last_timestamp
         })?;
@@ -266,29 +263,16 @@ impl JoyDbBudgetRuntime {
         Ok(events)
     }
 
-    fn get_budget(&self, id: Uuid) -> anyhow::Result<Option<Budget>> {
+    fn get_budget(&self, id: Uuid) -> Result<Option<Budget>, RuntimeError> {
         let budget = self.db.get::<Budget>(&id)?;
-        if let Some(budget) = budget {
-            Ok(Some(budget))
-        } else {
-            Ok(None)
-        }
+        Ok(budget)
     }
 }
 
 impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
-    fn load(&self, id: Uuid) -> Result<Option<Budget>, anyhow::Error> {
-        let budget: Result<Option<Budget>, anyhow::Error> = match self.db.get::<Budget>(&id) {
-            Err(err) => {
-                match err {
-                    JoydbError::Deserialize(_) => Ok(None),
-                    _ => Err(err.into()),
-                }
-            },
-            Ok(budget) => Ok(budget),
-        };
+    fn load(&self, id: Uuid) -> Result<Option<Budget>, RuntimeError> {
+        let budget = self.db.get::<Budget>(&id)?;
 
-        let budget = budget?;
         tracing::info!("Loaded budget is some: {}", budget.is_some());
         let mut budget = budget.unwrap_or(Budget::new(id));
         let version = budget.version;
@@ -306,18 +290,18 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
         Ok(Some(budget))
     }
 
-    fn snapshot(&self, agg: &Budget) -> anyhow::Result<()> {
+    fn snapshot(&self, agg: &Budget) -> Result<(), RuntimeError> {
         self.db.upsert(agg)?;
         Ok(())
     }
 
-    fn append(&self, user_id: Uuid, ev: BudgetEvent) -> anyhow::Result<()> {
+    fn append(&self, user_id: Uuid, ev: BudgetEvent) -> Result<(), RuntimeError> {
         let stored_event = StoredEvent::new(ev, user_id);
         self.db.insert(&stored_event)?;
         Ok(())
     }
 
-    fn events(&self, id: Uuid) -> anyhow::Result<Vec<StoredBudgetEvent>> {
+    fn events(&self, id: Uuid) -> Result<Vec<StoredBudgetEvent>, RuntimeError> {
         self.fetch_events(id, 0)
     }
 }

@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter};
 use std::hash::Hash;
+use joydb::JoydbError;
 use uuid::Uuid;
 
 /// Aggregate: domain state that evolves by applying events.
@@ -72,24 +73,37 @@ pub trait DomainEvent<A: Aggregate>: Clone + Debug + Sized {
     fn apply(&self, state: &mut A) -> Uuid;
 }
 
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum CommandError {
+    #[error("Validation error: {0}")]
     Validation(String),
+    #[error("Conflict error: {0}")]
     Conflict(String),
+    #[error("Not found error: {0}")]
     NotFound(String),
 }
 
-impl Display for CommandError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            CommandError::Validation(msg) => write!(f, "Validation error: {}", msg),
-            CommandError::Conflict(msg) => write!(f, "Conflict error: {}", msg),
-            CommandError::NotFound(msg) => write!(f, "Not found error: {}", msg),
-        }
+#[derive(Debug, thiserror::Error)]
+pub enum RuntimeError {
+    #[error("Aggregate not found")]
+    AggregateNotFound,
+    #[error("Command error: {0}")]
+    CommandError(CommandError),
+    #[error("Database error: {0}")]
+    DbError(JoydbError)
+}
+
+impl From<CommandError> for RuntimeError {
+    fn from(value: CommandError) -> Self {
+        RuntimeError::CommandError(value)
     }
 }
 
-impl Error for CommandError {}
+impl From<JoydbError> for RuntimeError {
+    fn from(value: JoydbError) -> Self {
+        RuntimeError::DbError(value)
+    }
+}
 
 pub trait Runtime<A, E>
 where
@@ -97,15 +111,15 @@ where
     E: DomainEvent<A>,
 {
     /// Load and rebuild current state from stored events.
-    fn load(&self, id: A::Id) -> anyhow::Result<Option<A>>;
+    fn load(&self, id: A::Id) -> Result<Option<A>, RuntimeError>;
 
-    fn snapshot(&self, agg: &A) -> anyhow::Result<()>;
+    fn snapshot(&self, agg: &A) -> Result<(), RuntimeError>;
 
     /// Append one new event to the stream.
-    fn append(&self, user_id: Uuid, ev: E) -> anyhow::Result<()>;
+    fn append(&self, user_id: Uuid, ev: E) -> Result<(), RuntimeError>;
 
     /// Execute a command: decide → append → return event.
-    fn execute<F>(&self, user_id: Uuid, id: A::Id, command: F) -> anyhow::Result<Uuid>
+    fn execute<F>(&self, user_id: Uuid, id: A::Id, command: F) -> Result<Uuid, RuntimeError>
     where
         F: FnOnce(&A) -> Result<E, CommandError>,
     {
@@ -130,15 +144,15 @@ where
     }
 
     /// Materialize latest state after commands.
-    fn materialize(&self, id: A::Id) -> anyhow::Result<A> {
+    fn materialize(&self, id: A::Id) -> Result<A, RuntimeError> {
         let state = self.load(id)?;
         if let Some(state) = state {
             Ok(state)
         } else {
-            Err(anyhow::anyhow!("Aggregate not found"))
+            Err(RuntimeError::AggregateNotFound)
         }
     }
 
     /// Inspect raw events (for audit/testing).
-    fn events(&self, id: A::Id) -> anyhow::Result<Vec<StoredEvent<A, E>>>;
+    fn events(&self, id: A::Id) -> Result<Vec<StoredEvent<A, E>>, RuntimeError>;
 }
