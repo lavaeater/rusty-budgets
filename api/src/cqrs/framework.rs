@@ -82,11 +82,11 @@ pub enum CommandError {
     #[error("Not found error: {0}")]
     NotFound(String),
 }
-
+//RuntimeError::AggregateNotFound
 #[derive(Debug, thiserror::Error)]
 pub enum RuntimeError {
-    #[error("Aggregate not found")]
-    AggregateNotFound,
+    #[error("Item not found: {0}")]
+    ItemNotFound(String, String),
     #[error("Command error: {0}")]
     CommandError(CommandError),
     #[error("Database error: {0}")]
@@ -101,7 +101,10 @@ impl From<CommandError> for RuntimeError {
 
 impl From<JoydbError> for RuntimeError {
     fn from(value: JoydbError) -> Self {
-        RuntimeError::DbError(value)
+        match value {
+            JoydbError::NotFound { id, model } => RuntimeError::ItemNotFound(id, model),
+            _ => RuntimeError::DbError(value)
+        }
     }
 }
 
@@ -111,7 +114,7 @@ where
     E: DomainEvent<A>,
 {
     /// Load and rebuild current state from stored events.
-    fn load(&self, id: A::Id) -> Result<Option<A>, RuntimeError>;
+    fn load(&self, id: A::Id) -> Result<A, RuntimeError>;
 
     fn snapshot(&self, agg: &A) -> Result<(), RuntimeError>;
 
@@ -132,7 +135,7 @@ where
             self.append(user_id, ev.clone())?;
             Ok(latest_id)
         } else {
-            let mut current = self.load(id)?.unwrap();
+            let mut current = self.load(id)?;
 
             let ev = command(&current)?;
 
@@ -140,16 +143,6 @@ where
 
             self.append(user_id, ev.clone())?;
             Ok(latest_id)
-        }
-    }
-
-    /// Materialize latest state after commands.
-    fn materialize(&self, id: A::Id) -> Result<A, RuntimeError> {
-        let state = self.load(id)?;
-        if let Some(state) = state {
-            Ok(state)
-        } else {
-            Err(RuntimeError::AggregateNotFound)
         }
     }
 

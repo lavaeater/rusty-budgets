@@ -270,7 +270,7 @@ impl JoyDbBudgetRuntime {
 }
 
 impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
-    fn load(&self, id: Uuid) -> Result<Option<Budget>, RuntimeError> {
+    fn load(&self, id: Uuid) -> Result<Budget, RuntimeError> {
         let budget = self.db.get::<Budget>(&id)?;
 
         tracing::info!("Loaded budget is some: {}", budget.is_some());
@@ -287,7 +287,7 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
             tracing::info!("More than 3 events since last snapshot, snapshotting");
             self.snapshot(&budget)?;
         }
-        Ok(Some(budget))
+        Ok(budget)
     }
 
     fn snapshot(&self, agg: &Budget) -> Result<(), RuntimeError> {

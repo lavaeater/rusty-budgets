@@ -20,7 +20,7 @@ pub fn create_budget_test() -> anyhow::Result<()> {
         MonthBeginsOn::default(),
         Currency::SEK,
     )?;
-    let res = rt.materialize(budget_id)?;
+    let res = rt.load(budget_id)?;
     assert_eq!(res.name, "Test Budget");
     assert!(res.default_budget);
     assert_eq!(res.currency, Currency::SEK);
@@ -52,12 +52,12 @@ pub fn add_budget_item() -> anyhow::Result<()> {
         BudgetingType::Expense,
     )?;
 
-    let res = rt.materialize(budget_id)?;
+    let res = rt.load(budget_id)?;
     let item = res.get_item(item_id).unwrap();
     assert_eq!(item.name, "Utgifter");
     assert_eq!(item.budgeting_type, BudgetingType::Expense);
 
-    let budget_agg = rt.materialize(budget_id)?;
+    let budget_agg = rt.load(budget_id)?;
 
     let new_item = budget_agg.get_item(item_id).unwrap();
     assert_eq!(new_item.name, "Utgifter");
@@ -163,7 +163,7 @@ pub fn connect_bank_transaction() -> anyhow::Result<()> {
 
     let _tx_id = rt.connect_transaction(user_id, budget_id, tx_id, actual_id)?;
 
-    let budget = rt.materialize(budget_id)?;
+    let budget = rt.load(budget_id)?;
     assert_eq!(
         budget.get_budgeted_by_type(&BudgetingType::Expense, period_id),
         hundred_money
@@ -211,7 +211,7 @@ pub fn add_bank_transaction() -> anyhow::Result<()> {
     );
 
     assert!(res.is_ok());
-    let mut budget = rt.materialize(budget_id)?;
+    let mut budget = rt.load(budget_id)?;
     assert_eq!(budget.with_period(period_id).transactions.len(), 1);
 
     let also_now: DateTime<Utc> = naive_date
@@ -263,7 +263,7 @@ pub fn test_import_from_skandia_excel() -> anyhow::Result<()> {
     assert_eq!(not_imported, 296);
     assert_eq!(omp, 0);
 
-    let budget = rt.materialize(budget_id)?;
+    let budget = rt.load(budget_id)?;
     assert_eq!(budget.all_transactions().len(), 296);
 
     Ok(())
@@ -329,7 +329,7 @@ pub fn reconnect_bank_transaction() -> anyhow::Result<()> {
 
     let expected_money = Money::new_dollars(100, Currency::SEK);
 
-    let budget = rt.materialize(budget_id)?;
+    let budget = rt.load(budget_id)?;
     assert_eq!(
         budget.get_budgeted_by_type(&BudgetingType::Expense, period_id),
         expected_money
@@ -349,7 +349,7 @@ pub fn reconnect_bank_transaction() -> anyhow::Result<()> {
 
     let _ = rt.connect_transaction(user_id, budget_id, tx_id, new_id)?;
 
-    let budget = rt.materialize(budget_id)?;
+    let budget = rt.load(budget_id)?;
     assert_eq!(
         budget.get_budgeted_by_type(&BudgetingType::Expense, period_id),
         expected_money
@@ -416,7 +416,7 @@ pub fn reallocate_item_funds() -> anyhow::Result<()> {
         to_actual_id,
         Money::new_dollars(50, Currency::SEK),
     )?;
-    let mut budget = rt.materialize(budget_id)?;
+    let mut budget = rt.load(budget_id)?;
     let from_item = budget.with_period(period_id).get_actual(from_actual_id).unwrap();
     assert_eq!(from_item.budgeted_amount, Money::new_dollars(50, Currency::SEK));
     let to_item = budget.with_period(period_id).get_actual(to_actual_id).unwrap();
