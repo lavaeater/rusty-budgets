@@ -1,64 +1,93 @@
 use crate::cqrs::framework::Runtime;
 use crate::cqrs::runtime::JoyDbBudgetRuntime;
 use crate::models::{Currency, Money};
-use calamine::{open_workbook, DataType, Reader, Xlsx};
-use chrono::{DateTime, NaiveDate, Utc};
+use calamine::{open_workbook, DataType, Reader, Xlsx, XlsxError};
+use chrono::{DateTime, NaiveDate, ParseError, Utc};
 use dioxus::logger;
 use dioxus::logger::tracing;
 use dioxus::logger::tracing::debug;
 use dioxus::prelude::error;
+use std::io::Error;
 use std::path::Path;
 use uuid::Uuid;
+
+#[derive(Debug, thiserror::Error)]
+pub enum ImportError {
+    #[error("Account number missing")]
+    AccountNumberMissing,
+    #[error("IO error: {0}")]
+    IoError(std::io::Error),
+    #[error("Calamine error: {0}")]
+    CalamineError(calamine::Error),
+    #[error("Xlsx error: {0}")]
+    XlsxError(XlsxError),
+    #[error("Parse error: {0}")]
+    ParseError(ParseError),
+}
+
+impl From<std::io::Error> for ImportError {
+    fn from(value: Error) -> Self {
+        ImportError::IoError(value)
+    }
+}
+
+impl From<calamine::Error> for ImportError {
+    fn from(value: calamine::Error) -> Self {
+        ImportError::CalamineError(value)
+    }
+}
+
+impl From<XlsxError> for ImportError {
+    fn from(value: XlsxError) -> Self {
+        ImportError::XlsxError(value)
+    }
+}
+
+impl From<ParseError> for ImportError {
+    fn from(value: ParseError) -> Self {
+        ImportError::ParseError(value)
+    }
+}
 
 pub fn import_from_path(
     path: &str,
     user_id: Uuid,
     budget_id: Uuid,
     runtime: &JoyDbBudgetRuntime,
-) -> anyhow::Result<(u64, u64, u64)> {
+) -> Result<(u64, u64, u64), ImportError> {
     let p = Path::new(path);
     debug!("Importing from path: {}", path);
     if p.exists() {
         debug!("Path does exist!");
         if p.is_dir() {
             debug!("Path is a dir!");
-            let mut imported = 0u64;
-            let mut not_imported = 0u64;
-            let mut total_rows = 0u64;
-            for entry in p.read_dir()? {
+            let entries = p.read_dir()?;
+            let r = entries.map(|entry| {
                 let path = entry?.path();
-                if path.is_file() {
-                    match import_from_skandia_excel(
+                
+                if path.is_file() && let Some(path_str) = path.to_str(){
+                    import_from_skandia_excel(
                         runtime,
                         user_id,
                         budget_id,
-                        path.to_str().unwrap(),
-                    ) {
-                        Ok((i, ni, t)) => {
-                            imported += i;
-                            not_imported += ni;
-                            total_rows += t;
-                        }
-                        Err(err) => {
-                            error!(error = %err, "Failed to import from path");
-                        }
-                    }
+                        path_str)
+                } else {
+                    Ok((0u64, 0u64, 0u64))
                 }
-            }
-            Ok((imported, not_imported, total_rows))
+            }).collect::<Result<Vec<_>, _>>()?;
+            Ok(r.iter().fold((0u64, 0u64, 0u64), |acc, (a, b, c)| {
+                (acc.0 + a, acc.1 + b, acc.2 + c)
+            }))
         } else {
-            match import_from_skandia_excel(runtime, user_id, budget_id, path ) {
-                Ok((imported, not_imported, total_rows)) => { 
-                    Ok((imported, not_imported, total_rows))
-                },
-                Err(e) => {
-                    error!(error = %e, "Failed to import from path");
-                    Err(e)
-                }
-            }
+            Ok(import_from_skandia_excel(
+                runtime, user_id, budget_id, path,
+            )?)
         }
     } else {
-        Err(anyhow::anyhow!("Path does not exist"))
+        Err(ImportError::IoError(Error::new(
+            std::io::ErrorKind::NotFound,
+            "Path does not exist",
+        )))
     }
 }
 
@@ -67,11 +96,11 @@ pub fn import_from_skandia_excel(
     user_id: Uuid,
     budget_id: Uuid,
     path: &str,
-) -> anyhow::Result<(u64, u64, u64)> {
-    let mut excel: Xlsx<_> = open_workbook(path)?;
+) -> Result<(u64, u64, u64), ImportError> {
     let mut imported = 0u64;
     let mut not_imported = 0u64;
     let mut total_rows = 0u64;
+    let mut excel: Xlsx<_> = open_workbook(path)?;
     if let Ok(r) = excel.worksheet_range("Kontoutdrag") {
         let mut account_number: Option<String> = None;
 
@@ -97,7 +126,7 @@ pub fn import_from_skandia_excel(
                 let acct_no = if account_number.is_some() {
                     account_number.clone().unwrap()
                 } else {
-                    return Err(anyhow::anyhow!("Could not find account number"));
+                    return Err(ImportError::AccountNumberMissing);
                 };
                 match runtime.add_transaction(
                     user_id,
@@ -126,7 +155,7 @@ pub fn import_from_skandia_excel(
             total_rows
         );
     }
-    
+
     Ok((imported, not_imported, total_rows))
 }
 
