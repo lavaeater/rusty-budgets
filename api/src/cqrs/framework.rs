@@ -10,6 +10,7 @@ use std::fmt::{Debug, Display, Formatter};
 use std::hash::Hash;
 use joydb::JoydbError;
 use uuid::Uuid;
+use crate::api_error::RustyError;
 
 /// Aggregate: domain state that evolves by applying events.
 pub trait Aggregate: Sized + Debug + Clone {
@@ -82,31 +83,6 @@ pub enum CommandError {
     #[error("Not found error: {0}")]
     NotFound(String),
 }
-//RuntimeError::AggregateNotFound
-#[derive(Debug, thiserror::Error)]
-pub enum RuntimeError {
-    #[error("Item not found: {0}")]
-    ItemNotFound(String, String),
-    #[error("Command error: {0}")]
-    CommandError(CommandError),
-    #[error("Database error: {0}")]
-    DbError(JoydbError)
-}
-
-impl From<CommandError> for RuntimeError {
-    fn from(value: CommandError) -> Self {
-        RuntimeError::CommandError(value)
-    }
-}
-
-impl From<JoydbError> for RuntimeError {
-    fn from(value: JoydbError) -> Self {
-        match value {
-            JoydbError::NotFound { id, model } => RuntimeError::ItemNotFound(id, model),
-            _ => RuntimeError::DbError(value)
-        }
-    }
-}
 
 pub trait Runtime<A, E>
 where
@@ -114,15 +90,15 @@ where
     E: DomainEvent<A>,
 {
     /// Load and rebuild current state from stored events.
-    fn load(&self, id: A::Id) -> Result<A, RuntimeError>;
+    fn load(&self, id: A::Id) -> Result<A, RustyError>;
 
-    fn snapshot(&self, agg: &A) -> Result<(), RuntimeError>;
+    fn snapshot(&self, agg: &A) -> Result<(), RustyError>;
 
     /// Append one new event to the stream.
-    fn append(&self, user_id: Uuid, ev: E) -> Result<(), RuntimeError>;
+    fn append(&self, user_id: Uuid, ev: E) -> Result<(), RustyError>;
 
     /// Execute a command: decide → append → return event.
-    fn execute<F>(&self, user_id: Uuid, id: A::Id, command: F) -> Result<Uuid, RuntimeError>
+    fn execute<F>(&self, user_id: Uuid, id: A::Id, command: F) -> Result<Uuid, RustyError>
     where
         F: FnOnce(&A) -> Result<E, CommandError>,
     {
@@ -147,5 +123,5 @@ where
     }
 
     /// Inspect raw events (for audit/testing).
-    fn events(&self, id: A::Id) -> Result<Vec<StoredEvent<A, E>>, RuntimeError>;
+    fn events(&self, id: A::Id) -> Result<Vec<StoredEvent<A, E>>, RustyError>;
 }

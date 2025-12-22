@@ -28,7 +28,7 @@ pub fn BudgetHero() -> Element {
     let mut ready = use_signal(|| false);
     let mut budget_signal = use_signal(|| BudgetViewModel::default());
     use_effect(move || {
-        if let Some(Ok(Some(budget))) = budget_resource.read().as_ref() {
+        if let Some(Ok(budget)) = budget_resource.read().as_ref() {
             info!("We have budget: {}", budget.id); 
             budget_signal.set(budget.clone());
             use_context_provider(|| BudgetState(budget_signal));

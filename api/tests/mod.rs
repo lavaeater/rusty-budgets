@@ -6,10 +6,11 @@ use chrono::{DateTime, NaiveDate, Utc};
 use std::collections::HashSet;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use uuid::Uuid;
+use api::api_error::RustyError;
 
 #[cfg(test)]
 #[test]
-pub fn create_budget_test() -> anyhow::Result<()> {
+pub fn create_budget_test() -> Result<(), RustyError> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
     let user_id = Uuid::new_v4();
 
@@ -33,7 +34,7 @@ pub fn create_budget_test() -> anyhow::Result<()> {
 }
 
 #[test]
-pub fn add_budget_item() -> anyhow::Result<()> {
+pub fn add_budget_item() -> Result<(), RustyError> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
     let user_id = Uuid::new_v4();
 
@@ -127,7 +128,7 @@ pub fn test_trans_hash() {
 }
 
 #[test]
-pub fn connect_bank_transaction() -> anyhow::Result<()> {
+pub fn connect_bank_transaction() -> Result<(), RustyError> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
     let user_id = Uuid::new_v4();
     let bank_account_number = "1234567890".to_string();
@@ -176,7 +177,7 @@ pub fn connect_bank_transaction() -> anyhow::Result<()> {
 }
 
 #[test]
-pub fn add_bank_transaction() -> anyhow::Result<()> {
+pub fn add_bank_transaction() -> Result<(), RustyError> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
     let user_id = Uuid::new_v4();
     let bank_account_number = "1234567890".to_string();
@@ -241,7 +242,7 @@ pub fn add_bank_transaction() -> anyhow::Result<()> {
 }
 
 #[test]
-pub fn test_import_from_skandia_excel() -> anyhow::Result<()> {
+pub fn test_import_from_skandia_excel() -> Result<(), RustyError> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
     let user_id = Uuid::new_v4();
 
@@ -270,7 +271,7 @@ pub fn test_import_from_skandia_excel() -> anyhow::Result<()> {
 }
 
 #[test]
-pub fn reconnect_bank_transaction() -> anyhow::Result<()> {
+pub fn reconnect_bank_transaction() -> Result<(), RustyError> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
     let user_id = Uuid::new_v4();
     let bank_account_number = "1234567890".to_string();
@@ -371,7 +372,7 @@ pub fn reconnect_bank_transaction() -> anyhow::Result<()> {
 }
 
 #[test]
-pub fn reallocate_item_funds() -> anyhow::Result<()> {
+pub fn reallocate_item_funds() -> Result<(), RustyError> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
     let user_id = Uuid::new_v4();
     let now = Utc::now();
@@ -427,7 +428,7 @@ pub fn reallocate_item_funds() -> anyhow::Result<()> {
     Ok(())
 }
 
-pub fn create_budget_with_items(rt: &JoyDbBudgetRuntime, user_id: Uuid, budget_name: &str, items: Vec<(String, BudgetingType, Money, PeriodId)>) -> anyhow::Result<(Uuid, Vec<(Uuid, Uuid)>)> {
+pub fn create_budget_with_items(rt: &JoyDbBudgetRuntime, user_id: Uuid, budget_name: &str, items: Vec<(String, BudgetingType, Money, PeriodId)>) -> Result<(Uuid, Vec<(Uuid, Uuid)>), RustyError> {
     let budget_id = rt.create_budget(user_id, budget_name, true, MonthBeginsOn::default(), Currency::SEK)?;
     let mut item_ids = Vec::new();
     for item in items {
@@ -439,7 +440,7 @@ pub fn create_budget_with_items(rt: &JoyDbBudgetRuntime, user_id: Uuid, budget_n
 }
 
 #[test]
-pub fn adjust_item_funds() -> anyhow::Result<()> {
+pub fn adjust_item_funds() -> Result<(), RustyError> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
     let user_id = Uuid::new_v4();
     let period_id = PeriodId::from_date(Utc::now(), MonthBeginsOn::default());
@@ -454,7 +455,7 @@ pub fn adjust_item_funds() -> anyhow::Result<()> {
         Money::new_dollars(-50, Currency::SEK),
     )?;
     
-    let mut budget = rt.load(budget_id)?.unwrap();
+    let mut budget = rt.load(budget_id)?;
     
     let item = budget.with_period(period_id).get_actual(*actual_id).unwrap();
     assert_eq!(item.budgeted_amount, Money::new_dollars(50, Currency::SEK));
@@ -463,7 +464,7 @@ pub fn adjust_item_funds() -> anyhow::Result<()> {
 
 
 #[test]
-pub fn test_budeting_overview() -> anyhow::Result<()> {
+pub fn test_budeting_overview() -> Result<(), RustyError> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
     let user_id = Uuid::new_v4();
     let bank_account_number = "1234567890".to_string();
@@ -481,7 +482,7 @@ pub fn test_budeting_overview() -> anyhow::Result<()> {
     ])?;
 
 
-    let budget = rt.load(budget_id)?.unwrap();
+    let budget = rt.load(budget_id)?;
     let income_overview = budget
         .get_budgeting_overview(BudgetingType::Income, period_id);
     assert_eq!(income_overview.budgeted_amount, thousand_money);
@@ -535,7 +536,7 @@ pub fn test_budeting_overview() -> anyhow::Result<()> {
         now,
     )?;
 
-    let budget = rt.load(budget_id)?.unwrap();
+    let budget = rt.load(budget_id)?;
     let income_overview = budget
         .get_budgeting_overview(BudgetingType::Income, period_id);
     assert_eq!(income_overview.budgeted_amount, thousand_money);
@@ -571,7 +572,7 @@ pub fn test_budeting_overview() -> anyhow::Result<()> {
 // ============================================================================
 
 #[test]
-pub fn evaluate_rules_no_rules_returns_empty() -> anyhow::Result<()> {
+pub fn evaluate_rules_no_rules_returns_empty() -> Result<(), RustyError> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
     let user_id = Uuid::new_v4();
     let now = Utc::now();
@@ -595,7 +596,7 @@ pub fn evaluate_rules_no_rules_returns_empty() -> anyhow::Result<()> {
         now,
     )?;
 
-    let budget = rt.load(budget_id)?.unwrap();
+    let budget = rt.load(budget_id)?;
     
     // No rules added, so evaluate_rules should return empty
     let matches = budget.evaluate_rules();
@@ -605,7 +606,7 @@ pub fn evaluate_rules_no_rules_returns_empty() -> anyhow::Result<()> {
 }
 
 #[test]
-pub fn evaluate_rules_matches_transaction_to_actual() -> anyhow::Result<()> {
+pub fn evaluate_rules_matches_transaction_to_actual() -> Result<(), RustyError> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
     let user_id = Uuid::new_v4();
     let now = Utc::now();
@@ -639,7 +640,7 @@ pub fn evaluate_rules_matches_transaction_to_actual() -> anyhow::Result<()> {
         true,
     )?;
 
-    let budget = rt.load(budget_id)?.unwrap();
+    let budget = rt.load(budget_id)?;
     let matches = budget.evaluate_rules();
 
     assert_eq!(matches.len(), 1, "Expected one match");
@@ -652,7 +653,7 @@ pub fn evaluate_rules_matches_transaction_to_actual() -> anyhow::Result<()> {
 }
 
 #[test]
-pub fn evaluate_rules_matches_transaction_to_item_when_no_actual() -> anyhow::Result<()> {
+pub fn evaluate_rules_matches_transaction_to_item_when_no_actual() -> Result<(), RustyError> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
     let user_id = Uuid::new_v4();
     let now = Utc::now();
@@ -693,7 +694,7 @@ pub fn evaluate_rules_matches_transaction_to_item_when_no_actual() -> anyhow::Re
         true,
     )?;
 
-    let budget = rt.load(budget_id)?.unwrap();
+    let budget = rt.load(budget_id)?;
     let matches = budget.evaluate_rules();
 
     assert_eq!(matches.len(), 1, "Expected one match");
@@ -706,7 +707,7 @@ pub fn evaluate_rules_matches_transaction_to_item_when_no_actual() -> anyhow::Re
 }
 
 #[test]
-pub fn evaluate_rules_no_match_for_unrelated_transaction() -> anyhow::Result<()> {
+pub fn evaluate_rules_no_match_for_unrelated_transaction() -> Result<(), RustyError> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
     let user_id = Uuid::new_v4();
     let now = Utc::now();
@@ -739,7 +740,7 @@ pub fn evaluate_rules_no_match_for_unrelated_transaction() -> anyhow::Result<()>
         true,
     )?;
 
-    let budget = rt.load(budget_id)?.unwrap();
+    let budget = rt.load(budget_id)?;
     let matches = budget.evaluate_rules();
 
     assert!(matches.is_empty(), "Expected no matches for unrelated transaction");
@@ -748,7 +749,7 @@ pub fn evaluate_rules_no_match_for_unrelated_transaction() -> anyhow::Result<()>
 }
 
 #[test]
-pub fn evaluate_rules_multiple_transactions_multiple_rules() -> anyhow::Result<()> {
+pub fn evaluate_rules_multiple_transactions_multiple_rules() -> Result<(), RustyError> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
     let user_id = Uuid::new_v4();
     let now = Utc::now();
@@ -814,7 +815,7 @@ pub fn evaluate_rules_multiple_transactions_multiple_rules() -> anyhow::Result<(
         true,
     )?;
 
-    let budget = rt.load(budget_id)?.unwrap();
+    let budget = rt.load(budget_id)?;
     let matches = budget.evaluate_rules();
 
     assert_eq!(matches.len(), 2, "Expected two matches");
@@ -836,7 +837,7 @@ pub fn evaluate_rules_multiple_transactions_multiple_rules() -> anyhow::Result<(
 }
 
 #[test]
-pub fn evaluate_rules_across_multiple_periods() -> anyhow::Result<()> {
+pub fn evaluate_rules_across_multiple_periods() -> Result<(), RustyError> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
     let user_id = Uuid::new_v4();
 
@@ -912,7 +913,7 @@ pub fn evaluate_rules_across_multiple_periods() -> anyhow::Result<()> {
         true,
     )?;
 
-    let budget = rt.load(budget_id)?.unwrap();
+    let budget = rt.load(budget_id)?;
     let matches = budget.evaluate_rules();
 
     assert_eq!(matches.len(), 2, "Expected matches from both periods");
