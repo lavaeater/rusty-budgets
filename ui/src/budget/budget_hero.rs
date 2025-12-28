@@ -1,60 +1,95 @@
-use api::models::*;
+use crate::Button;
 use crate::budget::{BudgetTabs, TransactionsView};
 use crate::file_chooser::{FileData, FileDialog};
-use crate::Button;
+use api::models::*;
+use api::view_models::BudgetViewModel;
+use api::view_models::*;
 use api::{auto_budget_period, get_budget, import_transactions_bytes};
 use chrono::Utc;
+use dioxus::core::internal::generational_box::GenerationalRef;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use dioxus_primitives::label::Label;
+use std::cell::Ref;
 use std::future::Future;
 use uuid::Uuid;
-use api::view_models::*;
-use api::view_models::BudgetViewModel;
 
 #[derive(Clone, Copy)]
 pub struct BudgetState(pub Signal<BudgetViewModel>);
 
+#[derive(Clone, Copy)]
+pub enum BudgetLoadingState {
+    Loading,
+    Loaded,
+    Error,
+    NoDefaultBudget,
+}
+
 const HERO_CSS: Asset = asset!("assets/styling/budget-hero.css");
 #[component]
 pub fn BudgetHero() -> Element {
+    let mut budget_loading_state = use_signal(|| BudgetLoadingState::Loading);
     let mut period_id = use_signal(|| PeriodId::from_date(Utc::now(), MonthBeginsOn::default()));
     let budget_resource = use_server_future(move || get_budget(None, period_id()))?;
-    
+
     let period_id_now = PeriodId::from_date(Utc::now(), MonthBeginsOn::default());
-    
+
     let mut budget_name = use_signal(|| "".to_string());
     let mut budget_id = use_signal(|| Uuid::default());
-    let mut ready = use_signal(|| false);
-    let mut budget_signal = use_signal(|| BudgetViewModel::default());
-    use_effect(move || {
-        if let Some(Ok(budget)) = budget_resource.read().as_ref() {
-            info!("We have budget: {}", budget.id); 
-            budget_signal.set(budget.clone());
-            use_context_provider(|| BudgetState(budget_signal));
-            budget_name.set(budget.name.clone());
-            ready.set(true);
+    let mut state_signal = use_signal(|| BudgetViewModel::default());
+    let mut loading_signal: Signal<Option<BudgetViewModel>> = use_signal(|| None);
+    
+    use_effect(move || match budget_resource.read().as_ref() {
+        None => {
+            budget_loading_state.set(BudgetLoadingState::Loading);
         }
+        Some(resource_result) => match resource_result {
+            Ok(viewmodel_result) => match viewmodel_result {
+                None => {
+                    budget_loading_state.set(BudgetLoadingState::NoDefaultBudget);
+                }
+                Some(budget_viewmodel) => {
+                    budget_loading_state.set(BudgetLoadingState::Loaded);
+                    state_signal.set(budget_viewmodel.clone());
+                    info!("We have budget: {}", budget_viewmodel.id);
+                    use_context_provider(|| BudgetState(state_signal));
+                    budget_name.set(budget_viewmodel.name.clone());
+                }
+            },
+            Err(err) => {
+                error!(error = %err, "Failed to get budget");
+                budget_loading_state.set(BudgetLoadingState::Error);
+            }
+        },
     });
 
     let import_file = move |file: FileData| {
         let contents = file.contents;
         spawn(async move {
             if !contents.is_empty() {
-                if let Ok(updated_budget) = import_transactions_bytes(budget_id(), contents, period_id()).await {
+                if let Ok(updated_budget) =
+                    import_transactions_bytes(budget_id(), contents, period_id()).await
+                {
                     consume_context::<BudgetState>().0.set(updated_budget);
                 }
             }
         });
     };
 
-    // Handle the resource state
-    if ready() {
-        let budget = use_context::<BudgetState>().0();
-        info!("The budget signal was updated: {}", budget.id);
-        budget_id.set(budget.id);
-        
-        let auto_budget_enabled = budget.period_id != period_id_now;
+    match budget_loading_state() {
+        BudgetLoadingState::Loading => {
+            rsx! {
+                div { id: "budget_hero",
+                    h4 { "Laddar..." }
+                }
+            }
+        }
+        BudgetLoadingState::Loaded => {
+            let budget = state_signal();
+            info!("The budget signal was updated: {}", budget.id);
+            budget_id.set(budget.id);
+
+            let auto_budget_enabled = budget.period_id != period_id_now;
 
             rsx! {
                 document::Link { rel: "stylesheet", href: HERO_CSS }
@@ -126,11 +161,56 @@ pub fn BudgetHero() -> Element {
                     }
                 }
             }
-        } else {
+        }
+        BudgetLoadingState::Error => {
             rsx! {
                 div { id: "budget_hero",
-                    h4 { "Laddar..." }
+                    h4 { "Något gick fel vid inläsning av budget." }
                 }
             }
         }
+        BudgetLoadingState::NoDefaultBudget => {
+            rsx! {
+                document::Link { rel: "stylesheet", href: HERO_CSS }
+
+                div { display: "flex", flex_direction: "column", gap: ".5rem",
+                    h4 { "Ingen budget hittad" }
+                    Label { html_for: "name", "Skapa budget" }
+                    div {
+                        display: "flex",
+                        flex_direction: "column",
+                        width: "40%",
+                        input {
+                            id: "name",
+                            placeholder: "Budgetnamn",
+                            oninput: move |e: FormEvent| { budget_name.set(e.value()) },
+                        }
+                    }
+                }
+                br {}
+                button {
+                    class: "button",
+                    "data-style": "primary",
+                    onclick: move |_| async move {
+                        if let Ok(budget) = api::create_budget(
+                                budget_name.to_string(),
+                                period_id(),
+                                Some(true),
+                            )
+                            .await
+                        {
+                            info!("Created new budget: {budget:?}");
+                            budget_loading_state.set(BudgetLoadingState::Loaded);
+                            state_signal.set(budget.clone());
+                            use_context_provider(|| BudgetState(state_signal));
+                            budget_name.set(budget.name.clone());
+                        }
+                    },
+                    "Skapa budget"
+                }
+            }
+        }
+    }
+
+    // Handle the resource state
 }

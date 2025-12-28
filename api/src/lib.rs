@@ -54,14 +54,14 @@ pub mod db {
     }
 
     pub static CLIENT: Lazy<JoyDbBudgetRuntime> = Lazy::new(|| {
-        tracing::info!("Init DB Client");
+        info!("Init DB Client");
 
         let client = JoyDbBudgetRuntime::new(get_data_file());
         // Run migrations
-        tracing::info!("Insert Default Data");
+        info!("Insert Default Data");
         match get_default_user(Some(&client.db)) {
             Ok(_) => {
-                tracing::info!("Default user exists");
+                info!("Default user exists");
             }
             Err(e) => {
                 error!(error = %e, "Could not get default user");
@@ -129,7 +129,8 @@ pub mod db {
 
     //THis one should evaluate the rules!
     pub fn get_budget(budget_id: Uuid) -> Result<Budget, RustyError> {
-        Ok(with_runtime(None).load(budget_id)?)
+        let budget = with_runtime(None).load(budget_id)?;
+        Ok(budget)
     }
 
     pub fn add_budget_to_user(
@@ -564,24 +565,28 @@ pub async fn get_default_user() -> Result<User, ServerFnError> {
 pub async fn get_budget(
     budget_id: Option<Uuid>,
     period_id: PeriodId,
-) -> Result<BudgetViewModel, ServerFnError> {
+) -> Result<Option<BudgetViewModel>, ServerFnError> {
     let user = db::get_default_user(None)?;
     match budget_id {
         Some(budget_id) => {
             _ = db::evaluate_rules(user.id, budget_id)?;
-            Ok(BudgetViewModel::from_budget(
+            Ok(Some(BudgetViewModel::from_budget(
                 &db::get_budget(budget_id)?,
                 period_id,
-            ))
+            )))
         }
         None => {
-            let default_budget = db::get_default_budget(user.id)?;
-            let _ = db::evaluate_rules(user.id, default_budget.id)?;
-            Ok(BudgetViewModel::from_budget(
-                &db::get_budget(default_budget.id)?,
-                period_id,
-            ))
-        }
+            match db::get_default_budget(user.id) {
+                Ok(default_budget) => {
+                    let _ = db::evaluate_rules(user.id, default_budget.id)?;
+                    Ok(Some(BudgetViewModel::from_budget(
+                        &default_budget,
+                        period_id,
+                    )))
+                }
+                Err(_) => Ok(None)
+            }
+        }           
     }
 }
 

@@ -168,7 +168,7 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                                                     }
                                                 }
                                                 if success {
-                                                    if let Ok(updated_budget) = api::get_budget(
+                                                    if let Ok(Some(updated_budget)) = api::get_budget(
                                                             Some(budget_id),
                                                             budget_signal().period_id,
                                                         )
