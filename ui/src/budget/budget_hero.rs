@@ -36,7 +36,7 @@ pub fn BudgetHero() -> Element {
     let period_id_now = PeriodId::from_date(Utc::now(), MonthBeginsOn::default());
     let mut budget_name = use_signal(|| "".to_string());
     let mut budget_id = use_signal(|| Uuid::default());
-    let mut state_signal = use_signal(|| BudgetViewModel::default());
+    let state_signal = use_signal(|| BudgetViewModel::default());
     use_context_provider(|| BudgetState(state_signal));
 
     use_effect(move || match budget_resource.read().as_ref() {
