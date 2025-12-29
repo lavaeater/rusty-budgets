@@ -10,6 +10,24 @@ pub mod models;
 pub mod time_delta;
 pub mod view_models;
 
+#[cfg(test)]
+#[cfg(not(debug_assertions))]
+pub fn set_server_url() {
+    
+}
+
+#[cfg(debug_assertions)]
+#[cfg(not(test))]
+pub fn set_server_url() {
+    
+}
+
+#[cfg(not(debug_assertions))]
+#[cfg(not(test))]
+pub fn set_server_url() {
+    
+}
+
 #[cfg(feature = "server")]
 pub mod db;
 #[cfg(feature = "server")]

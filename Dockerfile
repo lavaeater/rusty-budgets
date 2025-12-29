@@ -1,5 +1,10 @@
 FROM rust:1 AS chef
 RUN cargo install cargo-chef
+RUN apt-get update && apt-get install -y \
+    pkg-config \
+    libwayland-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 FROM chef AS planner

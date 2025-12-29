@@ -20,7 +20,9 @@ use uuid::Uuid;
 fn get_data_file() -> PathBuf {
     env::var("DATA_FILE")
         .map(PathBuf::from)
-        .unwrap_or_else(|_| PathBuf::from("data.json"))
+        .unwrap_or_else(|_| {
+            info!("DATA_FILE not set, using default data.json");
+            PathBuf::from("data.json") })
 }
 
 pub static CLIENT: Lazy<JoyDbBudgetRuntime> = Lazy::new(|| {
