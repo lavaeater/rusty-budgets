@@ -47,7 +47,7 @@ pub async fn add_actual(
     item_id: Uuid,
     budgeted_amount: Money,
     period_id: PeriodId,
-) -> Result<BudgetViewModel, ServerFnError> {
+) -> ServerFnResult<BudgetViewModel> {
     let user = db::get_default_user(None).expect("Could not get default user");
     let _ = db::add_actual(user.id, budget_id, item_id, budgeted_amount, period_id)?;
     Ok(BudgetViewModel::from_budget(
@@ -60,7 +60,7 @@ pub async fn add_actual(
 pub async fn auto_budget_period(
     budget_id: Uuid,
     period_id: PeriodId,
-) -> Result<BudgetViewModel, ServerFnError> {
+) -> ServerFnResult<BudgetViewModel> {
     let user = db::get_default_user(None)?;
     db::auto_budget_period(user.id, budget_id, period_id)?;
     Ok(BudgetViewModel::from_budget(
@@ -77,7 +77,7 @@ pub async fn add_new_actual_item(
     budgeted_amount: Money,
     tx_id: Option<Uuid>,
     period_id: PeriodId,
-) -> Result<BudgetViewModel, ServerFnError> {
+) -> ServerFnResult<BudgetViewModel> {
     let user = db::get_default_user(None)?;
     let item_id = db::add_item(user.id, budget_id, name, item_type)?;
     info!("We have a new item with Id: {}", item_id);
@@ -117,7 +117,7 @@ pub async fn modify_item(
     name: Option<String>,
     item_type: Option<BudgetingType>,
     period_id: PeriodId,
-) -> Result<BudgetViewModel, ServerFnError> {
+) -> ServerFnResult<BudgetViewModel> {
     let user = db::get_default_user(None).expect("Could not get default user");
     let _ = db::modify_item(user.id, budget_id, item_id, name, item_type)?;
     Ok(BudgetViewModel::from_budget(
@@ -133,7 +133,7 @@ pub async fn modify_actual(
     period_id: PeriodId,
     budgeted_amount: Option<Money>,
     actual_amount: Option<Money>,
-) -> Result<BudgetViewModel, ServerFnError> {
+) -> ServerFnResult<BudgetViewModel> {
     let user = db::get_default_user(None).expect("Could not get default user");
     let _ = db::modify_actual(
         user.id,
@@ -150,7 +150,7 @@ pub async fn modify_actual(
 }
 
 #[server(endpoint = "get_default_user")]
-pub async fn get_default_user() -> Result<User, ServerFnError> {
+pub async fn get_default_user() -> ServerFnResult<User> {
     Ok(db::get_default_user(None)?)
 }
 
@@ -158,7 +158,7 @@ pub async fn get_default_user() -> Result<User, ServerFnError> {
 pub async fn get_budget(
     budget_id: Option<Uuid>,
     period_id: PeriodId,
-) -> Result<Option<BudgetViewModel>, ServerFnError> {
+) -> ServerFnResult<Option<BudgetViewModel>> {
     let user = db::get_default_user(None)?;
     match budget_id {
         Some(budget_id) => {
@@ -186,7 +186,7 @@ pub async fn import_transactions(
     budget_id: Uuid,
     file_name: String,
     period_id: PeriodId,
-) -> Result<BudgetViewModel, ServerFnError> {
+) -> ServerFnResult<BudgetViewModel> {
     let user = db::get_default_user(None)?;
     let _ = db::import_transactions(user.id, budget_id, &file_name)?;
     let _ = db::evaluate_rules(user.id, budget_id)?;
@@ -201,7 +201,7 @@ pub async fn import_transactions_bytes(
     budget_id: Uuid,
     file_contents: Vec<u8>,
     period_id: PeriodId,
-) -> Result<BudgetViewModel, ServerFnError> {
+) -> ServerFnResult<BudgetViewModel> {
     let user = db::get_default_user(None)?;
     let _ = db::import_transactions_bytes(user.id, budget_id, file_contents)?;
     let _ = db::evaluate_rules(user.id, budget_id)?;
@@ -218,7 +218,7 @@ pub async fn connect_transaction(
     actual_id: Option<Uuid>,
     budget_item_id: Uuid,
     period_id: PeriodId,
-) -> Result<BudgetViewModel, ServerFnError> {
+) -> ServerFnResult<BudgetViewModel> {
     let user = db::get_default_user(None)?;
     let actual_id = db::connect_transaction(
         user.id,
@@ -241,7 +241,7 @@ pub async fn ignore_transaction(
     budget_id: Uuid,
     tx_id: Uuid,
     period_id: PeriodId,
-) -> Result<BudgetViewModel, ServerFnError> {
+) -> ServerFnResult<BudgetViewModel> {
     let user = db::get_default_user(None)?;
     let _ = db::ignore_transaction(budget_id, user.id, tx_id)?;
     Ok(BudgetViewModel::from_budget(
@@ -256,7 +256,7 @@ pub async fn adjust_actual_funds(
     actual_id: Uuid,
     amount: Money,
     period_id: PeriodId,
-) -> Result<BudgetViewModel, ServerFnError> {
+) -> ServerFnResult<BudgetViewModel> {
     let user = db::get_default_user(None)?;
     let _ = db::adjust_actual_funds(user.id, budget_id, actual_id, period_id, amount)?;
     Ok(BudgetViewModel::from_budget(
