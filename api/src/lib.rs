@@ -202,6 +202,7 @@ pub async fn import_transactions_bytes(
     file_contents: Vec<u8>,
     period_id: PeriodId,
 ) -> ServerFnResult<BudgetViewModel> {
+    info!("Importing transaction from bytes");
     let user = db::get_default_user(None)?;
     let _ = db::import_transactions_bytes(user.id, budget_id, file_contents)?;
     let _ = db::evaluate_rules(user.id, budget_id)?;

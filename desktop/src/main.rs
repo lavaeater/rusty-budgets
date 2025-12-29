@@ -19,7 +19,7 @@ enum Route {
 fn main() {
     dioxus::logger::init(Level::INFO).expect("failed to init logger");
     // #[cfg(not(feature = "server"))]
-    // fullstack::set_server_url("http://localhost");    
+    // fullstack::set_server_url("http://127.0.0.1");    
     #[cfg(feature = "server")]
     let _ = api::db::CLIENT;
     

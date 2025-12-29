@@ -3,10 +3,7 @@ use crate::cqrs::runtime::JoyDbBudgetRuntime;
 use crate::models::{Currency, Money};
 use calamine::{open_workbook, open_workbook_from_rs, DataType, Reader, Xlsx, XlsxError};
 use chrono::{DateTime, NaiveDate, ParseError, Utc};
-use dioxus::logger;
-use dioxus::logger::tracing;
-use dioxus::logger::tracing::debug;
-use dioxus::prelude::error;
+use dioxus::prelude::{error, info, debug};
 use std::io::{Cursor, Error};
 use std::path::Path;
 use uuid::Uuid;
@@ -105,7 +102,7 @@ pub fn import_from_skandia_excel(
         let mut account_number: Option<String> = None;
 
         for (row_num, row) in r.rows().enumerate() {
-            tracing::debug!("Row data: {:#?}", row);
+            debug!("Row data: {:#?}", row);
             if row_num == 0 {
                 account_number = Some(row[1].to_string());
             } else if row_num > 3 && row.len() > 3 {
@@ -148,7 +145,7 @@ pub fn import_from_skandia_excel(
                 }
             }
         }
-        tracing::info!(
+        info!(
             "Imported {} transactions, skipped {} transactions, total {} transactions",
             imported,
             not_imported,
@@ -168,13 +165,16 @@ pub fn import_from_skandia_excel_bytes(
     let mut imported = 0u64;
     let mut not_imported = 0u64;
     let mut total_rows = 0u64;
+    info!("Opening new cursor!");
     let cursor = Cursor::new(bytes);
+    info!("Opening workbook!");
     let mut excel: Xlsx<_> = open_workbook_from_rs(cursor)?;
     if let Ok(r) = excel.worksheet_range("Kontoutdrag") {
+        info!("Found worksheet!");
         let mut account_number: Option<String> = None;
 
         for (row_num, row) in r.rows().enumerate() {
-            tracing::debug!("Row data: {:#?}", row);
+            debug!("Row data: {:#?}", row);
             if row_num == 0 {
                 account_number = Some(row[1].to_string());
             } else if row_num > 3 && row.len() > 3 {
@@ -217,7 +217,7 @@ pub fn import_from_skandia_excel_bytes(
                 }
             }
         }
-        tracing::info!(
+        info!(
             "Imported {} transactions from bytes, skipped {} transactions, total {} transactions",
             imported,
             not_imported,

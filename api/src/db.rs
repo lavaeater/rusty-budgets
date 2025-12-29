@@ -169,6 +169,7 @@ pub fn import_transactions_bytes(
     budget_id: Uuid,
     bytes: Vec<u8>,
 ) -> Result<Uuid, RustyError> {
+    info!("Importing transaction from bytes");
     let runtime = with_runtime(None);
     let _ = import_from_skandia_excel_bytes(runtime, user_id, budget_id, bytes)?;
     Ok(budget_id)
