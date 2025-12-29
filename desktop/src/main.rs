@@ -1,7 +1,10 @@
 #![allow(unused_imports)]
+
+use dioxus::fullstack;
 use dioxus::logger::tracing::Level;
 use dioxus::prelude::*;
-use dioxus::fullstack;
+use std::env;
+
 mod views;
 use views::*;
 const MAIN_CSS: Asset = asset!("/assets/main.css");
@@ -19,16 +22,20 @@ enum Route {
 fn main() {
     dioxus::logger::init(Level::INFO).expect("failed to init logger");
     #[cfg(not(feature = "server"))]
-    fullstack::set_server_url("https://rustybudgets.kidvhs.com:8443");
+    {
+        let server_url = env::var("SERVER_URL").unwrap_or("http://localhost".to_string());
+        let port = env::var("PORT").unwrap_or("8080".to_string());
+        fullstack::set_server_url(Box::leak(format!("{}:{}", server_url, port).into_boxed_str()));
+    }
     #[cfg(feature = "server")]
     let _ = api::db::CLIENT;
-    
+
     launch(App);
 }
 
 #[component]
 fn App() -> Element {
-    // Build cool things 
+    // Build cool things
 
     rsx! {
         // Global app resources

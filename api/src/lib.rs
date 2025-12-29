@@ -9,27 +9,27 @@ pub mod import;
 pub mod models;
 pub mod time_delta;
 pub mod view_models;
-
-#[cfg(test)]
-#[cfg(not(debug_assertions))]
-pub fn set_server_url() {
-    
-}
-
-#[cfg(debug_assertions)]
-#[cfg(not(test))]
-pub fn set_server_url() {
-    
-}
-
-#[cfg(not(debug_assertions))]
-#[cfg(not(test))]
-pub fn set_server_url() {
-    
-}
+// 
+// #[cfg(test)]
+// #[cfg(not(debug_assertions))]
+// pub fn set_server_url() {
+//     
+// }
+// 
+// #[cfg(debug_assertions)]
+// #[cfg(not(test))]
+// 
+// #[cfg(not(debug_assertions))]
+// #[cfg(not(test))]
+// pub fn set_server_url() {
+//     fullstack::set_server_url("https://rustybudets.kidvs.com");
+// }
 
 #[cfg(feature = "server")]
 pub mod db;
+
+use std::env;
+use std::path::PathBuf;
 #[cfg(feature = "server")]
 use dioxus::logger::tracing;
 
@@ -37,6 +37,7 @@ use crate::api_error::RustyError;
 use crate::import::ImportError;
 use crate::models::*;
 use chrono::Utc;
+use dioxus::fullstack;
 use dioxus::prelude::*;
 use joydb::JoydbError;
 use models::*;
@@ -44,6 +45,7 @@ use uuid::Uuid;
 use view_models::BudgetItemViewModel;
 use view_models::BudgetViewModel;
 use view_models::TransactionViewModel;
+
 
 #[server(endpoint = "create_budget")]
 pub async fn create_budget(
