@@ -11,7 +11,7 @@ pub mod time_delta;
 pub mod view_models;
 
 #[cfg(feature = "server")]
-mod db;
+pub mod db;
 #[cfg(feature = "server")]
 use dioxus::logger::tracing;
 
