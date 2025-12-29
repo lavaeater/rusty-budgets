@@ -226,7 +226,7 @@ impl JoyDbBudgetRuntime {
         let config = JoydbConfig {
             mode: JoydbMode::Persistent {
                 adapter,
-                sync_policy: SyncPolicy::Periodic(Duration::from_secs(5)),
+                sync_policy: SyncPolicy::Instant,//Periodic(Duration::from_secs(60)),
             },
         };
         Self {
