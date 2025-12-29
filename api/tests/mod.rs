@@ -235,7 +235,7 @@ pub fn add_bank_transaction() -> Result<(), RustyError> {
     assert!(res.is_some());
     assert_eq!(
         res.unwrap().to_string(),
-        "Validation error: Transaction already exists."
+        "Command error: Validation error: Transaction already exists."
     );
 
     Ok(())
