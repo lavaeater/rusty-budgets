@@ -209,8 +209,7 @@ pub fn BudgetHero() -> Element {
                             {
                                 info!("Created new budget: {budget:?}");
                                 budget_loading_state.set(BudgetLoadingState::Loaded);
-                                state_signal.set(budget.clone());
-                                use_context_provider(|| BudgetState(state_signal));
+                                consume_context::<BudgetState>().0.set(budget.clone());
                                 budget_name.set(budget.name.clone());
                             }
                         },
