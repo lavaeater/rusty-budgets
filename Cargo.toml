@@ -9,7 +9,7 @@ members = [
 ]
 
 [workspace.dependencies]
-dioxus = { version = "0.7.2", features = ["fullstack"] }
+dioxus = { version = "0.7.3", features = ["fullstack"] }
 dioxus-primitives = { git = "https://github.com/DioxusLabs/components" }
 lucide-dioxus = { version = "2.46.0", features = ["all-icons"] }
 uuid = { version = "1.19.0", features = ["v4", "js", "serde"] }
