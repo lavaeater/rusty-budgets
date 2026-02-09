@@ -8,7 +8,9 @@ use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter};
 use std::hash::Hash;
+use joydb::JoydbError;
 use uuid::Uuid;
+use crate::api_error::RustyError;
 
 /// Aggregate: domain state that evolves by applying events.
 pub trait Aggregate: Sized + Debug + Clone {
@@ -72,24 +74,15 @@ pub trait DomainEvent<A: Aggregate>: Clone + Debug + Sized {
     fn apply(&self, state: &mut A) -> Uuid;
 }
 
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum CommandError {
+    #[error("Validation error: {0}")]
     Validation(String),
+    #[error("Conflict error: {0}")]
     Conflict(String),
+    #[error("Not found error: {0}")]
     NotFound(String),
 }
-
-impl Display for CommandError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            CommandError::Validation(msg) => write!(f, "Validation error: {}", msg),
-            CommandError::Conflict(msg) => write!(f, "Conflict error: {}", msg),
-            CommandError::NotFound(msg) => write!(f, "Not found error: {}", msg),
-        }
-    }
-}
-
-impl Error for CommandError {}
 
 pub trait Runtime<A, E>
 where
@@ -97,15 +90,15 @@ where
     E: DomainEvent<A>,
 {
     /// Load and rebuild current state from stored events.
-    fn load(&self, id: A::Id) -> anyhow::Result<Option<A>>;
+    fn load(&self, id: A::Id) -> Result<A, RustyError>;
 
-    fn snapshot(&self, agg: &A) -> anyhow::Result<()>;
+    fn snapshot(&self, agg: &A) -> Result<(), RustyError>;
 
     /// Append one new event to the stream.
-    fn append(&self, user_id: Uuid, ev: E) -> anyhow::Result<()>;
+    fn append(&self, user_id: Uuid, ev: E) -> Result<(), RustyError>;
 
     /// Execute a command: decide → append → return event.
-    fn execute<F>(&self, user_id: Uuid, id: A::Id, command: F) -> anyhow::Result<Uuid>
+    fn execute<F>(&self, user_id: Uuid, id: A::Id, command: F) -> Result<Uuid, RustyError>
     where
         F: FnOnce(&A) -> Result<E, CommandError>,
     {
@@ -118,7 +111,7 @@ where
             self.append(user_id, ev.clone())?;
             Ok(latest_id)
         } else {
-            let mut current = self.load(id)?.unwrap();
+            let mut current = self.load(id)?;
 
             let ev = command(&current)?;
 
@@ -129,16 +122,6 @@ where
         }
     }
 
-    /// Materialize latest state after commands.
-    fn materialize(&self, id: A::Id) -> anyhow::Result<A> {
-        let state = self.load(id)?;
-        if let Some(state) = state {
-            Ok(state)
-        } else {
-            Err(anyhow::anyhow!("Aggregate not found"))
-        }
-    }
-
     /// Inspect raw events (for audit/testing).
-    fn events(&self, id: A::Id) -> anyhow::Result<Vec<StoredEvent<A, E>>>;
+    fn events(&self, id: A::Id) -> Result<Vec<StoredEvent<A, E>>, RustyError>;
 }

@@ -1,5 +1,10 @@
 FROM rust:1 AS chef
 RUN cargo install cargo-chef
+RUN apt-get update && apt-get install -y \
+    pkg-config \
+    libwayland-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 FROM chef AS planner
@@ -22,11 +27,11 @@ RUN dx bundle --verbose --fullstack true --release --package web
 FROM chef AS runtime
 COPY --from=builder /app/target/dx/web/release/web /usr/local/app
 # set our port and make sure to listen for all connections
-ENV PORT=8080
+ENV PORT=8666
 ENV IP=0.0.0.0
 
-# expose the port 8080
-EXPOSE 8080
+# expose the port 8666
+EXPOSE 8666
 
 WORKDIR /usr/local/app
 ENTRYPOINT [ "/usr/local/app/web" ]

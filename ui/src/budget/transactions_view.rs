@@ -96,7 +96,11 @@ pub fn TransactionsView(ignored: bool) -> Element {
                                         "data-style": "destructive",
                                         onclick: move |_| async move {
                                             info!("Ignoring: {} in {}", tx.tx_id, budget_signal().period_id);
-                                            if let Ok(bv) = api::ignore_transaction(budget_signal().id, tx.tx_id, budget_signal().period_id)
+                                            if let Ok(bv) = api::ignore_transaction(
+                                                    budget_signal().id,
+                                                    tx.tx_id,
+                                                    budget_signal().period_id,
+                                                )
                                                 .await
                                             {
                                                 consume_context::<BudgetState>().0.set(bv);
