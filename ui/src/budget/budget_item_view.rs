@@ -199,7 +199,7 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                     div { class: "budget-item-edit-header",
                         div { class: "budget-item-edit-title", "{item_name()}" }
                         div { class: "budget-item-edit-amounts",
-                            "{item.actual_amount.to_string()} / {item.budgeted_amount.to_string()}"
+                            "{item.actual_amount.to_string()} / {budgeted_amount().to_string()}"
                         }
                     }
 
