@@ -29,13 +29,12 @@ const HERO_CSS: Asset = asset!("assets/styling/budget-hero.css");
 #[component]
 pub fn BudgetHero() -> Element {
     let mut budget_loading_state = use_signal(|| BudgetLoadingState::Loading);
+    let mut budget_id = use_signal(Uuid::default);
     let mut period_id = use_signal(|| PeriodId::from_date(Utc::now(), MonthBeginsOn::default()));
 
     let budget_resource = use_server_future(move || get_budget(None, period_id()))?;
 
-    let period_id_now = PeriodId::from_date(Utc::now(), MonthBeginsOn::default());
     let mut budget_name = use_signal(|| "".to_string());
-    let mut budget_id = use_signal(Uuid::default);
     let state_signal = use_signal(BudgetViewModel::default);
     use_context_provider(|| BudgetState(state_signal));
 
@@ -73,19 +72,6 @@ pub fn BudgetHero() -> Element {
         }
     });
 
-    let import_file = move |file: FileData| {
-        let contents = file.contents;
-        spawn(async move {
-            if !contents.is_empty()
-                && let Ok(updated_budget) =
-                    import_transactions_bytes(budget_id(), contents, period_id()).await
-            {
-                info!("Import went well and we update the context bro");
-                consume_context::<BudgetState>().0.set(updated_budget);
-            }
-        });
-    };
-
     match budget_loading_state() {
         BudgetLoadingState::Loading => {
             rsx! {
@@ -95,81 +81,8 @@ pub fn BudgetHero() -> Element {
             }
         }
         BudgetLoadingState::Loaded => {
-            let budget = use_context::<BudgetState>().0;
-            info!("The budget signal was updated: {}", budget().id);
-            budget_id.set(budget().id);
-
-            let auto_budget_enabled = budget().period_id != period_id_now;
-
             rsx! {
-                document::Link { rel: "stylesheet", href: HERO_CSS }
-                div { class: "budget-hero-a-container",
-                    // Header with quick stats
-                    div { class: "budget-header-a",
-                        div { class: "header-title",
-                            h1 { {budget().name.clone()} }
-                            h2 { {period_id().to_string()} }
-                            Button {
-                                onclick: move |_| {
-                                    period_id.set(period_id().month_before());
-                                },
-                                "Föregående period"
-                            }
-                            Button {
-                                onclick: move |_| {
-                                    period_id.set(period_id().month_after());
-                                },
-                                "Nästa period"
-                            }
-                            if auto_budget_enabled {
-                                Button {
-                                    onclick: move |_| async move {
-                                        if let Ok(bv) = auto_budget_period(budget().id, period_id()).await {
-                                            consume_context::<BudgetState>().0.set(bv);
-                                        }
-                                    },
-                                    "Auto budget"
-                                }
-                            }
-                        }
-                        div { class: "header-actions",
-                            FileDialog { on_chosen: import_file }
-                            if !budget().to_connect.is_empty() {
-                                // Main content area with tabs
-                                // Transactions section - prominent if there are unassigned
-                                div { class: "unassigned-badge",
-                                    "{budget().to_connect.len()} transaktioner att hantera"
-                                }
-                            }
-                            if !budget().ignored_transactions.is_empty() {
-                                div { class: "unassigned-badge",
-                                    "{budget().ignored_transactions.len()} ignorerade transaktioner"
-                                }
-                            }
-                        }
-                    }
-                    div { class: "budget-main-content", BudgetTabs {} }
-                    if budget().to_connect.is_empty() {
-                        div { class: "transactions-section-minimal",
-                            p { class: "success-message", "✓ Alla transaktioner är hanterade!" }
-                        }
-                    } else {
-                        div { class: "transactions-section-prominent",
-                            "TransactionsView"
-                            TransactionsView { ignored: false }
-                        }
-                    }
-                    if budget().ignored_transactions.is_empty() {
-                        div { class: "transactions-section-minimal",
-                            p { class: "success-message", "✓ Inga ignorerade transaktioner!" }
-                        }
-                    } else {
-                        div { class: "transactions-section-prominent",
-                            "Another transactions view"
-                            TransactionsView { ignored: true }
-                        }
-                    }
-                }
+                BudgetOverview { budget_id, period_id }
             }
         }
         BudgetLoadingState::Error => {
@@ -216,6 +129,99 @@ pub fn BudgetHero() -> Element {
                         }
                     },
                     "Skapa budget"
+                }
+            }
+        }
+    }
+}
+
+#[component]
+pub fn BudgetOverview(mut budget_id: Signal<Uuid>, mut period_id: Signal<PeriodId>) -> Element {
+    let period_id_now = PeriodId::from_date(Utc::now(), MonthBeginsOn::default());
+    let budget_signal = use_context::<BudgetState>().0;
+    let budget = budget_signal();
+    info!("The budget signal was updated: {}", budget.id);
+    budget_id.set(budget.id);
+
+    let auto_budget_enabled = budget.period_id != period_id_now;
+    let import_file = move |file: FileData| {
+        let contents = file.contents;
+        spawn(async move {
+            if !contents.is_empty()
+                && let Ok(updated_budget) =
+                    import_transactions_bytes(budget_id(), contents, period_id()).await
+            {
+                info!("Import went well and we update the context bro");
+                consume_context::<BudgetState>().0.set(updated_budget);
+            }
+        });
+    };
+    rsx! {
+        document::Link { rel: "stylesheet", href: HERO_CSS }
+        div { class: "budget-hero-a-container",
+            // Header with quick stats
+            div { class: "budget-header-a",
+                div { class: "header-title",
+                    h1 { {budget.name.clone()} }
+                    h2 { {period_id().to_string()} }
+                    Button {
+                        onclick: move |_| {
+                            period_id.set(period_id().month_before());
+                        },
+                        "Föregående period"
+                    }
+                    Button {
+                        onclick: move |_| {
+                            period_id.set(period_id().month_after());
+                        },
+                        "Nästa period"
+                    }
+                    if auto_budget_enabled {
+                        Button {
+                            onclick: move |_| async move {
+                                if let Ok(bv) = auto_budget_period(budget_id(), period_id()).await {
+                                    consume_context::<BudgetState>().0.set(bv);
+                                }
+                            },
+                            "Auto budget"
+                        }
+                    }
+                }
+                div { class: "header-actions",
+                    FileDialog { on_chosen: import_file }
+                    if !budget.to_connect.is_empty() {
+                        // Main content area with tabs
+                        // Transactions section - prominent if there are unassigned
+                        div { class: "unassigned-badge",
+                            "{budget.to_connect.len()} transaktioner att hantera"
+                        }
+                    }
+                    if !budget.ignored_transactions.is_empty() {
+                        div { class: "unassigned-badge",
+                            "{budget.ignored_transactions.len()} ignorerade transaktioner"
+                        }
+                    }
+                }
+            }
+            div { class: "budget-main-content", BudgetTabs {} }
+            if budget.to_connect.is_empty() {
+                div { class: "transactions-section-minimal",
+                    p { class: "success-message", "✓ Alla transaktioner är hanterade!" }
+                }
+            } else {
+                div { class: "transactions-section-prominent",
+                    "TransactionsView"
+                    TransactionsView { ignored: false }
+                }
+            }
+            if budget.ignored_transactions.is_empty() {
+                div { class: "transactions-section-minimal",
+                    p { class: "success-message", "✓ Inga ignorerade transaktioner!" }
+                }
+            } else {
+                div { class: "transactions-section-prominent",
+                    "Another transactions view"
+                    TransactionsView { ignored: true }
                 }
             }
         }
