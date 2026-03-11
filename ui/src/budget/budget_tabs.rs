@@ -20,7 +20,7 @@ pub fn BudgetTabs() -> Element {
                     (
                         index,
                         ov.budgeting_type,
-                        ov.clone(),
+                        *ov,
                         budget_signal()
                             .items
                             .iter()

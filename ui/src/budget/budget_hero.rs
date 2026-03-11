@@ -35,8 +35,8 @@ pub fn BudgetHero() -> Element {
 
     let period_id_now = PeriodId::from_date(Utc::now(), MonthBeginsOn::default());
     let mut budget_name = use_signal(|| "".to_string());
-    let mut budget_id = use_signal(|| Uuid::default());
-    let state_signal = use_signal(|| BudgetViewModel::default());
+    let mut budget_id = use_signal(Uuid::default);
+    let state_signal = use_signal(BudgetViewModel::default);
     use_context_provider(|| BudgetState(state_signal));
 
     use_effect(move || match budget_resource.read().as_ref() {
@@ -76,17 +76,15 @@ pub fn BudgetHero() -> Element {
     let import_file = move |file: FileData| {
         let contents = file.contents;
         spawn(async move {
-            if !contents.is_empty() {
-                if let Ok(updated_budget) =
+            if !contents.is_empty()
+                && let Ok(updated_budget) =
                     import_transactions_bytes(budget_id(), contents, period_id()).await
-                {
-                    info!("Import went well and we update the context bro");
-                    consume_context::<BudgetState>().0.set(updated_budget);
-                }
+            {
+                info!("Import went well and we update the context bro");
+                consume_context::<BudgetState>().0.set(updated_budget);
             }
         });
     };
-
 
     rsx! {
         match budget_loading_state() {
@@ -184,7 +182,7 @@ pub fn BudgetHero() -> Element {
             BudgetLoadingState::NoDefaultBudget => {
                 rsx! {
                     document::Link { rel: "stylesheet", href: HERO_CSS }
-            
+
                     div { display: "flex", flex_direction: "column", gap: ".5rem",
                         h4 { "Ingen budget hittad" }
                         Label { html_for: "name", "Skapa budget" }

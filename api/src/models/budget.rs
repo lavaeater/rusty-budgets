@@ -103,7 +103,9 @@ impl Budget {
     }
 
     pub fn all_actuals(&self, period_id: PeriodId) -> Vec<&ActualItem> {
-        self.get_period(period_id).map(|p|p.all_actuals()).unwrap_or_default()
+        self.get_period(period_id)
+            .map(|p| p.all_actuals())
+            .unwrap_or_default()
     }
 
     pub fn ignored_transactions(&self, period_id: PeriodId) -> Vec<&BankTransaction> {
@@ -214,18 +216,16 @@ impl Budget {
         budgeting_type: Option<BudgetingType>,
     ) {
         let mut was_updated = false;
-        self.items
-            .iter_mut()
-            .find(|item| item.id == id)
-            .map(|item| {
-                if let Some(name) = name {
-                    item.name = name;
-                }
-                if let Some(item_type) = budgeting_type {
-                    item.budgeting_type = item_type;
-                }
-                was_updated = true;
-            });
+        if let Some(item) = self.items.iter_mut().find(|item| item.id == id) {
+            if let Some(name) = name {
+                item.name = name;
+            }
+            if let Some(item_type) = budgeting_type {
+                item.budgeting_type = item_type;
+            }
+            was_updated = true;
+        };
+
         if was_updated {
             self.update_actuals_for_item(id);
         }

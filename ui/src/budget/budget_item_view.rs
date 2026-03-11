@@ -242,12 +242,13 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                             Button {
                                 variant: ButtonVariant::Primary,
                                 onclick: move |_| async move {
-                                    if item.actual_id.is_none() {
-                                        match api::add_actual(
+                                    if let Some(item_id) = item.actual_id {
+                                        match api::modify_actual(
                                                 budget_id,
-                                                item.item_id,
-                                                budgeted_amount(),
+                                                item_id,
                                                 budget_signal().period_id,
+                                                Some(budgeted_amount()),
+                                                None,
                                             )
                                             .await
                                         {
@@ -260,12 +261,11 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                                             }
                                         }
                                     } else {
-                                        match api::modify_actual(
+                                        match api::add_actual(
                                                 budget_id,
-                                                item.actual_id.unwrap(),
+                                                item.item_id,
+                                                budgeted_amount(),
                                                 budget_signal().period_id,
-                                                Some(budgeted_amount()),
-                                                None,
                                             )
                                             .await
                                         {
