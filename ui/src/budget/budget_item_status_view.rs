@@ -5,7 +5,8 @@ use crate::budget::budget_hero::BudgetState;
 
 #[component]
 pub fn BudgetItemStatusView(item: BudgetItemViewModel) -> Element {
-    let budget = use_context::<BudgetState>().0();
+    let budget_signal = use_context::<BudgetState>().0;
+    let budget = budget_signal();
     let budget_id = budget.id;
     match item.status {
         BudgetItemStatus::Balanced => {
