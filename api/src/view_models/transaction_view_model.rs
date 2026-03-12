@@ -10,6 +10,7 @@ pub struct TransactionViewModel {
     pub amount: Money,
     pub description: String,
     pub date: DateTime<Utc>,
+    pub account_number: String,
     pub actual_item_id: Option<Uuid>,
     pub allocations: Vec<AllocationViewModel>,
 }
@@ -21,6 +22,7 @@ impl TransactionViewModel {
             amount: tx.amount,
             description: strip_dates(&tx.description),
             date: tx.date,
+            account_number: tx.account_number.clone(),
             actual_item_id: tx.actual_id,
             allocations: Vec::new(),
         }

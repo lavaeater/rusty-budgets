@@ -275,6 +275,89 @@ fn SplitTransactionPopover(tx: TransactionViewModel) -> Element {
 }
 
 #[component]
+pub fn TransferPairsView() -> Element {
+    let budget_signal = use_context::<BudgetState>().0;
+    let pairs = budget_signal().potential_transfers.clone();
+
+    if pairs.is_empty() {
+        return rsx! {};
+    }
+
+    rsx! {
+        div { class: "transactions-view-a",
+            h2 { class: "transactions-title",
+                "Möjliga interna överföringar "
+                span { class: "transaction-count", "({pairs.len()})" }
+            }
+            div { class: "transactions-list",
+                for pair in pairs {
+                    TransferPairCard { pair }
+                }
+            }
+        }
+    }
+}
+
+#[component]
+fn TransferPairCard(pair: TransferPair) -> Element {
+    let budget_signal = use_context::<BudgetState>().0;
+    let out_id = pair.outgoing.tx_id;
+    let in_id = pair.incoming.tx_id;
+
+    rsx! {
+        div { class: "transaction-card transfer-pair-card", key: "{out_id}-{in_id}",
+            div { class: "transfer-pair-row",
+                div { class: "transfer-leg",
+                    span { class: "transfer-leg-label", "Ut" }
+                    span { class: "transaction-description", {pair.outgoing.description.clone()} }
+                    span { class: "transaction-date", {pair.outgoing.date.format("%Y-%m-%d").to_string()} }
+                    span { class: "transaction-amount negative", {pair.outgoing.amount.to_string()} }
+                    span { class: "transfer-account", {pair.outgoing.account_number.clone()} }
+                }
+                div { class: "transfer-arrow", "⇄" }
+                div { class: "transfer-leg",
+                    span { class: "transfer-leg-label", "In" }
+                    span { class: "transaction-description", {pair.incoming.description.clone()} }
+                    span { class: "transaction-date", {pair.incoming.date.format("%Y-%m-%d").to_string()} }
+                    span { class: "transaction-amount positive", {pair.incoming.amount.to_string()} }
+                    span { class: "transfer-account", {pair.incoming.account_number.clone()} }
+                }
+            }
+            div { class: "transaction-actions",
+                Button {
+                    r#type: "button",
+                    onclick: move |_| async move {
+                        let budget_id = budget_signal().id;
+                        let period_id = budget_signal().period_id;
+                        if let Ok(bv) = api::ignore_transaction(budget_id, out_id, period_id).await {
+                            consume_context::<BudgetState>().0.set(bv);
+                        }
+                        if let Ok(bv) = api::ignore_transaction(budget_id, in_id, period_id).await {
+                            consume_context::<BudgetState>().0.set(bv);
+                        }
+                    },
+                    "Bekräfta som intern överföring"
+                }
+                Button {
+                    r#type: "button",
+                    "data-style": "ghost",
+                    onclick: move |_| async move {
+                        if let Ok(bv) = api::ignore_transaction(
+                            budget_signal().id,
+                            out_id,
+                            budget_signal().period_id,
+                        ).await {
+                            consume_context::<BudgetState>().0.set(bv);
+                        }
+                    },
+                    "Ignorera"
+                }
+            }
+        }
+    }
+}
+
+#[component]
 pub fn NewBudgetItemPopover(budgeting_type: BudgetingType, tx_id: Option<Uuid>) -> Element {
     let mut open = use_signal(|| false);
     rsx! {
