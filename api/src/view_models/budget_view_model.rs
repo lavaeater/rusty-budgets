@@ -27,6 +27,11 @@ impl BudgetViewModel {
         let ignored_transactions = budget.ignored_transactions(period_id);
         let connected_transactions = budget.connected_transactions(period_id);
 
+        let period_allocations = budget
+            .get_period(period_id)
+            .map(|p| p.allocations.clone())
+            .unwrap_or_default();
+
         let items = budget_items
             .iter()
             .map(|bi| {
@@ -35,6 +40,7 @@ impl BudgetViewModel {
                     &actual_items,
                     budget.currency,
                     &connected_transactions,
+                    &period_allocations,
                 )
             })
             .collect::<Vec<_>>();

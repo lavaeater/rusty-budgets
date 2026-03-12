@@ -7,6 +7,7 @@ use crate::models::budgeting_type::BudgetingType;
 use crate::models::money::{Currency, Money};
 use crate::models::rule_packages::RulePackages;
 use crate::models::{ActualItem, BankTransaction, BudgetPeriod, MatchRule, MonthBeginsOn, TransactionAllocation};
+use crate::models::budget_period::RuleMatch;
 use crate::pub_events_enum;
 use crate::view_models::BudgetingTypeOverview;
 use chrono::{DateTime, Utc};
@@ -302,7 +303,11 @@ impl Budget {
             .map(|p| {
                 p.transactions
                     .iter()
-                    .filter(|t| t.actual_id.is_none() && !t.ignored)
+                    .filter(|t| {
+                        !t.ignored
+                            && t.actual_id.is_none()
+                            && !p.allocations.iter().any(|a| a.transaction_id == t.id)
+                    })
                     .collect()
             })
             .unwrap_or_default()
@@ -313,7 +318,10 @@ impl Budget {
             .map(|p| {
                 p.transactions
                     .iter()
-                    .filter(|t| t.actual_id.is_some())
+                    .filter(|t| {
+                        t.actual_id.is_some()
+                            || p.allocations.iter().any(|a| a.transaction_id == t.id)
+                    })
                     .collect()
             })
             .unwrap_or_default()
@@ -371,7 +379,7 @@ impl Budget {
         self.get_or_create_period(period_id)
     }
 
-    pub fn evaluate_rules(&self) -> Vec<(Uuid, Option<Uuid>, Option<Uuid>)> {
+    pub fn evaluate_rules(&self) -> Vec<RuleMatch> {
         self.periods
             .iter()
             .flat_map(|p| p.evaluate_rules(&self.match_rules, &self.items))

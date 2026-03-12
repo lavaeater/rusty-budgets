@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use crate::models::{ActualItem, BankTransaction, BudgetItem, BudgetingType, Currency, Money};
+use crate::models::{ActualItem, BankTransaction, BudgetItem, BudgetingType, Currency, Money, TransactionAllocation};
 use crate::view_models::transaction_view_model::TransactionViewModel;
 use crate::view_models::budget_item_status::BudgetItemStatus;
 use crate::view_models::budget_item_status::BudgetItemStatus::{Balanced, NotBudgeted, OverBudget, UnderBudget};
@@ -24,23 +24,41 @@ impl BudgetItemViewModel {
         actual_items: &[&ActualItem],
         currency: Currency,
         transactions: &Vec<&BankTransaction>,
+        allocations: &[TransactionAllocation],
     ) -> Self {
         let actual_item = actual_items
             .iter()
             .find(|ai| ai.budget_item_id == budget_item.id);
         if let Some(actual_item) = actual_item {
-            let mut transactions = transactions
+            let mut txs = transactions
                 .iter()
-                .filter(|tx| tx.actual_id == Some(actual_item.id))
+                .filter(|tx| {
+                    tx.actual_id == Some(actual_item.id)
+                        || allocations
+                            .iter()
+                            .any(|a| a.transaction_id == tx.id && a.actual_id == actual_item.id)
+                })
                 .map(|tx| TransactionViewModel::from_transaction(tx))
                 .collect::<Vec<_>>();
-            transactions.sort_by_key(|tx| tx.date);
+            txs.sort_by_key(|tx| tx.date);
+
+            let allocation_amount: Money = allocations
+                .iter()
+                .filter(|a| a.actual_id == actual_item.id)
+                .map(|a| a.amount)
+                .sum();
+
+            let actual_amount = if allocation_amount.is_zero() {
+                actual_item.actual_amount
+            } else {
+                allocation_amount
+            };
 
             let status = if actual_item.budgeted_amount.is_zero() {
                 NotBudgeted
-            } else if actual_item.actual_amount > actual_item.budgeted_amount {
+            } else if actual_amount > actual_item.budgeted_amount {
                 OverBudget
-            } else if actual_item.actual_amount < actual_item.budgeted_amount {
+            } else if actual_amount < actual_item.budgeted_amount {
                 UnderBudget
             } else {
                 Balanced
@@ -52,10 +70,10 @@ impl BudgetItemViewModel {
                 name: actual_item.item_name.clone(),
                 budgeting_type: actual_item.budgeting_type,
                 budgeted_amount: actual_item.budgeted_amount,
-                actual_amount: actual_item.actual_amount,
-                remaining_budget: actual_item.budgeted_amount - actual_item.actual_amount,
+                actual_amount,
+                remaining_budget: actual_item.budgeted_amount - actual_amount,
                 status,
-                transactions,
+                transactions: txs,
             }
         } else {
             Self {

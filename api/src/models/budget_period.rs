@@ -12,6 +12,14 @@ use std::collections::HashSet;
 use uuid::Uuid;
 use crate::view_models::BudgetingTypeOverview;
 
+#[derive(Debug, Clone)]
+pub struct RuleMatch {
+    pub tx_id: Uuid,
+    pub amount: Money,
+    pub actual_id: Option<Uuid>,
+    pub item_id: Option<Uuid>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BudgetPeriod {
     pub id: PeriodId,
@@ -235,23 +243,37 @@ impl BudgetPeriod {
         &self,
         rules: &HashSet<MatchRule>,
         items: &[BudgetItem],
-    ) -> Vec<(Uuid, Option<Uuid>, Option<Uuid>)> {
-        let mut matched_transactions = Vec::new();
+    ) -> Vec<RuleMatch> {
+        let mut matched = Vec::new();
         let actuals = self.actual_items.iter().collect::<Vec<_>>();
-        for transaction in self.transactions.iter().filter(|tx| !tx.ignored && tx.actual_id.is_none()) {
+        for transaction in self.transactions.iter().filter(|tx| {
+            !tx.ignored
+                && tx.actual_id.is_none()
+                && !self.allocations.iter().any(|a| a.transaction_id == tx.id)
+        }) {
             for rule in rules {
                 if rule.matches_transaction(transaction) {
                     if let Some(actual_id) = self.get_actual_id_for_rule(rule, &actuals) {
-                        matched_transactions.push((transaction.id, Some(actual_id), None));
+                        matched.push(RuleMatch {
+                            tx_id: transaction.id,
+                            amount: transaction.amount,
+                            actual_id: Some(actual_id),
+                            item_id: None,
+                        });
                         break;
                     } else if let Some(item_id) = self.get_item_id_for_rule(rule, items) {
-                        matched_transactions.push((transaction.id, None, Some(item_id)));
+                        matched.push(RuleMatch {
+                            tx_id: transaction.id,
+                            amount: transaction.amount,
+                            actual_id: None,
+                            item_id: Some(item_id),
+                        });
                         break;
                     }
                 }
             }
         }
-        matched_transactions
+        matched
     }
 
     pub fn get_actual_id_for_rule(

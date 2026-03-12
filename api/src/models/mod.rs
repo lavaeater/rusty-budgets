@@ -24,4 +24,5 @@ pub use budget_period::*;
 pub use actual_item::*;
 pub use match_rule::*;
 pub use transaction_allocation::*;
+pub use budget_period::RuleMatch;
 
