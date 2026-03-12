@@ -1,5 +1,5 @@
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
-use crate::models::{Budget, Money, TransactionAllocation};
+use crate::models::{Budget, BudgetingType, Money, PeriodId, TransactionAllocation};
 use core::fmt::Display;
 use cqrs_macros::DomainEvent;
 use serde::{Deserialize, Serialize};
@@ -29,6 +29,7 @@ impl Display for AllocationCreated {
 
 impl AllocationCreatedHandler for Budget {
     fn apply_create_allocation(&mut self, event: &AllocationCreated) -> Uuid {
+        let cost_types = [BudgetingType::Expense, BudgetingType::Savings];
         let allocation = TransactionAllocation {
             id: event.allocation_id,
             transaction_id: event.transaction_id,
@@ -36,8 +37,15 @@ impl AllocationCreatedHandler for Budget {
             amount: event.amount,
             tag: event.tag.clone(),
         };
-        if let Some(period) = self.get_period_for_transaction_mut(event.transaction_id) {
-            period.add_allocation(allocation);
+        if let Some(tx) = self.get_transaction(event.transaction_id) {
+            let period_id = PeriodId::from_date(tx.date, self.month_begins_on());
+            let actual_id = event.actual_id;
+            let amount = event.amount;
+            self.with_period_mut(period_id).add_allocation(allocation);
+            self.with_period_mut(period_id).mutate_actual(actual_id, |a| {
+                let signed = if cost_types.contains(&a.budgeting_type) { -amount } else { amount };
+                a.actual_amount += signed;
+            });
         }
         event.allocation_id
     }

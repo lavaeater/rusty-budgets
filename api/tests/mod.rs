@@ -644,10 +644,10 @@ pub fn evaluate_rules_matches_transaction_to_actual() -> Result<(), RustyError> 
     let matches = budget.evaluate_rules();
 
     assert_eq!(matches.len(), 1, "Expected one match");
-    let (matched_tx_id, matched_actual_id, matched_item_id) = &matches[0];
-    assert_eq!(*matched_tx_id, tx_id);
-    assert_eq!(*matched_actual_id, Some(actual_id), "Should match to actual");
-    assert!(matched_item_id.is_none(), "Item ID should be None when actual is found");
+    let m = &matches[0];
+    assert_eq!(m.tx_id, tx_id);
+    assert_eq!(m.actual_id, Some(actual_id), "Should match to actual");
+    assert!(m.item_id.is_none(), "Item ID should be None when actual is found");
 
     Ok(())
 }
@@ -698,10 +698,10 @@ pub fn evaluate_rules_matches_transaction_to_item_when_no_actual() -> Result<(),
     let matches = budget.evaluate_rules();
 
     assert_eq!(matches.len(), 1, "Expected one match");
-    let (matched_tx_id, matched_actual_id, matched_item_id) = &matches[0];
-    assert_eq!(*matched_tx_id, tx_id);
-    assert!(matched_actual_id.is_none(), "Actual ID should be None when no actual exists");
-    assert_eq!(*matched_item_id, Some(item_id), "Should match to item");
+    let m = &matches[0];
+    assert_eq!(m.tx_id, tx_id);
+    assert!(m.actual_id.is_none(), "Actual ID should be None when no actual exists");
+    assert_eq!(m.item_id, Some(item_id), "Should match to item");
 
     Ok(())
 }
@@ -821,17 +821,14 @@ pub fn evaluate_rules_multiple_transactions_multiple_rules() -> Result<(), Rusty
     assert_eq!(matches.len(), 2, "Expected two matches");
 
     // Check that both transactions are matched to their respective actuals
-    let tx1_match = matches.iter().find(|(tx_id, _, _)| *tx_id == tx1_id);
-    let tx2_match = matches.iter().find(|(tx_id, _, _)| *tx_id == tx2_id);
+    let tx1_match = matches.iter().find(|m| m.tx_id == tx1_id);
+    let tx2_match = matches.iter().find(|m| m.tx_id == tx2_id);
 
     assert!(tx1_match.is_some(), "Transaction 1 should be matched");
     assert!(tx2_match.is_some(), "Transaction 2 should be matched");
 
-    let (_, actual1, _) = tx1_match.unwrap();
-    let (_, actual2, _) = tx2_match.unwrap();
-
-    assert_eq!(*actual1, Some(groceries_actual_id));
-    assert_eq!(*actual2, Some(utilities_actual_id));
+    assert_eq!(tx1_match.unwrap().actual_id, Some(groceries_actual_id));
+    assert_eq!(tx2_match.unwrap().actual_id, Some(utilities_actual_id));
 
     Ok(())
 }
@@ -918,18 +915,15 @@ pub fn evaluate_rules_across_multiple_periods() -> Result<(), RustyError> {
 
     assert_eq!(matches.len(), 2, "Expected matches from both periods");
 
-    let tx1_match = matches.iter().find(|(tx_id, _, _)| *tx_id == tx1_id);
-    let tx2_match = matches.iter().find(|(tx_id, _, _)| *tx_id == tx2_id);
+    let tx1_match = matches.iter().find(|m| m.tx_id == tx1_id);
+    let tx2_match = matches.iter().find(|m| m.tx_id == tx2_id);
 
     assert!(tx1_match.is_some());
     assert!(tx2_match.is_some());
 
     // Each transaction should match to the actual in its respective period
-    let (_, actual1, _) = tx1_match.unwrap();
-    let (_, actual2, _) = tx2_match.unwrap();
-
-    assert_eq!(*actual1, Some(actual1_id));
-    assert_eq!(*actual2, Some(actual2_id));
+    assert_eq!(tx1_match.unwrap().actual_id, Some(actual1_id));
+    assert_eq!(tx2_match.unwrap().actual_id, Some(actual2_id));
 
     Ok(())
 }

@@ -132,13 +132,22 @@ impl JoyDbBudgetRuntime {
         tx_id: Uuid,
         actual_id: Uuid,
     ) -> Result<Uuid, RustyError> {
-        let amount = {
+        let (amount, existing_allocations) = {
             let budget = self.load(budget_id)?;
-            budget
+            let amount = budget
                 .get_transaction(tx_id)
                 .map(|tx| tx.amount)
-                .ok_or_else(|| RustyError::ItemNotFound(tx_id.to_string(), "Transaction not found".to_string()))?
+                .ok_or_else(|| RustyError::ItemNotFound(tx_id.to_string(), "Transaction not found".to_string()))?;
+            let existing = budget
+                .allocations_for_transaction(tx_id)
+                .iter()
+                .map(|a| (a.id, a.transaction_id))
+                .collect::<Vec<_>>();
+            (amount, existing)
         };
+        for (alloc_id, transaction_id) in existing_allocations {
+            self.delete_allocation(user_id, budget_id, alloc_id, transaction_id)?;
+        }
         self.create_allocation(user_id, budget_id, tx_id, actual_id, amount, String::new())
     }
 

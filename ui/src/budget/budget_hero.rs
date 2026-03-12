@@ -29,8 +29,8 @@ const HERO_CSS: Asset = asset!("assets/styling/budget-hero.css");
 #[component]
 pub fn BudgetHero() -> Element {
     let mut budget_loading_state = use_signal(|| BudgetLoadingState::Loading);
-    let mut budget_id = use_signal(Uuid::default);
-    let mut period_id = use_signal(|| PeriodId::from_date(Utc::now(), MonthBeginsOn::default()));
+    let budget_id = use_signal(Uuid::default);
+    let period_id = use_signal(|| PeriodId::from_date(Utc::now(), MonthBeginsOn::default()));
 
     let budget_resource = use_server_future(move || get_budget(None, period_id()))?;
 

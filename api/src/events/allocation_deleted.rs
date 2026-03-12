@@ -1,5 +1,5 @@
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
-use crate::models::Budget;
+use crate::models::{Budget, BudgetingType, PeriodId};
 use core::fmt::Display;
 use cqrs_macros::DomainEvent;
 use serde::{Deserialize, Serialize};
@@ -25,8 +25,22 @@ impl Display for AllocationDeleted {
 
 impl AllocationDeletedHandler for Budget {
     fn apply_delete_allocation(&mut self, event: &AllocationDeleted) -> Uuid {
-        if let Some(period) = self.get_period_for_transaction_mut(event.transaction_id) {
+        let cost_types = [BudgetingType::Expense, BudgetingType::Savings];
+        if let Some(tx) = self.get_transaction(event.transaction_id) {
+            let period_id = PeriodId::from_date(tx.date, self.month_begins_on());
+            let period = self.with_period_mut(period_id);
+            let amount = period
+                .allocations
+                .iter()
+                .find(|a| a.id == event.allocation_id)
+                .map(|a| (a.amount, a.actual_id));
             period.remove_allocation(event.allocation_id);
+            if let Some((amount, actual_id)) = amount {
+                period.mutate_actual(actual_id, |a| {
+                    let signed = if cost_types.contains(&a.budgeting_type) { -amount } else { amount };
+                    a.actual_amount -= signed;
+                });
+            }
         }
         event.budget_id
     }
