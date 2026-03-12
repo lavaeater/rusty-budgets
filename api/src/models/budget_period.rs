@@ -81,7 +81,7 @@ impl BudgetPeriod {
     }
 
     pub fn spent_for_type(&self, budgeting_type: BudgetingType) -> Money {
-        let cost_types = [BudgetingType::Expense, BudgetingType::Savings];
+        let cost_types = [BudgetingType::Expense, BudgetingType::Savings, BudgetingType::InternalTransfer];
         self.actual_items
             .iter()
             .filter(|item| item.budgeting_type == budgeting_type)

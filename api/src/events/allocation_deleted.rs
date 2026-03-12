@@ -25,7 +25,7 @@ impl Display for AllocationDeleted {
 
 impl AllocationDeletedHandler for Budget {
     fn apply_delete_allocation(&mut self, event: &AllocationDeleted) -> Uuid {
-        let cost_types = [BudgetingType::Expense, BudgetingType::Savings];
+        let cost_types = [BudgetingType::Expense, BudgetingType::Savings, BudgetingType::InternalTransfer];
         if let Some(tx) = self.get_transaction(event.transaction_id) {
             let period_id = PeriodId::from_date(tx.date, self.month_begins_on());
             let period = self.with_period_mut(period_id);

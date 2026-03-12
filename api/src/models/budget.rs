@@ -379,6 +379,38 @@ impl Budget {
         self.get_or_create_period(period_id)
     }
 
+    pub fn potential_internal_transfers(&self) -> Vec<(Uuid, Uuid)> {
+        let all_txs: Vec<&BankTransaction> = self.all_transactions();
+        let allocated_ids: std::collections::HashSet<Uuid> = self
+            .periods
+            .iter()
+            .flat_map(|p| p.allocations.iter().map(|a| a.transaction_id))
+            .collect();
+        let unallocated: Vec<&&BankTransaction> = all_txs
+            .iter()
+            .filter(|tx| !tx.ignored && tx.actual_id.is_none() && !allocated_ids.contains(&tx.id))
+            .collect();
+        let mut pairs: Vec<(Uuid, Uuid)> = Vec::new();
+        let mut used: std::collections::HashSet<Uuid> = std::collections::HashSet::new();
+        for tx in &unallocated {
+            if used.contains(&tx.id) {
+                continue;
+            }
+            if let Some(counterpart) = unallocated.iter().find(|other| {
+                other.id != tx.id
+                    && !used.contains(&other.id)
+                    && other.account_number != tx.account_number
+                    && other.amount == -tx.amount
+                    && (other.date - tx.date).num_days().abs() <= 3
+            }) {
+                used.insert(tx.id);
+                used.insert(counterpart.id);
+                pairs.push((tx.id, counterpart.id));
+            }
+        }
+        pairs
+    }
+
     pub fn evaluate_rules(&self) -> Vec<RuleMatch> {
         self.periods
             .iter()

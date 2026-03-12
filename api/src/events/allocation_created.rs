@@ -29,7 +29,7 @@ impl Display for AllocationCreated {
 
 impl AllocationCreatedHandler for Budget {
     fn apply_create_allocation(&mut self, event: &AllocationCreated) -> Uuid {
-        let cost_types = [BudgetingType::Expense, BudgetingType::Savings];
+        let cost_types = [BudgetingType::Expense, BudgetingType::Savings, BudgetingType::InternalTransfer];
         let allocation = TransactionAllocation {
             id: event.allocation_id,
             transaction_id: event.transaction_id,

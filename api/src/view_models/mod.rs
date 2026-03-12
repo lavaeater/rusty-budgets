@@ -18,7 +18,7 @@ pub use rule::Rule;
 pub use value_kind::ValueKind;
 pub use budget_item_view_model::BudgetItemViewModel;
 pub use transaction_view_model::TransactionViewModel;
-pub use budget_view_model::BudgetViewModel;
+pub use budget_view_model::{BudgetViewModel, TransferPair};
 pub use budget_item_status::BudgetItemStatus;
 pub use allocation_view_model::AllocationViewModel;
 
