@@ -1,5 +1,184 @@
 # Better Budgeting - Code Review & Feature Recommendations
 
+## Tommies New Thoughts
+
+I want to rewrite how we make the budget. 
+
+So, transactions should be tagged when being imported. A transaction can have one and only one tag. 
+A budget item is simply the aggregation of a collection of tags - for the actual outcome of what happens on that budget item.
+
+Why the change? Well, instead of connecting transactions to budget items, we simply tag transactions, no more hard connections between transactions and budget items.
+
+This would make it easier to move transactions around, create new tags as you go and also one could make different slices of views for tags. So tags could in effect become almost item-descriptors,
+so we could have a "house mortgage" tag, "house rent" tag, "transport" tag, "fuel" tag, we could almost have one tag for every transaction (inefficient).
+
+I also realize that we need to be able to split a transaction into multiple tags, somehow - so a mortgage payment is part interest and part principal, and we need to be able to split that into two tags, i.e. mortgage interest and mortgage principal. Paying off the principal is a form of savings and needs to be tracked.
+
+This all makes our budgetitems more free from the transactions. I still like the BudgetPeriods, but the budget should probably always be considered yearly... so when creating budget items, all items should have a periodicity, monthly, yearly, etc.
+
+Gaah, this isn't it either.
+
+Budget
+    - BudgetPeriod
+        - BudgetItem
+            - ActualItem
+
+Also, we really really need to be able to handle internal transactions. The system doesn't need to, right now, be able to handle other banks formats for exported transaction data, but it should be able to handle internal transactions between owned bank accounts, cancelling them out or... perhaps we mark one account as savings - and if money is transferred to it from another account, it's a deposit, if money is transferred from it to another account, it's a withdrawal.
+
+So, I feel what I have is really good, but not good enough. I want the focus of the software to be working with the budget - importing transactions and modifying budgeted amounts to make sure the budget stays balanced. Suggestions?
+
+Let me explore the current domain model to give you grounded suggestions.
+
+Let me grab a few more pieces to fully understand the current flow.
+
+I've read through the full domain model. Here's my analysis and a concrete proposal.
+
+---
+
+# The Missing Concept: `TransactionAllocation`
+
+Your instinct is right — there's a rigid coupling at the heart of the current model. Look at this:
+
+```@/home/tommie/projects/rusty-budgets/api/src/models/bank_transaction.rs:26
+    pub actual_id: Option<Uuid>,
+```
+
+A transaction points at **exactly one** `ActualItem` (or nothing). This single `Option<Uuid>` is the bottleneck behind every frustration you described: can't split, can't re-tag, can't move things around easily.
+
+## What's Actually Needed
+
+An **allocation layer** between transactions and budget line items:
+
+```
+BankTransaction ──1:N──▶ TransactionAllocation ──N:1──▶ ActualItem
+```
+
+### `TransactionAllocation`
+
+```rust
+pub struct TransactionAllocation {
+    pub id: Uuid,
+    pub transaction_id: Uuid,
+    pub actual_id: Uuid,
+    pub amount: Money,          // portion of the transaction
+    pub tag: String,            // e.g. "mortgage-interest", "mortgage-principal"
+}
+```
+
+**This single concept solves three of your problems at once:**
+
+1. **Splitting** — A 10,000 kr mortgage payment becomes two allocations: 7,000 kr → "mortgage-interest" (Expense), 3,000 kr → "mortgage-principal" (Savings). The sum of allocations must equal the transaction amount.
+
+2. **Flexible tagging** — Tags live on allocations, not on transactions or items. You tag *how money was spent*, not *where it came from*. A `BudgetItem` then defines which tags it aggregates (e.g. a "Housing" budget item covers tags `["mortgage-interest", "home-insurance", "electricity"]`).
+
+3. **Easy re-categorization** — Moving a transaction = deleting one allocation and creating another. No mutation of the transaction itself. The event log stays clean.
+
+### `BudgetItem` Gets Tag Aggregation + Periodicity
+
+```rust
+pub struct BudgetItem {
+    pub id: Uuid,
+    pub name: String,
+    pub budgeting_type: BudgetingType,
+    pub tags: Vec<String>,              // which allocation tags roll up here
+    pub periodicity: Periodicity,       // Monthly, Quarterly, Annual
+}
+
+pub enum Periodicity {
+    Monthly,
+    Quarterly,
+    Annual,
+}
+```
+
+Now `ActualItem.actual_amount` becomes a **computed value** — the sum of all `TransactionAllocation`s whose tag matches the item's tag set, in the relevant period. You can still store a cached value for display, but the source of truth is the allocations.
+
+### `ActualItem` Simplifies
+
+```rust
+pub struct ActualItem {
+    pub id: Uuid,
+    pub budget_item_id: Uuid,
+    pub period_id: PeriodId,
+    pub budgeted_amount: Money,
+    // actual_amount is now DERIVED from allocations
+    // item_name, budgeting_type are DERIVED from BudgetItem
+}
+```
+
+No more denormalized `item_name` and `budgeting_type` on `ActualItem` that you have to keep in sync (the `update_actuals_from_item` dance in `@/home/tommie/projects/rusty-budgets/api/src/models/budget_period.rs:29-36` goes away).
+
+---
+
+## Internal Transfers
+
+Add an `AccountType` to `BankAccount`:
+
+```rust
+pub enum AccountType {
+    Checking,
+    Savings,
+    Loan,
+}
+
+pub struct BankAccount {
+    pub id: Uuid,
+    pub account_number: String,
+    pub account_type: AccountType,
+    // ...
+}
+```
+
+**Transfer detection**: When two transactions in the same budget have matching amounts (one positive, one negative), same date, and are on different owned accounts → flag as a potential internal transfer. The user confirms, and both transactions get a special `"internal-transfer"` tag allocation. These allocations can then be excluded from expense/income totals, or — if the target is a Savings account — counted as savings.
+
+This doesn't require a new model, just a detection query and a reserved tag convention.
+
+---
+
+## How the Import Workflow Changes
+
+**Current**: Import → hash-dedup → insert transaction → match rules fire → hard-link `actual_id`.
+
+**Proposed**: Import → hash-dedup → insert transaction → match rules fire → **create allocations** (instead of setting `actual_id`). Unallocated transactions show up in a triage view. The user can:
+- Accept auto-allocation
+- Split a transaction (create multiple allocations)
+- Tag with a new tag (which auto-creates a match rule for next time)
+- Flag as internal transfer
+
+The budget view then shows each `ActualItem` with its budgeted amount vs. the sum of its allocations. **The focus stays exactly where you want it**: working with the budget, importing, categorizing, balancing.
+
+---
+
+## Migration Path
+
+This is evolutionary, not revolutionary:
+
+1. **Add** `TransactionAllocation` model and events (`AllocationCreated`, `AllocationDeleted`)
+2. **Add** `tags` and `periodicity` to `BudgetItem`
+3. **Migrate** existing `actual_id` links: for each transaction with `actual_id = Some(x)`, create an allocation `{ transaction_id, actual_id: x, amount: tx.amount, tag: actual.item_name }`
+4. **Deprecate** `BankTransaction.actual_id` — keep it temporarily for backward compat, eventually remove
+5. **Derive** `actual_amount` from allocations instead of manual tracking
+
+Your CQRS/event-sourcing architecture makes this migration safe — old events stay valid, new events add the allocation concept.
+
+---
+
+## Summary
+
+| Problem | Solution |
+|---|---|
+| Can't split transactions | `TransactionAllocation` with partial amounts |
+| Rigid transaction↔item coupling | Allocations as an indirection layer |
+| No tagging | Tags on allocations, aggregated by `BudgetItem.tags` |
+| Internal transfers | `AccountType` + transfer detection + reserved tag |
+| No periodicity | `Periodicity` enum on `BudgetItem` |
+| Denormalized `ActualItem` fields | Derive from `BudgetItem` + compute from allocations |
+
+The `TransactionAllocation` is the single missing concept that unlocks all of your listed pain points. Want me to start implementing any of this?
+
+
+
+
 ## Executive Summary
 
 This document contains a comprehensive code review of the rusty-budgets application, covering both the API crate (CQRS backend) and UI crate (Dioxus frontend). The application demonstrates solid architectural foundations with event sourcing and CQRS patterns, but lacks several critical features for practical budgeting workflows.
