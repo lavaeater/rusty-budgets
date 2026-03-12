@@ -285,3 +285,35 @@ pub async fn adjust_actual_funds(
         period_id,
     ))
 }
+
+#[server(endpoint = "create_allocation")]
+pub async fn create_allocation(
+    budget_id: Uuid,
+    transaction_id: Uuid,
+    actual_id: Uuid,
+    amount: Money,
+    tag: String,
+    period_id: PeriodId,
+) -> ServerFnResult<BudgetViewModel> {
+    let user = db::get_default_user(None)?;
+    let _ = db::create_allocation(user.id, budget_id, transaction_id, actual_id, amount, tag)?;
+    Ok(BudgetViewModel::from_budget(
+        &db::get_budget(budget_id)?,
+        period_id,
+    ))
+}
+
+#[server(endpoint = "delete_allocation")]
+pub async fn delete_allocation(
+    budget_id: Uuid,
+    allocation_id: Uuid,
+    transaction_id: Uuid,
+    period_id: PeriodId,
+) -> ServerFnResult<BudgetViewModel> {
+    let user = db::get_default_user(None)?;
+    let _ = db::delete_allocation(user.id, budget_id, allocation_id, transaction_id)?;
+    Ok(BudgetViewModel::from_budget(
+        &db::get_budget(budget_id)?,
+        period_id,
+    ))
+}

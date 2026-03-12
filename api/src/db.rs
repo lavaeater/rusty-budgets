@@ -321,6 +321,26 @@ pub fn adjust_actual_funds(
     Ok(budget_id)
 }
 
+pub fn create_allocation(
+    user_id: Uuid,
+    budget_id: Uuid,
+    transaction_id: Uuid,
+    actual_id: Uuid,
+    amount: Money,
+    tag: String,
+) -> Result<Uuid, RustyError> {
+    with_runtime(None).create_allocation(user_id, budget_id, transaction_id, actual_id, amount, tag)
+}
+
+pub fn delete_allocation(
+    user_id: Uuid,
+    budget_id: Uuid,
+    allocation_id: Uuid,
+    transaction_id: Uuid,
+) -> Result<Uuid, RustyError> {
+    with_runtime(None).delete_allocation(user_id, budget_id, allocation_id, transaction_id)
+}
+
 pub fn create_rule(
     user_id: Uuid,
     budget_id: Uuid,

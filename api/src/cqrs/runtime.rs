@@ -187,6 +187,32 @@ impl JoyDbBudgetRuntime {
             budget.add_rule(transaction_key, item_key, always_apply)
         })
     }
+
+    pub fn create_allocation(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        transaction_id: Uuid,
+        actual_id: Uuid,
+        amount: Money,
+        tag: String,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.create_allocation(transaction_id, actual_id, amount, tag)
+        })
+    }
+
+    pub fn delete_allocation(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        allocation_id: Uuid,
+        transaction_id: Uuid,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.delete_allocation(allocation_id, transaction_id)
+        })
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Model)]

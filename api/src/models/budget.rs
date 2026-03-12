@@ -410,6 +410,35 @@ impl Budget {
         self.with_period_mut(period_id)
             .mutate_actual(actual_id, mutator);
     }
+
+    pub fn allocations_for_actual(
+        &self,
+        period_id: PeriodId,
+        actual_id: Uuid,
+    ) -> Vec<&TransactionAllocation> {
+        self.get_period(period_id)
+            .map(|p| p.allocations_for_actual(actual_id))
+            .unwrap_or_default()
+    }
+
+    pub fn allocations_for_transaction(
+        &self,
+        transaction_id: Uuid,
+    ) -> Vec<&TransactionAllocation> {
+        self.get_period_for_transaction(transaction_id)
+            .map(|p| p.allocations_for_transaction(transaction_id))
+            .unwrap_or_default()
+    }
+
+    pub fn allocated_amount_for_actual(
+        &self,
+        period_id: PeriodId,
+        actual_id: Uuid,
+    ) -> Money {
+        self.get_period(period_id)
+            .map(|p| p.allocated_amount_for_actual(actual_id))
+            .unwrap_or(Money::zero(self.currency))
+    }
 }
 
 // --- Aggregate implementation ---

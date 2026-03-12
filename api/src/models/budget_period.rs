@@ -191,9 +191,44 @@ impl BudgetPeriod {
             id,
             actual_items: Vec::new(),
             transactions: Vec::new(),
+            allocations: Vec::new(),
         };
         period.clear_hashmaps_and_transactions();
         period
+    }
+
+    pub fn add_allocation(&mut self, allocation: TransactionAllocation) {
+        self.allocations.push(allocation);
+    }
+
+    pub fn remove_allocation(&mut self, allocation_id: Uuid) {
+        self.allocations.retain(|a| a.id != allocation_id);
+    }
+
+    pub fn contains_allocation(&self, allocation_id: Uuid) -> bool {
+        self.allocations.iter().any(|a| a.id == allocation_id)
+    }
+
+    pub fn allocations_for_transaction(&self, transaction_id: Uuid) -> Vec<&TransactionAllocation> {
+        self.allocations
+            .iter()
+            .filter(|a| a.transaction_id == transaction_id)
+            .collect()
+    }
+
+    pub fn allocations_for_actual(&self, actual_id: Uuid) -> Vec<&TransactionAllocation> {
+        self.allocations
+            .iter()
+            .filter(|a| a.actual_id == actual_id)
+            .collect()
+    }
+
+    pub fn allocated_amount_for_actual(&self, actual_id: Uuid) -> Money {
+        self.allocations
+            .iter()
+            .filter(|a| a.actual_id == actual_id)
+            .map(|a| a.amount)
+            .sum()
     }
 
     pub fn evaluate_rules(
