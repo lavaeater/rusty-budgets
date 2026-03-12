@@ -631,3 +631,84 @@ The rusty-budgets application has a **solid architectural foundation** with prop
 5. Add basic authentication
 
 The codebase is well-structured for expansion, and the CQRS pattern will support adding these features without major refactoring.
+
+---
+
+## Current Implementation Status (March 2026)
+
+### ✅ Completed
+
+**Core Allocation Layer**
+- `TransactionAllocation` model with `id`, `transaction_id`, `actual_id`, `amount`, `tag`
+- `AllocationCreated` / `AllocationDeleted` events with full CQRS handlers
+- `AllocationCreated` handler syncs `ActualItem.actual_amount` with correct sign (expenses/savings negated)
+- `AllocationDeleted` handler reverses the sync
+- `BankTransaction.actual_id` is now a read-only legacy field — nothing writes it anymore
+
+**Allocation-Based Connection**
+- `runtime.connect_transaction` now creates allocations, not `TransactionConnected` events
+- Reconnecting a transaction deletes the old allocation first (correct replace semantics)
+- `db::connect_transaction` uses allocation path
+- `db::evaluate_rules` creates allocations instead of setting `actual_id`
+- `BudgetPeriod::spent_for_type` sums from allocations (with sign), falls back to `actual_amount` for legacy data
+- `Budget::unconnected_transactions` / `connected_transactions` use allocations
+
+**Tags & Periodicity on BudgetItem**
+- `BudgetItem.tags: Vec<String>` — defines which allocation tags roll up to this item
+- `BudgetItem.periodicity: Periodicity` — `Monthly` / `Quarterly` / `Annual`
+- `BudgetItemViewModel` exposes `tags` and `periodicity`
+- `BudgetItemViewModel::from_item` filters allocations by tag match in addition to `actual_id`
+
+**InternalTransfer**
+- `BudgetingType::InternalTransfer` variant added (display: "Intern överföring")
+- `RulePackages` default includes an `InternalTransfer` rule package
+- `BudgetPeriod::get_transfer_overview` and exhaustive match arms
+- `BudgetingTypeOverview` now always includes InternalTransfer
+
+**Transfer Detection**
+- `Budget::potential_internal_transfers()` — finds pairs of unallocated transactions with inverse amounts, different account numbers, within 3 days
+- `BudgetViewModel.potential_transfers: Vec<TransferPair>` exposed to UI
+- `TransferPairsView` UI component shows detected pairs with "Bekräfta" / "Ignorera" actions
+- CSS for `.transfer-pair-card`, `.transfer-leg`, `.transfer-arrow`
+
+**Split Transaction UI**
+- `SplitTransactionPopover` — tag + amount + item selector → calls `create_allocation`
+- `AllocationChip` — shows allocation tag/amount on a transaction with delete button
+- `TransactionsView` shows allocation chips on each transaction card
+
+**View Models**
+- `TransactionViewModel` now includes `account_number`
+- `AllocationViewModel` with `allocation_id`, `transaction_id`, `actual_id`, `amount`, `tag`
+
+---
+
+### 🔲 Remaining Work
+
+**1. Tag-driven allocation matching (medium priority)**
+Currently, `BudgetItemViewModel` matches allocations by both `actual_id` AND tag. But when a user tags an allocation (e.g. tag = `"bolåneränta"`) and the `BudgetItem.tags` includes `"bolåneränta"`, the rollup works. However:
+- There is no UI to **edit `BudgetItem.tags`** — users can't add/remove tags on a budget item
+- There is no UI to **tag an allocation** in the connect-transaction flow (only in the split popover)
+- The main `connect_transaction` flow still creates allocations with an empty tag
+
+**2. Confirm internal transfer as allocation (low priority)**
+The "Bekräfta som intern överföring" button currently just ignores both transactions. Per the spec, it should instead create allocations with a reserved `"internal-transfer"` tag on a dedicated `InternalTransfer`-type actual item, so the transfers show up in the InternalTransfer overview rather than vanishing silently.
+
+**3. Periodicity UI (low priority)**
+`BudgetItem.periodicity` exists on the model and view model but:
+- No UI to set/edit periodicity when creating or editing a budget item
+- No budget math accounts for periodicity (a Quarterly item's budgeted amount should be prorated differently across months)
+
+**4. ItemModified event for tags/periodicity (medium priority)**
+`BudgetItem.tags` and `BudgetItem.periodicity` can be set at creation but there is no server function or event to *update* them on an existing item. Need:
+- Extend `ItemModified` event (or add `BudgetItemTagsUpdated`) to persist tag/periodicity changes
+- Server function `update_budget_item(budget_id, item_id, tags, periodicity)`
+- UI form in `BudgetItemView` / `NewBudgetItem` to edit tags and periodicity
+
+**5. Tag autocomplete from existing allocation tags (nice to have)**
+When creating a split allocation or tagging a connection, show suggestions from tags already used in the budget — so users build a consistent tag vocabulary.
+
+**6. Legacy `actual_id` data migration (medium priority)**
+Transactions imported before the allocation refactor have `actual_id` set but no corresponding `TransactionAllocation`. The fallback paths handle read-time display correctly, but there's no migration event/job to backfill allocations for these legacy links. When `actual_id` is eventually removed, these connections will silently disappear.
+
+**7. `"Another transactions view"` placeholder text (minor)**
+`budget_hero.rs` still has a literal `"Another transactions view"` string left from before in the ignored transactions section — should be removed.

@@ -224,7 +224,6 @@ pub fn BudgetOverview(mut budget_id: Signal<Uuid>, mut period_id: Signal<PeriodI
                 }
             } else {
                 div { class: "transactions-section-prominent",
-                    "Another transactions view"
                     TransactionsView { ignored: true }
                 }
             }
