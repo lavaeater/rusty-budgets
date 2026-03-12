@@ -275,19 +275,27 @@ pub fn connect_transaction(
     item_id: Uuid,
     period_id: PeriodId,
 ) -> Result<Uuid, RustyError> {
+    let budget = get_budget(budget_id)?;
+
     let actual_id = match actual_id {
         None => {
             with_runtime(None).add_actual(
                 user_id,
                 budget_id,
                 item_id,
-                Money::zero(Currency::default()),
+                Money::zero(budget.currency),
                 period_id,
             )?
         }
         Some(actual_id) => actual_id,
     };
-    with_runtime(None).connect_transaction(user_id, budget_id, tx_id, actual_id)?;
+
+    let amount = budget
+        .get_transaction(tx_id)
+        .map(|tx| tx.amount)
+        .ok_or_else(|| RustyError::ItemNotFound(tx_id.to_string(), "Transaction not found".to_string()))?;
+
+    create_allocation(user_id, budget_id, tx_id, actual_id, amount, String::new())?;
     Ok(actual_id)
 }
 

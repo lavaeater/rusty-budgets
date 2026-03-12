@@ -132,9 +132,14 @@ impl JoyDbBudgetRuntime {
         tx_id: Uuid,
         actual_id: Uuid,
     ) -> Result<Uuid, RustyError> {
-        self.cmd(user_id, budget_id, |budget| {
-            budget.connect_transaction(tx_id, actual_id)
-        })
+        let amount = {
+            let budget = self.load(budget_id)?;
+            budget
+                .get_transaction(tx_id)
+                .map(|tx| tx.amount)
+                .ok_or_else(|| RustyError::ItemNotFound(tx_id.to_string(), "Transaction not found".to_string()))?
+        };
+        self.create_allocation(user_id, budget_id, tx_id, actual_id, amount, String::new())
     }
 
     pub fn ignore_transaction(

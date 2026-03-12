@@ -81,10 +81,23 @@ impl BudgetPeriod {
     }
 
     pub fn spent_for_type(&self, budgeting_type: BudgetingType) -> Money {
+        let cost_types = [BudgetingType::Expense, BudgetingType::Savings];
         self.actual_items
             .iter()
             .filter(|item| item.budgeting_type == budgeting_type)
-            .map(|item| item.actual_amount)
+            .map(|item| {
+                let alloc_sum: Money = self
+                    .allocations
+                    .iter()
+                    .filter(|a| a.actual_id == item.id)
+                    .map(|a| if cost_types.contains(&item.budgeting_type) { -a.amount } else { a.amount })
+                    .sum();
+                if alloc_sum.is_zero() {
+                    item.actual_amount
+                } else {
+                    alloc_sum
+                }
+            })
             .sum()
     }
 
