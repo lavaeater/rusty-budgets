@@ -32,6 +32,8 @@ pub_events_enum! {
         ItemModified,
         ActualModified,
         RuleAdded,
+        AllocationCreated,
+        AllocationDeleted,
     }
 }
 

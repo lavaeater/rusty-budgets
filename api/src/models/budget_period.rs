@@ -1,7 +1,7 @@
 use crate::models::budget_period_id::PeriodId;
 use crate::models::rule_packages::RulePackages;
 use crate::models::BudgetingType::{Expense, Income, Savings};
-use crate::models::{ActualItem, BankTransaction, BudgetItem, BudgetingType, MatchRule, Money};
+use crate::models::{ActualItem, BankTransaction, BudgetItem, BudgetingType, MatchRule, Money, TransactionAllocation};
 use crate::view_models::value_kind::ValueKind;
 use core::fmt::Display;
 use iter_tools::Itertools;
@@ -17,6 +17,8 @@ pub struct BudgetPeriod {
     pub id: PeriodId,
     pub actual_items: Vec<ActualItem>,
     pub transactions: Vec<BankTransaction>,
+    #[serde(default)]
+    pub allocations: Vec<TransactionAllocation>,
 }
 
 impl BudgetPeriod {
