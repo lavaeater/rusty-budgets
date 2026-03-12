@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use chrono::{DateTime, Utc};
 use crate::models::{strip_dates, BankTransaction, Money};
+use crate::view_models::AllocationViewModel;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct TransactionViewModel {
@@ -10,6 +11,7 @@ pub struct TransactionViewModel {
     pub description: String,
     pub date: DateTime<Utc>,
     pub actual_item_id: Option<Uuid>,
+    pub allocations: Vec<AllocationViewModel>,
 }
 
 impl TransactionViewModel {
@@ -20,6 +22,17 @@ impl TransactionViewModel {
             description: strip_dates(&tx.description),
             date: tx.date,
             actual_item_id: tx.actual_id,
+            allocations: Vec::new(),
+        }
+    }
+
+    pub fn from_transaction_with_allocations(
+        tx: &BankTransaction,
+        allocations: Vec<AllocationViewModel>,
+    ) -> Self {
+        Self {
+            allocations,
+            ..Self::from_transaction(tx)
         }
     }
 }

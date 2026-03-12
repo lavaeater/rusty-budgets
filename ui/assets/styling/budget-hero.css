@@ -489,3 +489,89 @@
     color: #94a3b8;
     font-style: italic;
 }
+
+/* Allocation chips */
+.allocation-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.allocation-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #eef2ff;
+    border: 1px solid #c7d2fe;
+    border-radius: 20px;
+    padding: 2px 8px 2px 10px;
+    font-size: 0.8rem;
+    color: #3730a3;
+}
+
+.allocation-chip-tag {
+    font-weight: 600;
+}
+
+.allocation-chip-amount {
+    color: #4f46e5;
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+}
+
+.allocation-chip-remove {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #818cf8;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0 2px;
+    border-radius: 50%;
+    transition: color 0.15s, background 0.15s;
+}
+
+.allocation-chip-remove:hover {
+    color: #ef4444;
+    background: #fee2e2;
+}
+
+/* Split transaction form */
+.split-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 260px;
+    padding: 4px 2px;
+}
+
+.split-form-title {
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.split-form-total {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin: 0;
+}
+
+.split-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.split-form-field label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #475569;
+}
+
+.split-form-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+}

@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use crate::models::{Budget, BudgetingType, Currency, MonthBeginsOn, PeriodId};
+use crate::view_models::allocation_view_model::AllocationViewModel;
 use crate::view_models::budget_item_view_model::BudgetItemViewModel;
 use crate::view_models::budgeting_type_overview::BudgetingTypeOverview;
 use crate::view_models::transaction_view_model::TransactionViewModel;
@@ -39,7 +40,14 @@ impl BudgetViewModel {
             .collect::<Vec<_>>();
         let to_connect = transactions
             .iter()
-            .map(|tx| TransactionViewModel::from_transaction(tx))
+            .map(|tx| {
+                let allocs = budget
+                    .allocations_for_transaction(tx.id)
+                    .iter()
+                    .map(|a| AllocationViewModel::from_allocation(a))
+                    .collect::<Vec<_>>();
+                TransactionViewModel::from_transaction_with_allocations(tx, allocs)
+            })
             .collect::<Vec<_>>();
         let ignored_transactions = ignored_transactions
             .iter()
