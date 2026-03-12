@@ -6,10 +6,9 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]
-#[domain_event(aggregate = "Budget")]
+#[domain_event(aggregate = "Budget", command_fn = "delete_allocation")]
 pub struct AllocationDeleted {
     pub budget_id: Uuid,
-    #[event_id]
     pub allocation_id: Uuid,
     pub transaction_id: Uuid,
 }
@@ -29,7 +28,7 @@ impl AllocationDeletedHandler for Budget {
         if let Some(period) = self.get_period_for_transaction_mut(event.transaction_id) {
             period.remove_allocation(event.allocation_id);
         }
-        event.allocation_id
+        event.budget_id
     }
 
     fn delete_allocation_impl(

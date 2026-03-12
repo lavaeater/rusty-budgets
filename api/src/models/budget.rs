@@ -6,7 +6,7 @@ use crate::models::budget_period_id::PeriodId;
 use crate::models::budgeting_type::BudgetingType;
 use crate::models::money::{Currency, Money};
 use crate::models::rule_packages::RulePackages;
-use crate::models::{ActualItem, BankTransaction, BudgetPeriod, MatchRule, MonthBeginsOn};
+use crate::models::{ActualItem, BankTransaction, BudgetPeriod, MatchRule, MonthBeginsOn, TransactionAllocation};
 use crate::pub_events_enum;
 use crate::view_models::BudgetingTypeOverview;
 use chrono::{DateTime, Utc};
