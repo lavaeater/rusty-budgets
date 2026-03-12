@@ -1,6 +1,6 @@
 use crate::models::budget_period_id::PeriodId;
 use crate::models::rule_packages::RulePackages;
-use crate::models::BudgetingType::{Expense, Income, Savings};
+use crate::models::BudgetingType::{Expense, Income, InternalTransfer, Savings};
 use crate::models::{ActualItem, BankTransaction, BudgetItem, BudgetingType, MatchRule, Money, TransactionAllocation};
 use crate::view_models::value_kind::ValueKind;
 use core::fmt::Display;
@@ -66,6 +66,7 @@ impl BudgetPeriod {
                     Income => self.get_income_overview(rules),
                     Expense => self.get_expense_overview(rules),
                     Savings => self.get_savings_overview(rules),
+                    InternalTransfer => self.get_transfer_overview(rules),
                 };
                 (index, group, overview, items.cloned().collect::<Vec<_>>())
             })
@@ -175,6 +176,30 @@ impl BudgetPeriod {
             actual_amount: spent_savings,
             remaining_budget: self_diff,
             is_ok: self_diff < Money::zero(self_diff.currency()),
+        }
+    }
+
+    pub fn get_transfer_overview(
+        &self,
+        rules: &RulePackages,
+    ) -> BudgetingTypeOverview {
+        let rules = &rules
+            .rule_packages
+            .iter()
+            .find(|p| p.budgeting_type == InternalTransfer)
+            .unwrap();
+        let budgeted = rules
+            .budgeted_rule
+            .evaluate(&self.actual_items, Some(ValueKind::Budgeted));
+        let spent = rules.actual_rule.evaluate(&self.actual_items, Some(ValueKind::Spent));
+        let self_diff = rules.remaining_rule.evaluate(&self.actual_items, None);
+
+        BudgetingTypeOverview {
+            budgeting_type: InternalTransfer,
+            budgeted_amount: budgeted,
+            actual_amount: spent,
+            remaining_budget: self_diff,
+            is_ok: true,
         }
     }
 

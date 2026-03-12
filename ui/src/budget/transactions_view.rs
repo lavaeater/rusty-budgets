@@ -1,6 +1,6 @@
 use crate::budget::{ItemSelector, NewBudgetItem};
 use api::models::BudgetingType;
-use api::view_models::{AllocationViewModel, BudgetItemViewModel, TransactionViewModel};
+use api::view_models::{AllocationViewModel, BudgetItemViewModel, TransactionViewModel, TransferPair};
 use dioxus::prelude::*;
 use uuid::Uuid;
 use api::connect_transaction;

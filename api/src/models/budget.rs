@@ -270,6 +270,10 @@ impl Budget {
                 .get_period(period_id)
                 .map(|p| p.get_savings_overview(&self.rules))
                 .unwrap_or_default(),
+            BudgetingType::InternalTransfer => self
+                .get_period(period_id)
+                .map(|p| p.get_transfer_overview(&self.rules))
+                .unwrap_or_default(),
         }
     }
 

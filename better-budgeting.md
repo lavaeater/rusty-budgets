@@ -35,7 +35,7 @@ I've read through the full domain model. Here's my analysis and a concrete propo
 
 ---
 
-# The Missing Concept: `TransactionAllocation`
+~~# The Missing Concept: `TransactionAllocation`
 
 Your instinct is right — there's a rigid coupling at the heart of the current model. Look at this:
 
@@ -174,9 +174,9 @@ Your CQRS/event-sourcing architecture makes this migration safe — old events s
 | No periodicity | `Periodicity` enum on `BudgetItem` |
 | Denormalized `ActualItem` fields | Derive from `BudgetItem` + compute from allocations |
 
-The `TransactionAllocation` is the single missing concept that unlocks all of your listed pain points. Want me to start implementing any of this?
+The `TransactionAllocation` is the single missing concept that unlocks all of your listed pain points. Want me to start implementing any of this?~~
 
-
+Yes, going back we now need to add tagging to the allocations and to BudgetItems - and also we need periodicity fort the BudgetItems and then we need to fix the Internal Transfers as well
 
 
 ## Executive Summary
