@@ -619,3 +619,88 @@
     color: #94a3b8;
     font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
 }
+
+/* Tag editor */
+.tag-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.tag-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    background: #eef2ff;
+    color: #4338ca;
+    font-size: 0.78rem;
+    font-weight: 500;
+}
+
+.tag-chip-text {
+    line-height: 1;
+}
+
+.tag-chip-remove {
+    background: none;
+    border: none;
+    color: #6366f1;
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 0 2px;
+    line-height: 1;
+    border-radius: 50%;
+}
+
+.tag-chip-remove:hover {
+    background: #c7d2fe;
+    color: #3730a3;
+}
+
+.tag-add-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.tag-add-row input {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Inline tags on collapsed budget item */
+.budget-item-tags-inline {
+    display: inline-flex;
+    gap: 3px;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
+.tag-chip-small {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 8px;
+    background: #eef2ff;
+    color: #4338ca;
+    font-size: 0.65rem;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+.tag-connect-row {
+    display: flex;
+    align-items: center;
+}
+
+.tag-connect-row input {
+    max-width: 140px;
+    font-size: 0.8rem;
+}

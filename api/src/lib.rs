@@ -114,6 +114,7 @@ pub async fn add_new_actual_item(
                 Some(actual_id),
                 item_id,
                 period_id,
+                String::new(),
             )?;
 
             let _ = db::create_rule(user.id, budget_id, tx_id, actual_id)?;
@@ -240,6 +241,7 @@ pub async fn connect_transaction(
     tx_id: Uuid,
     actual_id: Option<Uuid>,
     budget_item_id: Uuid,
+    tag: Option<String>,
     period_id: PeriodId,
 ) -> ServerFnResult<BudgetViewModel> {
     let user = db::get_default_user(None)?;
@@ -250,6 +252,7 @@ pub async fn connect_transaction(
         actual_id,
         budget_item_id,
         period_id,
+        tag.unwrap_or_default(),
     )?;
     let _ = db::create_rule(user.id, budget_id, tx_id, actual_id)?;
     let _ = db::evaluate_rules(user.id, budget_id)?;

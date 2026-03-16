@@ -1,7 +1,7 @@
 use crate::cqrs::framework::Aggregate;
 use crate::cqrs::framework::DomainEvent;
 use crate::events::*;
-use crate::models::budget_item::BudgetItem;
+use crate::models::budget_item::{BudgetItem, Periodicity};
 use crate::models::budget_period_id::PeriodId;
 use crate::models::budgeting_type::BudgetingType;
 use crate::models::money::{Currency, Money};

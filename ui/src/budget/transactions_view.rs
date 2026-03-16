@@ -39,6 +39,7 @@ pub fn TransactionsView(ignored: bool) -> Element {
 #[component]
 fn TransactionCard(tx: TransactionViewModel, ignored: bool) -> Element {
     let budget_signal = use_context::<BudgetState>().0;
+    let mut tag_input = use_signal(String::new);
 
     rsx! {
         div { class: "transaction-card", key: "{tx.tx_id}",
@@ -70,20 +71,30 @@ fn TransactionCard(tx: TransactionViewModel, ignored: bool) -> Element {
             if !ignored {
                 div { class: "transaction-actions",
                     div { class: "action-group",
+                        div { class: "tag-connect-row",
+                            Input {
+                                placeholder: "Tagg (valfri)",
+                                value: tag_input(),
+                                oninput: move |e: FormEvent| tag_input.set(e.value()),
+                            }
+                        }
                         ItemSelector {
                             items: budget_signal().items.clone(),
                             on_change: {
                                 let tx = tx.clone();
                                 move |e: Option<BudgetItemViewModel>| {
                                     let tx = tx.clone();
+                                    let tag = tag_input().trim().to_string();
                                     async move {
                                         if let Some(item) = e {
                                             info!("Connecting transaction {} to item {}", tx.tx_id, item.item_id);
+                                            let tag_opt = if tag.is_empty() { None } else { Some(tag) };
                                             match connect_transaction(
                                                 budget_signal().id,
                                                 tx.tx_id,
                                                 item.actual_id,
                                                 item.item_id,
+                                                tag_opt,
                                                 budget_signal().period_id,
                                             )
                                             .await

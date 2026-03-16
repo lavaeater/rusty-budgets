@@ -1,7 +1,7 @@
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
 use crate::models::Budget;
 use crate::models::BudgetingType;
-use crate::models::budget_item::Periodicity;
+use crate::models::Periodicity;
 use crate::models::Money;
 use cqrs_macros::DomainEvent;
 use dioxus::logger::tracing;

@@ -276,6 +276,7 @@ pub fn connect_transaction(
     actual_id: Option<Uuid>,
     item_id: Uuid,
     period_id: PeriodId,
+    tag: String,
 ) -> Result<Uuid, RustyError> {
     let budget = get_budget(budget_id)?;
 
@@ -297,7 +298,7 @@ pub fn connect_transaction(
         .map(|tx| tx.amount)
         .ok_or_else(|| RustyError::ItemNotFound(tx_id.to_string(), "Transaction not found".to_string()))?;
 
-    create_allocation(user_id, budget_id, tx_id, actual_id, amount, String::new())?;
+    create_allocation(user_id, budget_id, tx_id, actual_id, amount, tag)?;
     Ok(actual_id)
 }
 
