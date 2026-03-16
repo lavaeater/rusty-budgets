@@ -217,6 +217,8 @@ impl Budget {
         id: Uuid,
         name: Option<String>,
         budgeting_type: Option<BudgetingType>,
+        tags: Option<Vec<String>>,
+        periodicity: Option<Periodicity>,
     ) {
         let mut was_updated = false;
         if let Some(item) = self.items.iter_mut().find(|item| item.id == id) {
@@ -225,6 +227,12 @@ impl Budget {
             }
             if let Some(item_type) = budgeting_type {
                 item.budgeting_type = item_type;
+            }
+            if let Some(tags) = tags {
+                item.tags = tags;
+            }
+            if let Some(periodicity) = periodicity {
+                item.periodicity = periodicity;
             }
             was_updated = true;
         };

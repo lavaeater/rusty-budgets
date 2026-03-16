@@ -136,10 +136,12 @@ pub async fn modify_item(
     item_id: Uuid,
     name: Option<String>,
     item_type: Option<BudgetingType>,
+    tags: Option<Vec<String>>,
+    periodicity: Option<Periodicity>,
     period_id: PeriodId,
 ) -> ServerFnResult<BudgetViewModel> {
     let user = db::get_default_user(None).expect("Could not get default user");
-    let _ = db::modify_item(user.id, budget_id, item_id, name, item_type)?;
+    let _ = db::modify_item(user.id, budget_id, item_id, name, item_type, tags, periodicity)?;
     Ok(BudgetViewModel::from_budget(
         &db::get_budget(budget_id)?,
         period_id,

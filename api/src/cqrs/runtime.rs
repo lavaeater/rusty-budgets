@@ -57,10 +57,12 @@ impl JoyDbBudgetRuntime {
         budget_id: Uuid,
         item_id: Uuid,
         name: Option<String>,
-        item_type: Option<BudgetingType>
+        item_type: Option<BudgetingType>,
+        tags: Option<Vec<String>>,
+        periodicity: Option<Periodicity>,
     ) -> Result<Uuid, RustyError> {
         self.cmd(user_id, budget_id,|budget| {
-            budget.modify_item(item_id, name, item_type)
+            budget.modify_item(item_id, name, item_type, tags, periodicity)
         })
     }
 

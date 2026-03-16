@@ -236,8 +236,10 @@ pub fn modify_item(
     item_id: Uuid,
     name: Option<String>,
     item_type: Option<BudgetingType>,
+    tags: Option<Vec<String>>,
+    periodicity: Option<Periodicity>,
 ) -> Result<Uuid, RustyError> {
-    with_runtime(None).modify_item(user_id, budget_id, item_id, name, item_type)
+    with_runtime(None).modify_item(user_id, budget_id, item_id, name, item_type, tags, periodicity)
 }
 
 /*
