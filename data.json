@@ -166,9 +166,286 @@
         }
       },
       "user_id": "d74556ad-f8c3-4960-b5e3-15f2fdd02a3b"
+    },
+    {
+      "id": "1a7b2e39-ffed-48d8-931d-27a1b951165c",
+      "aggregate_id": "2594c82b-2452-431a-b62c-e8f364c53901",
+      "timestamp": 1773739590523353658,
+      "created_at": "2026-03-17T09:26:30.523353658Z",
+      "data": {
+        "ItemAdded": {
+          "budget_id": "2594c82b-2452-431a-b62c-e8f364c53901",
+          "item_id": "063d109e-5dd6-4a54-8d83-4440b47efa8d",
+          "name": "El",
+          "item_type": "Expense"
+        }
+      },
+      "user_id": "d74556ad-f8c3-4960-b5e3-15f2fdd02a3b"
+    },
+    {
+      "id": "61fb42c4-49e7-4e71-8b7e-b1d3a92711d6",
+      "aggregate_id": "2594c82b-2452-431a-b62c-e8f364c53901",
+      "timestamp": 1773739590534288718,
+      "created_at": "2026-03-17T09:26:30.534288718Z",
+      "data": {
+        "ActualAdded": {
+          "budget_id": "2594c82b-2452-431a-b62c-e8f364c53901",
+          "actual_id": "a7eb9eef-02d4-4f04-ace1-2682e346b420",
+          "item_id": "063d109e-5dd6-4a54-8d83-4440b47efa8d",
+          "period_id": {
+            "year": 2026,
+            "month": 3
+          },
+          "budgeted_amount": {
+            "cents": 1067500,
+            "currency": "SEK"
+          }
+        }
+      },
+      "user_id": "d74556ad-f8c3-4960-b5e3-15f2fdd02a3b"
     }
   ],
-  "Budget": [],
+  "Budget": [
+    {
+      "id": "2594c82b-2452-431a-b62c-e8f364c53901",
+      "name": "Familjebudget",
+      "user_id": "d74556ad-f8c3-4960-b5e3-15f2fdd02a3b",
+      "items": [
+        {
+          "id": "7180615c-7e93-4e84-93d0-8712edecece0",
+          "name": "Lön",
+          "budgeting_type": "Income",
+          "tags": [],
+          "periodicity": "Monthly"
+        },
+        {
+          "id": "7808b240-831e-4843-b3d4-233c38cbb435",
+          "name": "Bostadslån - ränta",
+          "budgeting_type": "Expense",
+          "tags": [],
+          "periodicity": "Monthly"
+        },
+        {
+          "id": "b47d23a9-aaf9-4e0d-bf88-67c83eedb6c7",
+          "name": "Bostadslån - amortering",
+          "budgeting_type": "Savings",
+          "tags": [],
+          "periodicity": "Monthly"
+        },
+        {
+          "id": "954d25c1-6845-4398-96de-2be58ff63f10",
+          "name": "Japanresa",
+          "budgeting_type": "Savings",
+          "tags": [],
+          "periodicity": "Monthly"
+        },
+        {
+          "id": "063d109e-5dd6-4a54-8d83-4440b47efa8d",
+          "name": "El",
+          "budgeting_type": "Expense",
+          "tags": [],
+          "periodicity": "Monthly"
+        }
+      ],
+      "month_begins_on": {
+        "PreviousMonthWorkDayBefore": 25
+      },
+      "periods": [
+        {
+          "id": {
+            "year": 2026,
+            "month": 3
+          },
+          "actual_items": [
+            {
+              "id": "9a8213e6-9a87-47d8-9327-e9b5a1cce8db",
+              "item_name": "Lön",
+              "budget_item_id": "7180615c-7e93-4e84-93d0-8712edecece0",
+              "budgeting_type": "Income",
+              "period_id": {
+                "year": 2026,
+                "month": 3
+              },
+              "budgeted_amount": {
+                "cents": 5500000,
+                "currency": "SEK"
+              },
+              "actual_amount": {
+                "cents": 0,
+                "currency": "SEK"
+              },
+              "notes": null,
+              "tags": []
+            },
+            {
+              "id": "3632c83f-4e15-42a5-b145-d751e0f7350a",
+              "item_name": "Bostadslån - ränta",
+              "budget_item_id": "7808b240-831e-4843-b3d4-233c38cbb435",
+              "budgeting_type": "Expense",
+              "period_id": {
+                "year": 2026,
+                "month": 3
+              },
+              "budgeted_amount": {
+                "cents": 274800,
+                "currency": "SEK"
+              },
+              "actual_amount": {
+                "cents": 0,
+                "currency": "SEK"
+              },
+              "notes": null,
+              "tags": []
+            },
+            {
+              "id": "60435ccd-332e-496b-b589-a08baa140847",
+              "item_name": "Bostadslån - amortering",
+              "budget_item_id": "b47d23a9-aaf9-4e0d-bf88-67c83eedb6c7",
+              "budgeting_type": "Savings",
+              "period_id": {
+                "year": 2026,
+                "month": 3
+              },
+              "budgeted_amount": {
+                "cents": 241000,
+                "currency": "SEK"
+              },
+              "actual_amount": {
+                "cents": 0,
+                "currency": "SEK"
+              },
+              "notes": null,
+              "tags": []
+            },
+            {
+              "id": "4a7d14c3-3de1-4b23-aaf9-5d3b4e140e3b",
+              "item_name": "Japanresa",
+              "budget_item_id": "954d25c1-6845-4398-96de-2be58ff63f10",
+              "budgeting_type": "Savings",
+              "period_id": {
+                "year": 2026,
+                "month": 3
+              },
+              "budgeted_amount": {
+                "cents": 500000,
+                "currency": "SEK"
+              },
+              "actual_amount": {
+                "cents": 0,
+                "currency": "SEK"
+              },
+              "notes": null,
+              "tags": []
+            },
+            {
+              "id": "a7eb9eef-02d4-4f04-ace1-2682e346b420",
+              "item_name": "El",
+              "budget_item_id": "063d109e-5dd6-4a54-8d83-4440b47efa8d",
+              "budgeting_type": "Expense",
+              "period_id": {
+                "year": 2026,
+                "month": 3
+              },
+              "budgeted_amount": {
+                "cents": 1067500,
+                "currency": "SEK"
+              },
+              "actual_amount": {
+                "cents": 0,
+                "currency": "SEK"
+              },
+              "notes": null,
+              "tags": []
+            }
+          ],
+          "transactions": [],
+          "allocations": []
+        }
+      ],
+      "rules": {
+        "rule_packages": [
+          {
+            "budgeting_type": "Income",
+            "budgeted_rule": {
+              "Sum": [
+                "Income"
+              ]
+            },
+            "actual_rule": {
+              "Sum": [
+                "Income"
+              ]
+            },
+            "remaining_rule": {
+              "Difference": [
+                "Income",
+                [
+                  "Expense",
+                  "Savings"
+                ]
+              ]
+            }
+          },
+          {
+            "budgeting_type": "Expense",
+            "budgeted_rule": {
+              "Sum": [
+                "Expense"
+              ]
+            },
+            "actual_rule": {
+              "Sum": [
+                "Expense"
+              ]
+            },
+            "remaining_rule": {
+              "SelfDiff": "Expense"
+            }
+          },
+          {
+            "budgeting_type": "Savings",
+            "budgeted_rule": {
+              "Sum": [
+                "Savings"
+              ]
+            },
+            "actual_rule": {
+              "Sum": [
+                "Savings"
+              ]
+            },
+            "remaining_rule": {
+              "SelfDiff": "Savings"
+            }
+          },
+          {
+            "budgeting_type": "InternalTransfer",
+            "budgeted_rule": {
+              "Sum": [
+                "InternalTransfer"
+              ]
+            },
+            "actual_rule": {
+              "Sum": [
+                "InternalTransfer"
+              ]
+            },
+            "remaining_rule": {
+              "SelfDiff": "InternalTransfer"
+            }
+          }
+        ]
+      },
+      "transaction_hashes": [],
+      "match_rules": [],
+      "created_at": "2026-03-16T10:12:24.422913968Z",
+      "updated_at": "2026-03-17T09:26:30.534288718Z",
+      "default_budget": true,
+      "last_event": 1773739590534288718,
+      "version": 11,
+      "currency": "SEK"
+    }
+  ],
   "User": [
     {
       "id": "d74556ad-f8c3-4960-b5e3-15f2fdd02a3b",
