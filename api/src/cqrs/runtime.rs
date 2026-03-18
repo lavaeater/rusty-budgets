@@ -153,6 +153,25 @@ impl JoyDbBudgetRuntime {
         self.create_allocation(user_id, budget_id, tx_id, actual_id, amount, String::new())
     }
 
+    pub fn ensure_account(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        account_number: &str,
+        description: &str,
+    ) -> Result<Uuid, RustyError> {
+        let budget = self.load(budget_id)?;
+        if let Some(existing) = budget.get_account(account_number) {
+            return Ok(existing.id);
+        }
+        self.cmd(user_id, budget_id, |budget| {
+            budget.create_bank_account(
+                account_number.to_string(),
+                description.to_string(),
+            )
+        })
+    }
+
     pub fn ignore_transaction(
         &self,
         budget_id: Uuid,

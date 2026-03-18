@@ -269,6 +269,15 @@ pub fn modify_actual(
     )
 }
 
+pub fn ensure_account(
+    user_id: Uuid,
+    budget_id: Uuid,
+    account_number: &str,
+    description: &str,
+) -> Result<Uuid, RustyError> {
+    with_runtime(None).ensure_account(user_id, budget_id, account_number, description)
+}
+
 pub fn connect_transaction(
     user_id: Uuid,
     budget_id: Uuid,

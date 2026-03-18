@@ -6,7 +6,7 @@ use crate::models::budget_period_id::PeriodId;
 use crate::models::budgeting_type::BudgetingType;
 use crate::models::money::{Currency, Money};
 use crate::models::rule_packages::RulePackages;
-use crate::models::{ActualItem, BankTransaction, BudgetPeriod, MatchRule, MonthBeginsOn, TransactionAllocation};
+use crate::models::{ActualItem, BankAccount, BankTransaction, BudgetPeriod, MatchRule, MonthBeginsOn, TransactionAllocation};
 use crate::models::budget_period::RuleMatch;
 use crate::pub_events_enum;
 use crate::view_models::BudgetingTypeOverview;
@@ -35,6 +35,7 @@ pub_events_enum! {
         RuleAdded,
         AllocationCreated,
         AllocationDeleted,
+        BankAccountCreated,
     }
 }
 
@@ -57,6 +58,8 @@ pub struct Budget {
     pub last_event: i64,
     pub version: u64,
     pub currency: Currency,
+    #[serde(default)]
+    pub accounts: Vec<BankAccount>,
 }
 
 impl Default for Budget {
@@ -77,6 +80,7 @@ impl Default for Budget {
             currency: Default::default(),
             month_begins_on: Default::default(),
             transaction_hashes: Default::default(),
+            accounts: Default::default(),
         }
     }
 }
@@ -90,6 +94,20 @@ impl Budget {
                 MonthBeginsOn::default(),
             ))],
             ..Default::default()
+        }
+    }
+
+    pub fn get_account(&self, account_number: &str) -> Option<&BankAccount> {
+        self.accounts.iter().find(|a| a.account_number == account_number)
+    }
+
+    pub fn has_account(&self, account_number: &str) -> bool {
+        self.accounts.iter().any(|a| a.account_number == account_number)
+    }
+
+    pub fn add_account(&mut self, account: BankAccount) {
+        if !self.has_account(&account.account_number) {
+            self.accounts.push(account);
         }
     }
 

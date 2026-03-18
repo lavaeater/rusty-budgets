@@ -8,6 +8,21 @@ use std::io::{Cursor, Error};
 use std::path::Path;
 use uuid::Uuid;
 
+/// Extracts an account number from a transfer description like
+/// "Överföring 9159 12 345 67" or "Överföring 9150 12 345 67".
+/// Returns Some(account_number) if the description starts with "Överföring 915"
+/// and the rest looks like digits (possibly separated by spaces).
+fn extract_transfer_account_number(description: &str) -> Option<String> {
+    let desc = description.trim();
+    if let Some(rest) = desc.strip_prefix("Överföring ") {
+        let digits: String = rest.chars().filter(|c| c.is_ascii_digit()).collect();
+        if digits.starts_with("9150") || digits.starts_with("9159") {
+            return Some(digits);
+        }
+    }
+    None
+}
+
 #[derive(Debug, thiserror::Error)]
 pub enum ImportError {
     #[error("Account number missing")]
@@ -105,6 +120,8 @@ pub fn import_from_skandia_excel(
             debug!("Row data: {:#?}", row);
             if row_num == 0 {
                 account_number = Some(row[1].to_string());
+                let acct_no = row[1].to_string();
+                let _ = runtime.ensure_account(user_id, budget_id, &acct_no, "Skandiabanken");
             } else if row_num > 3 && row.len() > 3 {
                 let amount =
                     Money::new_cents((row[2].as_f64().unwrap() * 100.0) as i64, Currency::SEK);
@@ -120,6 +137,12 @@ pub fn import_from_skandia_excel(
                     .and_utc();
 
                 let description = row[1].to_string();
+
+                // Auto-create counterpart account from transfer descriptions
+                if let Some(counterpart) = extract_transfer_account_number(&description) {
+                    let _ = runtime.ensure_account(user_id, budget_id, &counterpart, "Skandiabanken");
+                }
+
                 let acct_no = if account_number.is_some() {
                     account_number.clone().unwrap()
                 } else {
@@ -177,6 +200,8 @@ pub fn import_from_skandia_excel_bytes(
             debug!("Row data: {:#?}", row);
             if row_num == 0 {
                 account_number = Some(row[1].to_string());
+                let acct_no = row[1].to_string();
+                let _ = runtime.ensure_account(user_id, budget_id, &acct_no, "Skandiabanken");
             } else if row_num > 3 && row.len() > 3 {
                 let amount =
                     Money::new_cents((row[2].as_f64().unwrap() * 100.0) as i64, Currency::SEK);
@@ -192,6 +217,12 @@ pub fn import_from_skandia_excel_bytes(
                     .and_utc();
 
                 let description = row[1].to_string();
+
+                // Auto-create counterpart account from transfer descriptions
+                if let Some(counterpart) = extract_transfer_account_number(&description) {
+                    let _ = runtime.ensure_account(user_id, budget_id, &counterpart, "Skandiabanken");
+                }
+
                 let acct_no = if account_number.is_some() {
                     account_number.clone().unwrap()
                 } else {
