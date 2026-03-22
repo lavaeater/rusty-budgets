@@ -1,4 +1,4 @@
-default_job = "clippy-server"
+default_job = "nextest"
 env.CARGO_TERM_COLOR = "always"
 
 [jobs.clippy-server]
@@ -9,6 +9,11 @@ need_stdout = false
 command = ["cargo", "clippy", "--package", "web", "--features", "web"]
 need_stdout = false
 
+[jobs.nextest]
+command = ["cargo", "nextest", "run"]
+need_stdout = false
+
 [keybindings]
 s = "job:clippy-server"
 c = "job:clippy-client"
+t = "job:nextest"
