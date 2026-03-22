@@ -11,7 +11,7 @@ uuid = { workspace = true  }
 strum = { workspace = true }
 chrono = {workspace = true}
 lucide-dioxus = { workspace = true }
-rfd = { version = "0.15", default-features = false, features = ["xdg-portal", "tokio"] }
+rfd = { version = "0.17.2", features = ["xdg-portal"] }
 
 [features]
 server = ["api/server"]

@@ -8,6 +8,7 @@ use api::view_models::*;
 use crate::{Button, Separator};
 use crate::budget::{BudgetItemView, NewBudgetItem};
 use std::cmp::Ordering;
+use crate::budget::budget_hero::BudgetState;
 
 #[derive(Clone, Copy, PartialEq, Default)]
 pub enum SortField {
@@ -26,7 +27,17 @@ pub enum SortDirection {
 }
 
 #[component]
-pub fn BudgetingTypeCard(budgeting_type: BudgetingType, items: Vec<BudgetItemViewModel>) -> Element {
+pub fn BudgetingTypeCard(budgeting_type: BudgetingType) -> Element {
+    let budget_signal = use_context::<BudgetState>().0;
+    let items = use_memo(move || {
+        budget_signal()
+            .items
+            .iter()
+            .filter(|i| i.budgeting_type == budgeting_type)
+            .cloned()
+            .collect::<Vec<_>>()
+    });
+    
     info!("Budgeting type: {}, item count: {}", budgeting_type, items.len());
     let budgeting_type_name = use_signal(|| budgeting_type.to_string());
     let new_item_label = format!("Ny {}", budgeting_type);
@@ -35,7 +46,7 @@ pub fn BudgetingTypeCard(budgeting_type: BudgetingType, items: Vec<BudgetItemVie
     let mut sort_direction = use_signal(SortDirection::default);
 
     let sorted_items = use_memo(move || {
-        let mut sorted = items.clone();
+        let mut sorted = items();
         sorted.sort_by(|a, b| {
             let ordering = match sort_field() {
                 SortField::Name => a.name.cmp(&b.name),
@@ -119,7 +130,9 @@ pub fn BudgetingTypeCard(budgeting_type: BudgetingType, items: Vec<BudgetItemVie
             }
         }
         for item in sorted_items() {
-            BudgetItemView { item: item.clone() }
+            BudgetItemView { 
+                key: "{item.item_id}",
+                item: item.clone() }
             Separator {
                 style: "margin: 15px 0; width: 50%;",
                 horizontal: true,

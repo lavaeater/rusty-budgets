@@ -57,10 +57,12 @@ impl JoyDbBudgetRuntime {
         budget_id: Uuid,
         item_id: Uuid,
         name: Option<String>,
-        item_type: Option<BudgetingType>
+        item_type: Option<BudgetingType>,
+        tags: Option<Vec<String>>,
+        periodicity: Option<Periodicity>,
     ) -> Result<Uuid, RustyError> {
         self.cmd(user_id, budget_id,|budget| {
-            budget.modify_item(item_id, name, item_type)
+            budget.modify_item(item_id, name, item_type, tags, periodicity)
         })
     }
 
@@ -132,8 +134,41 @@ impl JoyDbBudgetRuntime {
         tx_id: Uuid,
         actual_id: Uuid,
     ) -> Result<Uuid, RustyError> {
+        let (amount, existing_allocations) = {
+            let budget = self.load(budget_id)?;
+            let amount = budget
+                .get_transaction(tx_id)
+                .map(|tx| tx.amount)
+                .ok_or_else(|| RustyError::ItemNotFound(tx_id.to_string(), "Transaction not found".to_string()))?;
+            let existing = budget
+                .allocations_for_transaction(tx_id)
+                .iter()
+                .map(|a| (a.id, a.transaction_id))
+                .collect::<Vec<_>>();
+            (amount, existing)
+        };
+        for (alloc_id, transaction_id) in existing_allocations {
+            self.delete_allocation(user_id, budget_id, alloc_id, transaction_id)?;
+        }
+        self.create_allocation(user_id, budget_id, tx_id, actual_id, amount, String::new())
+    }
+
+    pub fn ensure_account(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        account_number: &str,
+        description: &str,
+    ) -> Result<Uuid, RustyError> {
+        let budget = self.load(budget_id)?;
+        if let Some(existing) = budget.get_account(account_number) {
+            return Ok(existing.id);
+        }
         self.cmd(user_id, budget_id, |budget| {
-            budget.connect_transaction(tx_id, actual_id)
+            budget.create_bank_account(
+                account_number.to_string(),
+                description.to_string(),
+            )
         })
     }
 
@@ -187,6 +222,32 @@ impl JoyDbBudgetRuntime {
             budget.add_rule(transaction_key, item_key, always_apply)
         })
     }
+
+    pub fn create_allocation(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        transaction_id: Uuid,
+        actual_id: Uuid,
+        amount: Money,
+        tag: String,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.create_allocation(transaction_id, actual_id, amount, tag)
+        })
+    }
+
+    pub fn delete_allocation(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        allocation_id: Uuid,
+        transaction_id: Uuid,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.delete_allocation(allocation_id, transaction_id)
+        })
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Model)]
@@ -226,7 +287,7 @@ impl JoyDbBudgetRuntime {
         let config = JoydbConfig {
             mode: JoydbMode::Persistent {
                 adapter,
-                sync_policy: SyncPolicy::Instant,//Periodic(Duration::from_secs(60)),
+                sync_policy: SyncPolicy::Periodic(Duration::from_secs(60)),
             },
         };
         Self {

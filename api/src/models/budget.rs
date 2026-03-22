@@ -1,12 +1,13 @@
 use crate::cqrs::framework::Aggregate;
 use crate::cqrs::framework::DomainEvent;
 use crate::events::*;
-use crate::models::budget_item::BudgetItem;
+use crate::models::budget_item::{BudgetItem, Periodicity};
 use crate::models::budget_period_id::PeriodId;
 use crate::models::budgeting_type::BudgetingType;
 use crate::models::money::{Currency, Money};
 use crate::models::rule_packages::RulePackages;
-use crate::models::{ActualItem, BankTransaction, BudgetPeriod, MatchRule, MonthBeginsOn};
+use crate::models::{ActualItem, BankAccount, BankTransaction, BudgetPeriod, MatchRule, MonthBeginsOn, TransactionAllocation};
+use crate::models::budget_period::RuleMatch;
 use crate::pub_events_enum;
 use crate::view_models::BudgetingTypeOverview;
 use chrono::{DateTime, Utc};
@@ -32,6 +33,9 @@ pub_events_enum! {
         ItemModified,
         ActualModified,
         RuleAdded,
+        AllocationCreated,
+        AllocationDeleted,
+        BankAccountCreated,
     }
 }
 
@@ -54,6 +58,8 @@ pub struct Budget {
     pub last_event: i64,
     pub version: u64,
     pub currency: Currency,
+    #[serde(default)]
+    pub accounts: Vec<BankAccount>,
 }
 
 impl Default for Budget {
@@ -74,6 +80,7 @@ impl Default for Budget {
             currency: Default::default(),
             month_begins_on: Default::default(),
             transaction_hashes: Default::default(),
+            accounts: Default::default(),
         }
     }
 }
@@ -90,6 +97,20 @@ impl Budget {
         }
     }
 
+    pub fn get_account(&self, account_number: &str) -> Option<&BankAccount> {
+        self.accounts.iter().find(|a| a.account_number == account_number)
+    }
+
+    pub fn has_account(&self, account_number: &str) -> bool {
+        self.accounts.iter().any(|a| a.account_number == account_number)
+    }
+
+    pub fn add_account(&mut self, account: BankAccount) {
+        if !self.has_account(&account.account_number) {
+            self.accounts.push(account);
+        }
+    }
+
     pub fn get_item(&self, item_id: Uuid) -> Option<&BudgetItem> {
         self.items.iter().find(|item| item.id == item_id)
     }
@@ -103,7 +124,9 @@ impl Budget {
     }
 
     pub fn all_actuals(&self, period_id: PeriodId) -> Vec<&ActualItem> {
-        self.get_period(period_id).map(|p|p.all_actuals()).unwrap_or_default()
+        self.get_period(period_id)
+            .map(|p| p.all_actuals())
+            .unwrap_or_default()
     }
 
     pub fn ignored_transactions(&self, period_id: PeriodId) -> Vec<&BankTransaction> {
@@ -212,20 +235,26 @@ impl Budget {
         id: Uuid,
         name: Option<String>,
         budgeting_type: Option<BudgetingType>,
+        tags: Option<Vec<String>>,
+        periodicity: Option<Periodicity>,
     ) {
         let mut was_updated = false;
-        self.items
-            .iter_mut()
-            .find(|item| item.id == id)
-            .map(|item| {
-                if let Some(name) = name {
-                    item.name = name;
-                }
-                if let Some(item_type) = budgeting_type {
-                    item.budgeting_type = item_type;
-                }
-                was_updated = true;
-            });
+        if let Some(item) = self.items.iter_mut().find(|item| item.id == id) {
+            if let Some(name) = name {
+                item.name = name;
+            }
+            if let Some(item_type) = budgeting_type {
+                item.budgeting_type = item_type;
+            }
+            if let Some(tags) = tags {
+                item.tags = tags;
+            }
+            if let Some(periodicity) = periodicity {
+                item.periodicity = periodicity;
+            }
+            was_updated = true;
+        };
+
         if was_updated {
             self.update_actuals_for_item(id);
         }
@@ -267,6 +296,10 @@ impl Budget {
                 .get_period(period_id)
                 .map(|p| p.get_savings_overview(&self.rules))
                 .unwrap_or_default(),
+            BudgetingType::InternalTransfer => self
+                .get_period(period_id)
+                .map(|p| p.get_transfer_overview(&self.rules))
+                .unwrap_or_default(),
         }
     }
 
@@ -300,7 +333,11 @@ impl Budget {
             .map(|p| {
                 p.transactions
                     .iter()
-                    .filter(|t| t.actual_id.is_none() && !t.ignored)
+                    .filter(|t| {
+                        !t.ignored
+                            && t.actual_id.is_none()
+                            && !p.allocations.iter().any(|a| a.transaction_id == t.id)
+                    })
                     .collect()
             })
             .unwrap_or_default()
@@ -311,7 +348,10 @@ impl Budget {
             .map(|p| {
                 p.transactions
                     .iter()
-                    .filter(|t| t.actual_id.is_some())
+                    .filter(|t| {
+                        t.actual_id.is_some()
+                            || p.allocations.iter().any(|a| a.transaction_id == t.id)
+                    })
                     .collect()
             })
             .unwrap_or_default()
@@ -369,7 +409,39 @@ impl Budget {
         self.get_or_create_period(period_id)
     }
 
-    pub fn evaluate_rules(&self) -> Vec<(Uuid, Option<Uuid>, Option<Uuid>)> {
+    pub fn potential_internal_transfers(&self) -> Vec<(Uuid, Uuid)> {
+        let all_txs: Vec<&BankTransaction> = self.all_transactions();
+        let allocated_ids: std::collections::HashSet<Uuid> = self
+            .periods
+            .iter()
+            .flat_map(|p| p.allocations.iter().map(|a| a.transaction_id))
+            .collect();
+        let unallocated: Vec<&&BankTransaction> = all_txs
+            .iter()
+            .filter(|tx| !tx.ignored && tx.actual_id.is_none() && !allocated_ids.contains(&tx.id))
+            .collect();
+        let mut pairs: Vec<(Uuid, Uuid)> = Vec::new();
+        let mut used: std::collections::HashSet<Uuid> = std::collections::HashSet::new();
+        for tx in &unallocated {
+            if used.contains(&tx.id) {
+                continue;
+            }
+            if let Some(counterpart) = unallocated.iter().find(|other| {
+                other.id != tx.id
+                    && !used.contains(&other.id)
+                    && other.account_number != tx.account_number
+                    && other.amount == -tx.amount
+                    && (other.date - tx.date).num_days().abs() <= 3
+            }) {
+                used.insert(tx.id);
+                used.insert(counterpart.id);
+                pairs.push((tx.id, counterpart.id));
+            }
+        }
+        pairs
+    }
+
+    pub fn evaluate_rules(&self) -> Vec<RuleMatch> {
         self.periods
             .iter()
             .flat_map(|p| p.evaluate_rules(&self.match_rules, &self.items))
@@ -407,6 +479,35 @@ impl Budget {
     ) {
         self.with_period_mut(period_id)
             .mutate_actual(actual_id, mutator);
+    }
+
+    pub fn allocations_for_actual(
+        &self,
+        period_id: PeriodId,
+        actual_id: Uuid,
+    ) -> Vec<&TransactionAllocation> {
+        self.get_period(period_id)
+            .map(|p| p.allocations_for_actual(actual_id))
+            .unwrap_or_default()
+    }
+
+    pub fn allocations_for_transaction(
+        &self,
+        transaction_id: Uuid,
+    ) -> Vec<&TransactionAllocation> {
+        self.get_period_for_transaction(transaction_id)
+            .map(|p| p.allocations_for_transaction(transaction_id))
+            .unwrap_or_default()
+    }
+
+    pub fn allocated_amount_for_actual(
+        &self,
+        period_id: PeriodId,
+        actual_id: Uuid,
+    ) -> Money {
+        self.get_period(period_id)
+            .map(|p| p.allocated_amount_for_actual(actual_id))
+            .unwrap_or(Money::zero(self.currency))
     }
 }
 

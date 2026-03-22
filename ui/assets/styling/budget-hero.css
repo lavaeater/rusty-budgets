@@ -489,3 +489,218 @@
     color: #94a3b8;
     font-style: italic;
 }
+
+/* Allocation chips */
+.allocation-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.allocation-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #eef2ff;
+    border: 1px solid #c7d2fe;
+    border-radius: 20px;
+    padding: 2px 8px 2px 10px;
+    font-size: 0.8rem;
+    color: #3730a3;
+}
+
+.allocation-chip-tag {
+    font-weight: 600;
+}
+
+.allocation-chip-amount {
+    color: #4f46e5;
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+}
+
+.allocation-chip-remove {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #818cf8;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0 2px;
+    border-radius: 50%;
+    transition: color 0.15s, background 0.15s;
+}
+
+.allocation-chip-remove:hover {
+    color: #ef4444;
+    background: #fee2e2;
+}
+
+/* Split transaction form */
+.split-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 260px;
+    padding: 4px 2px;
+}
+
+.split-form-title {
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.split-form-total {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin: 0;
+}
+
+.split-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.split-form-field label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #475569;
+}
+
+.split-form-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+/* Transfer pair cards */
+.transfer-pair-card {
+    border-left: 3px solid #818cf8;
+}
+
+.transfer-pair-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.transfer-leg {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+}
+
+.transfer-leg-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: #eef2ff;
+    color: #4f46e5;
+}
+
+.transfer-arrow {
+    font-size: 1.3rem;
+    color: #94a3b8;
+    flex-shrink: 0;
+}
+
+.transfer-account {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+}
+
+/* Tag editor */
+.tag-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.tag-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    background: #eef2ff;
+    color: #4338ca;
+    font-size: 0.78rem;
+    font-weight: 500;
+}
+
+.tag-chip-text {
+    line-height: 1;
+}
+
+.tag-chip-remove {
+    background: none;
+    border: none;
+    color: #6366f1;
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 0 2px;
+    line-height: 1;
+    border-radius: 50%;
+}
+
+.tag-chip-remove:hover {
+    background: #c7d2fe;
+    color: #3730a3;
+}
+
+.tag-add-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.tag-add-row input {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Inline tags on collapsed budget item */
+.budget-item-tags-inline {
+    display: inline-flex;
+    gap: 3px;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
+.tag-chip-small {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 8px;
+    background: #eef2ff;
+    color: #4338ca;
+    font-size: 0.65rem;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+.tag-connect-row {
+    display: flex;
+    align-items: center;
+}
+
+.tag-connect-row input {
+    max-width: 140px;
+    font-size: 0.8rem;
+}

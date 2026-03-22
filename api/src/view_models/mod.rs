@@ -9,6 +9,7 @@ mod budget_item_status;
 mod transaction_view_model;
 mod budget_view_model;
 mod budgeting_type_overview;
+mod allocation_view_model;
 pub mod rule;
 pub mod value_kind;
 
@@ -17,8 +18,9 @@ pub use rule::Rule;
 pub use value_kind::ValueKind;
 pub use budget_item_view_model::BudgetItemViewModel;
 pub use transaction_view_model::TransactionViewModel;
-pub use budget_view_model::BudgetViewModel;
+pub use budget_view_model::{BudgetViewModel, TransferPair};
 pub use budget_item_status::BudgetItemStatus;
+pub use allocation_view_model::AllocationViewModel;
 
 #[cfg(test)]
 #[test]

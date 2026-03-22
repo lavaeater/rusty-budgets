@@ -20,7 +20,7 @@ pub fn BudgetTabs() -> Element {
                     (
                         index,
                         ov.budgeting_type,
-                        ov.clone(),
+                        *ov,
                         budget_signal()
                             .items
                             .iter()
@@ -48,9 +48,9 @@ pub fn BudgetTabs() -> Element {
                             }
                         }
                     }
-                    for (index , budgeting_type , _ , items) in overview_by_type {
+                    for (index , budgeting_type , _ , _) in overview_by_type {
                         TabContent { index, value: budgeting_type.to_string(),
-                            BudgetingTypeCard { budgeting_type, items }
+                            BudgetingTypeCard { budgeting_type }
                         }
                     }
                 }

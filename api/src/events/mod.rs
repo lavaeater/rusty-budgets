@@ -9,6 +9,9 @@ mod rule_added;
 mod transaction_ignored;
 pub mod actual_added;
 pub mod actual_modified;
+pub mod allocation_created;
+pub mod allocation_deleted;
+pub mod bank_account_created;
 
 pub use budget_created::BudgetCreated;
 pub use item_added::ItemAdded;
@@ -21,6 +24,9 @@ pub use rule_added::RuleAdded;
 pub use transaction_ignored::TransactionIgnored;
 pub use actual_added::ActualAdded;
 pub use actual_modified::ActualModified;
+pub use allocation_created::AllocationCreated;
+pub use allocation_deleted::AllocationDeleted;
+pub use bank_account_created::BankAccountCreated;
 
 
 

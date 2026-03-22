@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use crate::models::BudgetingType;
-use crate::models::BudgetingType::{Expense, Income, Savings};
+use crate::models::BudgetingType::{Expense, Income, InternalTransfer, Savings};
 use crate::view_models::Rule;
 use crate::view_models::Rule::{Difference, SelfDiff, Sum};
 
@@ -54,6 +54,12 @@ impl Default for RulePackages {
                     Sum(vec![Savings]),
                     Sum(vec![Savings]),
                     SelfDiff(Savings),
+                ),
+                RulePackage::new(
+                    InternalTransfer,
+                    Sum(vec![InternalTransfer]),
+                    Sum(vec![InternalTransfer]),
+                    SelfDiff(InternalTransfer),
                 ),
             ],
         }

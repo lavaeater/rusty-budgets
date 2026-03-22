@@ -14,7 +14,7 @@ pub use budget_item_view::BudgetItemView;
 pub use budget_tabs::BudgetTabs;
 pub use budgeting_type_card::BudgetingTypeCard;
 pub use budgeting_type_overview_view::BudgetingTypeOverviewView;
-pub use transactions_view::TransactionsView;
+pub use transactions_view::{TransactionsView, TransferPairsView, NewBudgetItemPopover};
 pub use item_selector::ItemSelector;
 pub use new_budget_item::NewBudgetItem;
 pub use budget_item_status_view::BudgetItemStatusView;

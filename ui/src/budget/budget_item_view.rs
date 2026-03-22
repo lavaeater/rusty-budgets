@@ -1,5 +1,5 @@
 use crate::budget::ItemSelector;
-use crate::{Button, ButtonVariant, Slider, SliderRange, SliderThumb, SliderTrack};
+use crate::{Button, ButtonVariant, Input, Slider, SliderRange, SliderThumb, SliderTrack};
 use api::ignore_transaction;
 use api::models::{BudgetingType, Money};
 use api::view_models::*;
@@ -22,6 +22,8 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
     let mut edit_item = use_signal(|| false);
     let item_name = use_signal(|| item.name.clone());
     let mut budgeted_amount = use_signal(|| item.budgeted_amount);
+    let mut item_tags = use_signal(|| item.tags.clone());
+    let mut new_tag_input = use_signal(String::new);
 
     // State for selected transaction IDs and the target item for moving
     let mut selected_transactions = use_signal(HashSet::<Uuid>::new);
@@ -158,6 +160,7 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                                                             tx_id,
                                                             target_item.actual_id,
                                                             target_item.item_id,
+                                                            None,
                                                             budget_signal().period_id,
                                                         )
                                                         .await
@@ -199,11 +202,54 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                     div { class: "budget-item-edit-header",
                         div { class: "budget-item-edit-title", "{item_name()}" }
                         div { class: "budget-item-edit-amounts",
-                            "{item.actual_amount.to_string()} / {item.budgeted_amount.to_string()}"
+                            "{item.actual_amount.to_string()} / {budgeted_amount().to_string()}"
                         }
                     }
 
                     div { class: "budget-item-edit-form",
+                        div { class: "budget-item-edit-field",
+                            label { class: "budget-item-edit-label", "Taggar" }
+                            div { class: "tag-editor",
+                                div { class: "tag-chips",
+                                    for (idx, tag) in item_tags().iter().enumerate() {
+                                        span { class: "tag-chip", key: "{tag}",
+                                            span { class: "tag-chip-text", "{tag}" }
+                                            button {
+                                                class: "tag-chip-remove",
+                                                r#type: "button",
+                                                onclick: move |_| {
+                                                    let mut tags = item_tags();
+                                                    tags.remove(idx);
+                                                    item_tags.set(tags);
+                                                },
+                                                "×"
+                                            }
+                                        }
+                                    }
+                                }
+                                div { class: "tag-add-row",
+                                    Input {
+                                        placeholder: "Ny tagg...",
+                                        value: new_tag_input(),
+                                        oninput: move |e: FormEvent| new_tag_input.set(e.value()),
+                                    }
+                                    Button {
+                                        variant: ButtonVariant::Secondary,
+                                        r#type: "button",
+                                        onclick: move |_| {
+                                            let tag = new_tag_input().trim().to_string();
+                                            if !tag.is_empty() && !item_tags().contains(&tag) {
+                                                let mut tags = item_tags();
+                                                tags.push(tag);
+                                                item_tags.set(tags);
+                                                new_tag_input.set(String::new());
+                                            }
+                                        },
+                                        "Lägg till"
+                                    }
+                                }
+                            }
+                        }
                         div { class: "budget-item-edit-field",
                             label { class: "budget-item-edit-label", "Budgeterat belopp" }
                             input {
@@ -242,12 +288,24 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                             Button {
                                 variant: ButtonVariant::Primary,
                                 onclick: move |_| async move {
-                                    if item.actual_id.is_none() {
-                                        match api::add_actual(
+                                    let tags = item_tags();
+                                    // Save tags via modify_item
+                                    let _ = api::modify_item(
+                                        budget_id,
+                                        item.item_id,
+                                        None,
+                                        None,
+                                        Some(tags),
+                                        None,
+                                        budget_signal().period_id,
+                                    ).await;
+                                    if let Some(item_id) = item.actual_id {
+                                        match api::modify_actual(
                                                 budget_id,
-                                                item.item_id,
-                                                budgeted_amount(),
+                                                item_id,
                                                 budget_signal().period_id,
+                                                Some(budgeted_amount()),
+                                                None,
                                             )
                                             .await
                                         {
@@ -260,12 +318,11 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                                             }
                                         }
                                     } else {
-                                        match api::modify_actual(
+                                        match api::add_actual(
                                                 budget_id,
-                                                item.actual_id.unwrap(),
+                                                item.item_id,
+                                                budgeted_amount(),
                                                 budget_signal().period_id,
-                                                Some(budgeted_amount()),
-                                                None,
                                             )
                                             .await
                                         {
@@ -299,6 +356,13 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                         class: "budget-item-name",
                         onclick: move |_| { expanded.set(!expanded()) },
                         "{item.name}"
+                        if !item.tags.is_empty() {
+                            span { class: "budget-item-tags-inline",
+                                for tag in item.tags.iter() {
+                                    span { class: "tag-chip-small", "{tag}" }
+                                }
+                            }
+                        }
                     }
                     Button {
                         variant: ButtonVariant::Ghost,

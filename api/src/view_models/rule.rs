@@ -11,7 +11,7 @@ pub enum Rule {
 }
 
 impl Rule {
-    pub fn evaluate(&self, store: &Vec<ActualItem>, kind: Option<ValueKind>) -> Money {
+    pub fn evaluate(&self, store: &[ActualItem], kind: Option<ValueKind>) -> Money {
         match self {
             Rule::Sum(types) => types
                 .iter()
@@ -36,7 +36,7 @@ impl Rule {
         }
     }
 
-    pub fn get_sum(store: &Vec<ActualItem>, kind: &ValueKind, base: &BudgetingType) -> Money {
+    pub fn get_sum(store: &[ActualItem], kind: &ValueKind, base: &BudgetingType) -> Money {
         store
             .iter()
             .filter(|i| i.budgeting_type == *base)

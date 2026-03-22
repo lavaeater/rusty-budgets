@@ -114,6 +114,7 @@ pub async fn add_new_actual_item(
                 Some(actual_id),
                 item_id,
                 period_id,
+                String::new(),
             )?;
 
             let _ = db::create_rule(user.id, budget_id, tx_id, actual_id)?;
@@ -136,10 +137,12 @@ pub async fn modify_item(
     item_id: Uuid,
     name: Option<String>,
     item_type: Option<BudgetingType>,
+    tags: Option<Vec<String>>,
+    periodicity: Option<Periodicity>,
     period_id: PeriodId,
 ) -> ServerFnResult<BudgetViewModel> {
     let user = db::get_default_user(None).expect("Could not get default user");
-    let _ = db::modify_item(user.id, budget_id, item_id, name, item_type)?;
+    let _ = db::modify_item(user.id, budget_id, item_id, name, item_type, tags, periodicity)?;
     Ok(BudgetViewModel::from_budget(
         &db::get_budget(budget_id)?,
         period_id,
@@ -238,6 +241,7 @@ pub async fn connect_transaction(
     tx_id: Uuid,
     actual_id: Option<Uuid>,
     budget_item_id: Uuid,
+    tag: Option<String>,
     period_id: PeriodId,
 ) -> ServerFnResult<BudgetViewModel> {
     let user = db::get_default_user(None)?;
@@ -248,6 +252,7 @@ pub async fn connect_transaction(
         actual_id,
         budget_item_id,
         period_id,
+        tag.unwrap_or_default(),
     )?;
     let _ = db::create_rule(user.id, budget_id, tx_id, actual_id)?;
     let _ = db::evaluate_rules(user.id, budget_id)?;
@@ -280,6 +285,38 @@ pub async fn adjust_actual_funds(
 ) -> ServerFnResult<BudgetViewModel> {
     let user = db::get_default_user(None)?;
     let _ = db::adjust_actual_funds(user.id, budget_id, actual_id, period_id, amount)?;
+    Ok(BudgetViewModel::from_budget(
+        &db::get_budget(budget_id)?,
+        period_id,
+    ))
+}
+
+#[server(endpoint = "create_allocation")]
+pub async fn create_allocation(
+    budget_id: Uuid,
+    transaction_id: Uuid,
+    actual_id: Uuid,
+    amount: Money,
+    tag: String,
+    period_id: PeriodId,
+) -> ServerFnResult<BudgetViewModel> {
+    let user = db::get_default_user(None)?;
+    let _ = db::create_allocation(user.id, budget_id, transaction_id, actual_id, amount, tag)?;
+    Ok(BudgetViewModel::from_budget(
+        &db::get_budget(budget_id)?,
+        period_id,
+    ))
+}
+
+#[server(endpoint = "delete_allocation")]
+pub async fn delete_allocation(
+    budget_id: Uuid,
+    allocation_id: Uuid,
+    transaction_id: Uuid,
+    period_id: PeriodId,
+) -> ServerFnResult<BudgetViewModel> {
+    let user = db::get_default_user(None)?;
+    let _ = db::delete_allocation(user.id, budget_id, allocation_id, transaction_id)?;
     Ok(BudgetViewModel::from_budget(
         &db::get_budget(budget_id)?,
         period_id,

@@ -1,6 +1,7 @@
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
 use crate::models::Budget;
 use crate::models::BudgetingType;
+use crate::models::Periodicity;
 use crate::models::Money;
 use cqrs_macros::DomainEvent;
 use dioxus::logger::tracing;
@@ -14,6 +15,10 @@ pub struct ItemModified {
     pub item_id: Uuid,
     pub name: Option<String>,
     pub item_type: Option<BudgetingType>,
+    #[serde(default)]
+    pub tags: Option<Vec<String>>,
+    #[serde(default)]
+    pub periodicity: Option<Periodicity>,
 }
 
 impl ItemModifiedHandler for Budget {
@@ -21,7 +26,9 @@ impl ItemModifiedHandler for Budget {
         self.modify_budget_item(
             event.item_id,
             event.name.clone(),
-            event.item_type
+            event.item_type,
+            event.tags.clone(),
+            event.periodicity,
         );
         event.item_id
     }
@@ -31,13 +38,17 @@ impl ItemModifiedHandler for Budget {
         item_id: Uuid,
         name: Option<String>,
         item_type: Option<BudgetingType>,
+        tags: Option<Vec<String>>,
+        periodicity: Option<Periodicity>,
     ) -> Result<ItemModified, CommandError> {
         if self.contains_budget_item(item_id) {
             Ok(ItemModified {
                 budget_id: self.id,
                 item_id,
                 name,
-                item_type
+                item_type,
+                tags,
+                periodicity,
             })
         } else {
             tracing::error!("Budget Item not found");

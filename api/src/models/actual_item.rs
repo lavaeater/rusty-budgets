@@ -32,6 +32,7 @@ impl PartialEq for ActualItem {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 impl ActualItem {
     pub fn new(
         id: Uuid,

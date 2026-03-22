@@ -53,7 +53,6 @@ fn DesktopNavbar() -> Element {
         //     Link { to: Route::Home {}, "Översikt" }
         //     Link { to: Route::Blog { id: 1 }, "Blog" }
         // }
-
         Outlet::<Route> {}
     }
 }

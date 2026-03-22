@@ -8,6 +8,7 @@ pub enum BudgetingType {
     Income = 1,
     Expense = 2,
     Savings = 3,
+    InternalTransfer = 4,
 }
 
 
@@ -20,6 +21,7 @@ impl Display for BudgetingType {
                 BudgetingType::Income => "Inkomst",
                 BudgetingType::Expense => "Utgift",
                 BudgetingType::Savings => "Sparande",
+                BudgetingType::InternalTransfer => "Intern överföring",
             }
         )
     }

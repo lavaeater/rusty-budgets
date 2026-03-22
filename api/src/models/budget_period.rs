@@ -1,7 +1,7 @@
 use crate::models::budget_period_id::PeriodId;
 use crate::models::rule_packages::RulePackages;
-use crate::models::BudgetingType::{Expense, Income, Savings};
-use crate::models::{ActualItem, BankTransaction, BudgetItem, BudgetingType, MatchRule, Money};
+use crate::models::BudgetingType::{Expense, Income, InternalTransfer, Savings};
+use crate::models::{ActualItem, BankTransaction, BudgetItem, BudgetingType, MatchRule, Money, TransactionAllocation};
 use crate::view_models::value_kind::ValueKind;
 use core::fmt::Display;
 use iter_tools::Itertools;
@@ -12,11 +12,21 @@ use std::collections::HashSet;
 use uuid::Uuid;
 use crate::view_models::BudgetingTypeOverview;
 
+#[derive(Debug, Clone)]
+pub struct RuleMatch {
+    pub tx_id: Uuid,
+    pub amount: Money,
+    pub actual_id: Option<Uuid>,
+    pub item_id: Option<Uuid>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BudgetPeriod {
     pub id: PeriodId,
     pub actual_items: Vec<ActualItem>,
     pub transactions: Vec<BankTransaction>,
+    #[serde(default)]
+    pub allocations: Vec<TransactionAllocation>,
 }
 
 impl BudgetPeriod {
@@ -56,6 +66,7 @@ impl BudgetPeriod {
                     Income => self.get_income_overview(rules),
                     Expense => self.get_expense_overview(rules),
                     Savings => self.get_savings_overview(rules),
+                    InternalTransfer => self.get_transfer_overview(rules),
                 };
                 (index, group, overview, items.cloned().collect::<Vec<_>>())
             })
@@ -71,10 +82,23 @@ impl BudgetPeriod {
     }
 
     pub fn spent_for_type(&self, budgeting_type: BudgetingType) -> Money {
+        let cost_types = [BudgetingType::Expense, BudgetingType::Savings, BudgetingType::InternalTransfer];
         self.actual_items
             .iter()
             .filter(|item| item.budgeting_type == budgeting_type)
-            .map(|item| item.actual_amount)
+            .map(|item| {
+                let alloc_sum: Money = self
+                    .allocations
+                    .iter()
+                    .filter(|a| a.actual_id == item.id)
+                    .map(|a| if cost_types.contains(&item.budgeting_type) { -a.amount } else { a.amount })
+                    .sum();
+                if alloc_sum.is_zero() {
+                    item.actual_amount
+                } else {
+                    alloc_sum
+                }
+            })
             .sum()
     }
 
@@ -155,6 +179,30 @@ impl BudgetPeriod {
         }
     }
 
+    pub fn get_transfer_overview(
+        &self,
+        rules: &RulePackages,
+    ) -> BudgetingTypeOverview {
+        let rules = &rules
+            .rule_packages
+            .iter()
+            .find(|p| p.budgeting_type == InternalTransfer)
+            .unwrap();
+        let budgeted = rules
+            .budgeted_rule
+            .evaluate(&self.actual_items, Some(ValueKind::Budgeted));
+        let spent = rules.actual_rule.evaluate(&self.actual_items, Some(ValueKind::Spent));
+        let self_diff = rules.remaining_rule.evaluate(&self.actual_items, None);
+
+        BudgetingTypeOverview {
+            budgeting_type: InternalTransfer,
+            budgeted_amount: budgeted,
+            actual_amount: spent,
+            remaining_budget: self_diff,
+            is_ok: true,
+        }
+    }
+
     pub fn get_actual_mut(&mut self, id: Uuid) -> Option<&mut ActualItem> {
         self.actual_items.iter_mut().find(|i| i.id == id)
     }
@@ -189,32 +237,81 @@ impl BudgetPeriod {
             id,
             actual_items: Vec::new(),
             transactions: Vec::new(),
+            allocations: Vec::new(),
         };
         period.clear_hashmaps_and_transactions();
         period
+    }
+
+    pub fn add_allocation(&mut self, allocation: TransactionAllocation) {
+        self.allocations.push(allocation);
+    }
+
+    pub fn remove_allocation(&mut self, allocation_id: Uuid) {
+        self.allocations.retain(|a| a.id != allocation_id);
+    }
+
+    pub fn contains_allocation(&self, allocation_id: Uuid) -> bool {
+        self.allocations.iter().any(|a| a.id == allocation_id)
+    }
+
+    pub fn allocations_for_transaction(&self, transaction_id: Uuid) -> Vec<&TransactionAllocation> {
+        self.allocations
+            .iter()
+            .filter(|a| a.transaction_id == transaction_id)
+            .collect()
+    }
+
+    pub fn allocations_for_actual(&self, actual_id: Uuid) -> Vec<&TransactionAllocation> {
+        self.allocations
+            .iter()
+            .filter(|a| a.actual_id == actual_id)
+            .collect()
+    }
+
+    pub fn allocated_amount_for_actual(&self, actual_id: Uuid) -> Money {
+        self.allocations
+            .iter()
+            .filter(|a| a.actual_id == actual_id)
+            .map(|a| a.amount)
+            .sum()
     }
 
     pub fn evaluate_rules(
         &self,
         rules: &HashSet<MatchRule>,
         items: &[BudgetItem],
-    ) -> Vec<(Uuid, Option<Uuid>, Option<Uuid>)> {
-        let mut matched_transactions = Vec::new();
+    ) -> Vec<RuleMatch> {
+        let mut matched = Vec::new();
         let actuals = self.actual_items.iter().collect::<Vec<_>>();
-        for transaction in self.transactions.iter().filter(|tx| !tx.ignored && tx.actual_id.is_none()) {
+        for transaction in self.transactions.iter().filter(|tx| {
+            !tx.ignored
+                && tx.actual_id.is_none()
+                && !self.allocations.iter().any(|a| a.transaction_id == tx.id)
+        }) {
             for rule in rules {
-                if rule.matches_transaction(&transaction) {
+                if rule.matches_transaction(transaction) {
                     if let Some(actual_id) = self.get_actual_id_for_rule(rule, &actuals) {
-                        matched_transactions.push((transaction.id, Some(actual_id), None));
+                        matched.push(RuleMatch {
+                            tx_id: transaction.id,
+                            amount: transaction.amount,
+                            actual_id: Some(actual_id),
+                            item_id: None,
+                        });
                         break;
                     } else if let Some(item_id) = self.get_item_id_for_rule(rule, items) {
-                        matched_transactions.push((transaction.id, None, Some(item_id)));
+                        matched.push(RuleMatch {
+                            tx_id: transaction.id,
+                            amount: transaction.amount,
+                            actual_id: None,
+                            item_id: Some(item_id),
+                        });
                         break;
                     }
                 }
             }
         }
-        matched_transactions
+        matched
     }
 
     pub fn get_actual_id_for_rule(

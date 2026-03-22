@@ -188,41 +188,32 @@ pub fn add_item(
 
 pub fn evaluate_rules(user_id: Uuid, budget_id: Uuid) -> Result<Uuid, RustyError> {
     let budget = get_budget(budget_id)?;
-    for (tx_id, actual_id, item_id) in budget.evaluate_rules().iter() {
-        if actual_id.is_none() && item_id.is_none() {
-            tracing::warn!("No actual or item found for transaction {}", tx_id);
-            continue;
-        } else if actual_id.is_none() && item_id.is_some() {
-            tracing::warn!("No actual found for transaction {}", tx_id);
-            let period_id = budget.get_period_for_transaction(*tx_id).unwrap().id;
-            match connect_transaction(
-                user_id,
-                budget_id,
-                *tx_id,
-                None,
-                item_id.unwrap(),
-                period_id,
-            ) {
-                Ok(_) => {
-                    info!("Connected tx {:?} with actual item {:?}", tx_id, actual_id);
-                }
+    for rule_match in budget.evaluate_rules().iter() {
+        let tx_id = rule_match.tx_id;
+        let amount = rule_match.amount;
+
+        let actual_id = if let Some(actual_id) = rule_match.actual_id {
+            actual_id
+        } else if let Some(item_id) = rule_match.item_id {
+            let period_id = budget.get_period_for_transaction(tx_id).unwrap().id;
+            match add_actual(user_id, budget_id, item_id, Money::zero(budget.currency), period_id) {
+                Ok(id) => id,
                 Err(e) => {
-                    error!(error = %e, "Could not connect tx {:?} with actual item {:?}", tx_id, actual_id);
+                    error!(error = %e, "Could not create actual for tx {}", tx_id);
+                    continue;
                 }
             }
-        } else if actual_id.is_some() {
-            match with_runtime(None).connect_transaction(
-                user_id,
-                budget_id,
-                *tx_id,
-                actual_id.unwrap(),
-            ) {
-                Ok(_) => {
-                    info!("Connected tx {:?} with actual item {:?}", tx_id, actual_id);
-                }
-                Err(e) => {
-                    error!(error = %e, "Could not connect tx {:?} with actual item {:?}", tx_id, actual_id);
-                }
+        } else {
+            tracing::warn!("No actual or item found for transaction {}", tx_id);
+            continue;
+        };
+
+        match create_allocation(user_id, budget_id, tx_id, actual_id, amount, String::new()) {
+            Ok(_) => {
+                info!("Allocated tx {} to actual {}", tx_id, actual_id);
+            }
+            Err(e) => {
+                error!(error = %e, "Could not allocate tx {} to actual {}", tx_id, actual_id);
             }
         }
     }
@@ -245,8 +236,10 @@ pub fn modify_item(
     item_id: Uuid,
     name: Option<String>,
     item_type: Option<BudgetingType>,
+    tags: Option<Vec<String>>,
+    periodicity: Option<Periodicity>,
 ) -> Result<Uuid, RustyError> {
-    with_runtime(None).modify_item(user_id, budget_id, item_id, name, item_type)
+    with_runtime(None).modify_item(user_id, budget_id, item_id, name, item_type, tags, periodicity)
 }
 
 /*
@@ -276,6 +269,15 @@ pub fn modify_actual(
     )
 }
 
+pub fn ensure_account(
+    user_id: Uuid,
+    budget_id: Uuid,
+    account_number: &str,
+    description: &str,
+) -> Result<Uuid, RustyError> {
+    with_runtime(None).ensure_account(user_id, budget_id, account_number, description)
+}
+
 pub fn connect_transaction(
     user_id: Uuid,
     budget_id: Uuid,
@@ -283,20 +285,29 @@ pub fn connect_transaction(
     actual_id: Option<Uuid>,
     item_id: Uuid,
     period_id: PeriodId,
+    tag: String,
 ) -> Result<Uuid, RustyError> {
+    let budget = get_budget(budget_id)?;
+
     let actual_id = match actual_id {
         None => {
             with_runtime(None).add_actual(
                 user_id,
                 budget_id,
                 item_id,
-                Money::zero(Currency::default()),
+                Money::zero(budget.currency),
                 period_id,
             )?
         }
         Some(actual_id) => actual_id,
     };
-    with_runtime(None).connect_transaction(user_id, budget_id, tx_id, actual_id)?;
+
+    let amount = budget
+        .get_transaction(tx_id)
+        .map(|tx| tx.amount)
+        .ok_or_else(|| RustyError::ItemNotFound(tx_id.to_string(), "Transaction not found".to_string()))?;
+
+    create_allocation(user_id, budget_id, tx_id, actual_id, amount, tag)?;
     Ok(actual_id)
 }
 
@@ -319,6 +330,26 @@ pub fn adjust_actual_funds(
     with_runtime(None)
         .adjust_budgeted_amount(user_id, budget_id, actual_id, period_id, amount)?;
     Ok(budget_id)
+}
+
+pub fn create_allocation(
+    user_id: Uuid,
+    budget_id: Uuid,
+    transaction_id: Uuid,
+    actual_id: Uuid,
+    amount: Money,
+    tag: String,
+) -> Result<Uuid, RustyError> {
+    with_runtime(None).create_allocation(user_id, budget_id, transaction_id, actual_id, amount, tag)
+}
+
+pub fn delete_allocation(
+    user_id: Uuid,
+    budget_id: Uuid,
+    allocation_id: Uuid,
+    transaction_id: Uuid,
+) -> Result<Uuid, RustyError> {
+    with_runtime(None).delete_allocation(user_id, budget_id, allocation_id, transaction_id)
 }
 
 pub fn create_rule(
