@@ -9,14 +9,14 @@ use std::path::Path;
 use uuid::Uuid;
 
 /// Extracts an account number from a transfer description like
-/// "Överföring 9159 12 345 67" or "Överföring 9150 12 345 67".
+/// "Överföring 915X 12 345 67" or "Överföring 915X 12 345 67".
 /// Returns Some(account_number) if the description starts with "Överföring 915"
 /// and the rest looks like digits (possibly separated by spaces).
 fn extract_transfer_account_number(description: &str) -> Option<String> {
     let desc = description.trim();
     if let Some(rest) = desc.strip_prefix("Överföring ") {
         let digits: String = rest.chars().filter(|c| c.is_ascii_digit()).collect();
-        if digits.starts_with("9150") || digits.starts_with("9159") {
+        if digits.starts_with("915"){
             return Some(digits);
         }
     }
