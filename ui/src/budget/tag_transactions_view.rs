@@ -9,6 +9,7 @@ use dioxus::prelude::*;
 use uuid::Uuid;
 
 const TAG_TX_CSS: Asset = asset!("assets/styling/tag-transactions.css");
+const BATCH_SIZE: usize = 10;
 
 #[component]
 pub fn TagTransactionsView() -> Element {
@@ -28,14 +29,15 @@ pub fn TagTransactionsView() -> Element {
 
     use_effect(move || {
         spawn(async move {
-            if let Ok(txs) = get_untagged_transactions(budget_id).await {
+            if let Ok(txs) = get_untagged_transactions(budget_id, BATCH_SIZE).await {
                 untagged_txs.set(txs);
             }
         });
     });
 
     let txs = untagged_txs();
-    let total = txs.len();
+    let batch_size = txs.len();
+    let total_remaining = budget_signal().untagged_transaction_count;
     let current_tx: Option<BankTransaction> = txs.into_iter().nth(current_index());
     let tags = budget_signal()
         .tags
@@ -43,20 +45,38 @@ pub fn TagTransactionsView() -> Element {
         .filter(|t| !t.deleted)
         .collect::<Vec<_>>();
 
+    // Helper closures for resetting state and re-fetching the next batch
+    let mut reset_ui_state = move || {
+        selected_tag_id.set(None);
+        tagged_rule_id.set(None);
+        rule_tokens.set(Vec::new());
+        preview_count.set(0);
+    };
+
     rsx! {
         document::Link { rel: "stylesheet", href: TAG_TX_CSS }
         div { class: "tag-transactions-view",
-            if total == 0 {
+            if total_remaining == 0 && batch_size == 0 {
                 div { class: "tag-tx-all-done",
                     p { class: "success-message", "✓ Alla transaktioner är taggade!" }
                 }
-            } else if current_index() >= total {
+            } else if current_index() >= batch_size {
+                // Exhausted current batch — more may remain
                 div { class: "tag-tx-all-done",
-                    p { class: "success-message", "✓ Klart! Alla transaktioner genomgångna." }
-                    Button {
-                        r#type: "button",
-                        onclick: move |_| { current_index.set(0); },
-                        "Börja om"
+                    if total_remaining > 0 {
+                        p { "{total_remaining} transaktioner kvar — hoppa vidare till nästa omgång." }
+                        Button {
+                            r#type: "button",
+                            onclick: move |_| async move {
+                                if let Ok(txs) = get_untagged_transactions(budget_id, BATCH_SIZE).await {
+                                    untagged_txs.set(txs);
+                                    current_index.set(0);
+                                }
+                            },
+                            "Nästa omgång"
+                        }
+                    } else {
+                        p { class: "success-message", "✓ Klart! Alla transaktioner genomgångna." }
                     }
                 }
             } else if let Some(tx) = current_tx {
@@ -67,11 +87,16 @@ pub fn TagTransactionsView() -> Element {
                     let date_str = tx.date.format("%Y-%m-%d").to_string();
                     rsx! {
                         div { class: "tag-tx-progress",
-                            span { "Transaktion {current_index() + 1} av {total}" }
+                            span {
+                                "Transaktion {current_index() + 1}/{batch_size} i omgången"
+                                if total_remaining > 0 {
+                                    " · {total_remaining} kvar totalt"
+                                }
+                            }
                             div { class: "tag-tx-progress-bar",
                                 div {
                                     class: "tag-tx-progress-fill",
-                                    style: "width: {(current_index() + 1) * 100 / total.max(1)}%"
+                                    style: "width: {(current_index() + 1) * 100 / batch_size.max(1)}%"
                                 }
                             }
                         }
@@ -238,7 +263,8 @@ pub fn TagTransactionsView() -> Element {
                                         consume_context::<BudgetState>().0.set(updated_budget);
                                         selected_tag_id.set(None);
                                         preview_count.set(0);
-                                        if let Ok(txs) = get_untagged_transactions(budget_id).await {
+                                        current_index.set(0);
+                                        if let Ok(txs) = get_untagged_transactions(budget_id, BATCH_SIZE).await {
                                             untagged_txs.set(txs);
                                         }
                                     }
@@ -249,10 +275,7 @@ pub fn TagTransactionsView() -> Element {
                                 r#type: "button",
                                 "data-style": "ghost",
                                 onclick: move |_| {
-                                    selected_tag_id.set(None);
-                                    tagged_rule_id.set(None);
-                                    rule_tokens.set(Vec::new());
-                                    preview_count.set(0);
+                                    reset_ui_state();
                                     current_index.set(current_index() + 1);
                                 },
                                 "Hoppa över"
@@ -264,12 +287,10 @@ pub fn TagTransactionsView() -> Element {
                                     if let Ok(bv) =
                                         ignore_transaction(budget_id, tx_id, period_id).await
                                     {
-                                        selected_tag_id.set(None);
-                                        tagged_rule_id.set(None);
-                                        rule_tokens.set(Vec::new());
-                                        preview_count.set(0);
+                                        reset_ui_state();
                                         consume_context::<BudgetState>().0.set(bv);
-                                        if let Ok(txs) = get_untagged_transactions(budget_id).await {
+                                        current_index.set(0);
+                                        if let Ok(txs) = get_untagged_transactions(budget_id, BATCH_SIZE).await {
                                             untagged_txs.set(txs);
                                         }
                                     }

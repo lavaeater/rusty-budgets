@@ -23,6 +23,7 @@ pub struct BudgetViewModel {
     pub to_connect: Vec<TransactionViewModel>,
     pub ignored_transactions: Vec<TransactionViewModel>,
     pub potential_transfers: Vec<TransferPair>,
+    pub potential_transfer_count: usize,
     pub currency: Currency,
     pub tags: Vec<Tag>,
     pub match_rules: Vec<MatchRule>,
@@ -70,7 +71,7 @@ impl BudgetViewModel {
             .iter()
             .map(|tx| TransactionViewModel::from_transaction(tx))
             .collect::<Vec<_>>();
-        let potential_transfers = budget
+        let all_transfer_pairs: Vec<TransferPair> = budget
             .potential_internal_transfers()
             .into_iter()
             .filter_map(|(out_id, in_id)| {
@@ -81,7 +82,9 @@ impl BudgetViewModel {
                     incoming: TransactionViewModel::from_transaction(in_tx),
                 })
             })
-            .collect::<Vec<_>>();
+            .collect();
+        let potential_transfer_count = all_transfer_pairs.len();
+        let potential_transfers = all_transfer_pairs.into_iter().take(10).collect::<Vec<_>>();
 
         let mut overviews = vec![
             budget.get_budgeting_overview(BudgetingType::Income, period_id),
@@ -113,6 +116,7 @@ impl BudgetViewModel {
             to_connect,
             ignored_transactions,
             potential_transfers,
+            potential_transfer_count,
             currency: budget.currency,
             tags: budget.tags.clone(),
             match_rules,

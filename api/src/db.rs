@@ -466,7 +466,7 @@ pub fn get_next_untagged_transaction(budget_id: Uuid) -> Result<Option<BankTrans
     Ok(budget.get_next_untagged_transaction().cloned())
 }
 
-pub fn get_untagged_transactions(budget_id: Uuid) -> Result<Vec<BankTransaction>, RustyError> {
+pub fn get_untagged_transactions(budget_id: Uuid, limit: usize) -> Result<Vec<BankTransaction>, RustyError> {
     let budget = get_budget(budget_id)?;
     let transfer_ids: std::collections::HashSet<Uuid> = budget
         .potential_internal_transfers()
@@ -478,6 +478,7 @@ pub fn get_untagged_transactions(budget_id: Uuid) -> Result<Vec<BankTransaction>
         .iter()
         .flat_map(|p| p.transactions.iter())
         .filter(|tx| tx.tag_id.is_none() && !tx.ignored && !transfer_ids.contains(&tx.id))
+        .take(limit)
         .cloned()
         .collect())
 }

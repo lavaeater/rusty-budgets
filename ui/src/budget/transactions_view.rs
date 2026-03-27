@@ -288,7 +288,9 @@ fn SplitTransactionPopover(tx: TransactionViewModel) -> Element {
 #[component]
 pub fn TransferPairsView() -> Element {
     let budget_signal = use_context::<BudgetState>().0;
-    let pairs = budget_signal().potential_transfers.clone();
+    let budget = budget_signal();
+    let pairs = budget.potential_transfers.clone();
+    let total_count = budget.potential_transfer_count;
 
     if pairs.is_empty() {
         return rsx! {};
@@ -298,7 +300,12 @@ pub fn TransferPairsView() -> Element {
         div { class: "transactions-view-a",
             h2 { class: "transactions-title",
                 "Möjliga interna överföringar "
-                span { class: "transaction-count", "({pairs.len()})" }
+                span { class: "transaction-count", "({total_count})" }
+                if total_count > pairs.len() {
+                    span { class: "transaction-count",
+                        " — visar {pairs.len()} av {total_count}"
+                    }
+                }
             }
             div { class: "transactions-list",
                 for pair in pairs {
