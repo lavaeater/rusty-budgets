@@ -38,6 +38,8 @@ pub_events_enum! {
         BankAccountCreated,
         TagCreated,
         TagModified,
+        TransactionTagged,
+        RuleModified,
     }
 }
 

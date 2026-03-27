@@ -243,9 +243,10 @@ impl JoyDbBudgetRuntime {
         transaction_key: Vec<String>,
         item_key: Vec<String>,
         always_apply: bool,
+        tag_id: Option<Uuid>,
     ) -> Result<Uuid, RustyError> {
         self.cmd(user_id, budget_id, |budget| {
-            budget.add_rule(transaction_key, item_key, always_apply)
+            budget.add_rule(transaction_key, item_key, always_apply, tag_id)
         })
     }
 

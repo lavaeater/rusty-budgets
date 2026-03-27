@@ -14,6 +14,8 @@ pub mod allocation_deleted;
 pub mod bank_account_created;
 mod tag_created;
 mod tag_modified;
+mod transaction_tagged;
+mod rule_modified;
 
 pub use budget_created::BudgetCreated;
 pub use item_added::ItemAdded;
@@ -31,6 +33,8 @@ pub use allocation_deleted::AllocationDeleted;
 pub use bank_account_created::BankAccountCreated;
 pub use tag_created::TagCreated;
 pub use tag_modified::TagModified;
+pub use transaction_tagged::TransactionTagged;
+pub use rule_modified::RuleModified;
 
 
 

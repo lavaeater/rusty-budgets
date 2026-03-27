@@ -26,6 +26,8 @@ pub struct BankTransaction {
     pub actual_id: Option<Uuid>,
     pub balance: Money,
     pub ignored: bool,
+    #[serde(default)]
+    pub tag_id: Option<Uuid>,
 }
 
 impl PartialEq for BankTransaction {
@@ -90,6 +92,7 @@ impl BankTransaction {
             date,
             actual_id: None,
             ignored: false,
+            tag_id: None,
         }
     }
     

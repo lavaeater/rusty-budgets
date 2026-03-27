@@ -382,7 +382,7 @@ pub fn create_rule(
     let item_key = MatchRule::create_item_key(item);
     let always_apply = true;
 
-    with_runtime(None).add_rule(user_id, budget.id, transaction_key, item_key, always_apply)?;
+    with_runtime(None).add_rule(user_id, budget.id, transaction_key, item_key, always_apply, None)?;
     Ok(budget.id)
 }
 

@@ -9,12 +9,34 @@ use once_cell::sync::Lazy;
 use uuid::Uuid;
 use crate::models::actual_item::ActualItem;
 
-#[derive(Debug, Clone, Serialize, Deserialize, Hash, Eq, PartialEq)]
-pub struct  MatchRule {
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MatchRule {
+    #[serde(default = "Uuid::new_v4")]
+    pub id: Uuid,
     pub transaction_key: Vec<String>,
     pub item_key: Vec<String>,
-    pub always_apply: bool
+    pub always_apply: bool,
+    #[serde(default)]
+    pub tag_id: Option<Uuid>,
 }
+
+impl Hash for MatchRule {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.transaction_key.hash(state);
+        self.item_key.hash(state);
+        self.always_apply.hash(state);
+    }
+}
+
+impl PartialEq for MatchRule {
+    fn eq(&self, other: &Self) -> bool {
+        self.transaction_key == other.transaction_key
+            && self.item_key == other.item_key
+            && self.always_apply == other.always_apply
+    }
+}
+
+impl Eq for MatchRule {}
 
 impl Display for MatchRule {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -186,9 +208,21 @@ impl MatchRule {
     pub fn create_rule_for_transaction_and_item(transaction: &BankTransaction, item: &ActualItem) -> MatchRule {
         let transaction_key = Self::create_transaction_key(transaction);
         MatchRule {
+            id: Uuid::new_v4(),
             transaction_key,
             item_key: Self::create_item_key(item),
-            always_apply: true
+            always_apply: true,
+            tag_id: None,
+        }
+    }
+
+    pub fn create_rule_for_transaction_and_tag(transaction: &BankTransaction, tag_id: Uuid) -> MatchRule {
+        MatchRule {
+            id: Uuid::new_v4(),
+            transaction_key: Self::create_transaction_key(transaction),
+            item_key: Vec::new(),
+            always_apply: true,
+            tag_id: Some(tag_id),
         }
     }
     
