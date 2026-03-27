@@ -2,7 +2,9 @@
 
 ## My Notes
 
-"Continue Phase 1 Tag Model implementation — check the saved memory for context"
+**Next up: Phase 4 — Budget Item Creation Workflow (API)**
+
+Phases 1–3 are complete. The tagging workflow works end-to-end, including transfer pair resolution. Start Phase 4 by implementing `get_unbudgeted_tags` and `get_average_monthly_expenditure_per_tag`.
 
 ## Ambition Elevation
 
@@ -26,38 +28,41 @@ One should be able to basically front-load the budget so that when the buffer is
 
 So the Import at this stage should be of all transactions since 1st of january 2024, for instance, and for the most important bank accounts.
 
-Thinking about it, I think the actual import is probably where it needs to be right now. 
+Thinking about it, I think the actual import is probably where it needs to be right now.
 
 The rub comes in the next step!
 
 ## Tagging and Creating Rules
 
-After importing the transactions, they should be tagged and rules should be created. 
-Tagging should be done by showing the user a transaction at a time and asking the user to tag it. When tagging it, the user should be able to create a new tag or select an existing tag. We have a system to automatically create rules, I want to both visualize the effect of the rules and enable editing of the rules. After a rule is created, it should be run on the remaining non-processed transactions before moving on to the next transaction. OH, and I think we should connect the concept of periodicity to the transaction right here as well - but should it perhaps be on  the TAG and nothing else? This is where I need guidance. 
+After importing the transactions, they should be tagged and rules should be created.
+Tagging should be done by showing the user a transaction at a time and asking the user to tag it. When tagging it, the user should be able to create a new tag or select an existing tag. We have a system to automatically create rules, I want to both visualize the effect of the rules and enable editing of the rules. After a rule is created, it should be run on the remaining non-processed transactions before moving on to the next transaction.
 
-### Visualizing Rules
+Periodicity decision: **periodicity lives on the Tag**, not on the transaction or budget item. A tag like "Electricity" is inherently monthly; "Dog Insurance" is annual. BudgetItem has a `periodicity` field as an override only.
 
-This is basically just a "show all other transactions that match this rule" when we tag a transaction.
+### Transfer Pair Model
 
-### Editing Rules
+Savings contributions (spending account → savings account) are handled separately from regular tagging:
+- The outgoing (spending) side is tagged with a savings tag — this IS the budget event.
+- The incoming (savings receipt) side is ignored — it is just confirmation of where the money went.
+- True float transfers (spending → bills account pre-funding) ignore both sides.
 
-The rules are basically just a vector of strings that match the transaction description. The editing part of it should be text fields to edit every specific string in that vector, or remove it altogether by simply pressing a button. A rule tags a transaction, nothing else, if it matches. 
+This is implemented via `resolve_transfer_pair(budget_id, outgoing_tx_id, incoming_tx_id, tag_id: Option<Uuid>)`.
 
-- [ ] Decide on  how and where to put periodicity for transactions / tags
-- [ ] Move through transactions in a one-by-one fashion
-- [ ] Tag a transaction (either new or existing tags)
-- [ ] Create a rule based on the transaction information
-- [ ] Show all other transactions that match this rule
-- [ ] Edit a rule
-- [ ] Run a rule on remaining transactions
-- [ ] Move to next transaction
+- [x] Decide on how and where to put periodicity for transactions / tags
+- [x] Move through transactions in a one-by-one fashion (batches of 10)
+- [x] Tag a transaction (either new or existing tags)
+- [x] Create a rule based on the transaction information
+- [x] Show all other transactions that match this rule
+- [x] Edit a rule
+- [x] Run a rule on remaining transactions
+- [x] Move to next transaction
+- [x] Handle internal transfer pairs (savings vs float resolution)
 
 ## Creating Budget Items
 
 After we have tagged all the transactions, we can then move on to creating budgeting items. This is similar to what we are doing now.
-A Budget Item can be associated with several tags. This means that we could have a Budget Item called "Transport" that has the tags "Car", "Buss pass" and "Train pass". 
+A Budget Item can be associated with several tags. This means that we could have a Budget Item called "Transport" that has the tags "Car", "Buss pass" and "Train pass".
 
-- [ ] Decide on how and where to put periodicity for budgeting items - see transactions above
 - [ ] Using a suggested monthly income, create budget items until the entire income is "spent" AND all tags are associated with a BudgetItem
 - [ ] Display an average monthly expenditure for each tag not yet budgeted
 - [ ] A Budget Item can be Income, Expense, Savings
@@ -65,52 +70,51 @@ A Budget Item can be associated with several tags. This means that we could have
 
 ## Considerations
 
-What about the time factor. Perhaps a tag is removed - it should not be removed historically. 
+What about the time factor. Perhaps a tag is removed - it should not be removed historically.
 
 ## Cascade Plan
 
-### Current State Assessment
+### Current State (as of end of session 2026-03-27)
 
-What already exists in the codebase:
-- `BudgetItem` has `tags: Vec<String>` and `periodicity: Periodicity` (Monthly/Quarterly/Annual)
-- `BankTransaction` has no tag field — tags are only on BudgetItems/ActualItems
-- `MatchRule` exists with `transaction_key` (tokenized description) and `item_key` (tokenized item name)
-- `create_rule` and `evaluate_rules` are wired up — rules auto-allocate matching transactions
-- `TransactionAllocation` has a `tag: String` field but it is not used in a structured way
-- Import is functional; no dedicated "tagging workflow" UI or API exists yet
+What is built:
+- `Tag` struct with `id: Uuid`, `name: String`, `periodicity: Periodicity`, `deleted: bool`
+- `tags: Vec<Tag>` on `Budget`; events `TagCreated`, `TagModified`; API: `create_tag`, `get_tags`, `modify_tag`
+- `BudgetItem.tag_ids: Vec<Uuid>` (references tags by ID)
+- `BankTransaction.tag_id: Option<Uuid>`, `ignored: bool`
+- Full tagging workflow UI (`TagTransactionsView`) integrated in `BudgetOverview`
+- Batched fetching: `get_untagged_transactions(budget_id, limit: usize)` returns at most 10
+- `BudgetViewModel` has `untagged_transaction_count` (full count) and `potential_transfer_count` (full count), `potential_transfers` capped at 10
+- Transfer pair resolution: `resolve_transfer_pair` API + `TransferPairCard` UI with savings/float split
+- API: `tag_transaction`, `preview_rule_matches`, `update_rule`, `ignore_transaction`, `resolve_transfer_pair`
 
-### Decision Required: Periodicity Placement
+### Phase 1 — Tag Model ✅
 
-**Recommendation: Put periodicity on the Tag entity, not on the transaction or budget item.**
+- [x] Create a `Tag` struct with `id: Uuid`, `name: String`, `periodicity: Periodicity`
+- [x] Add `tags: Vec<Tag>` to the `Budget` struct
+- [x] Add events: `TagCreated`, `TagModified` (soft-delete only — never hard-delete tags)
+- [x] Add DB/API functions: `create_tag`, `get_tags`, `modify_tag`
+- [x] Replace `tags: Vec<String>` on `BudgetItem` with `tag_ids: Vec<Uuid>`
 
-Rationale: A tag like "Electricity" is inherently a monthly expense, while "Dog Insurance" is annual. This is a property of the category, not of a specific transaction or budget item. A `BudgetItem` can then inherit or aggregate from its associated tags. The existing `periodicity` on `BudgetItem` can remain as an override/override field.
+### Phase 2 — Transaction Tagging Workflow (API) ✅
 
-Action needed: Confirm or override this recommendation before implementing the Tag model.
+- [x] Add `tag_id: Option<Uuid>` to `BankTransaction`
+- [x] Add API fn `get_next_untagged_transaction(budget_id)`
+- [x] Add API fn `get_untagged_transactions(budget_id, limit)` — batched, excludes transfer pair members
+- [x] Add API fn `tag_transaction(budget_id, tx_id, tag_id)` — tags, auto-creates MatchRule, runs evaluate_tag_rules
+- [x] Add API fn `preview_rule_matches(budget_id, tx_id)`
+- [x] Add API fn `update_rule(budget_id, rule_id, transaction_key: Vec<String>)`
+- [x] Add API fn `resolve_transfer_pair(budget_id, outgoing_tx_id, incoming_tx_id, tag_id: Option<Uuid>)`
 
-### Phase 1 — Tag Model
+### Phase 3 — Transaction Tagging Workflow (UI) ✅
 
-- [ ] Create a `Tag` struct with `id: Uuid`, `name: String`, `periodicity: Periodicity`
-- [ ] Add `tags: Vec<Tag>` to the `Budget` struct (replacing ad-hoc string tags)
-- [ ] Add events: `TagCreated`, `TagModified` (soft-delete only — never hard-delete tags)
-- [ ] Add DB/API functions: `create_tag`, `get_tags`, `modify_tag`
-- [ ] Replace `tags: Vec<String>` on `BudgetItem` with `tag_ids: Vec<Uuid>` (no data migration needed — greenfield data)
-
-### Phase 2 — Transaction Tagging Workflow (API)
-
-- [x] Add `tag_id: Option<Uuid>` to `BankTransaction` to record which tag a transaction was assigned
-- [x] Add API fn `get_next_untagged_transaction(budget_id)` — returns first transaction with no tag and not ignored
-- [x] Add API fn `tag_transaction(budget_id, tx_id, tag_id)` — tags the transaction, auto-creates a `MatchRule`, runs `evaluate_rules` on remaining untagged transactions
-- [x] Add API fn `preview_rule_matches(budget_id, tx_id)` — returns all other transactions that would be matched by the auto-generated rule for this transaction
-- [x] Add API fn `update_rule(budget_id, rule_id, transaction_key: Vec<String>)` — allows editing the string tokens of an existing rule
-
-### Phase 3 — Transaction Tagging Workflow (UI)
-
-- [x] Build a "Tag Transactions" page/view: shows one untagged transaction at a time
+- [x] Build `TagTransactionsView`: shows one untagged transaction at a time from a batch of 10
 - [x] UI: select existing tag or type a new tag name (with periodicity picker) to create one inline
 - [x] UI: after tagging, display matching transactions panel ("X other transactions match this rule")
-- [x] UI: allow editing each token in the rule's `transaction_key` vector inline, with a remove button per token
-- [x] UI: "Skip" and "Ignore" buttons per transaction (ignored transactions are already supported in the model)
-- [x] UI: progress indicator — N transactions remaining to tag
+- [x] UI: allow editing each token in the rule's `transaction_key` vector inline
+- [x] UI: "Skip" and "Ignore" buttons per transaction
+- [x] UI: progress indicator showing batch position and total remaining
+- [x] UI: `TransferPairCard` with "Intern överföring (float)" and "Sparande →" resolution paths
+- [x] `TagTransactionsView` and `TransferPairsView` integrated in `BudgetOverview`
 
 ### Phase 4 — Budget Item Creation Workflow (API)
 
