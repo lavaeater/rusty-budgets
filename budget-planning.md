@@ -105,12 +105,12 @@ Action needed: Confirm or override this recommendation before implementing the T
 
 ### Phase 3 — Transaction Tagging Workflow (UI)
 
-- [ ] Build a "Tag Transactions" page/view: shows one untagged transaction at a time
-- [ ] UI: select existing tag or type a new tag name (with periodicity picker) to create one inline
-- [ ] UI: after tagging, display matching transactions panel ("X other transactions match this rule")
-- [ ] UI: allow editing each token in the rule's `transaction_key` vector inline, with a remove button per token
-- [ ] UI: "Skip" and "Ignore" buttons per transaction (ignored transactions are already supported in the model)
-- [ ] UI: progress indicator — N transactions remaining to tag
+- [x] Build a "Tag Transactions" page/view: shows one untagged transaction at a time
+- [x] UI: select existing tag or type a new tag name (with periodicity picker) to create one inline
+- [x] UI: after tagging, display matching transactions panel ("X other transactions match this rule")
+- [x] UI: allow editing each token in the rule's `transaction_key` vector inline, with a remove button per token
+- [x] UI: "Skip" and "Ignore" buttons per transaction (ignored transactions are already supported in the model)
+- [x] UI: progress indicator — N transactions remaining to tag
 
 ### Phase 4 — Budget Item Creation Workflow (API)
 
