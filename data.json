@@ -1,6 +1,46 @@
 {
-  "StoredBudgetEvent": [],
+  "StoredBudgetEvent": [
+    {
+      "id": "fc126446-4fc7-451c-9cfd-078a785c6ac5",
+      "aggregate_id": "a53d3b7c-5637-4db6-a450-610c554688ba",
+      "timestamp": 1774642389886924292,
+      "created_at": "2026-03-27T20:13:09.886924292Z",
+      "data": {
+        "BudgetCreated": {
+          "budget_id": "a53d3b7c-5637-4db6-a450-610c554688ba",
+          "name": "Familjebudget",
+          "user_id": "cc409c5b-f780-4e34-9f63-7ad38a24a7b0",
+          "month_begins_on": {
+            "PreviousMonthWorkDayBefore": 25
+          },
+          "default_budget": true,
+          "currency": "SEK"
+        }
+      },
+      "user_id": "cc409c5b-f780-4e34-9f63-7ad38a24a7b0"
+    }
+  ],
   "Budget": [],
-  "User": [],
-  "UserBudgets": []
+  "User": [
+    {
+      "id": "cc409c5b-f780-4e34-9f63-7ad38a24a7b0",
+      "user_name": "tommie",
+      "email": "tommie.nygren@gmail.com",
+      "first_name": "Tommie",
+      "last_name": "Nygren",
+      "phone": "0704382781",
+      "birthday": "1973-05-12"
+    }
+  ],
+  "UserBudgets": [
+    {
+      "id": "cc409c5b-f780-4e34-9f63-7ad38a24a7b0",
+      "budgets": [
+        [
+          "a53d3b7c-5637-4db6-a450-610c554688ba",
+          true
+        ]
+      ]
+    }
+  ]
 }
