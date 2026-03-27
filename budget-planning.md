@@ -64,3 +64,67 @@ A Budget Item can be associated with several tags. This means that we could have
 What about the time factor. Perhaps a tag is removed - it should not be removed historically. 
 
 ## Cascade Plan
+
+### Current State Assessment
+
+What already exists in the codebase:
+- `BudgetItem` has `tags: Vec<String>` and `periodicity: Periodicity` (Monthly/Quarterly/Annual)
+- `BankTransaction` has no tag field — tags are only on BudgetItems/ActualItems
+- `MatchRule` exists with `transaction_key` (tokenized description) and `item_key` (tokenized item name)
+- `create_rule` and `evaluate_rules` are wired up — rules auto-allocate matching transactions
+- `TransactionAllocation` has a `tag: String` field but it is not used in a structured way
+- Import is functional; no dedicated "tagging workflow" UI or API exists yet
+
+### Decision Required: Periodicity Placement
+
+**Recommendation: Put periodicity on the Tag entity, not on the transaction or budget item.**
+
+Rationale: A tag like "Electricity" is inherently a monthly expense, while "Dog Insurance" is annual. This is a property of the category, not of a specific transaction or budget item. A `BudgetItem` can then inherit or aggregate from its associated tags. The existing `periodicity` on `BudgetItem` can remain as an override/override field.
+
+Action needed: Confirm or override this recommendation before implementing the Tag model.
+
+### Phase 1 — Tag Model
+
+- [ ] Create a `Tag` struct with `id: Uuid`, `name: String`, `periodicity: Periodicity`
+- [ ] Add `tags: Vec<Tag>` to the `Budget` struct (replacing ad-hoc string tags)
+- [ ] Add events: `TagCreated`, `TagModified` (soft-delete only — never hard-delete tags)
+- [ ] Add DB/API functions: `create_tag`, `get_tags`, `modify_tag`
+- [ ] Replace `tags: Vec<String>` on `BudgetItem` with `tag_ids: Vec<Uuid>` (no data migration needed — greenfield data)
+
+### Phase 2 — Transaction Tagging Workflow (API)
+
+- [ ] Add `tag_id: Option<Uuid>` to `BankTransaction` to record which tag a transaction was assigned
+- [ ] Add API fn `get_next_untagged_transaction(budget_id)` — returns first transaction with no tag and not ignored
+- [ ] Add API fn `tag_transaction(budget_id, tx_id, tag_id)` — tags the transaction, auto-creates a `MatchRule`, runs `evaluate_rules` on remaining untagged transactions
+- [ ] Add API fn `preview_rule_matches(budget_id, tx_id)` — returns all other transactions that would be matched by the auto-generated rule for this transaction
+- [ ] Add API fn `update_rule(budget_id, rule_id, transaction_key: Vec<String>)` — allows editing the string tokens of an existing rule
+
+### Phase 3 — Transaction Tagging Workflow (UI)
+
+- [ ] Build a "Tag Transactions" page/view: shows one untagged transaction at a time
+- [ ] UI: select existing tag or type a new tag name (with periodicity picker) to create one inline
+- [ ] UI: after tagging, display matching transactions panel ("X other transactions match this rule")
+- [ ] UI: allow editing each token in the rule's `transaction_key` vector inline, with a remove button per token
+- [ ] UI: "Skip" and "Ignore" buttons per transaction (ignored transactions are already supported in the model)
+- [ ] UI: progress indicator — N transactions remaining to tag
+
+### Phase 4 — Budget Item Creation Workflow (API)
+
+- [ ] Add API fn `get_unbudgeted_tags(budget_id)` — returns tags not yet associated with any BudgetItem
+- [ ] Add API fn `get_average_monthly_expenditure_per_tag(budget_id)` — computes average monthly spend per tag from all imported transaction history
+- [ ] Add API fn `create_budget_item_with_tags(budget_id, name, budgeting_type, tag_ids, suggested_amount)` — creates item and associates tags
+
+### Phase 5 — Budget Item Creation Workflow (UI)
+
+- [ ] Build a "Create Budget Items" guided view:
+  - User enters a suggested monthly income at the top
+  - Shows running total of budgeted vs. income
+  - Lists unbudgeted tags with their computed average monthly expenditure
+  - User selects tags and groups them into a new BudgetItem with a name and type (Income/Expense/Savings)
+- [ ] Stop condition: all tags budgeted AND total budgeted amount equals suggested income
+
+### Phase 6 — Billing Buffer (Deferred / Future)
+
+- [ ] Add a `buffer_target: Option<Money>` field to `BudgetItem` for items that need a rolling buffer (e.g. electricity, yearly bills)
+- [ ] Add logic to compute required monthly contribution to reach buffer target based on periodicity and historical average
+- [ ] Visualize buffer fill level in the day-to-day budget view
