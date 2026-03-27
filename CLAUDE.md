@@ -66,20 +66,31 @@ Server functions use Dioxus's `#[server]` macro and live in `api/src/lib.rs`. Th
 ### `Money`
 - Stored as `cents: i64` (minor units). Currency mismatches panic — never mix currencies.
 
-## Tagging Workflow (Phase 2–3 in progress)
+## Tagging Workflow (Phases 1–3 complete)
 
-The tagging workflow is the core UX loop for new users:
+The tagging workflow is the core UX loop for new users. It is fully implemented.
 
-1. Show one untagged transaction at a time (`get_next_untagged_transaction`)
-2. User picks an existing tag or creates a new one inline (with periodicity)
-3. On tagging: auto-create a `MatchRule`, run `evaluate_rules` on remaining untagged transactions
-4. Show a preview of how many other transactions the new rule matches (`preview_rule_matches`)
-5. Allow editing rule tokens inline; each token in `transaction_key` is individually editable/removable
-6. "Skip" and "Ignore" buttons available per transaction
+- Transactions are shown in batches of 10 (`BATCH_SIZE`) fetched via `get_untagged_transactions(budget_id, limit)`. The full count is in `BudgetViewModel.untagged_transaction_count`.
+- User picks an existing tag (chip UI) or creates one inline with a periodicity picker.
+- On tagging: auto-creates a `MatchRule`, runs `evaluate_tag_rules` on remaining untagged transactions.
+- Shows a preview count of other transactions matching the new rule (`preview_rule_matches`).
+- Rule tokens are editable inline, each token individually removable (`update_rule`).
+- "Skip" (local index advance) and "Ignore" (server-side, permanent) buttons per transaction.
+- `TagTransactionsView` is mounted in `BudgetOverview` whenever `untagged_transaction_count > 0`.
 
-API functions for this workflow: `create_tag`, `get_tags`, `modify_tag`, `tag_transaction` (to be added), `preview_rule_matches` (to be added), `update_rule` (to be added).
+### Transfer Pair Resolution
 
-## Budget Item Creation Workflow (Phase 4–5, planned)
+Potential internal transfers (same absolute amount, different accounts, within 3 days) are detected by `Budget::potential_internal_transfers()` and resolved separately from the regular tagging flow — they are excluded from `get_untagged_transactions`.
+
+`BudgetViewModel.potential_transfers` is capped at 10 per response; `potential_transfer_count` carries the true total.
+
+The UI (`TransferPairCard`) offers two resolution paths:
+- **"Intern överföring (float)"** → `resolve_transfer_pair(..., tag_id: None)` — ignores both sides
+- **"Sparande →"** → tag picker appears; `resolve_transfer_pair(..., tag_id: Some(id))` — tags the outgoing (spending) side with a savings tag, ignores the incoming (savings receipt) side
+
+This correctly models savings contributions: the deduction from the spending account is the budget event; the deposit to the savings account is just the receipt.
+
+## Budget Item Creation Workflow (Phase 4–5, next)
 
 After all transactions are tagged:
 - User enters a suggested monthly income
