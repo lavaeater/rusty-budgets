@@ -13,14 +13,14 @@ pub struct TransactionTagged {
 }
 
 impl TransactionTaggedHandler for Budget {
-    fn apply_tag_transaction(&mut self, event: &TransactionTagged) -> Uuid {
+    fn apply_do_transaction_tagged(&mut self, event: &TransactionTagged) -> Uuid {
         if let Some(tx) = self.get_transaction_mut(event.tx_id) {
             tx.tag_id = Some(event.tag_id);
         }
         event.tx_id
     }
 
-    fn tag_transaction_impl(
+    fn do_transaction_tagged_impl(
         &self,
         tx_id: Uuid,
         tag_id: Uuid,

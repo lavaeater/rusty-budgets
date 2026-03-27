@@ -250,6 +250,30 @@ impl JoyDbBudgetRuntime {
         })
     }
 
+    pub fn tag_transaction(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        tx_id: Uuid,
+        tag_id: Uuid,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.do_transaction_tagged(tx_id, tag_id)
+        })
+    }
+
+    pub fn modify_rule(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        rule_id: Uuid,
+        transaction_key: Vec<String>,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.modify_rule(rule_id, transaction_key)
+        })
+    }
+
     pub fn create_allocation(
         &self,
         user_id: Uuid,

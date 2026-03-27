@@ -283,6 +283,47 @@ impl Budget {
         self.tags.iter().filter(|t| !t.deleted).collect()
     }
 
+    pub fn get_next_untagged_transaction(&self) -> Option<&BankTransaction> {
+        self.periods
+            .iter()
+            .flat_map(|p| p.transactions.iter())
+            .find(|tx| tx.tag_id.is_none() && !tx.ignored)
+    }
+
+    pub fn evaluate_tag_rules(&self) -> Vec<(Uuid, Uuid)> {
+        let mut matches = Vec::new();
+        for period in &self.periods {
+            for tx in &period.transactions {
+                if tx.tag_id.is_some() || tx.ignored {
+                    continue;
+                }
+                for rule in &self.match_rules {
+                    if let Some(tag_id) = rule.tag_id {
+                        if rule.matches_transaction(tx) {
+                            matches.push((tx.id, tag_id));
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        matches
+    }
+
+    pub fn preview_rule_matches(&self, tx_id: Uuid) -> Vec<BankTransaction> {
+        let tx = match self.get_transaction(tx_id) {
+            Some(t) => t,
+            None => return Vec::new(),
+        };
+        let key = MatchRule::create_transaction_key(tx);
+        self.periods
+            .iter()
+            .flat_map(|p| p.transactions.iter())
+            .filter(|t| t.id != tx_id && MatchRule::create_transaction_key(t) == key)
+            .cloned()
+            .collect()
+    }
+
     pub fn get_budgeted_by_type(
         &self,
         budgeting_type: &BudgetingType,

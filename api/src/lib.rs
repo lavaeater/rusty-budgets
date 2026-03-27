@@ -359,3 +359,48 @@ pub async fn delete_allocation(
         period_id,
     ))
 }
+
+#[server(endpoint = "get_next_untagged_transaction")]
+pub async fn get_next_untagged_transaction(
+    budget_id: Uuid,
+) -> ServerFnResult<Option<BankTransaction>> {
+    Ok(db::get_next_untagged_transaction(budget_id)?)
+}
+
+#[server(endpoint = "tag_transaction")]
+pub async fn tag_transaction(
+    budget_id: Uuid,
+    tx_id: Uuid,
+    tag_id: Uuid,
+    period_id: PeriodId,
+) -> ServerFnResult<BudgetViewModel> {
+    let user = db::get_default_user(None)?;
+    let _ = db::tag_transaction(user.id, budget_id, tx_id, tag_id)?;
+    Ok(BudgetViewModel::from_budget(
+        &db::get_budget(budget_id)?,
+        period_id,
+    ))
+}
+
+#[server(endpoint = "preview_rule_matches")]
+pub async fn preview_rule_matches(
+    budget_id: Uuid,
+    tx_id: Uuid,
+) -> ServerFnResult<Vec<BankTransaction>> {
+    Ok(db::preview_rule_matches(budget_id, tx_id)?)
+}
+
+#[server(endpoint = "update_rule")]
+pub async fn update_rule(
+    budget_id: Uuid,
+    rule_id: Uuid,
+    transaction_key: Vec<String>,
+    period_id: PeriodId,
+) -> ServerFnResult<BudgetViewModel> {
+    let user = db::get_default_user(None)?;
+    let _ = db::modify_rule(user.id, budget_id, rule_id, transaction_key)?;
+    Ok(BudgetViewModel::from_budget(
+        &db::get_budget(budget_id)?,
+        period_id,
+    ))
+}

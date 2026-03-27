@@ -97,11 +97,11 @@ Action needed: Confirm or override this recommendation before implementing the T
 
 ### Phase 2 — Transaction Tagging Workflow (API)
 
-- [ ] Add `tag_id: Option<Uuid>` to `BankTransaction` to record which tag a transaction was assigned
-- [ ] Add API fn `get_next_untagged_transaction(budget_id)` — returns first transaction with no tag and not ignored
-- [ ] Add API fn `tag_transaction(budget_id, tx_id, tag_id)` — tags the transaction, auto-creates a `MatchRule`, runs `evaluate_rules` on remaining untagged transactions
-- [ ] Add API fn `preview_rule_matches(budget_id, tx_id)` — returns all other transactions that would be matched by the auto-generated rule for this transaction
-- [ ] Add API fn `update_rule(budget_id, rule_id, transaction_key: Vec<String>)` — allows editing the string tokens of an existing rule
+- [x] Add `tag_id: Option<Uuid>` to `BankTransaction` to record which tag a transaction was assigned
+- [x] Add API fn `get_next_untagged_transaction(budget_id)` — returns first transaction with no tag and not ignored
+- [x] Add API fn `tag_transaction(budget_id, tx_id, tag_id)` — tags the transaction, auto-creates a `MatchRule`, runs `evaluate_rules` on remaining untagged transactions
+- [x] Add API fn `preview_rule_matches(budget_id, tx_id)` — returns all other transactions that would be matched by the auto-generated rule for this transaction
+- [x] Add API fn `update_rule(budget_id, rule_id, transaction_key: Vec<String>)` — allows editing the string tokens of an existing rule
 
 ### Phase 3 — Transaction Tagging Workflow (UI)
 

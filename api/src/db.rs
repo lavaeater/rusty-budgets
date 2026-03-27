@@ -460,3 +460,53 @@ pub fn modify_tag(
 ) -> Result<Uuid, RustyError> {
     with_runtime(None).modify_tag(user_id, budget_id, tag_id, name, periodicity, deleted)
 }
+
+pub fn get_next_untagged_transaction(budget_id: Uuid) -> Result<Option<BankTransaction>, RustyError> {
+    let budget = get_budget(budget_id)?;
+    Ok(budget.get_next_untagged_transaction().cloned())
+}
+
+pub fn tag_transaction(
+    user_id: Uuid,
+    budget_id: Uuid,
+    tx_id: Uuid,
+    tag_id: Uuid,
+) -> Result<Uuid, RustyError> {
+    with_runtime(None).tag_transaction(user_id, budget_id, tx_id, tag_id)?;
+    let budget = get_budget(budget_id)?;
+    let tx = budget
+        .get_transaction(tx_id)
+        .ok_or(RustyError::ItemNotFound(
+            tx_id.to_string(),
+            "Transaction not found".to_string(),
+        ))?;
+    let transaction_key = MatchRule::create_transaction_key(tx);
+    with_runtime(None).add_rule(user_id, budget_id, transaction_key, Vec::new(), true, Some(tag_id))?;
+    evaluate_tag_rules(user_id, budget_id)?;
+    Ok(budget_id)
+}
+
+pub(crate) fn evaluate_tag_rules(user_id: Uuid, budget_id: Uuid) -> Result<Uuid, RustyError> {
+    let budget = get_budget(budget_id)?;
+    for (tx_id, tag_id) in budget.evaluate_tag_rules() {
+        match with_runtime(None).tag_transaction(user_id, budget_id, tx_id, tag_id) {
+            Ok(_) => {}
+            Err(e) => error!(error = %e, "Could not tag transaction {} with tag {}", tx_id, tag_id),
+        }
+    }
+    Ok(budget_id)
+}
+
+pub fn preview_rule_matches(budget_id: Uuid, tx_id: Uuid) -> Result<Vec<BankTransaction>, RustyError> {
+    let budget = get_budget(budget_id)?;
+    Ok(budget.preview_rule_matches(tx_id))
+}
+
+pub fn modify_rule(
+    user_id: Uuid,
+    budget_id: Uuid,
+    rule_id: Uuid,
+    transaction_key: Vec<String>,
+) -> Result<Uuid, RustyError> {
+    with_runtime(None).modify_rule(user_id, budget_id, rule_id, transaction_key)
+}
