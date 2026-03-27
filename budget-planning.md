@@ -62,3 +62,5 @@ A Budget Item can be associated with several tags. This means that we could have
 ## Considerations
 
 What about the time factor. Perhaps a tag is removed - it should not be removed historically. 
+
+## Cascade Plan
