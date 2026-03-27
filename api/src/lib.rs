@@ -420,6 +420,7 @@ pub async fn update_rule(
 ) -> ServerFnResult<BudgetViewModel> {
     let user = db::get_default_user(None)?;
     let _ = db::modify_rule(user.id, budget_id, rule_id, transaction_key)?;
+    db::evaluate_tag_rules(user.id, budget_id)?;
     Ok(BudgetViewModel::from_budget(
         &db::get_budget(budget_id)?,
         period_id,
