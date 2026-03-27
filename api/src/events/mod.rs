@@ -12,6 +12,8 @@ pub mod actual_modified;
 pub mod allocation_created;
 pub mod allocation_deleted;
 pub mod bank_account_created;
+mod tag_created;
+mod tag_modified;
 
 pub use budget_created::BudgetCreated;
 pub use item_added::ItemAdded;
@@ -27,6 +29,8 @@ pub use actual_modified::ActualModified;
 pub use allocation_created::AllocationCreated;
 pub use allocation_deleted::AllocationDeleted;
 pub use bank_account_created::BankAccountCreated;
+pub use tag_created::TagCreated;
+pub use tag_modified::TagModified;
 
 
 

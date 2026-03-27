@@ -16,7 +16,7 @@ pub struct BudgetItem {
     pub name: String,
     pub budgeting_type: BudgetingType,
     #[serde(default)]
-    pub tags: Vec<String>,
+    pub tag_ids: Vec<Uuid>,
     #[serde(default)]
     pub periodicity: Periodicity,
 }
@@ -31,7 +31,7 @@ impl BudgetItem {
             id,
             name: name.to_string(),
             budgeting_type,
-            tags: Vec::new(),
+            tag_ids: Vec::new(),
             periodicity: Periodicity::default(),
         }
     }

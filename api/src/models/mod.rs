@@ -11,6 +11,7 @@ mod actual_item;
 mod rule_packages;
 mod match_rule;
 mod transaction_allocation;
+mod tag;
 
 pub use user::*;
 pub use month_begins_on::*;
@@ -25,4 +26,5 @@ pub use actual_item::*;
 pub use match_rule::*;
 pub use transaction_allocation::*;
 pub use budget_period::RuleMatch;
+pub use tag::*;
 
