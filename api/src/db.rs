@@ -514,7 +514,13 @@ pub fn tag_transaction(
             "Transaction not found".to_string(),
         ))?;
     let transaction_key = MatchRule::create_transaction_key(tx);
-    with_runtime(None).add_rule(user_id, budget_id, transaction_key, Vec::new(), true, Some(tag_id))?;
+    let rule_exists = budget
+        .match_rules
+        .iter()
+        .any(|r| r.transaction_key == transaction_key && r.tag_id == Some(tag_id));
+    if !rule_exists {
+        with_runtime(None).add_rule(user_id, budget_id, transaction_key, Vec::new(), true, Some(tag_id))?;
+    }
     evaluate_tag_rules(user_id, budget_id)?;
     Ok(budget_id)
 }

@@ -25,6 +25,7 @@ impl Hash for MatchRule {
         self.transaction_key.hash(state);
         self.item_key.hash(state);
         self.always_apply.hash(state);
+        self.tag_id.hash(state);
     }
 }
 
@@ -33,6 +34,7 @@ impl PartialEq for MatchRule {
         self.transaction_key == other.transaction_key
             && self.item_key == other.item_key
             && self.always_apply == other.always_apply
+            && self.tag_id == other.tag_id
     }
 }
 
