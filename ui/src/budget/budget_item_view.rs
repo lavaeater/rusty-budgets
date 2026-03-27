@@ -1,7 +1,7 @@
 use crate::budget::ItemSelector;
 use crate::{Button, ButtonVariant, Input, Slider, SliderRange, SliderThumb, SliderTrack};
 use api::ignore_transaction;
-use api::models::{BudgetingType, Money};
+use api::models::{BudgetingType, Money, Periodicity};
 use api::view_models::*;
 use dioxus::prelude::*;
 use lucide_dioxus::Pen;
@@ -22,8 +22,8 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
     let mut edit_item = use_signal(|| false);
     let item_name = use_signal(|| item.name.clone());
     let mut budgeted_amount = use_signal(|| item.budgeted_amount);
-    let mut item_tags = use_signal(|| item.tags.clone());
-    let mut new_tag_input = use_signal(String::new);
+    let mut item_tags = use_signal(|| item.tag_ids.clone());
+    let mut new_tag_name = use_signal(String::new);
 
     // State for selected transaction IDs and the target item for moving
     let mut selected_transactions = use_signal(HashSet::<Uuid>::new);
@@ -211,41 +211,50 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                             label { class: "budget-item-edit-label", "Taggar" }
                             div { class: "tag-editor",
                                 div { class: "tag-chips",
-                                    for (idx, tag) in item_tags().iter().enumerate() {
-                                        span { class: "tag-chip", key: "{tag}",
-                                            span { class: "tag-chip-text", "{tag}" }
-                                            button {
-                                                class: "tag-chip-remove",
-                                                r#type: "button",
-                                                onclick: move |_| {
-                                                    let mut tags = item_tags();
-                                                    tags.remove(idx);
-                                                    item_tags.set(tags);
-                                                },
-                                                "×"
-                                            }
+                                    for tag in budget_signal().tags.iter().filter(|t| !t.deleted).cloned().collect::<Vec<_>>() {
+                                        let tag_id = tag.id;
+                                        let is_selected = item_tags().contains(&tag_id);
+                                        span {
+                                            class: if is_selected { "tag-chip tag-chip-selected" } else { "tag-chip" },
+                                            key: "{tag_id}",
+                                            onclick: move |_| {
+                                                let mut tags = item_tags();
+                                                if is_selected { tags.retain(|id| *id != tag_id); } else { tags.push(tag_id); }
+                                                item_tags.set(tags);
+                                            },
+                                            "{tag.name}"
                                         }
                                     }
                                 }
                                 div { class: "tag-add-row",
                                     Input {
                                         placeholder: "Ny tagg...",
-                                        value: new_tag_input(),
-                                        oninput: move |e: FormEvent| new_tag_input.set(e.value()),
+                                        value: new_tag_name(),
+                                        oninput: move |e: FormEvent| new_tag_name.set(e.value()),
                                     }
                                     Button {
                                         variant: ButtonVariant::Secondary,
                                         r#type: "button",
-                                        onclick: move |_| {
-                                            let tag = new_tag_input().trim().to_string();
-                                            if !tag.is_empty() && !item_tags().contains(&tag) {
-                                                let mut tags = item_tags();
-                                                tags.push(tag);
-                                                item_tags.set(tags);
-                                                new_tag_input.set(String::new());
+                                        onclick: move |_| async move {
+                                            let name = new_tag_name().trim().to_string();
+                                            if !name.is_empty() {
+                                                if let Ok(updated_budget) = api::create_tag(
+                                                    budget_id,
+                                                    name.clone(),
+                                                    Periodicity::Monthly,
+                                                    budget_signal().period_id,
+                                                ).await {
+                                                    if let Some(new_tag) = updated_budget.tags.iter().find(|t| t.name == name) {
+                                                        let mut tags = item_tags();
+                                                        tags.push(new_tag.id);
+                                                        item_tags.set(tags);
+                                                    }
+                                                    new_tag_name.set(String::new());
+                                                    consume_context::<BudgetState>().0.set(updated_budget);
+                                                }
                                             }
                                         },
-                                        "Lägg till"
+                                        "Skapa tagg"
                                     }
                                 }
                             }
@@ -288,14 +297,13 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                             Button {
                                 variant: ButtonVariant::Primary,
                                 onclick: move |_| async move {
-                                    let tags = item_tags();
-                                    // Save tags via modify_item
+                                    let tag_ids = item_tags();
                                     let _ = api::modify_item(
                                         budget_id,
                                         item.item_id,
                                         None,
                                         None,
-                                        Some(tags),
+                                        Some(tag_ids),
                                         None,
                                         budget_signal().period_id,
                                     ).await;

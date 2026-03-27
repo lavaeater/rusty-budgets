@@ -236,10 +236,10 @@ pub fn modify_item(
     item_id: Uuid,
     name: Option<String>,
     item_type: Option<BudgetingType>,
-    tags: Option<Vec<String>>,
+    tag_ids: Option<Vec<Uuid>>,
     periodicity: Option<Periodicity>,
 ) -> Result<Uuid, RustyError> {
-    with_runtime(None).modify_item(user_id, budget_id, item_id, name, item_type, tags, periodicity)
+    with_runtime(None).modify_item(user_id, budget_id, item_id, name, item_type, tag_ids, periodicity)
 }
 
 /*
@@ -434,4 +434,29 @@ pub(crate) fn auto_budget_period(
         }
     });
     Ok(())
+}
+
+pub fn create_tag(
+    user_id: Uuid,
+    budget_id: Uuid,
+    name: String,
+    periodicity: Periodicity,
+) -> Result<Uuid, RustyError> {
+    with_runtime(None).create_tag(user_id, budget_id, name, periodicity)
+}
+
+pub fn get_tags(budget_id: Uuid) -> Result<Vec<Tag>, RustyError> {
+    let budget = get_budget(budget_id)?;
+    Ok(budget.tags)
+}
+
+pub fn modify_tag(
+    user_id: Uuid,
+    budget_id: Uuid,
+    tag_id: Uuid,
+    name: Option<String>,
+    periodicity: Option<Periodicity>,
+    deleted: Option<bool>,
+) -> Result<Uuid, RustyError> {
+    with_runtime(None).modify_tag(user_id, budget_id, tag_id, name, periodicity, deleted)
 }

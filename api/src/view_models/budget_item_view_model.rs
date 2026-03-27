@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use crate::models::{ActualItem, BankTransaction, BudgetItem, BudgetingType, Currency, Money, Periodicity, TransactionAllocation};
+use crate::models::{ActualItem, BankTransaction, BudgetItem, BudgetingType, Currency, Money, Periodicity, Tag, TransactionAllocation};
 use crate::view_models::transaction_view_model::TransactionViewModel;
 use crate::view_models::budget_item_status::BudgetItemStatus;
 use crate::view_models::budget_item_status::BudgetItemStatus::{Balanced, NotBudgeted, OverBudget, UnderBudget};
@@ -12,6 +12,7 @@ pub struct BudgetItemViewModel {
     pub name: String,
     pub budgeting_type: BudgetingType,
     pub tags: Vec<String>,
+    pub tag_ids: Vec<Uuid>,
     pub periodicity: Periodicity,
     pub budgeted_amount: Money,
     pub actual_amount: Money,
@@ -27,11 +28,16 @@ impl BudgetItemViewModel {
         currency: Currency,
         transactions: &Vec<&BankTransaction>,
         allocations: &[TransactionAllocation],
+        budget_tags: &[Tag],
     ) -> Self {
         let actual_item = actual_items
             .iter()
             .find(|ai| ai.budget_item_id == budget_item.id);
-        let item_tags = &budget_item.tags;
+        let resolved_tags: Vec<String> = budget_item.tag_ids
+            .iter()
+            .filter_map(|id| budget_tags.iter().find(|t| t.id == *id).map(|t| t.name.clone()))
+            .collect();
+        let item_tags = &resolved_tags;
 
         if let Some(actual_item) = actual_item {
             let relevant_allocs: Vec<&TransactionAllocation> = allocations
@@ -75,7 +81,8 @@ impl BudgetItemViewModel {
                 actual_id: Some(actual_item.id),
                 name: actual_item.item_name.clone(),
                 budgeting_type: actual_item.budgeting_type,
-                tags: budget_item.tags.clone(),
+                tags: item_tags.clone(),
+                tag_ids: budget_item.tag_ids.clone(),
                 periodicity: budget_item.periodicity,
                 budgeted_amount: actual_item.budgeted_amount,
                 actual_amount,
@@ -89,7 +96,8 @@ impl BudgetItemViewModel {
                 actual_id: None,
                 name: budget_item.name.clone(),
                 budgeting_type: budget_item.budgeting_type,
-                tags: budget_item.tags.clone(),
+                tags: item_tags.clone(),
+                tag_ids: budget_item.tag_ids.clone(),
                 periodicity: budget_item.periodicity,
                 budgeted_amount: Money::zero(currency),
                 actual_amount: Money::zero(currency),

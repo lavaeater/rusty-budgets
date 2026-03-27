@@ -58,11 +58,37 @@ impl JoyDbBudgetRuntime {
         item_id: Uuid,
         name: Option<String>,
         item_type: Option<BudgetingType>,
-        tags: Option<Vec<String>>,
+        tag_ids: Option<Vec<Uuid>>,
         periodicity: Option<Periodicity>,
     ) -> Result<Uuid, RustyError> {
-        self.cmd(user_id, budget_id,|budget| {
-            budget.modify_item(item_id, name, item_type, tags, periodicity)
+        self.cmd(user_id, budget_id, |budget| {
+            budget.modify_item(item_id, name, item_type, tag_ids, periodicity)
+        })
+    }
+
+    pub fn create_tag(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        name: String,
+        periodicity: Periodicity,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.create_tag(name, periodicity)
+        })
+    }
+
+    pub fn modify_tag(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        tag_id: Uuid,
+        name: Option<String>,
+        periodicity: Option<Periodicity>,
+        deleted: Option<bool>,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.modify_tag(tag_id, name, periodicity, deleted)
         })
     }
 

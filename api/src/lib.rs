@@ -137,12 +137,49 @@ pub async fn modify_item(
     item_id: Uuid,
     name: Option<String>,
     item_type: Option<BudgetingType>,
-    tags: Option<Vec<String>>,
+    tag_ids: Option<Vec<Uuid>>,
     periodicity: Option<Periodicity>,
     period_id: PeriodId,
 ) -> ServerFnResult<BudgetViewModel> {
     let user = db::get_default_user(None).expect("Could not get default user");
-    let _ = db::modify_item(user.id, budget_id, item_id, name, item_type, tags, periodicity)?;
+    let _ = db::modify_item(user.id, budget_id, item_id, name, item_type, tag_ids, periodicity)?;
+    Ok(BudgetViewModel::from_budget(
+        &db::get_budget(budget_id)?,
+        period_id,
+    ))
+}
+
+#[server(endpoint = "create_tag")]
+pub async fn create_tag(
+    budget_id: Uuid,
+    name: String,
+    periodicity: Periodicity,
+    period_id: PeriodId,
+) -> ServerFnResult<BudgetViewModel> {
+    let user = db::get_default_user(None)?;
+    let _ = db::create_tag(user.id, budget_id, name, periodicity)?;
+    Ok(BudgetViewModel::from_budget(
+        &db::get_budget(budget_id)?,
+        period_id,
+    ))
+}
+
+#[server(endpoint = "get_tags")]
+pub async fn get_tags(budget_id: Uuid) -> ServerFnResult<Vec<Tag>> {
+    Ok(db::get_tags(budget_id)?)
+}
+
+#[server(endpoint = "modify_tag")]
+pub async fn modify_tag(
+    budget_id: Uuid,
+    tag_id: Uuid,
+    name: Option<String>,
+    periodicity: Option<Periodicity>,
+    deleted: Option<bool>,
+    period_id: PeriodId,
+) -> ServerFnResult<BudgetViewModel> {
+    let user = db::get_default_user(None)?;
+    let _ = db::modify_tag(user.id, budget_id, tag_id, name, periodicity, deleted)?;
     Ok(BudgetViewModel::from_budget(
         &db::get_budget(budget_id)?,
         period_id,

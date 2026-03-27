@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use crate::models::{Budget, BudgetingType, Currency, MonthBeginsOn, PeriodId};
+use crate::models::{Budget, BudgetingType, Currency, MonthBeginsOn, PeriodId, Tag};
 use crate::view_models::allocation_view_model::AllocationViewModel;
 use crate::view_models::budget_item_view_model::BudgetItemViewModel;
 use crate::view_models::budgeting_type_overview::BudgetingTypeOverview;
@@ -24,6 +24,7 @@ pub struct BudgetViewModel {
     pub ignored_transactions: Vec<TransactionViewModel>,
     pub potential_transfers: Vec<TransferPair>,
     pub currency: Currency,
+    pub tags: Vec<Tag>,
 }
 
 impl BudgetViewModel {
@@ -48,6 +49,7 @@ impl BudgetViewModel {
                     budget.currency,
                     &connected_transactions,
                     &period_allocations,
+                    &budget.tags,
                 )
             })
             .collect::<Vec<_>>();
@@ -97,6 +99,7 @@ impl BudgetViewModel {
             ignored_transactions,
             potential_transfers,
             currency: budget.currency,
+            tags: budget.tags.clone(),
         }
     }
 }

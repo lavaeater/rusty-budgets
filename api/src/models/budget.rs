@@ -6,7 +6,7 @@ use crate::models::budget_period_id::PeriodId;
 use crate::models::budgeting_type::BudgetingType;
 use crate::models::money::{Currency, Money};
 use crate::models::rule_packages::RulePackages;
-use crate::models::{ActualItem, BankAccount, BankTransaction, BudgetPeriod, MatchRule, MonthBeginsOn, TransactionAllocation};
+use crate::models::{ActualItem, BankAccount, BankTransaction, BudgetPeriod, MatchRule, MonthBeginsOn, Tag, TransactionAllocation};
 use crate::models::budget_period::RuleMatch;
 use crate::pub_events_enum;
 use crate::view_models::BudgetingTypeOverview;
@@ -36,6 +36,8 @@ pub_events_enum! {
         AllocationCreated,
         AllocationDeleted,
         BankAccountCreated,
+        TagCreated,
+        TagModified,
     }
 }
 
@@ -60,6 +62,8 @@ pub struct Budget {
     pub currency: Currency,
     #[serde(default)]
     pub accounts: Vec<BankAccount>,
+    #[serde(default)]
+    pub tags: Vec<Tag>,
 }
 
 impl Default for Budget {
@@ -81,6 +85,7 @@ impl Default for Budget {
             month_begins_on: Default::default(),
             transaction_hashes: Default::default(),
             accounts: Default::default(),
+            tags: Default::default(),
         }
     }
 }
@@ -235,7 +240,7 @@ impl Budget {
         id: Uuid,
         name: Option<String>,
         budgeting_type: Option<BudgetingType>,
-        tags: Option<Vec<String>>,
+        tag_ids: Option<Vec<Uuid>>,
         periodicity: Option<Periodicity>,
     ) {
         let mut was_updated = false;
@@ -246,8 +251,8 @@ impl Budget {
             if let Some(item_type) = budgeting_type {
                 item.budgeting_type = item_type;
             }
-            if let Some(tags) = tags {
-                item.tags = tags;
+            if let Some(tag_ids) = tag_ids {
+                item.tag_ids = tag_ids;
             }
             if let Some(periodicity) = periodicity {
                 item.periodicity = periodicity;
@@ -258,6 +263,22 @@ impl Budget {
         if was_updated {
             self.update_actuals_for_item(id);
         }
+    }
+
+    pub fn contains_tag_with_name(&self, name: &str) -> bool {
+        self.tags.iter().any(|t| t.name == name)
+    }
+
+    pub fn contains_tag(&self, tag_id: Uuid) -> bool {
+        self.tags.iter().any(|t| t.id == tag_id)
+    }
+
+    pub fn get_tags(&self) -> &Vec<Tag> {
+        &self.tags
+    }
+
+    pub fn get_active_tags(&self) -> Vec<&Tag> {
+        self.tags.iter().filter(|t| !t.deleted).collect()
     }
 
     pub fn get_budgeted_by_type(

@@ -1,5 +1,9 @@
 # Budget Planning
 
+## My Notes
+
+"Continue Phase 1 Tag Model implementation — check the saved memory for context"
+
 ## Ambition Elevation
 
 So, thinking over how I want to work with the budget, I have come to some conclusions.
