@@ -704,3 +704,27 @@
     max-width: 140px;
     font-size: 0.8rem;
 }
+
+/* Transfer pair savings resolution */
+.transfer-savings-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 16px;
+    background: #f0fdf4;
+    border-top: 1px solid #86efac;
+    border-radius: 0 0 8px 8px;
+}
+
+.transfer-savings-hint {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #15803d;
+    font-weight: 500;
+}
+
+.transfer-savings-new-tag {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}

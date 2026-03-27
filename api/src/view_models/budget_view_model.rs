@@ -90,11 +90,16 @@ impl BudgetViewModel {
             budget.get_budgeting_overview(BudgetingType::InternalTransfer, period_id),
         ];
         overviews.sort_by_key(|ov| ov.budgeting_type);
+        let transfer_ids: std::collections::HashSet<uuid::Uuid> = budget
+            .potential_internal_transfers()
+            .into_iter()
+            .flat_map(|(a, b)| [a, b])
+            .collect();
         let untagged_transaction_count = budget
             .periods
             .iter()
             .flat_map(|p| p.transactions.iter())
-            .filter(|tx| tx.tag_id.is_none() && !tx.ignored)
+            .filter(|tx| tx.tag_id.is_none() && !tx.ignored && !transfer_ids.contains(&tx.id))
             .count();
         let match_rules = budget.match_rules.iter().cloned().collect::<Vec<_>>();
 

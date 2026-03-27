@@ -468,13 +468,34 @@ pub fn get_next_untagged_transaction(budget_id: Uuid) -> Result<Option<BankTrans
 
 pub fn get_untagged_transactions(budget_id: Uuid) -> Result<Vec<BankTransaction>, RustyError> {
     let budget = get_budget(budget_id)?;
+    let transfer_ids: std::collections::HashSet<Uuid> = budget
+        .potential_internal_transfers()
+        .into_iter()
+        .flat_map(|(a, b)| [a, b])
+        .collect();
     Ok(budget
         .periods
         .iter()
         .flat_map(|p| p.transactions.iter())
-        .filter(|tx| tx.tag_id.is_none() && !tx.ignored)
+        .filter(|tx| tx.tag_id.is_none() && !tx.ignored && !transfer_ids.contains(&tx.id))
         .cloned()
         .collect())
+}
+
+pub fn resolve_transfer_pair(
+    user_id: Uuid,
+    budget_id: Uuid,
+    outgoing_tx_id: Uuid,
+    incoming_tx_id: Uuid,
+    tag_id: Option<Uuid>,
+) -> Result<Uuid, RustyError> {
+    if let Some(tag_id) = tag_id {
+        tag_transaction(user_id, budget_id, outgoing_tx_id, tag_id)?;
+    } else {
+        ignore_transaction(budget_id, user_id, outgoing_tx_id)?;
+    }
+    ignore_transaction(budget_id, user_id, incoming_tx_id)?;
+    Ok(budget_id)
 }
 
 pub fn tag_transaction(

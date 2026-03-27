@@ -1,10 +1,10 @@
 use crate::budget::{ItemSelector, NewBudgetItem};
-use api::models::BudgetingType;
+use api::models::{BudgetingType, Periodicity};
 use api::view_models::{AllocationViewModel, BudgetItemViewModel, TransactionViewModel, TransferPair};
 use dioxus::prelude::*;
 use uuid::Uuid;
-use api::connect_transaction;
-use crate::{Button, Input, PopoverContent, PopoverRoot, PopoverTrigger};
+use api::{connect_transaction, resolve_transfer_pair};
+use crate::{Button, ButtonVariant, Input, PopoverContent, PopoverRoot, PopoverTrigger};
 use crate::budget::budget_hero::BudgetState;
 
 #[component]
@@ -314,6 +314,15 @@ fn TransferPairCard(pair: TransferPair) -> Element {
     let budget_signal = use_context::<BudgetState>().0;
     let out_id = pair.outgoing.tx_id;
     let in_id = pair.incoming.tx_id;
+    let mut savings_mode = use_signal(|| false);
+    let mut selected_tag_id: Signal<Option<Uuid>> = use_signal(|| None);
+    let mut new_tag_name: Signal<String> = use_signal(String::new);
+
+    let tags = budget_signal()
+        .tags
+        .into_iter()
+        .filter(|t| !t.deleted)
+        .collect::<Vec<_>>();
 
     rsx! {
         div { class: "transaction-card transfer-pair-card", key: "{out_id}-{in_id}",
@@ -334,34 +343,97 @@ fn TransferPairCard(pair: TransferPair) -> Element {
                     span { class: "transfer-account", {pair.incoming.account_number.clone()} }
                 }
             }
-            div { class: "transaction-actions",
-                Button {
-                    r#type: "button",
-                    onclick: move |_| async move {
-                        let budget_id = budget_signal().id;
-                        let period_id = budget_signal().period_id;
-                        if let Ok(bv) = api::ignore_transaction(budget_id, out_id, period_id).await {
-                            consume_context::<BudgetState>().0.set(bv);
+
+            if savings_mode() {
+                div { class: "transfer-savings-picker",
+                    p { class: "transfer-savings-hint",
+                        "Välj sparpost — utgående sidan taggas, ingående ignoreras:"
+                    }
+                    div { class: "tag-chips",
+                        for tag in tags {
+                            {
+                                let tag_id = tag.id;
+                                let is_selected = selected_tag_id() == Some(tag_id);
+                                rsx! {
+                                    span {
+                                        key: "{tag_id}",
+                                        class: if is_selected { "tag-chip tag-chip-selected" } else { "tag-chip" },
+                                        onclick: move |_| selected_tag_id.set(Some(tag_id)),
+                                        "{tag.name}"
+                                    }
+                                }
+                            }
                         }
-                        if let Ok(bv) = api::ignore_transaction(budget_id, in_id, period_id).await {
-                            consume_context::<BudgetState>().0.set(bv);
+                    }
+                    div { class: "transfer-savings-new-tag",
+                        Input {
+                            placeholder: "Ny sparpost...",
+                            value: new_tag_name(),
+                            oninput: move |e: FormEvent| new_tag_name.set(e.value()),
                         }
-                    },
-                    "Bekräfta som intern överföring"
+                        Button {
+                            variant: ButtonVariant::Secondary,
+                            r#type: "button",
+                            onclick: move |_| async move {
+                                let name = new_tag_name().trim().to_string();
+                                if name.is_empty() { return; }
+                                let budget_id = budget_signal().id;
+                                let period_id = budget_signal().period_id;
+                                if let Ok(updated) = api::create_tag(budget_id, name.clone(), Periodicity::Annual, period_id).await {
+                                    new_tag_name.set(String::new());
+                                    if let Some(new_tag) = updated.tags.iter().find(|t| t.name == name && !t.deleted) {
+                                        selected_tag_id.set(Some(new_tag.id));
+                                    }
+                                    consume_context::<BudgetState>().0.set(updated);
+                                }
+                            },
+                            "+"
+                        }
+                    }
+                    div { class: "transaction-actions",
+                        Button {
+                            r#type: "button",
+                            disabled: selected_tag_id().is_none(),
+                            onclick: move |_| async move {
+                                let Some(tag_id) = selected_tag_id() else { return };
+                                let budget_id = budget_signal().id;
+                                let period_id = budget_signal().period_id;
+                                if let Ok(bv) = resolve_transfer_pair(budget_id, out_id, in_id, Some(tag_id), period_id).await {
+                                    consume_context::<BudgetState>().0.set(bv);
+                                }
+                            },
+                            "Bekräfta sparande"
+                        }
+                        Button {
+                            variant: ButtonVariant::Secondary,
+                            r#type: "button",
+                            onclick: move |_| {
+                                savings_mode.set(false);
+                                selected_tag_id.set(None);
+                            },
+                            "Avbryt"
+                        }
+                    }
                 }
-                Button {
-                    r#type: "button",
-                    "data-style": "ghost",
-                    onclick: move |_| async move {
-                        if let Ok(bv) = api::ignore_transaction(
-                            budget_signal().id,
-                            out_id,
-                            budget_signal().period_id,
-                        ).await {
-                            consume_context::<BudgetState>().0.set(bv);
-                        }
-                    },
-                    "Ignorera"
+            } else {
+                div { class: "transaction-actions",
+                    Button {
+                        r#type: "button",
+                        onclick: move |_| async move {
+                            let budget_id = budget_signal().id;
+                            let period_id = budget_signal().period_id;
+                            if let Ok(bv) = resolve_transfer_pair(budget_id, out_id, in_id, None, period_id).await {
+                                consume_context::<BudgetState>().0.set(bv);
+                            }
+                        },
+                        "Intern överföring (float)"
+                    }
+                    Button {
+                        variant: ButtonVariant::Secondary,
+                        r#type: "button",
+                        onclick: move |_| savings_mode.set(true),
+                        "Sparande →"
+                    }
                 }
             }
         }
