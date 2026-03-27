@@ -466,6 +466,17 @@ pub fn get_next_untagged_transaction(budget_id: Uuid) -> Result<Option<BankTrans
     Ok(budget.get_next_untagged_transaction().cloned())
 }
 
+pub fn get_untagged_transactions(budget_id: Uuid) -> Result<Vec<BankTransaction>, RustyError> {
+    let budget = get_budget(budget_id)?;
+    Ok(budget
+        .periods
+        .iter()
+        .flat_map(|p| p.transactions.iter())
+        .filter(|tx| tx.tag_id.is_none() && !tx.ignored)
+        .cloned()
+        .collect())
+}
+
 pub fn tag_transaction(
     user_id: Uuid,
     budget_id: Uuid,

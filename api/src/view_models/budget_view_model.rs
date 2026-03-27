@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use crate::models::{Budget, BudgetingType, Currency, MonthBeginsOn, PeriodId, Tag};
+use crate::models::{Budget, BudgetingType, Currency, MatchRule, MonthBeginsOn, PeriodId, Tag};
 use crate::view_models::allocation_view_model::AllocationViewModel;
 use crate::view_models::budget_item_view_model::BudgetItemViewModel;
 use crate::view_models::budgeting_type_overview::BudgetingTypeOverview;
@@ -25,6 +25,8 @@ pub struct BudgetViewModel {
     pub potential_transfers: Vec<TransferPair>,
     pub currency: Currency,
     pub tags: Vec<Tag>,
+    pub match_rules: Vec<MatchRule>,
+    pub untagged_transaction_count: usize,
 }
 
 impl BudgetViewModel {
@@ -88,6 +90,14 @@ impl BudgetViewModel {
             budget.get_budgeting_overview(BudgetingType::InternalTransfer, period_id),
         ];
         overviews.sort_by_key(|ov| ov.budgeting_type);
+        let untagged_transaction_count = budget
+            .periods
+            .iter()
+            .flat_map(|p| p.transactions.iter())
+            .filter(|tx| tx.tag_id.is_none() && !tx.ignored)
+            .count();
+        let match_rules = budget.match_rules.iter().cloned().collect::<Vec<_>>();
+
         Self {
             id: budget.id,
             name: budget.name.clone(),
@@ -100,6 +110,8 @@ impl BudgetViewModel {
             potential_transfers,
             currency: budget.currency,
             tags: budget.tags.clone(),
+            match_rules,
+            untagged_transaction_count,
         }
     }
 }

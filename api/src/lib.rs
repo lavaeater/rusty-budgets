@@ -367,6 +367,11 @@ pub async fn get_next_untagged_transaction(
     Ok(db::get_next_untagged_transaction(budget_id)?)
 }
 
+#[server(endpoint = "get_untagged_transactions")]
+pub async fn get_untagged_transactions(budget_id: Uuid) -> ServerFnResult<Vec<BankTransaction>> {
+    Ok(db::get_untagged_transactions(budget_id)?)
+}
+
 #[server(endpoint = "tag_transaction")]
 pub async fn tag_transaction(
     budget_id: Uuid,
