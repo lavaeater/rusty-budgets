@@ -211,19 +211,25 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                             label { class: "budget-item-edit-label", "Taggar" }
                             div { class: "tag-editor",
                                 div { class: "tag-chips",
-                                    for tag in budget_signal().tags.iter().filter(|t| !t.deleted).cloned().collect::<Vec<_>>() {
-                                        let tag_id = tag.id;
-                                        let is_selected = item_tags().contains(&tag_id);
-                                        span {
-                                            class: if is_selected { "tag-chip tag-chip-selected" } else { "tag-chip" },
-                                            key: "{tag_id}",
-                                            onclick: move |_| {
-                                                let mut tags = item_tags();
-                                                if is_selected { tags.retain(|id| *id != tag_id); } else { tags.push(tag_id); }
-                                                item_tags.set(tags);
-                                            },
-                                            "{tag.name}"
-                                        }
+                                    {
+                                        budget_signal().tags.iter().filter(|t| !t.deleted).cloned().collect::<Vec<_>>()
+                                            .into_iter()
+                                            .map(|tag| {
+                                                let tag_id = tag.id;
+                                                let is_selected = item_tags().contains(&tag_id);
+                                                rsx! {
+                                                    span {
+                                                        class: if is_selected { "tag-chip tag-chip-selected" } else { "tag-chip" },
+                                                        key: "{tag_id}",
+                                                        onclick: move |_| {
+                                                            let mut tags = item_tags();
+                                                            if is_selected { tags.retain(|id| *id != tag_id); } else { tags.push(tag_id); }
+                                                            item_tags.set(tags);
+                                                        },
+                                                        "{tag.name}"
+                                                    }
+                                                }
+                                            })
                                     }
                                 }
                                 div { class: "tag-add-row",
