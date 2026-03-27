@@ -150,12 +150,14 @@ pub fn TagTransactionsView() -> Element {
                                         new_tag_periodicity.set(match e.value().as_str() {
                                             "Quarterly" => Periodicity::Quarterly,
                                             "Annual" => Periodicity::Annual,
+                                            "OneOff" => Periodicity::OneOff,
                                             _ => Periodicity::Monthly,
                                         });
                                     },
                                     option { value: "Monthly", selected: true, "Månadsvis" }
                                     option { value: "Quarterly", "Kvartalsvis" }
                                     option { value: "Annual", "Årsvis" }
+                                    option { value: "OneOff", "Engångskostnad" }
                                 }
                                 Button {
                                     variant: ButtonVariant::Secondary,

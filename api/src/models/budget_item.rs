@@ -8,6 +8,7 @@ pub enum Periodicity {
     Monthly,
     Quarterly,
     Annual,
+    OneOff,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
