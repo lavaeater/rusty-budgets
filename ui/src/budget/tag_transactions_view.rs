@@ -22,7 +22,7 @@ pub fn TagTransactionsView() -> Element {
     let mut current_index: Signal<usize> = use_signal(|| 0);
     let mut selected_tag_id: Signal<Option<Uuid>> = use_signal(|| None);
     let mut new_tag_name: Signal<String> = use_signal(String::new);
-    let mut new_tag_periodicity: Signal<Periodicity> = use_signal(|| Periodicity::Monthly);
+    let mut new_tag_periodicity: Signal<Periodicity> = use_signal(|| Periodicity::OneOff);
     let mut preview_count: Signal<usize> = use_signal(|| 0);
     let mut tagged_rule_id: Signal<Option<Uuid>> = use_signal(|| None);
     let mut rule_tokens: Signal<Vec<String>> = use_signal(Vec::new);
@@ -154,10 +154,10 @@ pub fn TagTransactionsView() -> Element {
                                             _ => Periodicity::Monthly,
                                         });
                                     },
-                                    option { value: "Monthly", selected: true, "Månadsvis" }
+                                    option { value: "Monthly", "Månadsvis" }
                                     option { value: "Quarterly", "Kvartalsvis" }
                                     option { value: "Annual", "Årsvis" }
-                                    option { value: "OneOff", "Engångskostnad" }
+                                    option { value: "OneOff", selected: true, "Engångskostnad" }
                                 }
                                 Button {
                                     variant: ButtonVariant::Secondary,

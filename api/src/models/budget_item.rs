@@ -4,10 +4,10 @@ use uuid::Uuid;
 
 #[derive(Default, Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum Periodicity {
-    #[default]
     Monthly,
     Quarterly,
     Annual,
+    #[default]
     OneOff,
 }
 
