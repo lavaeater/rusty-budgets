@@ -338,7 +338,7 @@ impl JoyDbBudgetRuntime {
         let config = JoydbConfig {
             mode: JoydbMode::Persistent {
                 adapter,
-                sync_policy: SyncPolicy::Periodic(Duration::from_secs(60)),
+                sync_policy: SyncPolicy::Periodic(Duration::from_secs(30)),
             },
         };
         Self {
@@ -356,7 +356,7 @@ impl JoyDbBudgetRuntime {
     /// Usage: rt.cmd(id, |budget| budget.create_budget(name, user_id, default))
     pub fn cmd<F, E>(&self, user_id: Uuid, id: Uuid, command: F) -> Result<Uuid, RustyError>
     where
-        F: FnOnce(&Budget) -> Result<E, crate::cqrs::framework::CommandError>,
+        F: FnOnce(&Budget) -> Result<E, CommandError>,
         E: Into<BudgetEvent>,
     {
         self.execute(user_id, id, |aggregate| {
