@@ -480,17 +480,29 @@ impl Budget {
             .iter()
             .flat_map(|p| p.allocations.iter().map(|a| a.transaction_id))
             .collect();
-        let unallocated: Vec<&&BankTransaction> = all_txs
-            .iter()
+        let unallocated: Vec<&BankTransaction> = all_txs
+            .into_iter()
             .filter(|tx| !tx.ignored && tx.actual_id.is_none() && !allocated_ids.contains(&tx.id))
             .collect();
+
+        // Group by abs(cents) so each tx only checks candidates with the matching amount.
+        let mut by_amount: std::collections::HashMap<i64, Vec<&BankTransaction>> =
+            std::collections::HashMap::new();
+        for tx in &unallocated {
+            by_amount.entry(tx.amount.abs().amount_in_cents()).or_default().push(tx);
+        }
+
         let mut pairs: Vec<(Uuid, Uuid)> = Vec::new();
         let mut used: std::collections::HashSet<Uuid> = std::collections::HashSet::new();
         for tx in &unallocated {
             if used.contains(&tx.id) {
                 continue;
             }
-            if let Some(counterpart) = unallocated.iter().find(|other| {
+            let candidates = match by_amount.get(&tx.amount.abs().amount_in_cents()) {
+                Some(c) => c,
+                None => continue,
+            };
+            if let Some(counterpart) = candidates.iter().find(|other| {
                 other.id != tx.id
                     && !used.contains(&other.id)
                     && other.account_number != tx.account_number
