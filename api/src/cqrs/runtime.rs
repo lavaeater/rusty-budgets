@@ -384,6 +384,7 @@ impl JoyDbBudgetRuntime {
 
 impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
     fn load(&self, id: Uuid) -> Result<Budget, RustyError> {
+        let t = std::time::Instant::now();
         let budget = self.db.get::<Budget>(&id)?;
 
         tracing::debug!("Loaded budget is some: {}", budget.is_some());
@@ -391,11 +392,15 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
         let version = budget.version;
         tracing::debug!("Loaded budget has version {} and last event at {}", version, budget.last_event);
         let events = self.fetch_events(id, budget.last_event)?;
+        let event_count = events.len();
         for ev in events {
             ev.apply(&mut budget);
         }
         let version = budget.version - version;
-        tracing::debug!("Loaded budget has {} events since last snapshot", version);
+        tracing::info!(
+            "[perf] load: replayed {} events in {:?} (snapshot age: {} events)",
+            event_count, t.elapsed(), version
+        );
         if version > 10 { // more than 3 events since last snapshot
             tracing::info!("More than 10 events since last snapshot, snapshotting");
             self.snapshot(&budget)?;

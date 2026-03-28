@@ -1,3 +1,4 @@
+use dioxus::logger::tracing;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use crate::models::{Budget, BudgetingType, Currency, MatchRule, MonthBeginsOn, PeriodId, Tag};
@@ -32,6 +33,7 @@ pub struct BudgetViewModel {
 
 impl BudgetViewModel {
     pub fn from_budget(budget: &Budget, period_id: PeriodId) -> Self {
+        let t = std::time::Instant::now();
         let actual_items = budget.all_actuals(period_id);
         let budget_items = budget.all_items();
         let transactions = budget.unconnected_transactions(period_id);
@@ -71,6 +73,7 @@ impl BudgetViewModel {
             .iter()
             .map(|tx| TransactionViewModel::from_transaction(tx))
             .collect::<Vec<_>>();
+        let t_transfers = std::time::Instant::now();
         let all_transfer_pairs: Vec<TransferPair> = budget
             .potential_internal_transfers()
             .into_iter()
@@ -83,6 +86,11 @@ impl BudgetViewModel {
                 })
             })
             .collect();
+        let transfer_ids: std::collections::HashSet<uuid::Uuid> = all_transfer_pairs
+            .iter()
+            .flat_map(|p| [p.outgoing.tx_id, p.incoming.tx_id])
+            .collect();
+        tracing::info!("[perf] from_budget/potential_transfers ({} pairs): {:?}", all_transfer_pairs.len(), t_transfers.elapsed());
         let potential_transfer_count = all_transfer_pairs.len();
         let potential_transfers = all_transfer_pairs.into_iter().take(10).collect::<Vec<_>>();
 
@@ -93,11 +101,6 @@ impl BudgetViewModel {
             budget.get_budgeting_overview(BudgetingType::InternalTransfer, period_id),
         ];
         overviews.sort_by_key(|ov| ov.budgeting_type);
-        let transfer_ids: std::collections::HashSet<uuid::Uuid> = budget
-            .potential_internal_transfers()
-            .into_iter()
-            .flat_map(|(a, b)| [a, b])
-            .collect();
         let untagged_transaction_count = budget
             .periods
             .iter()
@@ -105,6 +108,7 @@ impl BudgetViewModel {
             .filter(|tx| tx.tag_id.is_none() && !tx.ignored && !transfer_ids.contains(&tx.id))
             .count();
         let match_rules = budget.match_rules.iter().cloned().collect::<Vec<_>>();
+        tracing::info!("[perf] from_budget/total: {:?}", t.elapsed());
 
         Self {
             id: budget.id,

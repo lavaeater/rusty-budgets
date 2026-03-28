@@ -505,8 +505,11 @@ pub fn tag_transaction(
     tx_id: Uuid,
     tag_id: Uuid,
 ) -> Result<Uuid, RustyError> {
+    let t = std::time::Instant::now();
     with_runtime(None).tag_transaction(user_id, budget_id, tx_id, tag_id)?;
+    tracing::info!("[perf] tag_transaction/tag_event: {:?}", t.elapsed());
     let budget = get_budget(budget_id)?;
+    tracing::info!("[perf] tag_transaction/load_for_rule_check: {:?}", t.elapsed());
     let tx = budget
         .get_transaction(tx_id)
         .ok_or(RustyError::ItemNotFound(
@@ -520,19 +523,26 @@ pub fn tag_transaction(
         .any(|r| r.transaction_key == transaction_key && r.tag_id == Some(tag_id));
     if !rule_exists {
         with_runtime(None).add_rule(user_id, budget_id, transaction_key, Vec::new(), true, Some(tag_id))?;
+        tracing::info!("[perf] tag_transaction/add_rule: {:?}", t.elapsed());
     }
     evaluate_tag_rules(user_id, budget_id)?;
+    tracing::info!("[perf] tag_transaction/total: {:?}", t.elapsed());
     Ok(budget_id)
 }
 
 pub(crate) fn evaluate_tag_rules(user_id: Uuid, budget_id: Uuid) -> Result<Uuid, RustyError> {
+    let t = std::time::Instant::now();
     let budget = get_budget(budget_id)?;
-    for (tx_id, tag_id) in budget.evaluate_tag_rules() {
+    let matches = budget.evaluate_tag_rules();
+    let match_count = matches.len();
+    info!("[perf] evaluate_tag_rules: {} matches found in {:?}", match_count, t.elapsed());
+    for (tx_id, tag_id) in matches {
         match with_runtime(None).tag_transaction(user_id, budget_id, tx_id, tag_id) {
             Ok(_) => {}
             Err(e) => error!(error = %e, "Could not tag transaction {} with tag {}", tx_id, tag_id),
         }
     }
+    info!("[perf] evaluate_tag_rules/total (applied {} tags): {:?}", match_count, t.elapsed());
     Ok(budget_id)
 }
 
