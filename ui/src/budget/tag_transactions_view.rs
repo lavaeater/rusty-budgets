@@ -39,11 +39,12 @@ pub fn TagTransactionsView() -> Element {
     let batch_size = txs.len();
     let total_remaining = budget_signal().untagged_transaction_count;
     let current_tx: Option<BankTransaction> = txs.into_iter().nth(current_index());
-    let tags = budget_signal()
+    let mut tags = budget_signal()
         .tags
         .into_iter()
         .filter(|t| !t.deleted)
         .collect::<Vec<_>>();
+    tags.sort_by(|a, b| a.name.cmp(&b.name));
 
     // Helper closures for resetting state and re-fetching the next batch
     let mut reset_ui_state = move || {
