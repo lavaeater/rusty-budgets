@@ -44,6 +44,7 @@ pub fn TagTransactionsView() -> Element {
         .into_iter()
         .filter(|t| !t.deleted)
         .collect::<Vec<_>>();
+    
     tags.sort_by(|a, b| a.name.cmp(&b.name));
 
     // Helper closures for resetting state and re-fetching the next batch
