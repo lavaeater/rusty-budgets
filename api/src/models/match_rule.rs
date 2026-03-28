@@ -193,8 +193,13 @@ mod tests {
 
 impl MatchRule {
     pub fn matches_transaction(&self, transaction: &BankTransaction) -> bool {
+        if self.transaction_key.is_empty() {
+            return false;
+        }
         let tokenized_transaction_description = tokenize_description(&transaction.description);
-        self.transaction_key == tokenized_transaction_description
+        self.transaction_key
+            .iter()
+            .all(|token| tokenized_transaction_description.contains(token))
     }
 
     pub fn matches_actual(&self, actual: &ActualItem) -> bool {
