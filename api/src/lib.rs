@@ -433,6 +433,7 @@ pub async fn update_rule(
     transaction_key: Vec<String>,
     period_id: PeriodId,
 ) -> ServerFnResult<BudgetViewModel> {
+    info!("new transaction key ${:#?}", transaction_key);
     let user = db::get_default_user(None)?;
     let _ = db::modify_rule(user.id, budget_id, rule_id, transaction_key)?;
     db::evaluate_tag_rules(user.id, budget_id)?;

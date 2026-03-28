@@ -547,7 +547,9 @@ pub(crate) fn evaluate_tag_rules(user_id: Uuid, budget_id: Uuid) -> Result<Uuid,
     info!("[perf] evaluate_tag_rules: {} matches found in {:?}", match_count, t.elapsed());
     for (tx_id, tag_id) in matches {
         match with_runtime(None).tag_transaction(user_id, budget_id, tx_id, tag_id) {
-            Ok(_) => {}
+            Ok(_) => {
+                info!("Tagged a transaction, bro!");
+            }
             Err(e) => error!(error = %e, "Could not tag transaction {} with tag {}", tx_id, tag_id),
         }
     }

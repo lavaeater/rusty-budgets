@@ -238,7 +238,7 @@ pub fn TagTransactionsView() -> Element {
                                                 consume_context::<BudgetState>().0.set(bv);
                                             }
                                         },
-                                        "Spara regel"
+                                        "Spara & matcha fler transaktioner"
                                     }
                                 }
                             }
