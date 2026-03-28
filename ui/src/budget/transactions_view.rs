@@ -3,7 +3,7 @@ use api::models::{BudgetingType, Periodicity};
 use api::view_models::{AllocationViewModel, BudgetItemViewModel, TransactionViewModel, TransferPair};
 use dioxus::prelude::*;
 use uuid::Uuid;
-use api::{connect_transaction, resolve_transfer_pair};
+use api::{connect_transaction, reject_transfer_pair, resolve_transfer_pair};
 use crate::{Button, ButtonVariant, Input, PopoverContent, PopoverRoot, PopoverTrigger};
 use crate::budget::budget_hero::BudgetState;
 
@@ -440,6 +440,18 @@ fn TransferPairCard(pair: TransferPair) -> Element {
                         r#type: "button",
                         onclick: move |_| savings_mode.set(true),
                         "Sparande →"
+                    }
+                    Button {
+                        variant: ButtonVariant::Secondary,
+                        r#type: "button",
+                        onclick: move |_| async move {
+                            let budget_id = budget_signal().id;
+                            let period_id = budget_signal().period_id;
+                            if let Ok(bv) = reject_transfer_pair(budget_id, out_id, in_id, period_id).await {
+                                consume_context::<BudgetState>().0.set(bv);
+                            }
+                        },
+                        "Inte en överföring"
                     }
                 }
             }

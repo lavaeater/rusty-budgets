@@ -16,6 +16,7 @@ mod tag_created;
 mod tag_modified;
 mod transaction_tagged;
 mod rule_modified;
+mod transfer_pair_rejected;
 
 pub use budget_created::BudgetCreated;
 pub use item_added::ItemAdded;
@@ -35,6 +36,7 @@ pub use tag_created::TagCreated;
 pub use tag_modified::TagModified;
 pub use transaction_tagged::TransactionTagged;
 pub use rule_modified::RuleModified;
+pub use transfer_pair_rejected::TransferPairRejected;
 
 
 

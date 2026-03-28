@@ -483,6 +483,15 @@ pub fn get_untagged_transactions(budget_id: Uuid, limit: usize) -> Result<Vec<Ba
         .collect())
 }
 
+pub fn reject_transfer_pair(
+    user_id: Uuid,
+    budget_id: Uuid,
+    outgoing_tx_id: Uuid,
+    incoming_tx_id: Uuid,
+) -> Result<Uuid, RustyError> {
+    with_runtime(None).reject_transfer_pair(user_id, budget_id, outgoing_tx_id, incoming_tx_id)
+}
+
 pub fn resolve_transfer_pair(
     user_id: Uuid,
     budget_id: Uuid,

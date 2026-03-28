@@ -395,6 +395,21 @@ pub async fn preview_rule_matches(
     Ok(db::preview_rule_matches(budget_id, tx_id)?)
 }
 
+#[server(endpoint = "reject_transfer_pair")]
+pub async fn reject_transfer_pair(
+    budget_id: Uuid,
+    outgoing_tx_id: Uuid,
+    incoming_tx_id: Uuid,
+    period_id: PeriodId,
+) -> ServerFnResult<BudgetViewModel> {
+    let user = db::get_default_user(None)?;
+    let _ = db::reject_transfer_pair(user.id, budget_id, outgoing_tx_id, incoming_tx_id)?;
+    Ok(BudgetViewModel::from_budget(
+        &db::get_budget(budget_id)?,
+        period_id,
+    ))
+}
+
 #[server(endpoint = "resolve_transfer_pair")]
 pub async fn resolve_transfer_pair(
     budget_id: Uuid,

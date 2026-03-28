@@ -40,6 +40,7 @@ pub_events_enum! {
         TagModified,
         TransactionTagged,
         RuleModified,
+        TransferPairRejected,
     }
 }
 
@@ -66,6 +67,8 @@ pub struct Budget {
     pub accounts: Vec<BankAccount>,
     #[serde(default)]
     pub tags: Vec<Tag>,
+    #[serde(default)]
+    pub rejected_transfer_pairs: HashSet<(Uuid, Uuid)>,
 }
 
 impl Default for Budget {
@@ -88,6 +91,7 @@ impl Default for Budget {
             transaction_hashes: Default::default(),
             accounts: Default::default(),
             tags: Default::default(),
+            rejected_transfer_pairs: Default::default(),
         }
     }
 }
@@ -508,6 +512,8 @@ impl Budget {
                     && other.account_number != tx.account_number
                     && other.amount == -tx.amount
                     && (other.date - tx.date).num_days().abs() <= 3
+                    && !self.rejected_transfer_pairs.contains(&(tx.id, other.id))
+                    && !self.rejected_transfer_pairs.contains(&(other.id, tx.id))
             }) {
                 used.insert(tx.id);
                 used.insert(counterpart.id);

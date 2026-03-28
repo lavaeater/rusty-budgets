@@ -262,6 +262,18 @@ impl JoyDbBudgetRuntime {
         })
     }
 
+    pub fn reject_transfer_pair(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        outgoing_tx_id: Uuid,
+        incoming_tx_id: Uuid,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.reject_transfer_pair(outgoing_tx_id, incoming_tx_id)
+        })
+    }
+
     pub fn modify_rule(
         &self,
         user_id: Uuid,
