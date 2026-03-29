@@ -1,6 +1,6 @@
 use api::models::{BudgetingType, Periodicity};
 use api::view_models::TagSummary;
-use api::{create_budget_item, get_unbudgeted_tag_summaries};
+use api::{create_budget_item, get_unbudgeted_tag_summaries, modify_tag};
 use crate::budget::budget_hero::BudgetState;
 use crate::{Button, ButtonVariant, Input};
 use dioxus::prelude::*;
@@ -14,6 +14,15 @@ fn periodicity_label(p: Periodicity) -> &'static str {
         Periodicity::Quarterly => "Kvartalsvis",
         Periodicity::Annual => "Årsvis",
         Periodicity::OneOff => "Engångskostnad",
+    }
+}
+
+fn periodicity_sort_key(p: Periodicity) -> u8 {
+    match p {
+        Periodicity::Monthly => 0,
+        Periodicity::Quarterly => 1,
+        Periodicity::Annual => 2,
+        Periodicity::OneOff => 3,
     }
 }
 
@@ -43,11 +52,12 @@ pub fn CreateBudgetItemsView() -> Element {
     let period_id = budget.period_id;
 
     let mut tag_summaries: Signal<Vec<TagSummary>> = use_signal(Vec::new);
-    let mut suggested_income_str: Signal<String> = use_signal(String::new);
     let mut selected_tag_ids: Signal<Vec<Uuid>> = use_signal(Vec::new);
     let mut new_item_name: Signal<String> = use_signal(String::new);
     let mut new_item_type: Signal<BudgetingType> = use_signal(|| BudgetingType::Expense);
     let mut is_loading: Signal<bool> = use_signal(|| true);
+    let mut sort_col: Signal<&'static str> = use_signal(|| "name");
+    let mut sort_asc: Signal<bool> = use_signal(|| true);
 
     use_effect(move || {
         spawn(async move {
@@ -58,7 +68,7 @@ pub fn CreateBudgetItemsView() -> Element {
         });
     });
 
-    let summaries = tag_summaries();
+    let summaries_raw = tag_summaries();
 
     if is_loading() {
         return rsx! {
@@ -69,7 +79,7 @@ pub fn CreateBudgetItemsView() -> Element {
         };
     }
 
-    if summaries.is_empty() {
+    if summaries_raw.is_empty() {
         return rsx! {
             document::Link { rel: "stylesheet", href: CREATE_BUDGET_ITEMS_CSS }
             div { class: "create-budget-items-done",
@@ -78,71 +88,86 @@ pub fn CreateBudgetItemsView() -> Element {
         };
     }
 
+    // Sort summaries
+    let mut summaries = summaries_raw;
+    let col = sort_col();
+    let asc = sort_asc();
+    summaries.sort_by(|a, b| {
+        let ord = match col {
+            "periodicity" => periodicity_sort_key(a.periodicity).cmp(&periodicity_sort_key(b.periodicity)),
+            "monthly" => a.average_monthly.amount_in_cents().cmp(&b.average_monthly.amount_in_cents()),
+            "yearly" => a.average_yearly.amount_in_cents().cmp(&b.average_yearly.amount_in_cents()),
+            _ => a.name.cmp(&b.name),
+        };
+        if asc { ord } else { ord.reverse() }
+    });
+
     let selected = selected_tag_ids();
     let has_selection = !selected.is_empty();
 
-    // Selected tags' total average monthly (absolute value, always shown as positive cost)
     let selected_monthly_cents: i64 = summaries
         .iter()
         .filter(|s| selected.contains(&s.tag_id))
         .map(|s| s.average_monthly.amount_in_cents())
         .sum();
 
-    // Parse suggested income (in whole kronor, stored as cents)
-    let suggested_income_cents: Option<i64> = suggested_income_str()
-        .trim()
-        .replace(' ', "")
-        .parse::<i64>()
-        .ok()
-        .map(|kr| kr * 100);
-
-    // Total already-budgeted monthly from existing budget items (via BudgetViewModel)
-    // We approximate from tag summaries that are NOT in the unbudgeted list — i.e., already budgeted.
-    // For now we just show the selection total.
-
-    let remaining_cents = suggested_income_cents.map(|income| income + selected_monthly_cents);
+    // Helper: returns header class and onclick that toggles sort
+    let header_class = move |col_name: &'static str| {
+        if sort_col() == col_name {
+            if sort_asc() { "cbi-col-header sorted asc" } else { "cbi-col-header sorted desc" }
+        } else {
+            "cbi-col-header"
+        }
+    };
 
     rsx! {
         document::Link { rel: "stylesheet", href: CREATE_BUDGET_ITEMS_CSS }
         div { class: "create-budget-items-view",
 
-            // --- Suggested income input ---
-            div { class: "cbi-income-row",
-                span { class: "cbi-income-label", "Föreslagen månadsinkomst:" }
-                input {
-                    class: "cbi-income-input",
-                    r#type: "text",
-                    inputmode: "numeric",
-                    placeholder: "ex. 35000",
-                    value: "{suggested_income_str}",
-                    oninput: move |e| suggested_income_str.set(e.value()),
-                }
-                span { "kr" }
-                if let Some(rem) = remaining_cents {
-                    span {
-                        class: if rem >= 0 { "cbi-income-remaining" } else { "cbi-income-remaining over-budget" },
-                        "{fmt_sek(rem)} kvar"
-                    }
-                }
-            }
-
             // --- Unbudgeted tag table ---
             div { class: "cbi-tag-table",
                 div { class: "cbi-tag-header",
                     div {}
-                    div { "Tagg" }
-                    div { "Periodicitet" }
-                    div { "Snitt / mån" }
-                    div { "Snitt / år" }
+                    div {
+                        class: "{header_class(\"name\")}",
+                        onclick: move |_| {
+                            if sort_col() == "name" { sort_asc.toggle(); } else { sort_col.set("name"); sort_asc.set(true); }
+                        },
+                        "Tagg"
+                    }
+                    div {
+                        class: "{header_class(\"periodicity\")}",
+                        onclick: move |_| {
+                            if sort_col() == "periodicity" { sort_asc.toggle(); } else { sort_col.set("periodicity"); sort_asc.set(true); }
+                        },
+                        "Periodicitet"
+                    }
+                    div {
+                        class: "{header_class(\"monthly\")}",
+                        onclick: move |_| {
+                            if sort_col() == "monthly" { sort_asc.toggle(); } else { sort_col.set("monthly"); sort_asc.set(true); }
+                        },
+                        "Snitt / mån"
+                    }
+                    div {
+                        class: "{header_class(\"yearly\")}",
+                        onclick: move |_| {
+                            if sort_col() == "yearly" { sort_asc.toggle(); } else { sort_col.set("yearly"); sort_asc.set(true); }
+                        },
+                        "Snitt / år"
+                    }
                 }
                 for summary in summaries.iter() {
                     {
                         let tag_id = summary.tag_id;
+                        let tag_name = summary.name.clone();
                         let is_selected = selected.contains(&tag_id);
                         let monthly = summary.average_monthly.amount_in_cents();
                         let yearly = summary.average_yearly.amount_in_cents();
+                        let periodicity = summary.periodicity;
                         rsx! {
                             div {
+                                key: "{tag_id}",
                                 class: if is_selected { "cbi-tag-row selected" } else { "cbi-tag-row" },
                                 onclick: move |_| {
                                     let mut ids = selected_tag_ids();
@@ -157,7 +182,6 @@ pub fn CreateBudgetItemsView() -> Element {
                                     class: "cbi-tag-checkbox",
                                     r#type: "checkbox",
                                     checked: is_selected,
-                                    // clicking the row handles toggle; prevent double-fire
                                     onclick: move |e| e.stop_propagation(),
                                     onchange: move |_| {
                                         let mut ids = selected_tag_ids();
@@ -169,9 +193,35 @@ pub fn CreateBudgetItemsView() -> Element {
                                         selected_tag_ids.set(ids);
                                     },
                                 }
-                                span { class: "cbi-tag-name", "{summary.name}" }
-                                span { class: "{periodicity_class(summary.periodicity)}",
-                                    "{periodicity_label(summary.periodicity)}"
+                                span { class: "cbi-tag-name", "{tag_name}" }
+                                // Inline periodicity editor
+                                select {
+                                    class: "{periodicity_class(periodicity)} cbi-periodicity-select",
+                                    onclick: move |e| e.stop_propagation(),
+                                    onchange: move |e| {
+                                        let new_p = match e.value().as_str() {
+                                            "Quarterly" => Periodicity::Quarterly,
+                                            "Annual" => Periodicity::Annual,
+                                            "OneOff" => Periodicity::OneOff,
+                                            _ => Periodicity::Monthly,
+                                        };
+                                        // Update local signal immediately
+                                        let mut sums = tag_summaries();
+                                        if let Some(s) = sums.iter_mut().find(|s| s.tag_id == tag_id) {
+                                            s.periodicity = new_p;
+                                        }
+                                        tag_summaries.set(sums);
+                                        // Persist to server
+                                        spawn(async move {
+                                            if let Ok(updated) = modify_tag(budget_id, tag_id, None, Some(new_p), None, period_id).await {
+                                                consume_context::<BudgetState>().0.set(updated);
+                                            }
+                                        });
+                                    },
+                                    option { value: "Monthly", selected: periodicity == Periodicity::Monthly, "Månadsvis" }
+                                    option { value: "Quarterly", selected: periodicity == Periodicity::Quarterly, "Kvartalsvis" }
+                                    option { value: "Annual", selected: periodicity == Periodicity::Annual, "Årsvis" }
+                                    option { value: "OneOff", selected: periodicity == Periodicity::OneOff, "Engångskostnad" }
                                 }
                                 span { class: "{money_class(monthly)}", "{fmt_sek(monthly)}" }
                                 span { class: "{money_class(yearly)}", "{fmt_sek(yearly)}" }
@@ -229,7 +279,6 @@ pub fn CreateBudgetItemsView() -> Element {
                                         period_id,
                                     ).await {
                                         consume_context::<BudgetState>().0.set(updated);
-                                        // Refresh unbudgeted list
                                         if let Ok(summaries) = get_unbudgeted_tag_summaries(budget_id).await {
                                             tag_summaries.set(summaries);
                                         }

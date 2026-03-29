@@ -9,43 +9,6 @@
     padding: 30px;
 }
 
-.cbi-income-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-}
-
-.cbi-income-label {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: #1e293b;
-    white-space: nowrap;
-}
-
-.cbi-income-input {
-    width: 140px;
-    padding: 8px 12px;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    font-size: 0.95rem;
-    color: #334155;
-}
-
-.cbi-income-remaining {
-    font-size: 0.9rem;
-    font-weight: 600;
-    padding: 6px 14px;
-    border-radius: 20px;
-    background: #dcfce7;
-    color: #16a34a;
-}
-
-.cbi-income-remaining.over-budget {
-    background: #fee2e2;
-    color: #dc2626;
-}
-
 /* Tag summary table */
 .cbi-tag-table {
     background: white;
@@ -57,7 +20,7 @@
 
 .cbi-tag-header {
     display: grid;
-    grid-template-columns: 32px 1fr 130px 130px 130px;
+    grid-template-columns: 32px 1fr 160px 130px 130px;
     padding: 10px 16px;
     background: #f8fafc;
     border-bottom: 1px solid #e2e8f0;
@@ -69,9 +32,33 @@
     gap: 8px;
 }
 
+.cbi-col-header {
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.cbi-col-header:hover {
+    color: #64748b;
+}
+
+.cbi-col-header.sorted {
+    color: #4338ca;
+}
+
+.cbi-col-header.sorted.asc::after {
+    content: ' ↑';
+}
+
+.cbi-col-header.sorted.desc::after {
+    content: ' ↓';
+}
+
 .cbi-tag-row {
     display: grid;
-    grid-template-columns: 32px 1fr 130px 130px 130px;
+    grid-template-columns: 32px 1fr 160px 130px 130px;
     padding: 12px 16px;
     gap: 8px;
     align-items: center;
@@ -126,6 +113,39 @@
 }
 
 .cbi-periodicity-badge.oneoff {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+/* Inline periodicity dropdown — styled to look like the badge */
+.cbi-periodicity-select {
+    border: none;
+    border-radius: 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    cursor: pointer;
+    appearance: auto;
+    max-width: 140px;
+}
+
+/* Match badge colours by reusing the badge modifier classes */
+.cbi-periodicity-badge.cbi-periodicity-select {
+    background: #eef2ff;
+    color: #4338ca;
+}
+
+.cbi-periodicity-badge.annual.cbi-periodicity-select {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.cbi-periodicity-badge.quarterly.cbi-periodicity-select {
+    background: #ecfdf5;
+    color: #065f46;
+}
+
+.cbi-periodicity-badge.oneoff.cbi-periodicity-select {
     background: #f1f5f9;
     color: #64748b;
 }
