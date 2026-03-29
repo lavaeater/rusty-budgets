@@ -9,7 +9,7 @@ use crate::models::rule_packages::RulePackages;
 use crate::models::{ActualItem, BankAccount, BankTransaction, BudgetPeriod, MatchRule, MonthBeginsOn, Tag, TransactionAllocation};
 use crate::models::budget_period::RuleMatch;
 use crate::pub_events_enum;
-use crate::view_models::BudgetingTypeOverview;
+use crate::view_models::{BudgetingTypeOverview, TagSummary};
 use chrono::{DateTime, Utc};
 use joydb::Model;
 use serde::de::{MapAccess, Visitor};
@@ -285,6 +285,67 @@ impl Budget {
 
     pub fn get_active_tags(&self) -> Vec<&Tag> {
         self.tags.iter().filter(|t| !t.deleted).collect()
+    }
+
+    /// Compute average monthly and yearly spend per active tag, across all transaction history.
+    ///
+    /// The denominator is the number of calendar months spanned by the full transaction dataset
+    /// (from earliest to latest transaction, inclusive). Amounts are signed — expenses are
+    /// negative, income positive.
+    pub fn get_tag_summaries(&self) -> Vec<TagSummary> {
+        use std::collections::HashMap;
+        use chrono::Datelike;
+
+        let all_txs: Vec<&BankTransaction> = self.periods
+            .iter()
+            .flat_map(|p| p.transactions.iter())
+            .filter(|tx| !tx.ignored)
+            .collect();
+
+        if all_txs.is_empty() {
+            return vec![];
+        }
+
+        let min_date = all_txs.iter().map(|tx| tx.date).min().unwrap();
+        let max_date = all_txs.iter().map(|tx| tx.date).max().unwrap();
+        let months_covered = {
+            let months = (max_date.year() as i64 - min_date.year() as i64) * 12
+                + (max_date.month() as i64 - min_date.month() as i64)
+                + 1;
+            months.max(1)
+        };
+
+        let mut per_tag: HashMap<Uuid, (Money, u32)> = HashMap::new();
+        for tx in &all_txs {
+            if let Some(tag_id) = tx.tag_id {
+                let entry = per_tag
+                    .entry(tag_id)
+                    .or_insert((Money::zero(self.currency), 0));
+                entry.0 += tx.amount;
+                entry.1 += 1;
+            }
+        }
+
+        self.tags
+            .iter()
+            .filter(|t| !t.deleted)
+            .map(|tag| {
+                let (total, count) = per_tag
+                    .get(&tag.id)
+                    .copied()
+                    .unwrap_or((Money::zero(self.currency), 0));
+                let average_monthly = total.divide(months_covered);
+                let average_yearly = average_monthly.multiply(12);
+                TagSummary {
+                    tag_id: tag.id,
+                    name: tag.name.clone(),
+                    periodicity: tag.periodicity,
+                    average_monthly,
+                    average_yearly,
+                    transaction_count: count,
+                }
+            })
+            .collect()
     }
 
     pub fn get_next_untagged_transaction(&self) -> Option<&BankTransaction> {

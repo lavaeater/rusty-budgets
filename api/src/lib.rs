@@ -44,6 +44,7 @@ use models::*;
 use uuid::Uuid;
 use view_models::BudgetItemViewModel;
 use view_models::BudgetViewModel;
+use view_models::TagSummary;
 use view_models::TransactionViewModel;
 
 
@@ -424,6 +425,38 @@ pub async fn resolve_transfer_pair(
         &db::get_budget(budget_id)?,
         period_id,
     ))
+}
+
+#[server(endpoint = "get_unbudgeted_tag_summaries")]
+pub async fn get_unbudgeted_tag_summaries(budget_id: Uuid) -> ServerFnResult<Vec<TagSummary>> {
+    use std::collections::HashSet;
+    let budget = db::get_budget(budget_id)?;
+    let budgeted_tag_ids: HashSet<Uuid> = budget
+        .items
+        .iter()
+        .flat_map(|item| item.tag_ids.iter().copied())
+        .collect();
+    Ok(budget
+        .get_tag_summaries()
+        .into_iter()
+        .filter(|ts| !budgeted_tag_ids.contains(&ts.tag_id))
+        .collect())
+}
+
+#[server(endpoint = "create_budget_item")]
+pub async fn create_budget_item(
+    budget_id: Uuid,
+    name: String,
+    budgeting_type: BudgetingType,
+    tag_ids: Vec<Uuid>,
+    period_id: PeriodId,
+) -> ServerFnResult<BudgetViewModel> {
+    let user = db::get_default_user(None)?;
+    let item_id = db::add_item(user.id, budget_id, name, budgeting_type)?;
+    if !tag_ids.is_empty() {
+        db::modify_item(user.id, budget_id, item_id, None, None, Some(tag_ids), None)?;
+    }
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id)?, period_id))
 }
 
 #[server(endpoint = "update_rule")]

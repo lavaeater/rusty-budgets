@@ -1,5 +1,5 @@
 use crate::Button;
-use crate::budget::{BudgetTabs, TagTransactionsView, TransactionsView, TransferPairsView};
+use crate::budget::{BudgetTabs, CreateBudgetItemsView, TagTransactionsView, TransactionsView, TransferPairsView};
 use crate::file_chooser::{FileData, FileDialog};
 use api::models::*;
 use api::view_models::BudgetViewModel;
@@ -215,6 +215,12 @@ pub fn BudgetOverview(mut budget_id: Signal<Uuid>, mut period_id: Signal<PeriodI
             if !budget.potential_transfers.is_empty() {
                 div { class: "transactions-section-prominent",
                     TransferPairsView {}
+                }
+            }
+            if budget.untagged_transaction_count == 0 && budget.potential_transfer_count == 0 {
+                div { class: "transactions-section-prominent",
+                    h3 { style: "margin: 0 0 16px 0;", "Skapa budgetposter" }
+                    CreateBudgetItemsView {}
                 }
             }
             if budget.to_connect.is_empty() {

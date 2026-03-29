@@ -12,6 +12,7 @@ mod budgeting_type_overview;
 mod allocation_view_model;
 pub mod rule;
 pub mod value_kind;
+mod tag_summary;
 
 pub use budgeting_type_overview::BudgetingTypeOverview;
 pub use rule::Rule;
@@ -21,6 +22,7 @@ pub use transaction_view_model::TransactionViewModel;
 pub use budget_view_model::{BudgetViewModel, TransferPair};
 pub use budget_item_status::BudgetItemStatus;
 pub use allocation_view_model::AllocationViewModel;
+pub use tag_summary::TagSummary;
 
 #[cfg(test)]
 #[test]
