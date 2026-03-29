@@ -37,7 +37,16 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                     div {
                         class: "budget-item-expanded-header",
                         onclick: move |_| { expanded.set(false) },
-                        div { class: "budget-item-expanded-name", "{item_name()}" }
+                        div { class: "budget-item-expanded-name",
+                            "{item_name()}"
+                            if !item.tags.is_empty() {
+                                span { class: "budget-item-tags-inline",
+                                    for tag in item.tags.iter() {
+                                        span { class: "tag-chip-small", "{tag}" }
+                                    }
+                                }
+                            }
+                        }
                         div { class: "budget-item-expanded-amounts",
                             "{item.actual_amount.to_string()} / {item.budgeted_amount.to_string()}"
                         }

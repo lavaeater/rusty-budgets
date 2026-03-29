@@ -449,12 +449,18 @@ pub async fn create_budget_item(
     name: String,
     budgeting_type: BudgetingType,
     tag_ids: Vec<Uuid>,
+    budgeted_amount: Option<Money>,
     period_id: PeriodId,
 ) -> ServerFnResult<BudgetViewModel> {
     let user = db::get_default_user(None)?;
     let item_id = db::add_item(user.id, budget_id, name, budgeting_type)?;
     if !tag_ids.is_empty() {
         db::modify_item(user.id, budget_id, item_id, None, None, Some(tag_ids), None)?;
+    }
+    if let Some(amount) = budgeted_amount {
+        if !amount.is_zero() {
+            db::add_actual(user.id, budget_id, item_id, amount, period_id)?;
+        }
     }
     Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id)?, period_id))
 }

@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 use uuid::Uuid;
 use crate::models::{ActualItem, BankTransaction, BudgetItem, BudgetingType, Currency, Money, Periodicity, Tag, TransactionAllocation};
 use crate::view_models::transaction_view_model::TransactionViewModel;
@@ -29,6 +30,7 @@ impl BudgetItemViewModel {
         transactions: &Vec<&BankTransaction>,
         allocations: &[TransactionAllocation],
         budget_tags: &[Tag],
+        all_period_transactions: &[&BankTransaction],
     ) -> Self {
         let actual_item = actual_items
             .iter()
@@ -39,6 +41,15 @@ impl BudgetItemViewModel {
             .collect();
         let item_tags = &resolved_tags;
 
+        // Compute actual amount from tagged transactions (new tagging workflow)
+        let tag_ids_set: HashSet<&Uuid> = budget_item.tag_ids.iter().collect();
+        let mut tagged_txs: Vec<&&BankTransaction> = all_period_transactions
+            .iter()
+            .filter(|tx| tx.tag_id.map_or(false, |tid| tag_ids_set.contains(&tid)))
+            .collect();
+        tagged_txs.sort_by_key(|tx| tx.date);
+        let tagged_actual: Money = tagged_txs.iter().map(|tx| tx.amount).sum();
+
         if let Some(actual_item) = actual_item {
             let relevant_allocs: Vec<&TransactionAllocation> = allocations
                 .iter()
@@ -48,22 +59,33 @@ impl BudgetItemViewModel {
                 })
                 .collect();
 
-            let mut txs = transactions
-                .iter()
-                .filter(|tx| {
-                    tx.actual_id == Some(actual_item.id)
-                        || relevant_allocs.iter().any(|a| a.transaction_id == tx.id)
-                })
-                .map(|tx| TransactionViewModel::from_transaction(tx))
-                .collect::<Vec<_>>();
-            txs.sort_by_key(|tx| tx.date);
-
             let allocation_amount: Money = relevant_allocs.iter().map(|a| a.amount).sum();
 
-            let actual_amount = if allocation_amount.is_zero() {
-                actual_item.actual_amount
-            } else {
+            // Prefer tag-based actual; fall back to allocation or stored actual
+            let actual_amount = if !tagged_actual.is_zero() {
+                tagged_actual
+            } else if !allocation_amount.is_zero() {
                 allocation_amount
+            } else {
+                actual_item.actual_amount
+            };
+
+            // Transactions: prefer tag-based; fall back to connected/allocation-based
+            let txs = if !tagged_txs.is_empty() {
+                tagged_txs.iter()
+                    .map(|tx| TransactionViewModel::from_transaction(tx))
+                    .collect()
+            } else {
+                let mut old_txs = transactions
+                    .iter()
+                    .filter(|tx| {
+                        tx.actual_id == Some(actual_item.id)
+                            || relevant_allocs.iter().any(|a| a.transaction_id == tx.id)
+                    })
+                    .map(|tx| TransactionViewModel::from_transaction(tx))
+                    .collect::<Vec<_>>();
+                old_txs.sort_by_key(|tx| tx.date);
+                old_txs
             };
 
             let status = if actual_item.budgeted_amount.is_zero() {
@@ -91,6 +113,9 @@ impl BudgetItemViewModel {
                 transactions: txs,
             }
         } else {
+            let txs = tagged_txs.iter()
+                .map(|tx| TransactionViewModel::from_transaction(tx))
+                .collect();
             Self {
                 item_id: budget_item.id,
                 actual_id: None,
@@ -100,10 +125,10 @@ impl BudgetItemViewModel {
                 tag_ids: budget_item.tag_ids.clone(),
                 periodicity: budget_item.periodicity,
                 budgeted_amount: Money::zero(currency),
-                actual_amount: Money::zero(currency),
+                actual_amount: tagged_actual,
                 remaining_budget: Money::zero(currency),
                 status: NotBudgeted,
-                transactions: Vec::new(),
+                transactions: txs,
             }
         }
     }

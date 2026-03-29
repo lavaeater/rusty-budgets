@@ -55,6 +55,7 @@ pub fn CreateBudgetItemsView() -> Element {
     let mut selected_tag_ids: Signal<Vec<Uuid>> = use_signal(Vec::new);
     let mut new_item_name: Signal<String> = use_signal(String::new);
     let mut new_item_type: Signal<BudgetingType> = use_signal(|| BudgetingType::Expense);
+    let mut new_item_amount_str: Signal<String> = use_signal(String::new);
     let mut is_loading: Signal<bool> = use_signal(|| true);
     let mut sort_col: Signal<&'static str> = use_signal(|| "name");
     let mut sort_asc: Signal<bool> = use_signal(|| true);
@@ -262,6 +263,14 @@ pub fn CreateBudgetItemsView() -> Element {
                                 option { value: "InternalTransfer", "Intern överföring" }
                             }
                         }
+                        div { class: "cbi-create-field",
+                            label { "Budgeterat (kr/mån)" }
+                            Input {
+                                placeholder: "0",
+                                value: "{new_item_amount_str}",
+                                oninput: move |e: FormEvent| new_item_amount_str.set(e.value()),
+                            }
+                        }
                         Button {
                             r#type: "button",
                             disabled: new_item_name().trim().is_empty(),
@@ -270,12 +279,19 @@ pub fn CreateBudgetItemsView() -> Element {
                                 if name.is_empty() { return; }
                                 let tag_ids = selected_tag_ids();
                                 let item_type = new_item_type();
+                                let budgeted = new_item_amount_str()
+                                    .trim()
+                                    .parse::<i64>()
+                                    .ok()
+                                    .filter(|&v| v != 0)
+                                    .map(|kr| api::models::Money::new_dollars(kr, budget_signal().currency));
                                 spawn(async move {
                                     if let Ok(updated) = create_budget_item(
                                         budget_id,
                                         name,
                                         item_type,
                                         tag_ids,
+                                        budgeted,
                                         period_id,
                                     ).await {
                                         consume_context::<BudgetState>().0.set(updated);
@@ -284,6 +300,7 @@ pub fn CreateBudgetItemsView() -> Element {
                                         }
                                         selected_tag_ids.set(Vec::new());
                                         new_item_name.set(String::new());
+                                        new_item_amount_str.set(String::new());
                                     }
                                 });
                             },

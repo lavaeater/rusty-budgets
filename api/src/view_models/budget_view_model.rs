@@ -45,6 +45,11 @@ impl BudgetViewModel {
             .map(|p| p.allocations.clone())
             .unwrap_or_default();
 
+        let all_period_transactions: Vec<&crate::models::BankTransaction> = budget
+            .get_period(period_id)
+            .map(|p| p.transactions.iter().filter(|t| !t.ignored).collect())
+            .unwrap_or_default();
+
         let items = budget_items
             .iter()
             .map(|bi| {
@@ -55,6 +60,7 @@ impl BudgetViewModel {
                     &connected_transactions,
                     &period_allocations,
                     &budget.tags,
+                    &all_period_transactions,
                 )
             })
             .collect::<Vec<_>>();
