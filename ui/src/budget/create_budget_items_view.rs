@@ -243,8 +243,8 @@ pub fn CreateBudgetItemsView() -> Element {
                     }
                     p { class: "cbi-selected-total",
                         "Valt: "
-                        strong { "{fmt_sek(selected_monthly_cents.abs())} kr/mån" }
-                        " ({} taggar)", selected.len()
+                        strong { "{fmt_sek(selected_monthly_cents.abs())} / mån" }
+                        " — {selected.len()} taggar"
                     }
                 }
             }
