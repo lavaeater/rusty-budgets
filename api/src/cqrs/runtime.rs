@@ -392,6 +392,17 @@ impl JoyDbBudgetRuntime {
         let budget = self.db.get::<Budget>(&id)?;
         Ok(budget)
     }
+
+    pub fn undo_last(&self, budget_id: Uuid) -> Result<bool, RustyError> {
+        let mut events = self.events(budget_id)?;
+        if events.is_empty() {
+            return Ok(false);
+        }
+        events.sort_by_key(|e| e.timestamp);
+        let last_event_id = events.last().unwrap().id;
+        self.db.delete::<StoredBudgetEvent>(&last_event_id)?;
+        Ok(true)
+    }
 }
 
 impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
@@ -408,13 +419,11 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
         for ev in events {
             ev.apply(&mut budget);
         }
-        let version = budget.version - version;
         tracing::info!(
-            "[perf] load: replayed {} events in {:?} (snapshot age: {} events)",
-            event_count, t.elapsed(), version
+            "[perf] load: replayed {} events in {:?}",
+            event_count, t.elapsed()
         );
-        if version > 10 { // more than 3 events since last snapshot
-            tracing::info!("More than 10 events since last snapshot, snapshotting");
+        if event_count > 0 {
             self.snapshot(&budget)?;
         }
         Ok(budget)

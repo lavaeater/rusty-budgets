@@ -352,6 +352,10 @@ pub fn delete_allocation(
     with_runtime(None).delete_allocation(user_id, budget_id, allocation_id, transaction_id)
 }
 
+pub fn undo_last(budget_id: Uuid) -> Result<bool, RustyError> {
+    with_runtime(None).undo_last(budget_id)
+}
+
 pub fn create_rule(
     user_id: Uuid,
     budget_id: Uuid,
