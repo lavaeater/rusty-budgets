@@ -22,6 +22,7 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
     let mut edit_item = use_signal(|| false);
     let item_name = use_signal(|| item.name.clone());
     let mut budgeted_amount = use_signal(|| item.budgeted_amount);
+    let mut item_type = use_signal(|| item.budgeting_type);
     let mut item_tags = use_signal(|| item.tag_ids.clone());
     let mut new_tag_name = use_signal(String::new);
 
@@ -288,6 +289,24 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                         }
                     }
                     div { class: "budget-item-edit-field",
+                        label { class: "budget-item-edit-label", "Typ" }
+                        select {
+                            class: "budget-item-edit-input",
+                            onchange: move |e| {
+                                item_type.set(match e.value().as_str() {
+                                    "Income" => BudgetingType::Income,
+                                    "Savings" => BudgetingType::Savings,
+                                    "InternalTransfer" => BudgetingType::InternalTransfer,
+                                    _ => BudgetingType::Expense,
+                                });
+                            },
+                            option { value: "Expense", selected: item_type() == BudgetingType::Expense, "Utgift" }
+                            option { value: "Income", selected: item_type() == BudgetingType::Income, "Inkomst" }
+                            option { value: "Savings", selected: item_type() == BudgetingType::Savings, "Sparande" }
+                            option { value: "InternalTransfer", selected: item_type() == BudgetingType::InternalTransfer, "Intern överföring" }
+                        }
+                    }
+                    div { class: "budget-item-edit-field",
                         label { class: "budget-item-edit-label", "Budgeterat belopp" }
                         input {
                             class: "budget-item-edit-input",
@@ -330,7 +349,7 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                                     budget_id,
                                     item.item_id,
                                     None,
-                                    None,
+                                    Some(item_type()),
                                     Some(tag_ids),
                                     None,
                                     budget_signal().period_id,
