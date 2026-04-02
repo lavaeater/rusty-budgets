@@ -41,6 +41,11 @@ impl BudgetItemViewModel {
             .collect();
         let item_tags = &resolved_tags;
 
+        // Determine effective budgeting type (actual_item takes precedence over budget_item)
+        let effective_budgeting_type = actual_item
+            .map(|ai| ai.budgeting_type)
+            .unwrap_or(budget_item.budgeting_type);
+
         // Compute actual amount from tagged transactions (new tagging workflow)
         let tag_ids_set: HashSet<&Uuid> = budget_item.tag_ids.iter().collect();
         let mut tagged_txs: Vec<&&BankTransaction> = all_period_transactions
@@ -48,7 +53,14 @@ impl BudgetItemViewModel {
             .filter(|tx| tx.tag_id.map_or(false, |tid| tag_ids_set.contains(&tid)))
             .collect();
         tagged_txs.sort_by_key(|tx| tx.date);
-        let tagged_actual: Money = tagged_txs.iter().map(|tx| tx.amount).sum();
+        // Raw sum of transaction amounts (negative for expenses/savings — money leaving)
+        let tagged_actual_raw: Money = tagged_txs.iter().map(|tx| tx.amount).sum();
+        // Normalize: budgeted amounts are always positive, so abs-normalise actual for
+        // Expense and Savings so that comparisons and remaining_budget are correct.
+        let tagged_actual = match effective_budgeting_type {
+            BudgetingType::Expense | BudgetingType::Savings => tagged_actual_raw.abs(),
+            _ => tagged_actual_raw,
+        };
 
         if let Some(actual_item) = actual_item {
             let relevant_allocs: Vec<&TransactionAllocation> = allocations

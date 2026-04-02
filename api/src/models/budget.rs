@@ -465,6 +465,7 @@ impl Budget {
                     .filter(|t| {
                         !t.ignored
                             && t.actual_id.is_none()
+                            && t.tag_id.is_none()
                             && !p.allocations.iter().any(|a| a.transaction_id == t.id)
                     })
                     .collect()
