@@ -643,6 +643,19 @@
     color: #4338ca;
     font-size: 0.78rem;
     font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+}
+
+.tag-chip:hover {
+    background: #c7d2fe;
+    border-color: #818cf8;
+}
+
+.tag-chip-selected {
+    background: #667eea;
+    color: white;
+    border-color: #4f46e5;
 }
 
 .tag-chip-text {

@@ -226,8 +226,16 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                         div { class: "tag-editor",
                             div { class: "tag-chips",
                                 {
-                                   budget_signal().tags.iter().filter(|t| !t.deleted).cloned().collect::<Vec<_>>()
-                                        .into_iter()
+                                    let mut sorted_tags = budget_signal().tags.iter()
+                                        .filter(|t| !t.deleted)
+                                        .cloned()
+                                        .collect::<Vec<_>>();
+                                    sorted_tags.sort_by(|a, b| {
+                                        let a_sel = item_tags().contains(&a.id);
+                                        let b_sel = item_tags().contains(&b.id);
+                                        b_sel.cmp(&a_sel).then_with(|| a.name.cmp(&b.name))
+                                    });
+                                    sorted_tags.into_iter()
                                         .map(|tag| {
                                             let tag_id = tag.id;
                                             let is_selected = item_tags().contains(&tag_id);

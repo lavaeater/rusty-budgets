@@ -100,11 +100,54 @@ impl BudgetViewModel {
         let potential_transfer_count = all_transfer_pairs.len();
         let potential_transfers = all_transfer_pairs.into_iter().take(10).collect::<Vec<_>>();
 
+        // Compute overviews from BudgetItemViewModels (which have tag-based actual amounts)
+        // rather than from the RulePackages/ActualItem system which is never updated by
+        // the tagging workflow.
+        let sum_budgeted = |bt: BudgetingType| -> crate::models::Money {
+            items.iter().filter(|i| i.budgeting_type == bt).map(|i| i.budgeted_amount).sum()
+        };
+        let sum_actual = |bt: BudgetingType| -> crate::models::Money {
+            items.iter().filter(|i| i.budgeting_type == bt).map(|i| i.actual_amount).sum()
+        };
+        let income_budgeted = sum_budgeted(BudgetingType::Income);
+        let expense_budgeted = sum_budgeted(BudgetingType::Expense);
+        let savings_budgeted = sum_budgeted(BudgetingType::Savings);
+        let transfer_budgeted = sum_budgeted(BudgetingType::InternalTransfer);
+        let income_actual = sum_actual(BudgetingType::Income);
+        let expense_actual = sum_actual(BudgetingType::Expense);
+        let savings_actual = sum_actual(BudgetingType::Savings);
+        let transfer_actual = sum_actual(BudgetingType::InternalTransfer);
+        // Income remaining = income budgeted minus what is allocated to expenses + savings
+        let income_remaining = income_budgeted - expense_budgeted - savings_budgeted;
         let mut overviews = vec![
-            budget.get_budgeting_overview(BudgetingType::Income, period_id),
-            budget.get_budgeting_overview(BudgetingType::Expense, period_id),
-            budget.get_budgeting_overview(BudgetingType::Savings, period_id),
-            budget.get_budgeting_overview(BudgetingType::InternalTransfer, period_id),
+            BudgetingTypeOverview {
+                budgeting_type: BudgetingType::Income,
+                budgeted_amount: income_budgeted,
+                actual_amount: income_actual,
+                remaining_budget: income_remaining,
+                is_ok: income_remaining >= crate::models::Money::zero(budget.currency),
+            },
+            BudgetingTypeOverview {
+                budgeting_type: BudgetingType::Expense,
+                budgeted_amount: expense_budgeted,
+                actual_amount: expense_actual,
+                remaining_budget: expense_budgeted - expense_actual,
+                is_ok: expense_actual <= expense_budgeted,
+            },
+            BudgetingTypeOverview {
+                budgeting_type: BudgetingType::Savings,
+                budgeted_amount: savings_budgeted,
+                actual_amount: savings_actual,
+                remaining_budget: savings_budgeted - savings_actual,
+                is_ok: savings_actual <= savings_budgeted,
+            },
+            BudgetingTypeOverview {
+                budgeting_type: BudgetingType::InternalTransfer,
+                budgeted_amount: transfer_budgeted,
+                actual_amount: transfer_actual,
+                remaining_budget: transfer_budgeted - transfer_actual,
+                is_ok: true,
+            },
         ];
         overviews.sort_by_key(|ov| ov.budgeting_type);
         let untagged_transaction_count = budget
