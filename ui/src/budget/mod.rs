@@ -12,6 +12,7 @@ mod tag_transactions_view;
 mod create_budget_items_view;
 mod retag_transactions_view;
 mod rules_view;
+mod tags_view;
 
 pub use budget_hero::BudgetHero;
 pub use budget_item_view::BudgetItemView;
@@ -26,5 +27,6 @@ pub use tag_transactions_view::TagTransactionsView;
 pub use create_budget_items_view::CreateBudgetItemsView;
 pub use retag_transactions_view::RetagTransactionsView;
 pub use rules_view::RulesView;
+pub use tags_view::TagsView;
 
 
