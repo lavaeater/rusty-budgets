@@ -465,6 +465,20 @@ pub async fn create_budget_item(
     Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id)?, period_id))
 }
 
+#[server(endpoint = "delete_rule")]
+pub async fn delete_rule(
+    budget_id: Uuid,
+    rule_id: Uuid,
+    period_id: PeriodId,
+) -> ServerFnResult<BudgetViewModel> {
+    let user = db::get_default_user(None)?;
+    let _ = db::delete_rule(user.id, budget_id, rule_id)?;
+    Ok(BudgetViewModel::from_budget(
+        &db::get_budget(budget_id)?,
+        period_id,
+    ))
+}
+
 #[server(endpoint = "update_rule")]
 pub async fn update_rule(
     budget_id: Uuid,

@@ -286,6 +286,15 @@ impl JoyDbBudgetRuntime {
         })
     }
 
+    pub fn delete_rule(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        rule_id: Uuid,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| budget.delete_rule(rule_id))
+    }
+
     pub fn create_allocation(
         &self,
         user_id: Uuid,

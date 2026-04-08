@@ -40,6 +40,7 @@ pub_events_enum! {
         TagModified,
         TransactionTagged,
         RuleModified,
+        RuleDeleted,
         TransferPairRejected,
     }
 }

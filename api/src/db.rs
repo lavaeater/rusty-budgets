@@ -574,3 +574,7 @@ pub fn modify_rule(
 ) -> Result<Uuid, RustyError> {
     with_runtime(None).modify_rule(user_id, budget_id, rule_id, transaction_key)
 }
+
+pub fn delete_rule(user_id: Uuid, budget_id: Uuid, rule_id: Uuid) -> Result<Uuid, RustyError> {
+    with_runtime(None).delete_rule(user_id, budget_id, rule_id)
+}
