@@ -1,4 +1,4 @@
-use api::models::Periodicity;
+use api::models::{Money, Periodicity};
 use api::modify_tag;
 use crate::budget::budget_hero::BudgetState;
 use crate::Input;
@@ -25,6 +25,7 @@ pub fn TagsView() -> Element {
     let mut search: Signal<String> = use_signal(String::new);
     let mut editing_tag_id: Signal<Option<Uuid>> = use_signal(|| None);
     let mut editing_name: Signal<String> = use_signal(String::new);
+    let mut expanded_tag_id: Signal<Option<Uuid>> = use_signal(|| None);
 
     let budget = budget_signal();
 
@@ -75,6 +76,7 @@ pub fn TagsView() -> Element {
                         span { "Namn" }
                         span { "Periodicitet" }
                         span { "Budgetpost" }
+                        span {}
                     }
                     for tag in tags {
                         {
@@ -86,75 +88,153 @@ pub fn TagsView() -> Element {
                             let periodicity = tag.periodicity;
                             let item_name = tag_to_item.get(&tag_id).cloned();
                             let is_editing = editing_tag_id() == Some(tag_id);
+                            let is_expanded = expanded_tag_id() == Some(tag_id);
 
                             rsx! {
-                                div { key: "{tag_id}", class: "tags-row",
-                                    // Inline name editor
-                                    if is_editing {
-                                        input {
-                                            class: "tags-name-input",
-                                            r#type: "text",
-                                            value: "{editing_name}",
-                                            autofocus: true,
-                                            onclick: move |e| e.stop_propagation(),
-                                            oninput: move |e: FormEvent| editing_name.set(e.value()),
-                                            onkeydown: move |e: KeyboardEvent| {
-                                                if e.key() == Key::Escape {
-                                                    editing_name.set(tag_name_escape.clone());
-                                                    editing_tag_id.set(None);
-                                                }
-                                            },
-                                            onblur: move |_| {
-                                                let original = tag_name_blur.clone();
-                                                async move {
-                                                    let name = editing_name().trim().to_string();
-                                                    editing_tag_id.set(None);
-                                                    if name.is_empty() || name == original { return; }
-                                                    if let Ok(updated) = modify_tag(budget_id, tag_id, Some(name), None, None, period_id).await {
+                                div { key: "{tag_id}", class: "tags-row-wrapper",
+                                    div { class: "tags-row",
+                                        // Inline name editor
+                                        if is_editing {
+                                            input {
+                                                class: "tags-name-input",
+                                                r#type: "text",
+                                                value: "{editing_name}",
+                                                autofocus: true,
+                                                onclick: move |e| e.stop_propagation(),
+                                                oninput: move |e: FormEvent| editing_name.set(e.value()),
+                                                onkeydown: move |e: KeyboardEvent| {
+                                                    if e.key() == Key::Escape {
+                                                        editing_name.set(tag_name_escape.clone());
+                                                        editing_tag_id.set(None);
+                                                    }
+                                                },
+                                                onblur: move |_| {
+                                                    let original = tag_name_blur.clone();
+                                                    async move {
+                                                        let name = editing_name().trim().to_string();
+                                                        editing_tag_id.set(None);
+                                                        if name.is_empty() || name == original { return; }
+                                                        if let Ok(updated) = modify_tag(budget_id, tag_id, Some(name), None, None, period_id).await {
+                                                            consume_context::<BudgetState>().0.set(updated);
+                                                        }
+                                                    }
+                                                },
+                                            }
+                                        } else {
+                                            span {
+                                                class: "tags-name tags-name-editable",
+                                                title: "Klicka för att byta namn",
+                                                onclick: move |_| {
+                                                    editing_name.set(tag_name_click.clone());
+                                                    editing_tag_id.set(Some(tag_id));
+                                                },
+                                                "{tag_name}"
+                                            }
+                                        }
+
+                                        // Periodicity editor
+                                        select {
+                                            class: "tags-periodicity-select",
+                                            onchange: move |e| {
+                                                let new_p = match e.value().as_str() {
+                                                    "Quarterly" => Periodicity::Quarterly,
+                                                    "Annual" => Periodicity::Annual,
+                                                    "OneOff" => Periodicity::OneOff,
+                                                    _ => Periodicity::Monthly,
+                                                };
+                                                spawn(async move {
+                                                    if let Ok(updated) = modify_tag(budget_id, tag_id, None, Some(new_p), None, period_id).await {
                                                         consume_context::<BudgetState>().0.set(updated);
                                                     }
-                                                }
+                                                });
                                             },
+                                            option { value: "Monthly",   selected: periodicity == Periodicity::Monthly,   "{periodicity_label(Periodicity::Monthly)}" }
+                                            option { value: "Quarterly", selected: periodicity == Periodicity::Quarterly, "{periodicity_label(Periodicity::Quarterly)}" }
+                                            option { value: "Annual",    selected: periodicity == Periodicity::Annual,    "{periodicity_label(Periodicity::Annual)}" }
+                                            option { value: "OneOff",    selected: periodicity == Periodicity::OneOff,    "{periodicity_label(Periodicity::OneOff)}" }
                                         }
-                                    } else {
-                                        span {
-                                            class: "tags-name tags-name-editable",
-                                            title: "Klicka för att byta namn",
+
+                                        // Budget item connection
+                                        if let Some(name) = item_name {
+                                            span { class: "tags-item-badge", "{name}" }
+                                        } else {
+                                            span { class: "tags-item-none", "—" }
+                                        }
+
+                                        // Expand toggle
+                                        button {
+                                            class: if is_expanded { "tags-expand-btn tags-expand-btn-open" } else { "tags-expand-btn" },
+                                            r#type: "button",
+                                            title: if is_expanded { "Dölj transaktioner" } else { "Visa transaktioner" },
                                             onclick: move |_| {
-                                                editing_name.set(tag_name_click.clone());
-                                                editing_tag_id.set(Some(tag_id));
+                                                if is_expanded {
+                                                    expanded_tag_id.set(None);
+                                                } else {
+                                                    expanded_tag_id.set(Some(tag_id));
+                                                }
                                             },
-                                            "{tag_name}"
+                                            "▾"
                                         }
                                     }
 
-                                    // Periodicity editor
-                                    select {
-                                        class: "tags-periodicity-select",
-                                        onchange: move |e| {
-                                            let new_p = match e.value().as_str() {
-                                                "Quarterly" => Periodicity::Quarterly,
-                                                "Annual" => Periodicity::Annual,
-                                                "OneOff" => Periodicity::OneOff,
-                                                _ => Periodicity::Monthly,
-                                            };
-                                            spawn(async move {
-                                                if let Ok(updated) = modify_tag(budget_id, tag_id, None, Some(new_p), None, period_id).await {
-                                                    consume_context::<BudgetState>().0.set(updated);
-                                                }
-                                            });
-                                        },
-                                        option { value: "Monthly",   selected: periodicity == Periodicity::Monthly,   "{periodicity_label(Periodicity::Monthly)}" }
-                                        option { value: "Quarterly", selected: periodicity == Periodicity::Quarterly, "{periodicity_label(Periodicity::Quarterly)}" }
-                                        option { value: "Annual",    selected: periodicity == Periodicity::Annual,    "{periodicity_label(Periodicity::Annual)}" }
-                                        option { value: "OneOff",    selected: periodicity == Periodicity::OneOff,    "{periodicity_label(Periodicity::OneOff)}" }
+                                    if is_expanded {
+                                        TagTransactionsPanel { budget_id, tag_id }
                                     }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 
-                                    // Budget item connection
-                                    if let Some(name) = item_name {
-                                        span { class: "tags-item-badge", "{name}" }
-                                    } else {
-                                        span { class: "tags-item-none", "—" }
+#[component]
+fn TagTransactionsPanel(budget_id: Uuid, tag_id: Uuid) -> Element {
+    let transactions = use_resource(move || async move {
+        api::get_transactions_for_tag(budget_id, tag_id).await
+    });
+
+    match &*transactions.read() {
+        None => rsx! {
+            div { class: "tags-tx-panel",
+                span { class: "tags-tx-loading", "Laddar..." }
+            }
+        },
+        Some(Err(e)) => rsx! {
+            div { class: "tags-tx-panel",
+                span { class: "tags-tx-error", "Fel: {e}" }
+            }
+        },
+        Some(Ok(txs)) => {
+            let currency = txs.first().map(|tx| tx.amount.currency());
+            let total: Option<Money> = currency.map(|cur| {
+                txs.iter().fold(Money::new_cents(0, cur), |acc, tx| acc + tx.amount)
+            });
+
+            rsx! {
+                div { class: "tags-tx-panel",
+                    if txs.is_empty() {
+                        span { class: "tags-tx-empty", "Inga taggade transaktioner." }
+                    } else {
+                        div { class: "tags-tx-summary",
+                            span { class: "tags-tx-count", "{txs.len()} transaktioner" }
+                            if let Some(total) = total {
+                                span { class: "tags-tx-total",
+                                    "Totalt: "
+                                    strong { {total.to_string()} }
+                                }
+                            }
+                        }
+                        div { class: "tags-tx-list",
+                            for tx in txs {
+                                div { class: "tags-tx-row", key: "{tx.id}",
+                                    span { class: "tags-tx-date", {tx.date.format("%Y-%m-%d").to_string()} }
+                                    span { class: "tags-tx-desc", {tx.description.clone()} }
+                                    span {
+                                        class: if tx.amount.is_pos() { "tags-tx-amount positive" } else { "tags-tx-amount negative" },
+                                        {tx.amount.to_string()}
                                     }
                                 }
                             }

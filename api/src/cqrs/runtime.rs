@@ -262,6 +262,17 @@ impl JoyDbBudgetRuntime {
         })
     }
 
+    pub fn untag_transaction(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        tx_id: Uuid,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.do_transaction_untagged(tx_id)
+        })
+    }
+
     pub fn reject_transfer_pair(
         &self,
         user_id: Uuid,

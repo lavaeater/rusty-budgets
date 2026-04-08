@@ -470,6 +470,19 @@ pub fn get_next_untagged_transaction(budget_id: Uuid) -> Result<Option<BankTrans
     Ok(budget.get_next_untagged_transaction().cloned())
 }
 
+pub fn get_transactions_for_tag(budget_id: Uuid, tag_id: Uuid) -> Result<Vec<BankTransaction>, RustyError> {
+    let budget = get_budget(budget_id)?;
+    let mut txs: Vec<BankTransaction> = budget
+        .periods
+        .iter()
+        .flat_map(|p| p.transactions.iter())
+        .filter(|tx| tx.tag_id == Some(tag_id) && !tx.ignored)
+        .cloned()
+        .collect();
+    txs.sort_by(|a, b| b.date.cmp(&a.date));
+    Ok(txs)
+}
+
 pub fn get_tagged_transactions(budget_id: Uuid, limit: usize, offset: usize) -> Result<Vec<BankTransaction>, RustyError> {
     let budget = get_budget(budget_id)?;
     let mut txs: Vec<BankTransaction> = budget
@@ -589,7 +602,46 @@ pub fn modify_rule(
 }
 
 pub fn delete_rule(user_id: Uuid, budget_id: Uuid, rule_id: Uuid) -> Result<Uuid, RustyError> {
-    with_runtime(None).delete_rule(user_id, budget_id, rule_id)
+    // Capture the rule's tag_id before deletion so we know which transactions to re-evaluate.
+    let budget = get_budget(budget_id)?;
+    let deleted_tag_id = budget
+        .match_rules
+        .iter()
+        .find(|r| r.id == rule_id)
+        .and_then(|r| r.tag_id);
+
+    with_runtime(None).delete_rule(user_id, budget_id, rule_id)?;
+
+    // If the deleted rule had a tag, re-evaluate all transactions tagged with that tag.
+    // Any transaction that no longer matches ANY remaining rule for that tag gets untagged.
+    if let Some(tag_id) = deleted_tag_id {
+        let budget = get_budget(budget_id)?;
+        let transactions_to_check: Vec<uuid::Uuid> = budget
+            .periods
+            .iter()
+            .flat_map(|p| p.transactions.iter())
+            .filter(|tx| tx.tag_id == Some(tag_id) && !tx.ignored)
+            .map(|tx| tx.id)
+            .collect();
+
+        for tx_id in transactions_to_check {
+            let budget = get_budget(budget_id)?;
+            if let Some(tx) = budget.get_transaction(tx_id) {
+                let still_matches = budget
+                    .match_rules
+                    .iter()
+                    .any(|r| r.tag_id == Some(tag_id) && r.matches_transaction(tx));
+                if !still_matches {
+                    match with_runtime(None).untag_transaction(user_id, budget_id, tx_id) {
+                        Ok(_) => info!("Untagged transaction {} after rule deletion", tx_id),
+                        Err(e) => error!(error = %e, "Failed to untag transaction {} after rule deletion", tx_id),
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(budget_id)
 }
 
 pub fn set_item_buffer(
