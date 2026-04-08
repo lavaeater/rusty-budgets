@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 dioxus = { workspace = true, features = ["fullstack"] }
-tokio = { version = "1.50.0", features = ["full"], optional = true }
+tokio = { version = "1.51.1", features = ["full"], optional = true }
 uuid = { workspace = true, features = ["v4", "js", "serde"] }
 chrono = { workspace = true, features = ["serde"] }
 serde = { workspace = true, features = ["derive"] }
@@ -19,7 +19,7 @@ strum_macros = "0.28.0"
 strum = { workspace = true, features = ["derive"] }
 sum = "0.1.7"
 duration-extender = "0.5.0"
-iter_tools = "0.46.0"
+iter_tools = "0.47.0"
 
 [features]
 server = ["dioxus/server", "tokio"]

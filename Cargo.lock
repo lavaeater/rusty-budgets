@@ -466,9 +466,9 @@ dependencies = [
 
 [[package]]
 name = "clone_dyn_types"
-version = "0.45.0"
+version = "0.46.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "428fb064c48ddc585483ce887e884b59656f58c53f38f3b9525df8be3e6fc381"
+checksum = "1a3f776157ddd8935bbb73ece8d0c48cf447b8eaf0294882f2d091a3fca2de2b"
 
 [[package]]
 name = "cocoa"
@@ -2797,9 +2797,9 @@ dependencies = [
 
 [[package]]
 name = "iter_tools"
-version = "0.46.0"
+version = "0.47.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5264d5f7bbead74cd597ee5042d01d37e51969bb31bbf648a754d159f2a81f04"
+checksum = "89afce388151859e44f42138d1c7250dea4c308c9324e6905b3ff32ce43036cf"
 dependencies = [
  "clone_dyn_types",
  "itertools",
