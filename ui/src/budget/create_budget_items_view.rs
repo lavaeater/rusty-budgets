@@ -59,6 +59,8 @@ pub fn CreateBudgetItemsView() -> Element {
     let mut is_loading: Signal<bool> = use_signal(|| true);
     let mut sort_col: Signal<&'static str> = use_signal(|| "name");
     let mut sort_asc: Signal<bool> = use_signal(|| true);
+    let mut editing_tag_id: Signal<Option<Uuid>> = use_signal(|| None);
+    let mut editing_name: Signal<String> = use_signal(String::new);
 
     use_effect(move || {
         spawn(async move {
@@ -162,6 +164,9 @@ pub fn CreateBudgetItemsView() -> Element {
                     {
                         let tag_id = summary.tag_id;
                         let tag_name = summary.name.clone();
+                        let tag_name_escape = tag_name.clone();
+                        let tag_name_blur = tag_name.clone();
+                        let tag_name_click = tag_name.clone();
                         let is_selected = selected.contains(&tag_id);
                         let monthly = summary.average_monthly.amount_in_cents();
                         let yearly = summary.average_yearly.amount_in_cents();
@@ -194,7 +199,54 @@ pub fn CreateBudgetItemsView() -> Element {
                                         selected_tag_ids.set(ids);
                                     },
                                 }
-                                span { class: "cbi-tag-name", "{tag_name}" }
+                                // Inline name editor
+                                if editing_tag_id() == Some(tag_id) {
+                                    input {
+                                        class: "cbi-tag-name-input",
+                                        r#type: "text",
+                                        value: "{editing_name}",
+                                        autofocus: true,
+                                        onclick: move |e| e.stop_propagation(),
+                                        oninput: move |e: FormEvent| editing_name.set(e.value()),
+                                        onkeydown: move |e: KeyboardEvent| {
+                                            match e.key() {
+                                                Key::Escape => {
+                                                    // Restore original name so blur doesn't save a change
+                                                    editing_name.set(tag_name_escape.clone());
+                                                    editing_tag_id.set(None);
+                                                }
+                                                _ => {}
+                                            }
+                                        },
+                                        onblur: move |_| {
+                                            let original_name = tag_name_blur.clone();
+                                            async move {
+                                            let name = editing_name().trim().to_string();
+                                            editing_tag_id.set(None);
+                                            if name.is_empty() || name == original_name { return; }
+                                            let mut sums = tag_summaries();
+                                            if let Some(s) = sums.iter_mut().find(|s| s.tag_id == tag_id) {
+                                                s.name = name.clone();
+                                            }
+                                            tag_summaries.set(sums);
+                                            if let Ok(updated) = modify_tag(budget_id, tag_id, Some(name), None, None, period_id).await {
+                                                consume_context::<BudgetState>().0.set(updated);
+                                            }
+                                            }
+                                        },
+                                    }
+                                } else {
+                                    span {
+                                        class: "cbi-tag-name cbi-tag-name-editable",
+                                        title: "Klicka för att byta namn",
+                                        onclick: move |e| {
+                                            e.stop_propagation();
+                                            editing_name.set(tag_name_click.clone());
+                                            editing_tag_id.set(Some(tag_id));
+                                        },
+                                        "{tag_name}"
+                                    }
+                                }
                                 // Inline periodicity editor
                                 select {
                                     class: "{periodicity_class(periodicity)} cbi-periodicity-select",

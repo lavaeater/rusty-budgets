@@ -1,0 +1,110 @@
+.retag-transactions-view {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.retag-search-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.retag-count {
+    font-size: 0.82rem;
+    color: #94a3b8;
+    white-space: nowrap;
+}
+
+.retag-loading,
+.retag-empty {
+    font-size: 0.9rem;
+    color: #94a3b8;
+    padding: 12px 0;
+}
+
+/* Table */
+.retag-table {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.retag-header {
+    display: grid;
+    grid-template-columns: 110px 1fr 120px 180px;
+    padding: 10px 16px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+    gap: 8px;
+}
+
+.retag-row {
+    display: grid;
+    grid-template-columns: 110px 1fr 120px 180px;
+    padding: 10px 16px;
+    gap: 8px;
+    align-items: center;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.retag-row:last-child {
+    border-bottom: none;
+}
+
+.retag-row:hover {
+    background: #f8fafc;
+}
+
+.retag-date {
+    font-size: 0.82rem;
+    color: #64748b;
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+}
+
+.retag-description {
+    font-size: 0.88rem;
+    color: #1e293b;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.retag-amount {
+    font-size: 0.88rem;
+    font-weight: 600;
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+    text-align: right;
+}
+
+.retag-amount.positive {
+    color: #16a34a;
+}
+
+.retag-amount.negative {
+    color: #dc2626;
+}
+
+.retag-tag-select {
+    font-size: 0.82rem;
+    padding: 4px 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: white;
+    color: #334155;
+    cursor: pointer;
+    width: 100%;
+}
+
+.retag-tag-select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}

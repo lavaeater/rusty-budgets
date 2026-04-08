@@ -470,6 +470,19 @@ pub fn get_next_untagged_transaction(budget_id: Uuid) -> Result<Option<BankTrans
     Ok(budget.get_next_untagged_transaction().cloned())
 }
 
+pub fn get_tagged_transactions(budget_id: Uuid, limit: usize, offset: usize) -> Result<Vec<BankTransaction>, RustyError> {
+    let budget = get_budget(budget_id)?;
+    let mut txs: Vec<BankTransaction> = budget
+        .periods
+        .iter()
+        .flat_map(|p| p.transactions.iter())
+        .filter(|tx| tx.tag_id.is_some() && !tx.ignored)
+        .cloned()
+        .collect();
+    txs.sort_by(|a, b| b.date.cmp(&a.date));
+    Ok(txs.into_iter().skip(offset).take(limit).collect())
+}
+
 pub fn get_untagged_transactions(budget_id: Uuid, limit: usize) -> Result<Vec<BankTransaction>, RustyError> {
     let budget = get_budget(budget_id)?;
     let transfer_ids: std::collections::HashSet<Uuid> = budget

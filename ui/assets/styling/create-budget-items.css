@@ -92,6 +92,36 @@
     color: #1e293b;
 }
 
+.cbi-tag-name-editable {
+    cursor: text;
+    border-radius: 4px;
+    padding: 1px 3px;
+    margin: -1px -3px;
+    transition: background 0.1s;
+}
+
+.cbi-tag-name-editable:hover {
+    background: #e0e7ff;
+}
+
+.cbi-tag-name-input {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #1e293b;
+    border: 1px solid #a5b4fc;
+    border-radius: 4px;
+    padding: 1px 5px;
+    outline: none;
+    background: white;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.cbi-tag-name-input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
 .cbi-periodicity-badge {
     display: inline-block;
     padding: 3px 10px;
