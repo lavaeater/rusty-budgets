@@ -150,6 +150,18 @@ pub async fn modify_item(
     ))
 }
 
+#[server(endpoint = "set_item_buffer")]
+pub async fn set_item_buffer(
+    budget_id: Uuid,
+    item_id: Uuid,
+    buffer_target: Option<Money>,
+    period_id: PeriodId,
+) -> ServerFnResult<BudgetViewModel> {
+    let user = db::get_default_user(None)?;
+    let _ = db::set_item_buffer(user.id, budget_id, item_id, buffer_target)?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id)?, period_id))
+}
+
 #[server(endpoint = "create_tag")]
 pub async fn create_tag(
     budget_id: Uuid,

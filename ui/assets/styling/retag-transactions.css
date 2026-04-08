@@ -92,6 +92,23 @@
     color: #dc2626;
 }
 
+.retag-tag-filter {
+    font-size: 0.82rem;
+    padding: 6px 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: white;
+    color: #334155;
+    cursor: pointer;
+    min-width: 140px;
+}
+
+.retag-tag-filter:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
 .retag-tag-select {
     font-size: 0.82rem;
     padding: 4px 8px;
@@ -107,4 +124,43 @@
     outline: none;
     border-color: #667eea;
     box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.retag-create-tag-row {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    width: 100%;
+}
+
+.retag-new-tag-input {
+    flex: 1;
+    font-size: 0.82rem;
+    padding: 4px 8px;
+    border: 1px solid #a5b4fc;
+    border-radius: 6px;
+    outline: none;
+    color: #1e293b;
+}
+
+.retag-new-tag-input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.retag-cancel-create {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #94a3b8;
+    font-size: 1rem;
+    padding: 2px 5px;
+    border-radius: 4px;
+    line-height: 1;
+    transition: color 0.15s, background 0.15s;
+}
+
+.retag-cancel-create:hover {
+    color: #dc2626;
+    background: #fee2e2;
 }

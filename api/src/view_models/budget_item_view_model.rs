@@ -20,6 +20,10 @@ pub struct BudgetItemViewModel {
     pub remaining_budget: Money,
     pub status: BudgetItemStatus,
     pub transactions: Vec<TransactionViewModel>,
+    /// The total amount this item needs to have available (e.g. 1200 kr for annual insurance).
+    pub buffer_target: Option<Money>,
+    /// Computed: buffer_target ÷ periodicity_months. None if no buffer target is set.
+    pub required_monthly_contribution: Option<Money>,
 }
 
 impl BudgetItemViewModel {
@@ -45,6 +49,21 @@ impl BudgetItemViewModel {
         let effective_budgeting_type = actual_item
             .map(|ai| ai.budgeting_type)
             .unwrap_or(budget_item.budgeting_type);
+
+        // Compute required monthly buffer contribution from tag periodicities
+        let required_monthly_contribution = budget_item.buffer_target.map(|target| {
+            let max_months = budget_item.tag_ids.iter()
+                .filter_map(|tid| budget_tags.iter().find(|t| t.id == *tid))
+                .map(|t| match t.periodicity {
+                    Periodicity::Monthly => 1i64,
+                    Periodicity::Quarterly => 3,
+                    Periodicity::Annual => 12,
+                    Periodicity::OneOff => 1,
+                })
+                .max()
+                .unwrap_or(12);
+            target.divide(max_months)
+        });
 
         // Compute actual amount from tagged transactions (new tagging workflow)
         let tag_ids_set: HashSet<&Uuid> = budget_item.tag_ids.iter().collect();
@@ -123,6 +142,8 @@ impl BudgetItemViewModel {
                 remaining_budget: actual_item.budgeted_amount - actual_amount,
                 status,
                 transactions: txs,
+                buffer_target: budget_item.buffer_target,
+                required_monthly_contribution,
             }
         } else {
             let txs = tagged_txs.iter()
@@ -141,6 +162,8 @@ impl BudgetItemViewModel {
                 remaining_budget: Money::zero(currency),
                 status: NotBudgeted,
                 transactions: txs,
+                buffer_target: budget_item.buffer_target,
+                required_monthly_contribution,
             }
         }
     }

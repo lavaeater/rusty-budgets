@@ -1,8 +1,7 @@
 use crate::budget::BudgetItemStatusView;
-use crate::budget::ItemSelector;
 use crate::budget::budget_hero::BudgetState;
 use crate::{Button, ButtonVariant, Input, Slider, SliderRange, SliderThumb, SliderTrack};
-use api::ignore_transaction;
+use api::{create_tag, ignore_transaction, set_item_buffer, tag_transaction};
 use api::models::{BudgetingType, Money, Periodicity};
 use api::view_models::BudgetItemStatus;
 use api::view_models::BudgetItemViewModel;
@@ -25,10 +24,17 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
     let mut item_type = use_signal(|| item.budgeting_type);
     let mut item_tags = use_signal(|| item.tag_ids.clone());
     let mut new_tag_name = use_signal(String::new);
+    let mut buffer_target_str = use_signal(|| {
+        item.buffer_target
+            .map(|m| m.amount_in_dollars().to_string())
+            .unwrap_or_default()
+    });
 
-    // State for selected transaction IDs and the target item for moving
+    // State for selected transactions and retagging
     let mut selected_transactions = use_signal(HashSet::<Uuid>::new);
-    let mut show_move_selector = use_signal(|| false);
+    let mut show_retag_selector = use_signal(|| false);
+    let mut creating_retag_tag = use_signal(|| false);
+    let mut new_retag_tag_name = use_signal(String::new);
     let budget_signal = use_context::<BudgetState>().0;
     let budget_id = budget_signal().id;
     let remaining_to_budget = budget_signal()
@@ -135,75 +141,104 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                                 if let Some(updated_budget) = updated_budget {
                                     info!("Transactions ignored, budget updated");
                                     selected_transactions.set(HashSet::new());
-                                    show_move_selector.set(false);
+                                    show_retag_selector.set(false);
                                     consume_context::<BudgetState>().0.set(updated_budget);
                                 } else {
                                     error!("Transactions ignored, budget not updated");
                                     selected_transactions.set(HashSet::new());
-                                    show_move_selector.set(false);
+                                    show_retag_selector.set(false);
                                 }
                             },
                             "Ignorera alla"
                         }
 
-                        if !show_move_selector() {
+                        if !show_retag_selector() {
                             Button {
                                 variant: ButtonVariant::Primary,
                                 onclick: move |_| {
-                                    show_move_selector.set(true);
+                                    show_retag_selector.set(true);
+                                    creating_retag_tag.set(false);
+                                    new_retag_tag_name.set(String::new());
                                 },
-                                "Flytta markerade"
+                                "Ändra tagg"
+                            }
+                        } else if creating_retag_tag() {
+                            div { class: "move-selector-container",
+                                span { class: "move-selector-label", "Ny tagg:" }
+                                Input {
+                                    placeholder: "Taggnamn...",
+                                    value: new_retag_tag_name(),
+                                    oninput: move |e: FormEvent| new_retag_tag_name.set(e.value()),
+                                }
+                                Button {
+                                    variant: ButtonVariant::Primary,
+                                    r#type: "button",
+                                    onclick: move |_| async move {
+                                        let name = new_retag_tag_name().trim().to_string();
+                                        if name.is_empty() { return; }
+                                        let Ok(updated) = create_tag(budget_id, name.clone(), Periodicity::Monthly, budget_signal().period_id).await else { return; };
+                                        let Some(new_tag) = updated.tags.iter().find(|t| t.name == name && !t.deleted).cloned() else { return; };
+                                        consume_context::<BudgetState>().0.set(updated);
+                                        let selected_ids: Vec<Uuid> = selected_transactions().into_iter().collect();
+                                        for tx_id in selected_ids {
+                                            if let Ok(bv) = tag_transaction(budget_id, tx_id, new_tag.id, budget_signal().period_id).await {
+                                                consume_context::<BudgetState>().0.set(bv);
+                                            }
+                                        }
+                                        selected_transactions.set(HashSet::new());
+                                        show_retag_selector.set(false);
+                                        creating_retag_tag.set(false);
+                                        new_retag_tag_name.set(String::new());
+                                    },
+                                    "Skapa & tagga"
+                                }
+                                Button {
+                                    variant: ButtonVariant::Secondary,
+                                    r#type: "button",
+                                    onclick: move |_| { creating_retag_tag.set(false); },
+                                    "Tillbaka"
+                                }
                             }
                         } else {
                             div { class: "move-selector-container",
-                                span { class: "move-selector-label", "Flytta till:" }
-                                ItemSelector {
-                                    items: budget_signal()
-                                        .items
-                                        .iter()
-                                        .filter(|i| i.item_id != item.item_id)
-                                        .cloned()
-                                        .collect(),
-                                    on_change: move |target_item: Option<BudgetItemViewModel>| async move {
-                                        if let Some(target_item) = target_item {
-                                            let mut success = true;
-                                            let selected_ids: Vec<Uuid> = selected_transactions().into_iter().collect();
-
-                                            for tx_id in selected_ids {
-                                                if api::connect_transaction(
-                                                        budget_id,
-                                                        tx_id,
-                                                        target_item.actual_id,
-                                                        target_item.item_id,
-                                                        None,
-                                                        budget_signal().period_id,
-                                                    )
-                                                    .await
-                                                    .is_err()
-                                                {
-                                                    success = false;
-                                                    break;
-                                                }
-                                            }
-                                            if success {
-                                                if let Ok(Some(updated_budget)) = api::get_budget(
-                                                        Some(budget_id),
-                                                        budget_signal().period_id,
-                                                    )
-                                                    .await
-                                                {
-                                                    selected_transactions.set(HashSet::new());
-                                                    show_move_selector.set(false);
-                                                    consume_context::<BudgetState>().0.set(updated_budget);
-                                                } else {
-                                                    show_move_selector.set(false);
-                                                    error!("Transactions moved, budget not updated");
-                                                }
-                                            }
-                                        } else {
-                                            show_move_selector.set(false);
+                                span { class: "move-selector-label", "Tagga som:" }
+                                select {
+                                    class: "retag-tag-select",
+                                    onchange: move |e| {
+                                        if e.value() == "__new__" {
+                                            creating_retag_tag.set(true);
+                                            return;
                                         }
+                                        let Ok(tag_id) = Uuid::parse_str(&e.value()) else { return; };
+                                        let selected_ids: Vec<Uuid> = selected_transactions().into_iter().collect();
+                                        spawn(async move {
+                                            for tx_id in selected_ids {
+                                                if let Ok(bv) = tag_transaction(budget_id, tx_id, tag_id, budget_signal().period_id).await {
+                                                    consume_context::<BudgetState>().0.set(bv);
+                                                }
+                                            }
+                                            selected_transactions.set(HashSet::new());
+                                            show_retag_selector.set(false);
+                                        });
                                     },
+                                    option { value: "", disabled: true, selected: true, "Välj tagg..." }
+                                    {
+                                        let mut sorted_tags = budget_signal().tags.iter()
+                                            .filter(|t| !t.deleted)
+                                            .cloned()
+                                            .collect::<Vec<_>>();
+                                        sorted_tags.sort_by(|a, b| a.name.cmp(&b.name));
+                                        sorted_tags.into_iter().map(|tag| rsx! {
+                                            option { key: "{tag.id}", value: "{tag.id}", "{tag.name}" }
+                                        })
+                                    }
+                                    option { value: "__new__", "＋ Ny tagg..." }
+                                }
+                                Button {
+                                    variant: ButtonVariant::Secondary,
+                                    r#type: "button",
+                                    onclick: move |_| { show_retag_selector.set(false); },
+                                    "Avbryt"
                                 }
                             }
                         }
@@ -340,11 +375,44 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                             }
                         }
                     }
+                    div { class: "budget-item-edit-field",
+                        label { class: "budget-item-edit-label", "Buffertmål (kr)" }
+                        div { class: "buffer-target-field",
+                            input {
+                                class: "budget-item-edit-input",
+                                r#type: "number",
+                                min: "0",
+                                placeholder: "t.ex. 1200 för årsförsäkring",
+                                value: "{buffer_target_str}",
+                                oninput: move |e: FormEvent| buffer_target_str.set(e.value()),
+                            }
+                            if let Some(contrib) = item.required_monthly_contribution {
+                                span { class: "buffer-contribution-hint",
+                                    "→ {contrib} / mån"
+                                }
+                            } else if let Ok(v) = buffer_target_str().trim().parse::<i64>() {
+                                if v > 0 {
+                                    // preview based on current tags' max periodicity
+                                    span { class: "buffer-contribution-hint buffer-contribution-preview",
+                                        "Ange tagg med periodicitet för att se bidrag/mån"
+                                    }
+                                }
+                            }
+                        }
+                        p { class: "buffer-target-hint",
+                            "Tomt = ingen buffert. Fyll i hela beloppet för perioden (t.ex. hela årsavgiften)."
+                        }
+                    }
                     div { class: "budget-item-edit-actions",
                         Button {
                             variant: ButtonVariant::Primary,
                             onclick: move |_| async move {
                                 let tag_ids = item_tags();
+                                // Save buffer target
+                                let new_buffer = buffer_target_str().trim().parse::<i64>().ok()
+                                    .filter(|&v| v > 0)
+                                    .map(|kr| Money::new_dollars(kr, budget_signal().currency));
+                                let _ = set_item_buffer(budget_id, item.item_id, new_buffer, budget_signal().period_id).await;
                                 let _ = api::modify_item(
                                     budget_id,
                                     item.item_id,
@@ -427,6 +495,11 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                 BudgetItemStatusView { item: item.clone() }
                 div { class: "budget-item-amounts",
                     "{item.actual_amount.to_string()} / {item.budgeted_amount.to_string()}"
+                    if let Some(contrib) = item.required_monthly_contribution {
+                        span { class: "buffer-badge", title: "Rekommenderat buffertsparande per månad",
+                            "🏦 {contrib}/mån"
+                        }
+                    }
                 }
             }
         }

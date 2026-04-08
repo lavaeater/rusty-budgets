@@ -1,4 +1,5 @@
 use crate::models::budgeting_type::BudgetingType;
+use crate::models::money::Money;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -20,6 +21,8 @@ pub struct BudgetItem {
     pub tag_ids: Vec<Uuid>,
     #[serde(default)]
     pub periodicity: Periodicity,
+    #[serde(default)]
+    pub buffer_target: Option<Money>,
 }
 
 impl BudgetItem {
@@ -34,6 +37,7 @@ impl BudgetItem {
             budgeting_type,
             tag_ids: Vec::new(),
             periodicity: Periodicity::default(),
+            buffer_target: None,
         }
     }
 }

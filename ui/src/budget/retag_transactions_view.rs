@@ -1,5 +1,5 @@
-use api::models::BankTransaction;
-use api::{get_tagged_transactions, tag_transaction};
+use api::models::{BankTransaction, Periodicity};
+use api::{create_tag, get_tagged_transactions, tag_transaction};
 use crate::budget::budget_hero::BudgetState;
 use crate::{Button, ButtonVariant, Input};
 use dioxus::prelude::*;
@@ -18,7 +18,11 @@ pub fn RetagTransactionsView() -> Element {
     let mut offset: Signal<usize> = use_signal(|| 0);
     let mut has_more: Signal<bool> = use_signal(|| false);
     let mut search: Signal<String> = use_signal(String::new);
+    let mut tag_filter: Signal<Option<Uuid>> = use_signal(|| None);
     let mut is_loading: Signal<bool> = use_signal(|| true);
+    // Per-row "create new tag" state
+    let mut creating_for_tx: Signal<Option<Uuid>> = use_signal(|| None);
+    let mut new_tag_name: Signal<String> = use_signal(String::new);
 
     use_effect(move || {
         spawn(async move {
@@ -36,14 +40,18 @@ pub fn RetagTransactionsView() -> Element {
     tags.sort_by(|a, b| a.name.cmp(&b.name));
 
     let search_str = search().to_lowercase();
-    let visible: Vec<BankTransaction> = if search_str.is_empty() {
-        transactions()
-    } else {
-        transactions()
-            .into_iter()
-            .filter(|tx| tx.description.to_lowercase().contains(&search_str))
-            .collect()
-    };
+    let active_tag_filter = tag_filter();
+
+    let visible: Vec<BankTransaction> = transactions()
+        .into_iter()
+        .filter(|tx| {
+            let matches_search = search_str.is_empty()
+                || tx.description.to_lowercase().contains(&search_str);
+            let matches_tag = active_tag_filter
+                .map_or(true, |tid| tx.tag_id == Some(tid));
+            matches_search && matches_tag
+        })
+        .collect();
 
     rsx! {
         document::Link { rel: "stylesheet", href: RETAG_CSS }
@@ -54,9 +62,23 @@ pub fn RetagTransactionsView() -> Element {
                     value: search(),
                     oninput: move |e: FormEvent| search.set(e.value()),
                 }
+                select {
+                    class: "retag-tag-filter",
+                    onchange: move |e| {
+                        tag_filter.set(Uuid::parse_str(&e.value()).ok());
+                    },
+                    option { value: "", "Alla taggar" }
+                    for tag in &tags {
+                        option {
+                            value: "{tag.id}",
+                            selected: active_tag_filter == Some(tag.id),
+                            "{tag.name}"
+                        }
+                    }
+                }
                 span { class: "retag-count",
                     "{visible.len()} transaktioner"
-                    if has_more() && search_str.is_empty() {
+                    if has_more() && search_str.is_empty() && active_tag_filter.is_none() {
                         " (fler finns)"
                     }
                 }
@@ -66,10 +88,10 @@ pub fn RetagTransactionsView() -> Element {
                 p { class: "retag-loading", "Laddar..." }
             } else if visible.is_empty() {
                 p { class: "retag-empty",
-                    if search_str.is_empty() {
+                    if search_str.is_empty() && active_tag_filter.is_none() {
                         "Inga taggade transaktioner."
                     } else {
-                        "Inga transaktioner matchar sökningen."
+                        "Inga transaktioner matchar filtret."
                     }
                 }
             } else {
@@ -89,6 +111,7 @@ pub fn RetagTransactionsView() -> Element {
                             let description = tx.description.clone();
                             let amount_pos = tx.amount.is_pos();
                             let tags_row = tags.clone();
+                            let is_creating = creating_for_tx() == Some(tx_id);
 
                             rsx! {
                                 div { key: "{tx_id}", class: "retag-row",
@@ -98,27 +121,83 @@ pub fn RetagTransactionsView() -> Element {
                                         class: if amount_pos { "retag-amount positive" } else { "retag-amount negative" },
                                         "{amount_str}"
                                     }
-                                    select {
-                                        class: "retag-tag-select",
-                                        onchange: move |e| {
-                                            let Ok(new_tag_id) = Uuid::parse_str(&e.value()) else { return; };
-                                            let mut txs = transactions();
-                                            if let Some(t) = txs.iter_mut().find(|t| t.id == tx_id) {
-                                                t.tag_id = Some(new_tag_id);
+                                    if is_creating {
+                                        div { class: "retag-create-tag-row",
+                                            input {
+                                                class: "retag-new-tag-input",
+                                                r#type: "text",
+                                                placeholder: "Taggnamn...",
+                                                value: "{new_tag_name}",
+                                                autofocus: true,
+                                                oninput: move |e: FormEvent| new_tag_name.set(e.value()),
+                                                onkeydown: move |e: KeyboardEvent| {
+                                                    match e.key() {
+                                                        Key::Escape => {
+                                                            new_tag_name.set(String::new());
+                                                            creating_for_tx.set(None);
+                                                        }
+                                                        Key::Enter => {
+                                                            let name = new_tag_name().trim().to_string();
+                                                            if name.is_empty() { return; }
+                                                            new_tag_name.set(String::new());
+                                                            creating_for_tx.set(None);
+                                                            spawn(async move {
+                                                                let Ok(updated) = create_tag(budget_id, name.clone(), Periodicity::Monthly, period_id).await else { return; };
+                                                                let Some(new_tag) = updated.tags.iter().find(|t| t.name == name && !t.deleted).cloned() else { return; };
+                                                                consume_context::<BudgetState>().0.set(updated);
+                                                                if let Ok(bv) = tag_transaction(budget_id, tx_id, new_tag.id, period_id).await {
+                                                                    let mut txs = transactions();
+                                                                    if let Some(t) = txs.iter_mut().find(|t| t.id == tx_id) {
+                                                                        t.tag_id = Some(new_tag.id);
+                                                                    }
+                                                                    transactions.set(txs);
+                                                                    consume_context::<BudgetState>().0.set(bv);
+                                                                }
+                                                            });
+                                                        }
+                                                        _ => {}
+                                                    }
+                                                },
                                             }
-                                            transactions.set(txs);
-                                            spawn(async move {
-                                                if let Ok(updated) = tag_transaction(budget_id, tx_id, new_tag_id, period_id).await {
-                                                    consume_context::<BudgetState>().0.set(updated);
+                                            button {
+                                                r#type: "button",
+                                                class: "retag-cancel-create",
+                                                onclick: move |_| {
+                                                    new_tag_name.set(String::new());
+                                                    creating_for_tx.set(None);
+                                                },
+                                                "×"
+                                            }
+                                        }
+                                    } else {
+                                        select {
+                                            class: "retag-tag-select",
+                                            onchange: move |e| {
+                                                if e.value() == "__new__" {
+                                                    new_tag_name.set(String::new());
+                                                    creating_for_tx.set(Some(tx_id));
+                                                    return;
                                                 }
-                                            });
-                                        },
-                                        for tag in &tags_row {
-                                            option {
-                                                value: "{tag.id}",
-                                                selected: current_tag_id == Some(tag.id),
-                                                "{tag.name}"
+                                                let Ok(new_tag_id) = Uuid::parse_str(&e.value()) else { return; };
+                                                let mut txs = transactions();
+                                                if let Some(t) = txs.iter_mut().find(|t| t.id == tx_id) {
+                                                    t.tag_id = Some(new_tag_id);
+                                                }
+                                                transactions.set(txs);
+                                                spawn(async move {
+                                                    if let Ok(updated) = tag_transaction(budget_id, tx_id, new_tag_id, period_id).await {
+                                                        consume_context::<BudgetState>().0.set(updated);
+                                                    }
+                                                });
+                                            },
+                                            for tag in &tags_row {
+                                                option {
+                                                    value: "{tag.id}",
+                                                    selected: current_tag_id == Some(tag.id),
+                                                    "{tag.name}"
+                                                }
                                             }
+                                            option { value: "__new__", "＋ Ny tagg..." }
                                         }
                                     }
                                 }
@@ -127,7 +206,7 @@ pub fn RetagTransactionsView() -> Element {
                     }
                 }
 
-                if has_more() && search_str.is_empty() {
+                if has_more() && search_str.is_empty() && active_tag_filter.is_none() {
                     Button {
                         variant: ButtonVariant::Secondary,
                         r#type: "button",

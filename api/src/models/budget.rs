@@ -41,6 +41,7 @@ pub_events_enum! {
         TransactionTagged,
         RuleModified,
         RuleDeleted,
+        ItemBufferSet,
         TransferPairRejected,
     }
 }

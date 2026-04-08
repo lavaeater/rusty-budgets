@@ -591,3 +591,12 @@ pub fn modify_rule(
 pub fn delete_rule(user_id: Uuid, budget_id: Uuid, rule_id: Uuid) -> Result<Uuid, RustyError> {
     with_runtime(None).delete_rule(user_id, budget_id, rule_id)
 }
+
+pub fn set_item_buffer(
+    user_id: Uuid,
+    budget_id: Uuid,
+    item_id: Uuid,
+    buffer_target: Option<Money>,
+) -> Result<Uuid, RustyError> {
+    with_runtime(None).set_item_buffer(user_id, budget_id, item_id, buffer_target)
+}
