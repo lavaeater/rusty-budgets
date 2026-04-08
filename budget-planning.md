@@ -118,21 +118,21 @@ What is built:
 
 ### Phase 4 — Budget Item Creation Workflow (API)
 
-- [ ] Add API fn `get_unbudgeted_tags(budget_id)` — returns tags not yet associated with any BudgetItem
-- [ ] Add API fn `get_average_monthly_expenditure_per_tag(budget_id)` — computes average monthly spend per tag from all imported transaction history
-- [ ] Add API fn `create_budget_item_with_tags(budget_id, name, budgeting_type, tag_ids, suggested_amount)` — creates item and associates tags
+- [x] Add API fn `get_unbudgeted_tags(budget_id)` — returns tags not yet associated with any BudgetItem
+- [x] Add API fn `get_average_monthly_expenditure_per_tag(budget_id)` — computes average monthly spend per tag from all imported transaction history
+- [x] Add API fn `create_budget_item_with_tags(budget_id, name, budgeting_type, tag_ids, suggested_amount)` — creates item and associates tags
 
 ### Phase 5 — Budget Item Creation Workflow (UI)
 
-- [ ] Build a "Create Budget Items" guided view:
+- [x] Build a "Create Budget Items" guided view:
   - User enters a suggested monthly income at the top
   - Shows running total of budgeted vs. income
   - Lists unbudgeted tags with their computed average monthly expenditure
   - User selects tags and groups them into a new BudgetItem with a name and type (Income/Expense/Savings)
-- [ ] Stop condition: all tags budgeted AND total budgeted amount equals suggested income
+- [x] Stop condition: all tags budgeted AND total budgeted amount equals suggested income
 
 ### Phase 6 — Billing Buffer (Deferred / Future)
 
-- [ ] Add a `buffer_target: Option<Money>` field to `BudgetItem` for items that need a rolling buffer (e.g. electricity, yearly bills)
+- [x] Add a `buffer_target: Option<Money>` field to `BudgetItem` for items that need a rolling buffer (e.g. electricity, yearly bills)
 - [ ] Add logic to compute required monthly contribution to reach buffer target based on periodicity and historical average
 - [ ] Visualize buffer fill level in the day-to-day budget view
