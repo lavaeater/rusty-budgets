@@ -1,5 +1,5 @@
 use crate::Button;
-use crate::budget::{BudgetTabs, CreateBudgetItemsView, RetagTransactionsView, TagTransactionsView, TransactionsView, TransferPairsView};
+use crate::budget::{BudgetTabs, CreateBudgetItemsView, RetagTransactionsView, RulesView, TagTransactionsView, TransactionsView, TransferPairsView};
 use crate::file_chooser::{FileData, FileDialog};
 use api::models::*;
 use api::view_models::BudgetViewModel;
@@ -226,6 +226,10 @@ pub fn BudgetOverview(mut budget_id: Signal<Uuid>, mut period_id: Signal<PeriodI
             div { class: "transactions-section-prominent",
                 h3 { style: "margin: 0 0 16px 0;", "Taggade transaktioner" }
                 RetagTransactionsView {}
+            }
+            div { class: "transactions-section-prominent",
+                h3 { style: "margin: 0 0 16px 0;", "Taggningsregler" }
+                RulesView {}
             }
             if budget.to_connect.is_empty() {
                 div { class: "transactions-section-minimal",
