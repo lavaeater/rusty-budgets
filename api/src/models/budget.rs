@@ -39,6 +39,7 @@ pub_events_enum! {
         TagCreated,
         TagModified,
         TransactionTagged,
+        TransactionUntagged,
         RuleModified,
         RuleDeleted,
         ItemBufferSet,
