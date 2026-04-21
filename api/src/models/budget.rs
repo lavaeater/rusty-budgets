@@ -11,7 +11,7 @@ use crate::models::budget_period::RuleMatch;
 use crate::pub_events_enum;
 use crate::view_models::{BudgetingTypeOverview, TagSummary};
 use chrono::{DateTime, Utc};
-use joydb::Model;
+use joydb::Model as JoyModel;
 use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeStruct;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -48,7 +48,7 @@ pub_events_enum! {
 }
 
 // --- Budget Domain ---
-#[derive(Debug, Clone, Serialize, Deserialize, Model)]
+#[derive(Debug, Clone, Serialize, Deserialize, JoyModel)]
 pub struct Budget {
     pub id: Uuid,
     pub name: String,

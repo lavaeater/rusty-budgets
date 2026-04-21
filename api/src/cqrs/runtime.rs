@@ -4,7 +4,7 @@ use chrono::{DateTime, Utc};
 use dioxus::logger::tracing;
 use joydb::adapters::{FromPath, JsonAdapter};
 use joydb::{Joydb, JoydbConfig, JoydbMode, SyncPolicy};
-use joydb::Model;
+use joydb::Model as JoyModel;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use std::time::Duration;
@@ -345,7 +345,7 @@ impl JoyDbBudgetRuntime {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Model)]
+#[derive(Debug, Clone, Serialize, Deserialize, JoyModel)]
 pub struct UserBudgets {
     pub id: Uuid,
     pub budgets: Vec<(Uuid, bool)>,
@@ -358,7 +358,7 @@ joydb::state! {
 
 pub type StoredBudgetEvent = StoredEvent<Budget, BudgetEvent>;
 
-impl Model for StoredBudgetEvent {
+impl JoyModel for StoredBudgetEvent {
     type Id = Uuid;
 
     fn id(&self) -> &Self::Id {

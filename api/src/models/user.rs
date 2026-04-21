@@ -1,9 +1,9 @@
 use chrono::NaiveDate;
-use joydb::Model;
+use joydb::Model as JoyModel;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default, Model)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default, JoyModel)]
 pub struct User {
     pub id: Uuid,
     pub user_name: String,

@@ -5,7 +5,8 @@ members = [
     "web",
     "desktop",
     "mobile",
-    "api", "cqrs_macros", "database",
+    "api", 
+    "cqrs_macros",
 ]
 
 [workspace.dependencies]
