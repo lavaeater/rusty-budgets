@@ -66,7 +66,9 @@ pub fn TagTransactionsView() -> Element {
                 // Exhausted current batch — more may remain
                 div { class: "tag-tx-all-done",
                     if total_remaining > 0 {
-                        p { "{total_remaining} transaktioner kvar — hoppa vidare till nästa omgång." }
+                        p {
+                            "{total_remaining} transaktioner kvar — hoppa vidare till nästa omgång."
+                        }
                         Button {
                             r#type: "button",
                             onclick: move |_| async move {
@@ -98,17 +100,18 @@ pub fn TagTransactionsView() -> Element {
                             div { class: "tag-tx-progress-bar",
                                 div {
                                     class: "tag-tx-progress-fill",
-                                    style: "width: {(current_index() + 1) * 100 / batch_size.max(1)}%"
+                                    style: "width: {(current_index() + 1) * 100 / batch_size.max(1)}%",
                                 }
                             }
                         }
 
                         div { class: "tag-tx-card",
-                            div { class: "tag-tx-description", strong { "{tx.description}" } }
+                            div { class: "tag-tx-description",
+                                strong { "{tx.description}" }
+                            }
                             div { class: "tag-tx-meta",
                                 span { class: "tag-tx-date", "{date_str}" }
-                                span {
-                                    class: if tx_amount_pos { "tag-tx-amount positive" } else { "tag-tx-amount negative" },
+                                span { class: if tx_amount_pos { "tag-tx-amount positive" } else { "tag-tx-amount negative" },
                                     "{amount_str}"
                                 }
                             }
@@ -149,12 +152,15 @@ pub fn TagTransactionsView() -> Element {
                                 select {
                                     class: "tag-tx-periodicity-select",
                                     onchange: move |e: FormEvent| {
-                                        new_tag_periodicity.set(match e.value().as_str() {
-                                            "Quarterly" => Periodicity::Quarterly,
-                                            "Annual" => Periodicity::Annual,
-                                            "OneOff" => Periodicity::OneOff,
-                                            _ => Periodicity::Monthly,
-                                        });
+                                        new_tag_periodicity
+                                            .set(
+                                                match e.value().as_str() {
+                                                    "Quarterly" => Periodicity::Quarterly,
+                                                    "Annual" => Periodicity::Annual,
+                                                    "OneOff" => Periodicity::OneOff,
+                                                    _ => Periodicity::Monthly,
+                                                },
+                                            );
                                     },
                                     option { value: "Monthly", "Månadsvis" }
                                     option { value: "Quarterly", "Kvartalsvis" }
@@ -166,13 +172,17 @@ pub fn TagTransactionsView() -> Element {
                                     r#type: "button",
                                     onclick: move |_| async move {
                                         let name = new_tag_name().trim().to_string();
-                                        if name.is_empty() { return; }
+                                        if name.is_empty() {
+                                            return;
+                                        }
                                         if let Ok(updated_budget) = create_tag(
-                                            budget_id,
-                                            name.clone(),
-                                            new_tag_periodicity(),
-                                            period_id,
-                                        ).await {
+                                                budget_id,
+                                                name.clone(),
+                                                new_tag_periodicity(),
+                                                period_id,
+                                            )
+                                            .await
+                                        {
                                             new_tag_name.set(String::new());
                                             if let Some(new_tag) = updated_budget
                                                 .tags
@@ -217,7 +227,9 @@ pub fn TagTransactionsView() -> Element {
                                                 class: "tag-tx-token-remove",
                                                 onclick: move |_| {
                                                     let mut toks = rule_tokens();
-                                                    if i < toks.len() { toks.remove(i); }
+                                                    if i < toks.len() {
+                                                        toks.remove(i);
+                                                    }
                                                     rule_tokens.set(toks);
                                                 },
                                                 "×"
@@ -230,12 +242,7 @@ pub fn TagTransactionsView() -> Element {
                                         variant: ButtonVariant::Secondary,
                                         r#type: "button",
                                         onclick: move |_| async move {
-                                            if let Ok(bv) = update_rule(
-                                                budget_id,
-                                                rule_id,
-                                                rule_tokens(),
-                                                period_id,
-                                            ).await {
+                                            if let Ok(bv) = update_rule(budget_id, rule_id, rule_tokens(), period_id).await {
                                                 consume_context::<BudgetState>().0.set(bv);
                                             }
                                         },
@@ -250,10 +257,12 @@ pub fn TagTransactionsView() -> Element {
                                 r#type: "button",
                                 disabled: selected_tag_id().is_none(),
                                 onclick: move |_| async move {
-                                    let Some(tag_id) = selected_tag_id() else { return; };
+                                    let Some(tag_id) = selected_tag_id() else {
+                                        return;
+                                    };
                                     let rules_before = budget_signal().match_rules.clone();
-                                    if let Ok(updated_budget) =
-                                        tag_transaction(budget_id, tx_id, tag_id, period_id).await
+                                    if let Ok(updated_budget) = tag_transaction(budget_id, tx_id, tag_id, period_id)
+                                        .await
                                     {
                                         let new_rule = updated_budget
                                             .match_rules

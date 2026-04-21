@@ -1,8 +1,8 @@
-use std::sync::{Arc, Mutex};
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
 use crate::models::{Budget, BudgetItem, BudgetingType};
 use cqrs_macros::DomainEvent;
 use serde::{Deserialize, Serialize};
+use std::sync::{Arc, Mutex};
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]

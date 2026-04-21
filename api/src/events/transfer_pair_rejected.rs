@@ -42,4 +42,3 @@ impl TransferPairRejectedHandler for Budget {
         })
     }
 }
-

@@ -2,12 +2,15 @@ use crate::cqrs::framework::Aggregate;
 use crate::cqrs::framework::DomainEvent;
 use crate::events::*;
 use crate::models::budget_item::{BudgetItem, Periodicity};
+use crate::models::budget_period::RuleMatch;
 use crate::models::budget_period_id::PeriodId;
 use crate::models::budgeting_type::BudgetingType;
 use crate::models::money::{Currency, Money};
 use crate::models::rule_packages::RulePackages;
-use crate::models::{ActualItem, BankAccount, BankTransaction, BudgetPeriod, MatchRule, MonthBeginsOn, Tag, TransactionAllocation};
-use crate::models::budget_period::RuleMatch;
+use crate::models::{
+    ActualItem, BankAccount, BankTransaction, BudgetPeriod, MatchRule, MonthBeginsOn, Tag,
+    TransactionAllocation,
+};
 use crate::pub_events_enum;
 use crate::view_models::{BudgetingTypeOverview, TagSummary};
 use chrono::{DateTime, Utc};
@@ -112,11 +115,15 @@ impl Budget {
     }
 
     pub fn get_account(&self, account_number: &str) -> Option<&BankAccount> {
-        self.accounts.iter().find(|a| a.account_number == account_number)
+        self.accounts
+            .iter()
+            .find(|a| a.account_number == account_number)
     }
 
     pub fn has_account(&self, account_number: &str) -> bool {
-        self.accounts.iter().any(|a| a.account_number == account_number)
+        self.accounts
+            .iter()
+            .any(|a| a.account_number == account_number)
     }
 
     pub fn add_account(&mut self, account: BankAccount) {
@@ -296,10 +303,11 @@ impl Budget {
     /// (from earliest to latest transaction, inclusive). Amounts are signed — expenses are
     /// negative, income positive.
     pub fn get_tag_summaries(&self) -> Vec<TagSummary> {
-        use std::collections::HashMap;
         use chrono::Datelike;
+        use std::collections::HashMap;
 
-        let all_txs: Vec<&BankTransaction> = self.periods
+        let all_txs: Vec<&BankTransaction> = self
+            .periods
             .iter()
             .flat_map(|p| p.transactions.iter())
             .filter(|tx| !tx.ignored)
@@ -366,12 +374,11 @@ impl Budget {
                     continue;
                 }
                 for rule in &self.match_rules {
-                    if let Some(tag_id) = rule.tag_id {
-                        if rule.matches_transaction(tx) {
+                    if let Some(tag_id) = rule.tag_id && rule.matches_transaction(tx) {
                             matches.push((tx.id, tag_id));
                             break;
                         }
-                    }
+                    
                 }
             }
         }
@@ -558,7 +565,10 @@ impl Budget {
         let mut by_amount: std::collections::HashMap<i64, Vec<&BankTransaction>> =
             std::collections::HashMap::new();
         for tx in &unallocated {
-            by_amount.entry(tx.amount.abs().amount_in_cents()).or_default().push(tx);
+            by_amount
+                .entry(tx.amount.abs().amount_in_cents())
+                .or_default()
+                .push(tx);
         }
 
         let mut pairs: Vec<(Uuid, Uuid)> = Vec::new();
@@ -638,20 +648,13 @@ impl Budget {
             .unwrap_or_default()
     }
 
-    pub fn allocations_for_transaction(
-        &self,
-        transaction_id: Uuid,
-    ) -> Vec<&TransactionAllocation> {
+    pub fn allocations_for_transaction(&self, transaction_id: Uuid) -> Vec<&TransactionAllocation> {
         self.get_period_for_transaction(transaction_id)
             .map(|p| p.allocations_for_transaction(transaction_id))
             .unwrap_or_default()
     }
 
-    pub fn allocated_amount_for_actual(
-        &self,
-        period_id: PeriodId,
-        actual_id: Uuid,
-    ) -> Money {
+    pub fn allocated_amount_for_actual(&self, period_id: PeriodId, actual_id: Uuid) -> Money {
         self.get_period(period_id)
             .map(|p| p.allocated_amount_for_actual(actual_id))
             .unwrap_or(Money::zero(self.currency))

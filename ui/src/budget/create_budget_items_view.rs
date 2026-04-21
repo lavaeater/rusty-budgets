@@ -134,28 +134,48 @@ pub fn CreateBudgetItemsView() -> Element {
                     div {
                         class: "{header_class(\"name\")}",
                         onclick: move |_| {
-                            if sort_col() == "name" { sort_asc.toggle(); } else { sort_col.set("name"); sort_asc.set(true); }
+                            if sort_col() == "name" {
+                                sort_asc.toggle();
+                            } else {
+                                sort_col.set("name");
+                                sort_asc.set(true);
+                            }
                         },
                         "Tagg"
                     }
                     div {
                         class: "{header_class(\"periodicity\")}",
                         onclick: move |_| {
-                            if sort_col() == "periodicity" { sort_asc.toggle(); } else { sort_col.set("periodicity"); sort_asc.set(true); }
+                            if sort_col() == "periodicity" {
+                                sort_asc.toggle();
+                            } else {
+                                sort_col.set("periodicity");
+                                sort_asc.set(true);
+                            }
                         },
                         "Periodicitet"
                     }
                     div {
                         class: "{header_class(\"monthly\")}",
                         onclick: move |_| {
-                            if sort_col() == "monthly" { sort_asc.toggle(); } else { sort_col.set("monthly"); sort_asc.set(true); }
+                            if sort_col() == "monthly" {
+                                sort_asc.toggle();
+                            } else {
+                                sort_col.set("monthly");
+                                sort_asc.set(true);
+                            }
                         },
                         "Snitt / mån"
                     }
                     div {
                         class: "{header_class(\"yearly\")}",
                         onclick: move |_| {
-                            if sort_col() == "yearly" { sort_asc.toggle(); } else { sort_col.set("yearly"); sort_asc.set(true); }
+                            if sort_col() == "yearly" {
+                                sort_asc.toggle();
+                            } else {
+                                sort_col.set("yearly");
+                                sort_asc.set(true);
+                            }
                         },
                         "Snitt / år"
                     }
@@ -209,31 +229,40 @@ pub fn CreateBudgetItemsView() -> Element {
                                         onclick: move |e| e.stop_propagation(),
                                         oninput: move |e: FormEvent| editing_name.set(e.value()),
                                         onkeydown: move |e: KeyboardEvent| {
-                                            match e.key() {
-                                                Key::Escape => {
-                                                    // Restore original name so blur doesn't save a change
-                                                    editing_name.set(tag_name_escape.clone());
-                                                    editing_tag_id.set(None);
-                                                }
-                                                _ => {}
+                                            if e.key() == Key::Escape {
+                                                // Restore original name so blur doesn't save a change
+                                                editing_name.set(tag_name_escape.clone());
+                                                editing_tag_id.set(None);
                                             }
+
                                         },
                                         onblur: move |_| {
                                             let original_name = tag_name_blur.clone();
                                             async move {
-                                            let name = editing_name().trim().to_string();
-                                            editing_tag_id.set(None);
-                                            if name.is_empty() || name == original_name { return; }
-                                            let mut sums = tag_summaries();
-                                            if let Some(s) = sums.iter_mut().find(|s| s.tag_id == tag_id) {
-                                                s.name = name.clone();
+                                                let name = editing_name().trim().to_string();
+                                                editing_tag_id.set(None);
+                                                if name.is_empty() || name == original_name {
+                                                    return;
+                                                }
+                                                let mut sums = tag_summaries();
+                                                if let Some(s) = sums.iter_mut().find(|s| s.tag_id == tag_id) {
+                                                    s.name = name.clone();
+                                                }
+                                                tag_summaries.set(sums);
+                                                if let Ok(updated) = modify_tag(
+                                                        budget_id,
+                                                        tag_id,
+                                                        Some(name),
+                                                        None,
+                                                        None,
+                                                        period_id,
+                                                    )
+                                                    .await
+                                                {
+                                                    consume_context::<BudgetState>().0.set(updated); // Update local signal immediately
+                                                }
                                             }
-                                            tag_summaries.set(sums);
-                                            if let Ok(updated) = modify_tag(budget_id, tag_id, Some(name), None, None, period_id).await {
-                                                consume_context::<BudgetState>().0.set(updated);
-                                            }
-                                            }
-                                        },
+                                        }, // Persist to server
                                     }
                                 } else {
                                     span {
@@ -266,13 +295,26 @@ pub fn CreateBudgetItemsView() -> Element {
                                         tag_summaries.set(sums);
                                         // Persist to server
                                         spawn(async move {
-                                            if let Ok(updated) = modify_tag(budget_id, tag_id, None, Some(new_p), None, period_id).await {
+                                            if let Ok(updated) = modify_tag(
+                                                    budget_id,
+                                                    tag_id,
+                                                    None,
+                                                    Some(new_p),
+                                                    None,
+                                                    period_id,
+                                                )
+                                                .await
+                                            {
                                                 consume_context::<BudgetState>().0.set(updated);
                                             }
                                         });
                                     },
                                     option { value: "Monthly", selected: periodicity == Periodicity::Monthly, "Månadsvis" }
-                                    option { value: "Quarterly", selected: periodicity == Periodicity::Quarterly, "Kvartalsvis" }
+                                    option {
+                                        value: "Quarterly",
+                                        selected: periodicity == Periodicity::Quarterly,
+                                        "Kvartalsvis"
+                                    }
                                     option { value: "Annual", selected: periodicity == Periodicity::Annual, "Årsvis" }
                                     option { value: "OneOff", selected: periodicity == Periodicity::OneOff, "Engångskostnad" }
                                 }
@@ -302,12 +344,15 @@ pub fn CreateBudgetItemsView() -> Element {
                             select {
                                 class: "cbi-type-select",
                                 onchange: move |e| {
-                                    new_item_type.set(match e.value().as_str() {
-                                        "Income" => BudgetingType::Income,
-                                        "Savings" => BudgetingType::Savings,
-                                        "InternalTransfer" => BudgetingType::InternalTransfer,
-                                        _ => BudgetingType::Expense,
-                                    });
+                                    new_item_type
+                                        .set(
+                                            match e.value().as_str() {
+                                                "Income" => BudgetingType::Income,
+                                                "Savings" => BudgetingType::Savings,
+                                                "InternalTransfer" => BudgetingType::InternalTransfer,
+                                                _ => BudgetingType::Expense,
+                                            },
+                                        );
                                 },
                                 option { value: "Expense", "Utgift" }
                                 option { value: "Income", "Inkomst" }
@@ -328,7 +373,9 @@ pub fn CreateBudgetItemsView() -> Element {
                             disabled: new_item_name().trim().is_empty(),
                             onclick: move |_| {
                                 let name = new_item_name().trim().to_string();
-                                if name.is_empty() { return; }
+                                if name.is_empty() {
+                                    return;
+                                }
                                 let tag_ids = selected_tag_ids();
                                 let item_type = new_item_type();
                                 let budgeted = new_item_amount_str()
@@ -339,13 +386,15 @@ pub fn CreateBudgetItemsView() -> Element {
                                     .map(|kr| api::models::Money::new_dollars(kr, budget_signal().currency));
                                 spawn(async move {
                                     if let Ok(updated) = create_budget_item(
-                                        budget_id,
-                                        name,
-                                        item_type,
-                                        tag_ids,
-                                        budgeted,
-                                        period_id,
-                                    ).await {
+                                            budget_id,
+                                            name,
+                                            item_type,
+                                            tag_ids,
+                                            budgeted,
+                                            period_id,
+                                        )
+                                        .await
+                                    {
                                         consume_context::<BudgetState>().0.set(updated);
                                         if let Ok(summaries) = get_unbudgeted_tag_summaries(budget_id).await {
                                             tag_summaries.set(summaries);

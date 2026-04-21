@@ -1,11 +1,11 @@
-use dioxus::logger::tracing;
-use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 use crate::models::{Budget, BudgetingType, Currency, MatchRule, MonthBeginsOn, PeriodId, Tag};
 use crate::view_models::allocation_view_model::AllocationViewModel;
 use crate::view_models::budget_item_view_model::BudgetItemViewModel;
 use crate::view_models::budgeting_type_overview::BudgetingTypeOverview;
 use crate::view_models::transaction_view_model::TransactionViewModel;
+use dioxus::logger::tracing;
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct TransferPair {
@@ -96,7 +96,11 @@ impl BudgetViewModel {
             .iter()
             .flat_map(|p| [p.outgoing.tx_id, p.incoming.tx_id])
             .collect();
-        tracing::info!("[perf] from_budget/potential_transfers ({} pairs): {:?}", all_transfer_pairs.len(), t_transfers.elapsed());
+        tracing::info!(
+            "[perf] from_budget/potential_transfers ({} pairs): {:?}",
+            all_transfer_pairs.len(),
+            t_transfers.elapsed()
+        );
         let potential_transfer_count = all_transfer_pairs.len();
         let potential_transfers = all_transfer_pairs.into_iter().take(10).collect::<Vec<_>>();
 
@@ -104,10 +108,18 @@ impl BudgetViewModel {
         // rather than from the RulePackages/ActualItem system which is never updated by
         // the tagging workflow.
         let sum_budgeted = |bt: BudgetingType| -> crate::models::Money {
-            items.iter().filter(|i| i.budgeting_type == bt).map(|i| i.budgeted_amount).sum()
+            items
+                .iter()
+                .filter(|i| i.budgeting_type == bt)
+                .map(|i| i.budgeted_amount)
+                .sum()
         };
         let sum_actual = |bt: BudgetingType| -> crate::models::Money {
-            items.iter().filter(|i| i.budgeting_type == bt).map(|i| i.actual_amount).sum()
+            items
+                .iter()
+                .filter(|i| i.budgeting_type == bt)
+                .map(|i| i.actual_amount)
+                .sum()
         };
         let income_budgeted = sum_budgeted(BudgetingType::Income);
         let expense_budgeted = sum_budgeted(BudgetingType::Expense);

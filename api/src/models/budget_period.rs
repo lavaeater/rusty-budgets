@@ -1,7 +1,10 @@
+use crate::models::BudgetingType::{Expense, Income, InternalTransfer, Savings};
 use crate::models::budget_period_id::PeriodId;
 use crate::models::rule_packages::RulePackages;
-use crate::models::BudgetingType::{Expense, Income, InternalTransfer, Savings};
-use crate::models::{ActualItem, BankTransaction, BudgetItem, BudgetingType, MatchRule, Money, TransactionAllocation};
+use crate::models::{
+    ActualItem, BankTransaction, BudgetItem, BudgetingType, MatchRule, Money, TransactionAllocation,
+};
+use crate::view_models::BudgetingTypeOverview;
 use crate::view_models::value_kind::ValueKind;
 use core::fmt::Display;
 use iter_tools::Itertools;
@@ -10,7 +13,6 @@ use serde::ser::SerializeStruct;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::HashSet;
 use uuid::Uuid;
-use crate::view_models::BudgetingTypeOverview;
 
 #[derive(Debug, Clone)]
 pub struct RuleMatch {
@@ -82,7 +84,11 @@ impl BudgetPeriod {
     }
 
     pub fn spent_for_type(&self, budgeting_type: BudgetingType) -> Money {
-        let cost_types = [BudgetingType::Expense, BudgetingType::Savings, BudgetingType::InternalTransfer];
+        let cost_types = [
+            BudgetingType::Expense,
+            BudgetingType::Savings,
+            BudgetingType::InternalTransfer,
+        ];
         self.actual_items
             .iter()
             .filter(|item| item.budgeting_type == budgeting_type)
@@ -91,7 +97,13 @@ impl BudgetPeriod {
                     .allocations
                     .iter()
                     .filter(|a| a.actual_id == item.id)
-                    .map(|a| if cost_types.contains(&item.budgeting_type) { -a.amount } else { a.amount })
+                    .map(|a| {
+                        if cost_types.contains(&item.budgeting_type) {
+                            -a.amount
+                        } else {
+                            a.amount
+                        }
+                    })
                     .sum();
                 if alloc_sum.is_zero() {
                     item.actual_amount
@@ -102,22 +114,21 @@ impl BudgetPeriod {
             .sum()
     }
 
-    pub fn get_income_overview(
-        &self,
-        rules: &RulePackages,
-    ) -> BudgetingTypeOverview {
+    pub fn get_income_overview(&self, rules: &RulePackages) -> BudgetingTypeOverview {
         let rules = &rules
             .rule_packages
             .iter()
             .find(|p| p.budgeting_type == Income)
             .unwrap();
-       
+
         let budgeted_income = rules
             .budgeted_rule
             .evaluate(&self.actual_items, Some(ValueKind::Budgeted));
-        
-        let spent_income = rules.actual_rule.evaluate(&self.actual_items, Some(ValueKind::Spent));
-        
+
+        let spent_income = rules
+            .actual_rule
+            .evaluate(&self.actual_items, Some(ValueKind::Spent));
+
         let remaining_income = rules
             .remaining_rule
             .evaluate(&self.actual_items, Some(ValueKind::Budgeted));
@@ -131,10 +142,7 @@ impl BudgetPeriod {
         }
     }
 
-    pub fn get_expense_overview(
-        &self,
-        rules: &RulePackages,
-    ) -> BudgetingTypeOverview {
+    pub fn get_expense_overview(&self, rules: &RulePackages) -> BudgetingTypeOverview {
         let rules = &rules
             .rule_packages
             .iter()
@@ -143,7 +151,9 @@ impl BudgetPeriod {
         let budgeted_expenses = rules
             .budgeted_rule
             .evaluate(&self.actual_items, Some(ValueKind::Budgeted));
-        let spent_expenses = rules.actual_rule.evaluate(&self.actual_items, Some(ValueKind::Spent));
+        let spent_expenses = rules
+            .actual_rule
+            .evaluate(&self.actual_items, Some(ValueKind::Spent));
         let self_diff = rules.remaining_rule.evaluate(&self.actual_items, None);
 
         BudgetingTypeOverview {
@@ -155,10 +165,7 @@ impl BudgetPeriod {
         }
     }
 
-    pub fn get_savings_overview(
-        &self,
-        rules: &RulePackages,
-    ) -> BudgetingTypeOverview {
+    pub fn get_savings_overview(&self, rules: &RulePackages) -> BudgetingTypeOverview {
         let rules = &rules
             .rule_packages
             .iter()
@@ -167,7 +174,9 @@ impl BudgetPeriod {
         let budgeted_savings = rules
             .budgeted_rule
             .evaluate(&self.actual_items, Some(ValueKind::Budgeted));
-        let spent_savings = rules.actual_rule.evaluate(&self.actual_items, Some(ValueKind::Spent));
+        let spent_savings = rules
+            .actual_rule
+            .evaluate(&self.actual_items, Some(ValueKind::Spent));
         let self_diff = rules.remaining_rule.evaluate(&self.actual_items, None);
 
         BudgetingTypeOverview {
@@ -179,10 +188,7 @@ impl BudgetPeriod {
         }
     }
 
-    pub fn get_transfer_overview(
-        &self,
-        rules: &RulePackages,
-    ) -> BudgetingTypeOverview {
+    pub fn get_transfer_overview(&self, rules: &RulePackages) -> BudgetingTypeOverview {
         let rules = &rules
             .rule_packages
             .iter()
@@ -191,7 +197,9 @@ impl BudgetPeriod {
         let budgeted = rules
             .budgeted_rule
             .evaluate(&self.actual_items, Some(ValueKind::Budgeted));
-        let spent = rules.actual_rule.evaluate(&self.actual_items, Some(ValueKind::Spent));
+        let spent = rules
+            .actual_rule
+            .evaluate(&self.actual_items, Some(ValueKind::Spent));
         let self_diff = rules.remaining_rule.evaluate(&self.actual_items, None);
 
         BudgetingTypeOverview {
@@ -326,7 +334,8 @@ impl BudgetPeriod {
     }
 
     pub fn transactions_for_actual(&self, actual_id: Uuid, sorted: bool) -> Vec<&BankTransaction> {
-        let mut transactions = self.transactions
+        let mut transactions = self
+            .transactions
             .iter()
             .filter(|i| i.actual_id == Some(actual_id))
             .collect::<Vec<_>>();

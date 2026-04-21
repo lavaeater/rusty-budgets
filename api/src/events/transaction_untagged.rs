@@ -24,9 +24,10 @@ impl TransactionUntaggedHandler for Budget {
         tx_id: Uuid,
     ) -> Result<TransactionUntagged, CommandError> {
         if !self.contains_transaction(tx_id) {
-            return Err(CommandError::Validation(
-                format!("Transaction {} does not exist", tx_id),
-            ));
+            return Err(CommandError::Validation(format!(
+                "Transaction {} does not exist",
+                tx_id
+            )));
         }
         Ok(TransactionUntagged {
             budget_id: self.id,

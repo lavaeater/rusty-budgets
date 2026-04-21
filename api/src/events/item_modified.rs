@@ -1,8 +1,8 @@
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
 use crate::models::Budget;
 use crate::models::BudgetingType;
-use crate::models::Periodicity;
 use crate::models::Money;
+use crate::models::Periodicity;
 use cqrs_macros::DomainEvent;
 use dioxus::logger::tracing;
 use serde::{Deserialize, Serialize};

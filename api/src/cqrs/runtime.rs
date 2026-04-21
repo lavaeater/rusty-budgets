@@ -1,15 +1,15 @@
+use crate::api_error::RustyError;
 use crate::cqrs::framework::{CommandError, Runtime, StoredEvent};
 use crate::models::*;
 use chrono::{DateTime, Utc};
 use dioxus::logger::tracing;
+use joydb::Model as JoyModel;
 use joydb::adapters::{FromPath, JsonAdapter};
 use joydb::{Joydb, JoydbConfig, JoydbMode, SyncPolicy};
-use joydb::Model as JoyModel;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use std::time::Duration;
 use uuid::Uuid;
-use crate::api_error::RustyError;
 
 impl JoyDbBudgetRuntime {
     pub fn create_budget(
@@ -21,7 +21,13 @@ impl JoyDbBudgetRuntime {
         currency: Currency,
     ) -> Result<Uuid, RustyError> {
         self.cmd(user_id, Uuid::default(), |budget| {
-            budget.create_budget(budget_name.to_string(), user_id, month_begins_on, default_budget, currency)
+            budget.create_budget(
+                budget_name.to_string(),
+                user_id,
+                month_begins_on,
+                default_budget,
+                currency,
+            )
         })
     }
 
@@ -102,8 +108,15 @@ impl JoyDbBudgetRuntime {
         budgeted_amount: Option<Money>,
         actual_amount: Option<Money>,
     ) -> Result<Uuid, RustyError> {
-        self.cmd(user_id, budget_id,|budget| {
-            budget.modify_actual(actual_id, period_id, budgeted_amount, actual_amount, None, None)
+        self.cmd(user_id, budget_id, |budget| {
+            budget.modify_actual(
+                actual_id,
+                period_id,
+                budgeted_amount,
+                actual_amount,
+                None,
+                None,
+            )
         })
     }
 
@@ -117,7 +130,7 @@ impl JoyDbBudgetRuntime {
         amount: Money,
         balance: Money,
         description: &str,
-        date: DateTime<Utc>
+        date: DateTime<Utc>,
     ) -> Result<Uuid, RustyError> {
         let tx_id = self.add_transaction(
             user_id,
@@ -140,7 +153,7 @@ impl JoyDbBudgetRuntime {
         amount: Money,
         balance: Money,
         description: &str,
-        date: DateTime<Utc>
+        date: DateTime<Utc>,
     ) -> Result<Uuid, RustyError> {
         self.cmd(user_id, budget_id, |budget| {
             budget.add_transaction(
@@ -165,7 +178,9 @@ impl JoyDbBudgetRuntime {
             let amount = budget
                 .get_transaction(tx_id)
                 .map(|tx| tx.amount)
-                .ok_or_else(|| RustyError::ItemNotFound(tx_id.to_string(), "Transaction not found".to_string()))?;
+                .ok_or_else(|| {
+                    RustyError::ItemNotFound(tx_id.to_string(), "Transaction not found".to_string())
+                })?;
             let existing = budget
                 .allocations_for_transaction(tx_id)
                 .iter()
@@ -191,10 +206,7 @@ impl JoyDbBudgetRuntime {
             return Ok(existing.id);
         }
         self.cmd(user_id, budget_id, |budget| {
-            budget.create_bank_account(
-                account_number.to_string(),
-                description.to_string(),
-            )
+            budget.create_bank_account(account_number.to_string(), description.to_string())
         })
     }
 
@@ -445,7 +457,11 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
         tracing::debug!("Loaded budget is some: {}", budget.is_some());
         let mut budget = budget.unwrap_or(Budget::new(id));
         let version = budget.version;
-        tracing::debug!("Loaded budget has version {} and last event at {}", version, budget.last_event);
+        tracing::debug!(
+            "Loaded budget has version {} and last event at {}",
+            version,
+            budget.last_event
+        );
         let events = self.fetch_events(id, budget.last_event)?;
         let event_count = events.len();
         for ev in events {
@@ -453,7 +469,8 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
         }
         tracing::info!(
             "[perf] load: replayed {} events in {:?}",
-            event_count, t.elapsed()
+            event_count,
+            t.elapsed()
         );
         if event_count > 0 {
             self.snapshot(&budget)?;

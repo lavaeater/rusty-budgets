@@ -13,7 +13,9 @@ pub fn last_day_of_month(dt: DateTime<Utc>) -> DateTime<Utc> {
     first_next_month.checked_sub_days(Days::new(1)).unwrap()
 }
 
-#[derive(Default, Copy, Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
+#[derive(
+    Default, Copy, Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize,
+)]
 pub struct PeriodId {
     pub year: i32,
     pub month: u32,
@@ -153,7 +155,7 @@ impl PeriodId {
             }
         }
     }
-    
+
     pub fn new(year: i32, month: u32) -> Self {
         Self { year, month }
     }
@@ -189,8 +191,8 @@ impl PeriodId {
 
 #[cfg(test)]
 mod tests {
-    use crate::models::budget_period_id::{last_day_of_month, PeriodId};
     use crate::models::MonthBeginsOn;
+    use crate::models::budget_period_id::{PeriodId, last_day_of_month};
     use chrono::{Datelike, TimeZone, Utc};
 
     #[test]

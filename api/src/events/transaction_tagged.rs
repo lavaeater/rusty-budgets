@@ -26,14 +26,16 @@ impl TransactionTaggedHandler for Budget {
         tag_id: Uuid,
     ) -> Result<TransactionTagged, CommandError> {
         if !self.contains_transaction(tx_id) {
-            return Err(CommandError::Validation(
-                format!("Transaction {} does not exist", tx_id),
-            ));
+            return Err(CommandError::Validation(format!(
+                "Transaction {} does not exist",
+                tx_id
+            )));
         }
         if !self.contains_tag(tag_id) {
-            return Err(CommandError::Validation(
-                format!("Tag {} does not exist", tag_id),
-            ));
+            return Err(CommandError::Validation(format!(
+                "Tag {} does not exist",
+                tag_id
+            )));
         }
         Ok(TransactionTagged {
             budget_id: self.id,

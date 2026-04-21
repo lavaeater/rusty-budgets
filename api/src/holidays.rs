@@ -1,5 +1,5 @@
-use chrono::{DateTime, Utc, TimeDelta, Datelike, Weekday, TimeZone};
 use crate::time_delta::TimeDeltaExt;
+use chrono::{DateTime, Datelike, TimeDelta, TimeZone, Utc, Weekday};
 /// Checks if a date is a weekend (Saturday or Sunday)
 fn is_weekend(date: &DateTime<Utc>) -> bool {
     date.weekday() == Weekday::Sat || date.weekday() == Weekday::Sun
@@ -11,10 +11,8 @@ fn is_swedish_holiday(date: &DateTime<Utc>) -> bool {
     let month = date.month();
     let day = date.day();
     let easter_sunday = calculate_easter_sunday(year);
-
-    let fixed_date = 
     // Fixed date holidays
-    match (month, day) {
+    let fixed_date = match (month, day) {
         (1, 1) => true,   // New Year's Day
         (1, 5) => true,   // Twelfth Night
         (1, 6) => true,   // Epiphany
@@ -192,4 +190,3 @@ mod tests {
         );
     }
 }
-

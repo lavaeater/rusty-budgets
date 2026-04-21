@@ -9,16 +9,16 @@ pub mod import;
 pub mod models;
 pub mod time_delta;
 pub mod view_models;
-// 
+//
 // #[cfg(test)]
 // #[cfg(not(debug_assertions))]
 // pub fn set_server_url() {
-//     
+//
 // }
-// 
+//
 // #[cfg(debug_assertions)]
 // #[cfg(not(test))]
-// 
+//
 // #[cfg(not(debug_assertions))]
 // #[cfg(not(test))]
 // pub fn set_server_url() {
@@ -28,10 +28,10 @@ pub mod view_models;
 #[cfg(feature = "server")]
 pub mod db;
 
-use std::env;
-use std::path::PathBuf;
 #[cfg(feature = "server")]
 use dioxus::logger::tracing;
+use std::env;
+use std::path::PathBuf;
 
 use crate::api_error::RustyError;
 use crate::import::ImportError;
@@ -46,7 +46,6 @@ use view_models::BudgetItemViewModel;
 use view_models::BudgetViewModel;
 use view_models::TagSummary;
 use view_models::TransactionViewModel;
-
 
 #[server(endpoint = "create_budget")]
 pub async fn create_budget(
@@ -143,7 +142,15 @@ pub async fn modify_item(
     period_id: PeriodId,
 ) -> ServerFnResult<BudgetViewModel> {
     let user = db::get_default_user(None).expect("Could not get default user");
-    let _ = db::modify_item(user.id, budget_id, item_id, name, item_type, tag_ids, periodicity)?;
+    let _ = db::modify_item(
+        user.id,
+        budget_id,
+        item_id,
+        name,
+        item_type,
+        tag_ids,
+        periodicity,
+    )?;
     Ok(BudgetViewModel::from_budget(
         &db::get_budget(budget_id)?,
         period_id,
@@ -159,7 +166,10 @@ pub async fn set_item_buffer(
 ) -> ServerFnResult<BudgetViewModel> {
     let user = db::get_default_user(None)?;
     let _ = db::set_item_buffer(user.id, budget_id, item_id, buffer_target)?;
-    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id)?, period_id))
+    Ok(BudgetViewModel::from_budget(
+        &db::get_budget(budget_id)?,
+        period_id,
+    ))
 }
 
 #[server(endpoint = "create_tag")]
@@ -381,17 +391,27 @@ pub async fn get_next_untagged_transaction(
 }
 
 #[server(endpoint = "get_transactions_for_tag")]
-pub async fn get_transactions_for_tag(budget_id: Uuid, tag_id: Uuid) -> ServerFnResult<Vec<BankTransaction>> {
+pub async fn get_transactions_for_tag(
+    budget_id: Uuid,
+    tag_id: Uuid,
+) -> ServerFnResult<Vec<BankTransaction>> {
     Ok(db::get_transactions_for_tag(budget_id, tag_id)?)
 }
 
 #[server(endpoint = "get_tagged_transactions")]
-pub async fn get_tagged_transactions(budget_id: Uuid, limit: usize, offset: usize) -> ServerFnResult<Vec<BankTransaction>> {
+pub async fn get_tagged_transactions(
+    budget_id: Uuid,
+    limit: usize,
+    offset: usize,
+) -> ServerFnResult<Vec<BankTransaction>> {
     Ok(db::get_tagged_transactions(budget_id, limit, offset)?)
 }
 
 #[server(endpoint = "get_untagged_transactions")]
-pub async fn get_untagged_transactions(budget_id: Uuid, limit: usize) -> ServerFnResult<Vec<BankTransaction>> {
+pub async fn get_untagged_transactions(
+    budget_id: Uuid,
+    limit: usize,
+) -> ServerFnResult<Vec<BankTransaction>> {
     Ok(db::get_untagged_transactions(budget_id, limit)?)
 }
 
@@ -484,7 +504,10 @@ pub async fn create_budget_item(
             db::add_actual(user.id, budget_id, item_id, amount, period_id)?;
         }
     }
-    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id)?, period_id))
+    Ok(BudgetViewModel::from_budget(
+        &db::get_budget(budget_id)?,
+        period_id,
+    ))
 }
 
 #[server(endpoint = "delete_rule")]

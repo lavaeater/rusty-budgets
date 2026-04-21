@@ -48,15 +48,8 @@ fn TransactionCard(tx: TransactionViewModel, ignored: bool) -> Element {
                     strong { {tx.description.to_string()} }
                 }
                 div { class: "transaction-meta",
-                    span { class: "transaction-date",
-                        {tx.date.format("%Y-%m-%d").to_string()}
-                    }
-                    span {
-                        class: if tx.amount.is_pos() {
-                            "transaction-amount positive"
-                        } else {
-                            "transaction-amount negative"
-                        },
+                    span { class: "transaction-date", {tx.date.format("%Y-%m-%d").to_string()} }
+                    span { class: if tx.amount.is_pos() { "transaction-amount positive" } else { "transaction-amount negative" },
                         {tx.amount.to_string()}
                     }
                 }
@@ -87,17 +80,19 @@ fn TransactionCard(tx: TransactionViewModel, ignored: bool) -> Element {
                                     let tag = tag_input().trim().to_string();
                                     async move {
                                         if let Some(item) = e {
-                                            info!("Connecting transaction {} to item {}", tx.tx_id, item.item_id);
+                                            info!(
+                                                "Connecting transaction {} to item {}", tx.tx_id, item.item_id
+                                            );
                                             let tag_opt = if tag.is_empty() { None } else { Some(tag) };
                                             match connect_transaction(
-                                                budget_signal().id,
-                                                tx.tx_id,
-                                                item.actual_id,
-                                                item.item_id,
-                                                tag_opt,
-                                                budget_signal().period_id,
-                                            )
-                                            .await
+                                                    budget_signal().id,
+                                                    tx.tx_id,
+                                                    item.actual_id,
+                                                    item.item_id,
+                                                    tag_opt,
+                                                    budget_signal().period_id,
+                                                )
+                                                .await
                                             {
                                                 Ok(bv) => {
                                                     consume_context::<BudgetState>().0.set(bv);
@@ -138,11 +133,11 @@ fn TransactionCard(tx: TransactionViewModel, ignored: bool) -> Element {
                             move |_| async move {
                                 info!("Ignoring: {} in {}", tx_id, budget_signal().period_id);
                                 if let Ok(bv) = api::ignore_transaction(
-                                    budget_signal().id,
-                                    tx_id,
-                                    budget_signal().period_id,
-                                )
-                                .await
+                                        budget_signal().id,
+                                        tx_id,
+                                        budget_signal().period_id,
+                                    )
+                                    .await
                                 {
                                     consume_context::<BudgetState>().0.set(bv);
                                 }
@@ -171,12 +166,12 @@ fn AllocationChip(alloc: AllocationViewModel, transaction_id: Uuid) -> Element {
                 title: "Ta bort allokering",
                 onclick: move |_| async move {
                     if let Ok(bv) = api::delete_allocation(
-                        budget_signal().id,
-                        alloc_id,
-                        transaction_id,
-                        budget_signal().period_id,
-                    )
-                    .await
+                            budget_signal().id,
+                            alloc_id,
+                            transaction_id,
+                            budget_signal().period_id,
+                        )
+                        .await
                     {
                         consume_context::<BudgetState>().0.set(bv);
                     }
@@ -196,15 +191,14 @@ fn SplitTransactionPopover(tx: TransactionViewModel) -> Element {
     let mut selected_item: Signal<Option<BudgetItemViewModel>> = use_signal(|| None);
 
     rsx! {
-        PopoverRoot {
-            open: open(),
-            on_open_change: move |v| open.set(v),
+        PopoverRoot { open: open(), on_open_change: move |v| open.set(v),
             PopoverTrigger { "Dela upp" }
             PopoverContent { gap: "0.5rem",
                 div { class: "split-form",
                     p { class: "split-form-title", "Allokera del av transaktion" }
                     p { class: "split-form-total",
-                        "Total: " strong { {tx.amount.to_string()} }
+                        "Total: "
+                        strong { {tx.amount.to_string()} }
                     }
                     div { class: "split-form-field",
                         label { "Tagg" }
@@ -246,20 +240,22 @@ fn SplitTransactionPopover(tx: TransactionViewModel) -> Element {
                                     async move {
                                         let Some(item) = item else { return };
                                         let Some(actual_id) = item.actual_id else { return };
-                                        let Ok(cents) = amount_str.trim().replace(',', ".").parse::<f64>() else { return };
+                                        let Ok(cents) = amount_str.trim().replace(',', ".").parse::<f64>() else {
+                                            return
+                                        };
                                         let amount = api::models::Money::new_cents(
                                             (cents * 100.0) as i64,
                                             budget_signal().currency,
                                         );
                                         if let Ok(bv) = api::create_allocation(
-                                            budget_signal().id,
-                                            tx.tx_id,
-                                            actual_id,
-                                            amount,
-                                            tag,
-                                            budget_signal().period_id,
-                                        )
-                                        .await
+                                                budget_signal().id,
+                                                tx.tx_id,
+                                                actual_id,
+                                                amount,
+                                                tag,
+                                                budget_signal().period_id,
+                                            )
+                                            .await
                                         {
                                             consume_context::<BudgetState>().0.set(bv);
                                             tag_input.set(String::new());
@@ -302,9 +298,7 @@ pub fn TransferPairsView() -> Element {
                 "Möjliga interna överföringar "
                 span { class: "transaction-count", "({total_count})" }
                 if total_count > pairs.len() {
-                    span { class: "transaction-count",
-                        " — visar {pairs.len()} av {total_count}"
-                    }
+                    span { class: "transaction-count", " — visar {pairs.len()} av {total_count}" }
                 }
             }
             div { class: "transactions-list",
@@ -332,12 +326,16 @@ fn TransferPairCard(pair: TransferPair) -> Element {
         .collect::<Vec<_>>();
 
     rsx! {
-        div { class: "transaction-card transfer-pair-card", key: "{out_id}-{in_id}",
+        div {
+            class: "transaction-card transfer-pair-card",
+            key: "{out_id}-{in_id}",
             div { class: "transfer-pair-row",
                 div { class: "transfer-leg",
                     span { class: "transfer-leg-label", "Ut" }
                     span { class: "transaction-description", {pair.outgoing.description.clone()} }
-                    span { class: "transaction-date", {pair.outgoing.date.format("%Y-%m-%d").to_string()} }
+                    span { class: "transaction-date",
+                        {pair.outgoing.date.format("%Y-%m-%d").to_string()}
+                    }
                     span { class: "transaction-amount negative", {pair.outgoing.amount.to_string()} }
                     span { class: "transfer-account", {pair.outgoing.account_number.clone()} }
                 }
@@ -345,7 +343,9 @@ fn TransferPairCard(pair: TransferPair) -> Element {
                 div { class: "transfer-leg",
                     span { class: "transfer-leg-label", "In" }
                     span { class: "transaction-description", {pair.incoming.description.clone()} }
-                    span { class: "transaction-date", {pair.incoming.date.format("%Y-%m-%d").to_string()} }
+                    span { class: "transaction-date",
+                        {pair.incoming.date.format("%Y-%m-%d").to_string()}
+                    }
                     span { class: "transaction-amount positive", {pair.incoming.amount.to_string()} }
                     span { class: "transfer-account", {pair.incoming.account_number.clone()} }
                 }
@@ -383,12 +383,25 @@ fn TransferPairCard(pair: TransferPair) -> Element {
                             r#type: "button",
                             onclick: move |_| async move {
                                 let name = new_tag_name().trim().to_string();
-                                if name.is_empty() { return; }
+                                if name.is_empty() {
+                                    return;
+                                }
                                 let budget_id = budget_signal().id;
                                 let period_id = budget_signal().period_id;
-                                if let Ok(updated) = api::create_tag(budget_id, name.clone(), Periodicity::Annual, period_id).await {
+                                if let Ok(updated) = api::create_tag(
+                                        budget_id,
+                                        name.clone(),
+                                        Periodicity::Annual,
+                                        period_id,
+                                    )
+                                    .await
+                                {
                                     new_tag_name.set(String::new());
-                                    if let Some(new_tag) = updated.tags.iter().find(|t| t.name == name && !t.deleted) {
+                                    if let Some(new_tag) = updated
+                                        .tags
+                                        .iter()
+                                        .find(|t| t.name == name && !t.deleted)
+                                    {
                                         selected_tag_id.set(Some(new_tag.id));
                                     }
                                     consume_context::<BudgetState>().0.set(updated);
@@ -405,7 +418,15 @@ fn TransferPairCard(pair: TransferPair) -> Element {
                                 let Some(tag_id) = selected_tag_id() else { return };
                                 let budget_id = budget_signal().id;
                                 let period_id = budget_signal().period_id;
-                                if let Ok(bv) = resolve_transfer_pair(budget_id, out_id, in_id, Some(tag_id), period_id).await {
+                                if let Ok(bv) = resolve_transfer_pair(
+                                        budget_id,
+                                        out_id,
+                                        in_id,
+                                        Some(tag_id),
+                                        period_id,
+                                    )
+                                    .await
+                                {
                                     consume_context::<BudgetState>().0.set(bv);
                                 }
                             },
@@ -429,7 +450,9 @@ fn TransferPairCard(pair: TransferPair) -> Element {
                         onclick: move |_| async move {
                             let budget_id = budget_signal().id;
                             let period_id = budget_signal().period_id;
-                            if let Ok(bv) = resolve_transfer_pair(budget_id, out_id, in_id, None, period_id).await {
+                            if let Ok(bv) = resolve_transfer_pair(budget_id, out_id, in_id, None, period_id)
+                                .await
+                            {
                                 consume_context::<BudgetState>().0.set(bv);
                             }
                         },

@@ -46,7 +46,7 @@ pub fn TagsView() -> Element {
                 || t.name.to_lowercase().contains(&search_str)
                 || tag_to_item
                     .get(&t.id)
-                    .map_or(false, |item| item.to_lowercase().contains(&search_str))
+                    .is_some_and(|item| item.to_lowercase().contains(&search_str))
         })
         .cloned()
         .collect();
@@ -68,7 +68,11 @@ pub fn TagsView() -> Element {
 
             if tags.is_empty() {
                 p { class: "tags-empty",
-                    if search_str.is_empty() { "Inga taggar." } else { "Inga taggar matchar sökningen." }
+                    if search_str.is_empty() {
+                        "Inga taggar."
+                    } else {
+                        "Inga taggar matchar sökningen."
+                    }
                 }
             } else {
                 div { class: "tags-table",
@@ -113,8 +117,19 @@ pub fn TagsView() -> Element {
                                                     async move {
                                                         let name = editing_name().trim().to_string();
                                                         editing_tag_id.set(None);
-                                                        if name.is_empty() || name == original { return; }
-                                                        if let Ok(updated) = modify_tag(budget_id, tag_id, Some(name), None, None, period_id).await {
+                                                        if name.is_empty() || name == original {
+                                                            return;
+                                                        }
+                                                        if let Ok(updated) = modify_tag(
+                                                                budget_id,
+                                                                tag_id,
+                                                                Some(name),
+                                                                None,
+                                                                None,
+                                                                period_id,
+                                                            )
+                                                            .await
+                                                        {
                                                             consume_context::<BudgetState>().0.set(updated);
                                                         }
                                                     }
@@ -143,15 +158,36 @@ pub fn TagsView() -> Element {
                                                     _ => Periodicity::Monthly,
                                                 };
                                                 spawn(async move {
-                                                    if let Ok(updated) = modify_tag(budget_id, tag_id, None, Some(new_p), None, period_id).await {
+                                                    if let Ok(updated) = modify_tag(
+                                                            budget_id,
+                                                            tag_id,
+                                                            None,
+                                                            Some(new_p),
+                                                            None,
+                                                            period_id,
+                                                        )
+                                                        .await
+                                                    {
                                                         consume_context::<BudgetState>().0.set(updated);
                                                     }
                                                 });
                                             },
-                                            option { value: "Monthly",   selected: periodicity == Periodicity::Monthly,   "{periodicity_label(Periodicity::Monthly)}" }
-                                            option { value: "Quarterly", selected: periodicity == Periodicity::Quarterly, "{periodicity_label(Periodicity::Quarterly)}" }
-                                            option { value: "Annual",    selected: periodicity == Periodicity::Annual,    "{periodicity_label(Periodicity::Annual)}" }
-                                            option { value: "OneOff",    selected: periodicity == Periodicity::OneOff,    "{periodicity_label(Periodicity::OneOff)}" }
+                                            option {
+                                                value: "Monthly",
+                                                selected: periodicity == Periodicity::Monthly,
+                                                "{periodicity_label(Periodicity::Monthly)}"
+                                            }
+                                            option {
+                                                value: "Quarterly",
+                                                selected: periodicity == Periodicity::Quarterly,
+                                                "{periodicity_label(Periodicity::Quarterly)}"
+                                            }
+                                            option { value: "Annual", selected: periodicity == Periodicity::Annual,
+                                                "{periodicity_label(Periodicity::Annual)}"
+                                            }
+                                            option { value: "OneOff", selected: periodicity == Periodicity::OneOff,
+                                                "{periodicity_label(Periodicity::OneOff)}"
+                                            }
                                         }
 
                                         // Budget item connection
@@ -230,10 +266,11 @@ fn TagTransactionsPanel(budget_id: Uuid, tag_id: Uuid) -> Element {
                         div { class: "tags-tx-list",
                             for tx in txs {
                                 div { class: "tags-tx-row", key: "{tx.id}",
-                                    span { class: "tags-tx-date", {tx.date.format("%Y-%m-%d").to_string()} }
+                                    span { class: "tags-tx-date",
+                                        {tx.date.format("%Y-%m-%d").to_string()}
+                                    }
                                     span { class: "tags-tx-desc", {tx.description.clone()} }
-                                    span {
-                                        class: if tx.amount.is_pos() { "tags-tx-amount positive" } else { "tags-tx-amount negative" },
+                                    span { class: if tx.amount.is_pos() { "tags-tx-amount positive" } else { "tags-tx-amount negative" },
                                         {tx.amount.to_string()}
                                     }
                                 }

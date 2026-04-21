@@ -175,13 +175,36 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                                     r#type: "button",
                                     onclick: move |_| async move {
                                         let name = new_retag_tag_name().trim().to_string();
-                                        if name.is_empty() { return; }
-                                        let Ok(updated) = create_tag(budget_id, name.clone(), Periodicity::Monthly, budget_signal().period_id).await else { return; };
-                                        let Some(new_tag) = updated.tags.iter().find(|t| t.name == name && !t.deleted).cloned() else { return; };
+                                        if name.is_empty() {
+                                            return;
+                                        }
+                                        let Ok(updated) = create_tag(
+                                                budget_id,
+                                                name.clone(),
+                                                Periodicity::Monthly,
+                                                budget_signal().period_id,
+                                            )
+                                            .await else {
+                                            return;
+                                        };
+                                        let Some(new_tag) = updated
+                                            .tags
+                                            .iter()
+                                            .find(|t| t.name == name && !t.deleted)
+                                            .cloned() else {
+                                            return;
+                                        };
                                         consume_context::<BudgetState>().0.set(updated);
                                         let selected_ids: Vec<Uuid> = selected_transactions().into_iter().collect();
                                         for tx_id in selected_ids {
-                                            if let Ok(bv) = tag_transaction(budget_id, tx_id, new_tag.id, budget_signal().period_id).await {
+                                            if let Ok(bv) = tag_transaction(
+                                                    budget_id,
+                                                    tx_id,
+                                                    new_tag.id,
+                                                    budget_signal().period_id,
+                                                )
+                                                .await
+                                            {
                                                 consume_context::<BudgetState>().0.set(bv);
                                             }
                                         }
@@ -195,7 +218,9 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                                 Button {
                                     variant: ButtonVariant::Secondary,
                                     r#type: "button",
-                                    onclick: move |_| { creating_retag_tag.set(false); },
+                                    onclick: move |_| {
+                                        creating_retag_tag.set(false);
+                                    },
                                     "Tillbaka"
                                 }
                             }
@@ -209,11 +234,20 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                                             creating_retag_tag.set(true);
                                             return;
                                         }
-                                        let Ok(tag_id) = Uuid::parse_str(&e.value()) else { return; };
+                                        let Ok(tag_id) = Uuid::parse_str(&e.value()) else {
+                                            return;
+                                        };
                                         let selected_ids: Vec<Uuid> = selected_transactions().into_iter().collect();
                                         spawn(async move {
                                             for tx_id in selected_ids {
-                                                if let Ok(bv) = tag_transaction(budget_id, tx_id, tag_id, budget_signal().period_id).await {
+                                                if let Ok(bv) = tag_transaction(
+                                                        budget_id,
+                                                        tx_id,
+                                                        tag_id,
+                                                        budget_signal().period_id,
+                                                    )
+                                                    .await
+                                                {
                                                     consume_context::<BudgetState>().0.set(bv);
                                                 }
                                             }
@@ -221,9 +255,16 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                                             show_retag_selector.set(false);
                                         });
                                     },
-                                    option { value: "", disabled: true, selected: true, "Välj tagg..." }
+                                    option {
+                                        value: "",
+                                        disabled: true,
+                                        selected: true,
+                                        "Välj tagg..."
+                                    }
                                     {
-                                        let mut sorted_tags = budget_signal().tags.iter()
+                                        let mut sorted_tags = budget_signal()
+                                            .tags
+                                            .iter()
                                             .filter(|t| !t.deleted)
                                             .cloned()
                                             .collect::<Vec<_>>();
@@ -237,7 +278,9 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                                 Button {
                                     variant: ButtonVariant::Secondary,
                                     r#type: "button",
-                                    onclick: move |_| { show_retag_selector.set(false); },
+                                    onclick: move |_| {
+                                        show_retag_selector.set(false);
+                                    },
                                     "Avbryt"
                                 }
                             }
@@ -262,16 +305,20 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                         div { class: "tag-editor",
                             div { class: "tag-chips",
                                 {
-                                    let mut sorted_tags = budget_signal().tags.iter()
+                                    let mut sorted_tags = budget_signal()
+                                        .tags
+                                        .iter()
                                         .filter(|t| !t.deleted)
                                         .cloned()
                                         .collect::<Vec<_>>();
-                                    sorted_tags.sort_by(|a, b| {
-                                        let a_sel = item_tags().contains(&a.id);
-                                        let b_sel = item_tags().contains(&b.id);
-                                        b_sel.cmp(&a_sel).then_with(|| a.name.cmp(&b.name))
-                                    });
-                                    sorted_tags.into_iter()
+                                    sorted_tags
+                                        .sort_by(|a, b| {
+                                            let a_sel = item_tags().contains(&a.id);
+                                            let b_sel = item_tags().contains(&b.id);
+                                            b_sel.cmp(&a_sel).then_with(|| a.name.cmp(&b.name))
+                                        });
+                                    sorted_tags
+                                        .into_iter()
                                         .map(|tag| {
                                             let tag_id = tag.id;
                                             let is_selected = item_tags().contains(&tag_id);
@@ -281,7 +328,11 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                                                     key: "{tag_id}",
                                                     onclick: move |_| {
                                                         let mut tags = item_tags();
-                                                        if is_selected { tags.retain(|id| *id != tag_id); } else { tags.push(tag_id); }
+                                                        if is_selected {
+                                                            tags.retain(|id| *id != tag_id);
+                                                        } else {
+                                                            tags.push(tag_id);
+                                                        }
                                                         item_tags.set(tags);
                                                     },
                                                     "{tag.name}"
@@ -301,21 +352,22 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                                     r#type: "button",
                                     onclick: move |_| async move {
                                         let name = new_tag_name().trim().to_string();
-                                        if !name.is_empty() {
-                                            if let Ok(updated_budget) = api::create_tag(
-                                                budget_id,
-                                                name.clone(),
-                                                Periodicity::Monthly,
-                                                budget_signal().period_id,
-                                            ).await {
-                                                if let Some(new_tag) = updated_budget.tags.iter().find(|t| t.name == name) {
-                                                    let mut tags = item_tags();
-                                                    tags.push(new_tag.id);
-                                                    item_tags.set(tags);
-                                                }
-                                                new_tag_name.set(String::new());
-                                                consume_context::<BudgetState>().0.set(updated_budget);
+                                        if !name.is_empty()
+                                            && let Ok(updated_budget) = api::create_tag(
+                                                    budget_id,
+                                                    name.clone(),
+                                                    Periodicity::Monthly,
+                                                    budget_signal().period_id,
+                                                )
+                                                .await
+                                        {
+                                            if let Some(new_tag) = updated_budget.tags.iter().find(|t| t.name == name) {
+                                                let mut tags = item_tags();
+                                                tags.push(new_tag.id);
+                                                item_tags.set(tags);
                                             }
+                                            new_tag_name.set(String::new());
+                                            consume_context::<BudgetState>().0.set(updated_budget);
                                         }
                                     },
                                     "Skapa tagg"
@@ -328,17 +380,36 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                         select {
                             class: "budget-item-edit-input",
                             onchange: move |e| {
-                                item_type.set(match e.value().as_str() {
-                                    "Income" => BudgetingType::Income,
-                                    "Savings" => BudgetingType::Savings,
-                                    "InternalTransfer" => BudgetingType::InternalTransfer,
-                                    _ => BudgetingType::Expense,
-                                });
+                                item_type
+                                    .set(
+                                        match e.value().as_str() {
+                                            "Income" => BudgetingType::Income,
+                                            "Savings" => BudgetingType::Savings,
+                                            "InternalTransfer" => BudgetingType::InternalTransfer,
+                                            _ => BudgetingType::Expense,
+                                        },
+                                    );
                             },
-                            option { value: "Expense", selected: item_type() == BudgetingType::Expense, "Utgift" }
-                            option { value: "Income", selected: item_type() == BudgetingType::Income, "Inkomst" }
-                            option { value: "Savings", selected: item_type() == BudgetingType::Savings, "Sparande" }
-                            option { value: "InternalTransfer", selected: item_type() == BudgetingType::InternalTransfer, "Intern överföring" }
+                            option {
+                                value: "Expense",
+                                selected: item_type() == BudgetingType::Expense,
+                                "Utgift"
+                            }
+                            option {
+                                value: "Income",
+                                selected: item_type() == BudgetingType::Income,
+                                "Inkomst"
+                            }
+                            option {
+                                value: "Savings",
+                                selected: item_type() == BudgetingType::Savings,
+                                "Sparande"
+                            }
+                            option {
+                                value: "InternalTransfer",
+                                selected: item_type() == BudgetingType::InternalTransfer,
+                                "Intern överföring"
+                            }
                         }
                     }
                     div { class: "budget-item-edit-field",
@@ -387,9 +458,7 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                                 oninput: move |e: FormEvent| buffer_target_str.set(e.value()),
                             }
                             if let Some(contrib) = item.required_monthly_contribution {
-                                span { class: "buffer-contribution-hint",
-                                    "→ {contrib} / mån"
-                                }
+                                span { class: "buffer-contribution-hint", "→ {contrib} / mån" }
                             } else if let Ok(v) = buffer_target_str().trim().parse::<i64>() {
                                 if v > 0 {
                                     // preview based on current tags' max periodicity
@@ -409,19 +478,29 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                             onclick: move |_| async move {
                                 let tag_ids = item_tags();
                                 // Save buffer target
-                                let new_buffer = buffer_target_str().trim().parse::<i64>().ok()
+                                let new_buffer = buffer_target_str()
+                                    .trim()
+                                    .parse::<i64>()
+                                    .ok()
                                     .filter(|&v| v > 0)
                                     .map(|kr| Money::new_dollars(kr, budget_signal().currency));
-                                let _ = set_item_buffer(budget_id, item.item_id, new_buffer, budget_signal().period_id).await;
+                                let _ = set_item_buffer(
+                                        budget_id,
+                                        item.item_id,
+                                        new_buffer,
+                                        budget_signal().period_id,
+                                    )
+                                    .await;
                                 let _ = api::modify_item(
-                                    budget_id,
-                                    item.item_id,
-                                    None,
-                                    Some(item_type()),
-                                    Some(tag_ids),
-                                    None,
-                                    budget_signal().period_id,
-                                ).await;
+                                        budget_id,
+                                        item.item_id,
+                                        None,
+                                        Some(item_type()),
+                                        Some(tag_ids),
+                                        None,
+                                        budget_signal().period_id,
+                                    )
+                                    .await;
                                 if let Some(item_id) = item.actual_id {
                                     match api::modify_actual(
                                             budget_id,
@@ -496,7 +575,9 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                 div { class: "budget-item-amounts",
                     "{item.actual_amount.to_string()} / {item.budgeted_amount.to_string()}"
                     if let Some(contrib) = item.required_monthly_contribution {
-                        span { class: "buffer-badge", title: "Rekommenderat buffertsparande per månad",
+                        span {
+                            class: "buffer-badge",
+                            title: "Rekommenderat buffertsparande per månad",
                             "🏦 {contrib}/mån"
                         }
                     }

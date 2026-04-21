@@ -22,7 +22,8 @@ fn get_data_file() -> PathBuf {
         .map(PathBuf::from)
         .unwrap_or_else(|_| {
             info!("DATA_FILE not set, using default data.json");
-            PathBuf::from("data.json") })
+            PathBuf::from("data.json")
+        })
 }
 
 pub static CLIENT: Lazy<JoyDbBudgetRuntime> = Lazy::new(|| {
@@ -66,9 +67,7 @@ pub fn get_default_user(client: Option<&Db>) -> Result<User, RustyError> {
                     "Tommie",
                     "Nygren",
                     Some("0704382781".to_string()),
-                    Some(
-                        NaiveDate::parse_from_str("1973-05-12", "%Y-%m-%d").unwrap_or_default(),
-                    ),
+                    Some(NaiveDate::parse_from_str("1973-05-12", "%Y-%m-%d").unwrap_or_default()),
                     client,
                 )
             } else {
@@ -113,10 +112,13 @@ pub fn add_budget_to_user(
     let user_budgets = with_client(None).get::<UserBudgets>(&user_id)?;
     match user_budgets {
         None => {
-            match with_client(None).insert(&UserBudgets {
-                id: user_id,
-                budgets: vec![(budget_id, default)],
-            }).map(|_| user_id) {
+            match with_client(None)
+                .insert(&UserBudgets {
+                    id: user_id,
+                    budgets: vec![(budget_id, default)],
+                })
+                .map(|_| user_id)
+            {
                 Ok(_) => Ok(user_id),
                 Err(e) => Err(RustyError::JoydbError(e)),
             }
@@ -140,11 +142,7 @@ pub fn add_budget_to_user(
     }
 }
 
-pub fn create_budget(
-    user_id: Uuid,
-    name: &str,
-    default_budget: bool,
-) -> Result<Uuid, RustyError> {
+pub fn create_budget(user_id: Uuid, name: &str, default_budget: bool) -> Result<Uuid, RustyError> {
     let budget_id = with_runtime(None).create_budget(
         user_id,
         name,
@@ -196,7 +194,13 @@ pub fn evaluate_rules(user_id: Uuid, budget_id: Uuid) -> Result<Uuid, RustyError
             actual_id
         } else if let Some(item_id) = rule_match.item_id {
             let period_id = budget.get_period_for_transaction(tx_id).unwrap().id;
-            match add_actual(user_id, budget_id, item_id, Money::zero(budget.currency), period_id) {
+            match add_actual(
+                user_id,
+                budget_id,
+                item_id,
+                Money::zero(budget.currency),
+                period_id,
+            ) {
                 Ok(id) => id,
                 Err(e) => {
                     error!(error = %e, "Could not create actual for tx {}", tx_id);
@@ -239,7 +243,15 @@ pub fn modify_item(
     tag_ids: Option<Vec<Uuid>>,
     periodicity: Option<Periodicity>,
 ) -> Result<Uuid, RustyError> {
-    with_runtime(None).modify_item(user_id, budget_id, item_id, name, item_type, tag_ids, periodicity)
+    with_runtime(None).modify_item(
+        user_id,
+        budget_id,
+        item_id,
+        name,
+        item_type,
+        tag_ids,
+        periodicity,
+    )
 }
 
 /*
@@ -290,32 +302,28 @@ pub fn connect_transaction(
     let budget = get_budget(budget_id)?;
 
     let actual_id = match actual_id {
-        None => {
-            with_runtime(None).add_actual(
-                user_id,
-                budget_id,
-                item_id,
-                Money::zero(budget.currency),
-                period_id,
-            )?
-        }
+        None => with_runtime(None).add_actual(
+            user_id,
+            budget_id,
+            item_id,
+            Money::zero(budget.currency),
+            period_id,
+        )?,
         Some(actual_id) => actual_id,
     };
 
     let amount = budget
         .get_transaction(tx_id)
         .map(|tx| tx.amount)
-        .ok_or_else(|| RustyError::ItemNotFound(tx_id.to_string(), "Transaction not found".to_string()))?;
+        .ok_or_else(|| {
+            RustyError::ItemNotFound(tx_id.to_string(), "Transaction not found".to_string())
+        })?;
 
     create_allocation(user_id, budget_id, tx_id, actual_id, amount, tag)?;
     Ok(actual_id)
 }
 
-pub fn ignore_transaction(
-    budget_id: Uuid,
-    user_id: Uuid,
-    tx_id: Uuid,
-) -> Result<Uuid, RustyError> {
+pub fn ignore_transaction(budget_id: Uuid, user_id: Uuid, tx_id: Uuid) -> Result<Uuid, RustyError> {
     with_runtime(None).ignore_transaction(budget_id, tx_id, user_id)?;
     Ok(budget_id)
 }
@@ -327,8 +335,7 @@ pub fn adjust_actual_funds(
     period_id: PeriodId,
     amount: Money,
 ) -> Result<Uuid, RustyError> {
-    with_runtime(None)
-        .adjust_budgeted_amount(user_id, budget_id, actual_id, period_id, amount)?;
+    with_runtime(None).adjust_budgeted_amount(user_id, budget_id, actual_id, period_id, amount)?;
     Ok(budget_id)
 }
 
@@ -386,7 +393,14 @@ pub fn create_rule(
     let item_key = MatchRule::create_item_key(item);
     let always_apply = true;
 
-    with_runtime(None).add_rule(user_id, budget.id, transaction_key, item_key, always_apply, None)?;
+    with_runtime(None).add_rule(
+        user_id,
+        budget.id,
+        transaction_key,
+        item_key,
+        always_apply,
+        None,
+    )?;
     Ok(budget.id)
 }
 
@@ -465,12 +479,17 @@ pub fn modify_tag(
     with_runtime(None).modify_tag(user_id, budget_id, tag_id, name, periodicity, deleted)
 }
 
-pub fn get_next_untagged_transaction(budget_id: Uuid) -> Result<Option<BankTransaction>, RustyError> {
+pub fn get_next_untagged_transaction(
+    budget_id: Uuid,
+) -> Result<Option<BankTransaction>, RustyError> {
     let budget = get_budget(budget_id)?;
     Ok(budget.get_next_untagged_transaction().cloned())
 }
 
-pub fn get_transactions_for_tag(budget_id: Uuid, tag_id: Uuid) -> Result<Vec<BankTransaction>, RustyError> {
+pub fn get_transactions_for_tag(
+    budget_id: Uuid,
+    tag_id: Uuid,
+) -> Result<Vec<BankTransaction>, RustyError> {
     let budget = get_budget(budget_id)?;
     let mut txs: Vec<BankTransaction> = budget
         .periods
@@ -483,7 +502,11 @@ pub fn get_transactions_for_tag(budget_id: Uuid, tag_id: Uuid) -> Result<Vec<Ban
     Ok(txs)
 }
 
-pub fn get_tagged_transactions(budget_id: Uuid, limit: usize, offset: usize) -> Result<Vec<BankTransaction>, RustyError> {
+pub fn get_tagged_transactions(
+    budget_id: Uuid,
+    limit: usize,
+    offset: usize,
+) -> Result<Vec<BankTransaction>, RustyError> {
     let budget = get_budget(budget_id)?;
     let mut txs: Vec<BankTransaction> = budget
         .periods
@@ -496,7 +519,10 @@ pub fn get_tagged_transactions(budget_id: Uuid, limit: usize, offset: usize) -> 
     Ok(txs.into_iter().skip(offset).take(limit).collect())
 }
 
-pub fn get_untagged_transactions(budget_id: Uuid, limit: usize) -> Result<Vec<BankTransaction>, RustyError> {
+pub fn get_untagged_transactions(
+    budget_id: Uuid,
+    limit: usize,
+) -> Result<Vec<BankTransaction>, RustyError> {
     let budget = get_budget(budget_id)?;
     let transfer_ids: std::collections::HashSet<Uuid> = budget
         .potential_internal_transfers()
@@ -548,7 +574,10 @@ pub fn tag_transaction(
     with_runtime(None).tag_transaction(user_id, budget_id, tx_id, tag_id)?;
     tracing::info!("[perf] tag_transaction/tag_event: {:?}", t.elapsed());
     let budget = get_budget(budget_id)?;
-    tracing::info!("[perf] tag_transaction/load_for_rule_check: {:?}", t.elapsed());
+    tracing::info!(
+        "[perf] tag_transaction/load_for_rule_check: {:?}",
+        t.elapsed()
+    );
     let tx = budget
         .get_transaction(tx_id)
         .ok_or(RustyError::ItemNotFound(
@@ -561,7 +590,14 @@ pub fn tag_transaction(
         .iter()
         .any(|r| r.transaction_key == transaction_key && r.tag_id == Some(tag_id));
     if !rule_exists {
-        with_runtime(None).add_rule(user_id, budget_id, transaction_key, Vec::new(), true, Some(tag_id))?;
+        with_runtime(None).add_rule(
+            user_id,
+            budget_id,
+            transaction_key,
+            Vec::new(),
+            true,
+            Some(tag_id),
+        )?;
         tracing::info!("[perf] tag_transaction/add_rule: {:?}", t.elapsed());
     }
     evaluate_tag_rules(user_id, budget_id)?;
@@ -574,7 +610,11 @@ pub(crate) fn evaluate_tag_rules(user_id: Uuid, budget_id: Uuid) -> Result<Uuid,
     let budget = get_budget(budget_id)?;
     let matches = budget.evaluate_tag_rules();
     let match_count = matches.len();
-    info!("[perf] evaluate_tag_rules: {} matches found in {:?}", match_count, t.elapsed());
+    info!(
+        "[perf] evaluate_tag_rules: {} matches found in {:?}",
+        match_count,
+        t.elapsed()
+    );
     for (tx_id, tag_id) in matches {
         match with_runtime(None).tag_transaction(user_id, budget_id, tx_id, tag_id) {
             Ok(_) => {
@@ -583,11 +623,18 @@ pub(crate) fn evaluate_tag_rules(user_id: Uuid, budget_id: Uuid) -> Result<Uuid,
             Err(e) => error!(error = %e, "Could not tag transaction {} with tag {}", tx_id, tag_id),
         }
     }
-    info!("[perf] evaluate_tag_rules/total (applied {} tags): {:?}", match_count, t.elapsed());
+    info!(
+        "[perf] evaluate_tag_rules/total (applied {} tags): {:?}",
+        match_count,
+        t.elapsed()
+    );
     Ok(budget_id)
 }
 
-pub fn preview_rule_matches(budget_id: Uuid, tx_id: Uuid) -> Result<Vec<BankTransaction>, RustyError> {
+pub fn preview_rule_matches(
+    budget_id: Uuid,
+    tx_id: Uuid,
+) -> Result<Vec<BankTransaction>, RustyError> {
     let budget = get_budget(budget_id)?;
     Ok(budget.preview_rule_matches(tx_id))
 }
@@ -634,7 +681,9 @@ pub fn delete_rule(user_id: Uuid, budget_id: Uuid, rule_id: Uuid) -> Result<Uuid
                 if !still_matches {
                     match with_runtime(None).untag_transaction(user_id, budget_id, tx_id) {
                         Ok(_) => info!("Untagged transaction {} after rule deletion", tx_id),
-                        Err(e) => error!(error = %e, "Failed to untag transaction {} after rule deletion", tx_id),
+                        Err(e) => {
+                            error!(error = %e, "Failed to untag transaction {} after rule deletion", tx_id)
+                        }
                     }
                 }
             }

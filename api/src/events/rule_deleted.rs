@@ -13,7 +13,12 @@ pub struct RuleDeleted {
 
 impl RuleDeletedHandler for Budget {
     fn apply_delete_rule(&mut self, event: &RuleDeleted) -> Uuid {
-        if let Some(rule) = self.match_rules.iter().find(|r| r.id == event.rule_id).cloned() {
+        if let Some(rule) = self
+            .match_rules
+            .iter()
+            .find(|r| r.id == event.rule_id)
+            .cloned()
+        {
             self.match_rules.remove(&rule);
         }
         event.rule_id
@@ -29,4 +34,3 @@ impl RuleDeletedHandler for Budget {
         })
     }
 }
-

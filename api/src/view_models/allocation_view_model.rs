@@ -1,6 +1,6 @@
+use crate::models::{Money, TransactionAllocation};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use crate::models::{Money, TransactionAllocation};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct AllocationViewModel {

@@ -130,9 +130,7 @@ pub fn BudgetingTypeCard(budgeting_type: BudgetingType) -> Element {
             }
         }
         for item in sorted_items() {
-            BudgetItemView { 
-                key: "{item.item_id}",
-                item: item.clone() }
+            BudgetItemView { key: "{item.item_id}", item: item.clone() }
             Separator {
                 style: "margin: 15px 0; width: 50%;",
                 horizontal: true,

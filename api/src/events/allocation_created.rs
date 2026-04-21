@@ -29,7 +29,11 @@ impl Display for AllocationCreated {
 
 impl AllocationCreatedHandler for Budget {
     fn apply_create_allocation(&mut self, event: &AllocationCreated) -> Uuid {
-        let cost_types = [BudgetingType::Expense, BudgetingType::Savings, BudgetingType::InternalTransfer];
+        let cost_types = [
+            BudgetingType::Expense,
+            BudgetingType::Savings,
+            BudgetingType::InternalTransfer,
+        ];
         let allocation = TransactionAllocation {
             id: event.allocation_id,
             transaction_id: event.transaction_id,
@@ -42,10 +46,15 @@ impl AllocationCreatedHandler for Budget {
             let actual_id = event.actual_id;
             let amount = event.amount;
             self.with_period_mut(period_id).add_allocation(allocation);
-            self.with_period_mut(period_id).mutate_actual(actual_id, |a| {
-                let signed = if cost_types.contains(&a.budgeting_type) { -amount } else { amount };
-                a.actual_amount += signed;
-            });
+            self.with_period_mut(period_id)
+                .mutate_actual(actual_id, |a| {
+                    let signed = if cost_types.contains(&a.budgeting_type) {
+                        -amount
+                    } else {
+                        amount
+                    };
+                    a.actual_amount += signed;
+                });
         }
         event.allocation_id
     }
@@ -65,7 +74,9 @@ impl AllocationCreatedHandler for Budget {
         }
         let period = self
             .get_period_for_transaction(transaction_id)
-            .ok_or_else(|| CommandError::NotFound("Period not found for transaction".to_string()))?;
+            .ok_or_else(|| {
+                CommandError::NotFound("Period not found for transaction".to_string())
+            })?;
         if !period.contains_actual(actual_id) {
             return Err(CommandError::NotFound(format!(
                 "ActualItem {} not found in period",

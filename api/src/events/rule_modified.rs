@@ -14,7 +14,12 @@ pub struct RuleModified {
 
 impl RuleModifiedHandler for Budget {
     fn apply_modify_rule(&mut self, event: &RuleModified) -> Uuid {
-        if let Some(old_rule) = self.match_rules.iter().find(|r| r.id == event.rule_id).cloned() {
+        if let Some(old_rule) = self
+            .match_rules
+            .iter()
+            .find(|r| r.id == event.rule_id)
+            .cloned()
+        {
             self.match_rules.remove(&old_rule);
             let mut updated = old_rule;
             updated.transaction_key = event.transaction_key.clone();

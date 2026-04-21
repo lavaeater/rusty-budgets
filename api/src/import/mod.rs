@@ -1,9 +1,9 @@
 use crate::cqrs::framework::Runtime;
 use crate::cqrs::runtime::JoyDbBudgetRuntime;
 use crate::models::{Currency, Money};
-use calamine::{open_workbook, open_workbook_from_rs, DataType, Reader, Xlsx, XlsxError};
+use calamine::{DataType, Reader, Xlsx, XlsxError, open_workbook, open_workbook_from_rs};
 use chrono::{DateTime, NaiveDate, ParseError, Utc};
-use dioxus::prelude::{error, info, debug};
+use dioxus::prelude::{debug, error, info};
 use std::io::{Cursor, Error};
 use std::path::Path;
 use uuid::Uuid;
@@ -16,7 +16,7 @@ fn extract_transfer_account_number(description: &str) -> Option<String> {
     let desc = description.trim();
     if let Some(rest) = desc.strip_prefix("Överföring ") {
         let digits: String = rest.chars().filter(|c| c.is_ascii_digit()).collect();
-        if digits.starts_with("915"){
+        if digits.starts_with("915") {
             return Some(digits);
         }
     }
@@ -74,19 +74,19 @@ pub fn import_from_path(
         if p.is_dir() {
             debug!("Path is a dir!");
             let entries = p.read_dir()?;
-            let r = entries.map(|entry| {
-                let path = entry?.path();
-                
-                if path.is_file() && let Some(path_str) = path.to_str(){
-                    import_from_skandia_excel(
-                        runtime,
-                        user_id,
-                        budget_id,
-                        path_str)
-                } else {
-                    Ok((0u64, 0u64, 0u64))
-                }
-            }).collect::<Result<Vec<_>, _>>()?;
+            let r = entries
+                .map(|entry| {
+                    let path = entry?.path();
+
+                    if path.is_file()
+                        && let Some(path_str) = path.to_str()
+                    {
+                        import_from_skandia_excel(runtime, user_id, budget_id, path_str)
+                    } else {
+                        Ok((0u64, 0u64, 0u64))
+                    }
+                })
+                .collect::<Result<Vec<_>, _>>()?;
             Ok(r.iter().fold((0u64, 0u64, 0u64), |acc, (a, b, c)| {
                 (acc.0 + a, acc.1 + b, acc.2 + c)
             }))
@@ -140,7 +140,8 @@ pub fn import_from_skandia_excel(
 
                 // Auto-create counterpart account from transfer descriptions
                 if let Some(counterpart) = extract_transfer_account_number(&description) {
-                    let _ = runtime.ensure_account(user_id, budget_id, &counterpart, "Skandiabanken");
+                    let _ =
+                        runtime.ensure_account(user_id, budget_id, &counterpart, "Skandiabanken");
                 }
 
                 let acct_no = if account_number.is_some() {
@@ -170,9 +171,7 @@ pub fn import_from_skandia_excel(
         }
         info!(
             "Imported {} transactions, skipped {} transactions, total {} transactions",
-            imported,
-            not_imported,
-            total_rows
+            imported, not_imported, total_rows
         );
     }
 
@@ -211,16 +210,14 @@ pub fn import_from_skandia_excel_bytes(
                 let naive_date = NaiveDate::parse_from_str(&date_str, "%Y-%m-%d")?;
 
                 // Convert to midnight UTC
-                let date: DateTime<Utc> = naive_date
-                    .and_hms_opt(0, 0, 0)
-                    .unwrap()
-                    .and_utc();
+                let date: DateTime<Utc> = naive_date.and_hms_opt(0, 0, 0).unwrap().and_utc();
 
                 let description = row[1].to_string();
 
                 // Auto-create counterpart account from transfer descriptions
                 if let Some(counterpart) = extract_transfer_account_number(&description) {
-                    let _ = runtime.ensure_account(user_id, budget_id, &counterpart, "Skandiabanken");
+                    let _ =
+                        runtime.ensure_account(user_id, budget_id, &counterpart, "Skandiabanken");
                 }
 
                 let acct_no = if account_number.is_some() {
@@ -250,9 +247,7 @@ pub fn import_from_skandia_excel_bytes(
         }
         info!(
             "Imported {} transactions from bytes, skipped {} transactions, total {} transactions",
-            imported,
-            not_imported,
-            total_rows
+            imported, not_imported, total_rows
         );
     }
 

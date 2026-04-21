@@ -1,8 +1,8 @@
-use serde::{Deserialize, Serialize};
 use crate::models::BudgetingType;
 use crate::models::BudgetingType::{Expense, Income, InternalTransfer, Savings};
 use crate::view_models::Rule;
 use crate::view_models::Rule::{Difference, SelfDiff, Sum};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RulePackages {

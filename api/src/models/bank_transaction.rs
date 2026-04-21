@@ -1,11 +1,11 @@
-use core::fmt;
-use core::fmt::{Display, Formatter};
-use std::hash::{DefaultHasher, Hash, Hasher};
-use uuid::Uuid;
-use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
 use crate::models::money::Money;
 use crate::models::{MonthBeginsOn, PeriodId};
+use chrono::{DateTime, Utc};
+use core::fmt;
+use core::fmt::{Display, Formatter};
+use serde::{Deserialize, Serialize};
+use std::hash::{DefaultHasher, Hash, Hasher};
+use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct BankAccount {
@@ -54,11 +54,23 @@ impl Hash for BankTransaction {
 
 impl BankTransaction {
     pub fn get_hash(&self) -> u64 {
-        get_transaction_hash(&self.amount, &self.balance, &self.account_number, &self.description, &self.date)
+        get_transaction_hash(
+            &self.amount,
+            &self.balance,
+            &self.account_number,
+            &self.description,
+            &self.date,
+        )
     }
 }
 
-pub fn get_transaction_hash(amount: &Money, balance: &Money, account_number: &str, description: &str, date: &DateTime<Utc>) -> u64 {
+pub fn get_transaction_hash(
+    amount: &Money,
+    balance: &Money,
+    account_number: &str,
+    description: &str,
+    date: &DateTime<Utc>,
+) -> u64 {
     let mut hasher = DefaultHasher::new();
     amount.hash(&mut hasher);
     balance.hash(&mut hasher);
@@ -70,7 +82,11 @@ pub fn get_transaction_hash(amount: &Money, balance: &Money, account_number: &st
 
 impl Display for BankTransaction {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{}, {}, {}, {}", self.description, self.amount, self.date, self.ignored)
+        write!(
+            f,
+            "{}, {}, {}, {}",
+            self.description, self.amount, self.date, self.ignored
+        )
     }
 }
 
@@ -95,8 +111,8 @@ impl BankTransaction {
             tag_id: None,
         }
     }
-    
-    pub fn period_id(&self, month_begins_on: MonthBeginsOn)-> PeriodId {
+
+    pub fn period_id(&self, month_begins_on: MonthBeginsOn) -> PeriodId {
         PeriodId::from_date(self.date, month_begins_on)
     }
 }

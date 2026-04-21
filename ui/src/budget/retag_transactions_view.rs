@@ -48,7 +48,7 @@ pub fn RetagTransactionsView() -> Element {
             let matches_search = search_str.is_empty()
                 || tx.description.to_lowercase().contains(&search_str);
             let matches_tag = active_tag_filter
-                .map_or(true, |tid| tx.tag_id == Some(tid));
+                .is_none_or(|tid| tx.tag_id == Some(tid));
             matches_search && matches_tag
         })
         .collect();
@@ -117,10 +117,7 @@ pub fn RetagTransactionsView() -> Element {
                                 div { key: "{tx_id}", class: "retag-row",
                                     span { class: "retag-date", "{date_str}" }
                                     span { class: "retag-description", title: "{description}", "{description}" }
-                                    span {
-                                        class: if amount_pos { "retag-amount positive" } else { "retag-amount negative" },
-                                        "{amount_str}"
-                                    }
+                                    span { class: if amount_pos { "retag-amount positive" } else { "retag-amount negative" }, "{amount_str}" }
                                     if is_creating {
                                         div { class: "retag-create-tag-row",
                                             input {
@@ -138,14 +135,37 @@ pub fn RetagTransactionsView() -> Element {
                                                         }
                                                         Key::Enter => {
                                                             let name = new_tag_name().trim().to_string();
-                                                            if name.is_empty() { return; }
+                                                            if name.is_empty() {
+                                                                return;
+                                                            }
                                                             new_tag_name.set(String::new());
                                                             creating_for_tx.set(None);
                                                             spawn(async move {
-                                                                let Ok(updated) = create_tag(budget_id, name.clone(), Periodicity::Monthly, period_id).await else { return; };
-                                                                let Some(new_tag) = updated.tags.iter().find(|t| t.name == name && !t.deleted).cloned() else { return; };
+                                                                let Ok(updated) = create_tag(
+                                                                        budget_id,
+                                                                        name.clone(),
+                                                                        Periodicity::Monthly,
+                                                                        period_id,
+                                                                    )
+                                                                    .await else {
+                                                                    return;
+                                                                };
+                                                                let Some(new_tag) = updated
+                                                                    .tags
+                                                                    .iter()
+                                                                    .find(|t| t.name == name && !t.deleted)
+                                                                    .cloned() else {
+                                                                    return;
+                                                                };
                                                                 consume_context::<BudgetState>().0.set(updated);
-                                                                if let Ok(bv) = tag_transaction(budget_id, tx_id, new_tag.id, period_id).await {
+                                                                if let Ok(bv) = tag_transaction(
+                                                                        budget_id,
+                                                                        tx_id,
+                                                                        new_tag.id,
+                                                                        period_id,
+                                                                    )
+                                                                    .await
+                                                                {
                                                                     let mut txs = transactions();
                                                                     if let Some(t) = txs.iter_mut().find(|t| t.id == tx_id) {
                                                                         t.tag_id = Some(new_tag.id);
@@ -178,14 +198,18 @@ pub fn RetagTransactionsView() -> Element {
                                                     creating_for_tx.set(Some(tx_id));
                                                     return;
                                                 }
-                                                let Ok(new_tag_id) = Uuid::parse_str(&e.value()) else { return; };
+                                                let Ok(new_tag_id) = Uuid::parse_str(&e.value()) else {
+                                                    return;
+                                                };
                                                 let mut txs = transactions();
                                                 if let Some(t) = txs.iter_mut().find(|t| t.id == tx_id) {
                                                     t.tag_id = Some(new_tag_id);
                                                 }
                                                 transactions.set(txs);
                                                 spawn(async move {
-                                                    if let Ok(updated) = tag_transaction(budget_id, tx_id, new_tag_id, period_id).await {
+                                                    if let Ok(updated) = tag_transaction(budget_id, tx_id, new_tag_id, period_id)
+                                                        .await
+                                                    {
                                                         consume_context::<BudgetState>().0.set(updated);
                                                     }
                                                 });
@@ -212,7 +236,13 @@ pub fn RetagTransactionsView() -> Element {
                         r#type: "button",
                         onclick: move |_| async move {
                             let current_offset = offset();
-                            if let Ok(batch) = get_tagged_transactions(budget_id, PAGE_SIZE + 1, current_offset).await {
+                            if let Ok(batch) = get_tagged_transactions(
+                                    budget_id,
+                                    PAGE_SIZE + 1,
+                                    current_offset,
+                                )
+                                .await
+                            {
                                 let more = batch.len() > PAGE_SIZE;
                                 let new_txs: Vec<_> = batch.into_iter().take(PAGE_SIZE).collect();
                                 let mut all = transactions();

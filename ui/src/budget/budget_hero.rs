@@ -213,9 +213,7 @@ pub fn BudgetOverview(mut budget_id: Signal<Uuid>, mut period_id: Signal<PeriodI
                 }
             }
             if !budget.potential_transfers.is_empty() {
-                div { class: "transactions-section-prominent",
-                    TransferPairsView {}
-                }
+                div { class: "transactions-section-prominent", TransferPairsView {} }
             }
             if budget.untagged_transaction_count == 0 && budget.potential_transfer_count == 0 {
                 div { class: "transactions-section-prominent",

@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::models::{BudgetingType, Money};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Copy, Default, Hash, PartialEq, Eq)]
 pub struct BudgetingTypeOverview {

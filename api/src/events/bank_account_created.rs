@@ -1,5 +1,5 @@
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
-use crate::models::{BankAccount, Budget, Money, Currency};
+use crate::models::{BankAccount, Budget, Currency, Money};
 use cqrs_macros::DomainEvent;
 use dioxus::logger::tracing;
 use serde::{Deserialize, Serialize};
@@ -33,9 +33,10 @@ impl BankAccountCreatedHandler for Budget {
         description: String,
     ) -> Result<BankAccountCreated, CommandError> {
         if self.has_account(&account_number) {
-            Err(CommandError::Validation(
-                format!("Account {} already exists", account_number),
-            ))
+            Err(CommandError::Validation(format!(
+                "Account {} already exists",
+                account_number
+            )))
         } else {
             Ok(BankAccountCreated {
                 budget_id: self.id,

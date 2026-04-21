@@ -1,10 +1,15 @@
+use crate::models::{
+    ActualItem, BankTransaction, BudgetItem, BudgetingType, Currency, Money, Periodicity, Tag,
+    TransactionAllocation,
+};
+use crate::view_models::budget_item_status::BudgetItemStatus;
+use crate::view_models::budget_item_status::BudgetItemStatus::{
+    Balanced, NotBudgeted, OverBudget, UnderBudget,
+};
+use crate::view_models::transaction_view_model::TransactionViewModel;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use uuid::Uuid;
-use crate::models::{ActualItem, BankTransaction, BudgetItem, BudgetingType, Currency, Money, Periodicity, Tag, TransactionAllocation};
-use crate::view_models::transaction_view_model::TransactionViewModel;
-use crate::view_models::budget_item_status::BudgetItemStatus;
-use crate::view_models::budget_item_status::BudgetItemStatus::{Balanced, NotBudgeted, OverBudget, UnderBudget};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct BudgetItemViewModel {
@@ -39,9 +44,15 @@ impl BudgetItemViewModel {
         let actual_item = actual_items
             .iter()
             .find(|ai| ai.budget_item_id == budget_item.id);
-        let resolved_tags: Vec<String> = budget_item.tag_ids
+        let resolved_tags: Vec<String> = budget_item
+            .tag_ids
             .iter()
-            .filter_map(|id| budget_tags.iter().find(|t| t.id == *id).map(|t| t.name.clone()))
+            .filter_map(|id| {
+                budget_tags
+                    .iter()
+                    .find(|t| t.id == *id)
+                    .map(|t| t.name.clone())
+            })
             .collect();
         let item_tags = &resolved_tags;
 
@@ -52,7 +63,9 @@ impl BudgetItemViewModel {
 
         // Compute required monthly buffer contribution from tag periodicities
         let required_monthly_contribution = budget_item.buffer_target.map(|target| {
-            let max_months = budget_item.tag_ids.iter()
+            let max_months = budget_item
+                .tag_ids
+                .iter()
                 .filter_map(|tid| budget_tags.iter().find(|t| t.id == *tid))
                 .map(|t| match t.periodicity {
                     Periodicity::Monthly => 1i64,
@@ -69,7 +82,7 @@ impl BudgetItemViewModel {
         let tag_ids_set: HashSet<&Uuid> = budget_item.tag_ids.iter().collect();
         let mut tagged_txs: Vec<&&BankTransaction> = all_period_transactions
             .iter()
-            .filter(|tx| tx.tag_id.map_or(false, |tid| tag_ids_set.contains(&tid)))
+            .filter(|tx| tx.tag_id.is_some_and(|tid| tag_ids_set.contains(&tid)))
             .collect();
         tagged_txs.sort_by_key(|tx| tx.date);
         // Raw sum of transaction amounts (negative for expenses/savings — money leaving)
@@ -103,7 +116,8 @@ impl BudgetItemViewModel {
 
             // Transactions: prefer tag-based; fall back to connected/allocation-based
             let txs = if !tagged_txs.is_empty() {
-                tagged_txs.iter()
+                tagged_txs
+                    .iter()
                     .map(|tx| TransactionViewModel::from_transaction(tx))
                     .collect()
             } else {
@@ -146,7 +160,8 @@ impl BudgetItemViewModel {
                 required_monthly_contribution,
             }
         } else {
-            let txs = tagged_txs.iter()
+            let txs = tagged_txs
+                .iter()
                 .map(|tx| TransactionViewModel::from_transaction(tx))
                 .collect();
             Self {

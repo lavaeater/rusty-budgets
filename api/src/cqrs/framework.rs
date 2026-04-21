@@ -2,15 +2,15 @@
 // Framework (Generic Core)
 // ===========================
 
+use crate::api_error::RustyError;
 use chrono::{DateTime, Utc};
 use dioxus::logger::tracing;
+use joydb::JoydbError;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter};
 use std::hash::Hash;
-use joydb::JoydbError;
 use uuid::Uuid;
-use crate::api_error::RustyError;
 
 /// Aggregate: domain state that evolves by applying events.
 pub trait Aggregate: Sized + Debug + Clone {
@@ -61,7 +61,6 @@ impl<A: Aggregate, E: DomainEvent<A>> StoredEvent<A, E> {
     pub fn apply(&self, state: &mut A) {
         state.update_timestamp(self.timestamp, self.created_at);
         self.data.apply(state);
-        
     }
 }
 

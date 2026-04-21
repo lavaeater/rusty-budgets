@@ -16,11 +16,19 @@ pub struct TagCreated {
 
 impl TagCreatedHandler for Budget {
     fn apply_create_tag(&mut self, event: &TagCreated) -> Uuid {
-        self.tags.push(Tag::new(event.tag_id, event.name.clone(), event.periodicity));
+        self.tags.push(Tag::new(
+            event.tag_id,
+            event.name.clone(),
+            event.periodicity,
+        ));
         event.tag_id
     }
 
-    fn create_tag_impl(&self, name: String, periodicity: Periodicity) -> Result<TagCreated, CommandError> {
+    fn create_tag_impl(
+        &self,
+        name: String,
+        periodicity: Periodicity,
+    ) -> Result<TagCreated, CommandError> {
         if self.contains_tag_with_name(&name) {
             return Err(CommandError::Validation("Tag already exists.".to_string()));
         }

@@ -1,7 +1,7 @@
+use crate::cqrs::framework::CommandError;
+use crate::import::ImportError;
 use dioxus::prelude::ServerFnError;
 use joydb::JoydbError;
-use crate::cqrs::framework::{CommandError};
-use crate::import::ImportError;
 
 #[derive(Debug, thiserror::Error)]
 pub enum RustyError {
@@ -43,7 +43,7 @@ impl From<JoydbError> for RustyError {
     fn from(value: JoydbError) -> Self {
         match value {
             JoydbError::NotFound { id, model } => RustyError::ItemNotFound(id, model),
-            _ => RustyError::JoydbError(value)
+            _ => RustyError::JoydbError(value),
         }
     }
 }

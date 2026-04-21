@@ -67,7 +67,11 @@ pub fn RulesView() -> Element {
 
             if groups.is_empty() {
                 p { class: "rules-empty",
-                    if search_str.is_empty() { "Inga regler." } else { "Inga regler matchar sökningen." }
+                    if search_str.is_empty() {
+                        "Inga regler."
+                    } else {
+                        "Inga regler matchar sökningen."
+                    }
                 }
             } else {
                 div { class: "rules-groups",
@@ -103,7 +107,9 @@ pub fn RulesView() -> Element {
                                                                         .find(|r| r.id == rule_id)
                                                                         .map(|r| r.transaction_key.clone())
                                                                         .unwrap_or_default();
-                                                                    if i < toks.len() { toks.remove(i); }
+                                                                    if i < toks.len() {
+                                                                        toks.remove(i);
+                                                                    }
                                                                     async move {
                                                                         if let Ok(bv) = update_rule(budget_id, rule_id, toks, period_id).await {
                                                                             consume_context::<BudgetState>().0.set(bv);
@@ -140,7 +146,9 @@ pub fn RulesView() -> Element {
                                                                         new_token_value.set(String::new());
                                                                         adding_to_rule.set(None);
                                                                         spawn(async move {
-                                                                            if let Ok(bv) = update_rule(budget_id, rule_id, toks, period_id).await {
+                                                                            if let Ok(bv) = update_rule(budget_id, rule_id, toks, period_id)
+                                                                                .await
+                                                                            {
                                                                                 consume_context::<BudgetState>().0.set(bv);
                                                                             }
                                                                         });

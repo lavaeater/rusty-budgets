@@ -15,7 +15,14 @@ pub struct User {
 }
 
 impl User {
-    pub fn new(user_name: &str, email: &str, first_name: &str, last_name: &str, phone: Option<String>, birthday: Option<NaiveDate>) -> Self {
+    pub fn new(
+        user_name: &str,
+        email: &str,
+        first_name: &str,
+        last_name: &str,
+        phone: Option<String>,
+        birthday: Option<NaiveDate>,
+    ) -> Self {
         Self {
             id: Uuid::new_v4(),
             user_name: user_name.to_string(),

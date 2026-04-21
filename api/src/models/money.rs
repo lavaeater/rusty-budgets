@@ -1,10 +1,10 @@
+use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::hash::Hash;
 use std::iter::Sum;
 use std::ops::{Add, AddAssign, Mul, Neg, Sub, SubAssign};
-use serde::{Deserialize, Serialize};
 
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Currency {
@@ -41,15 +41,15 @@ impl Money {
     pub fn multiply(&self, rhs: i64) -> Money {
         Money::new_cents(self.cents * rhs, self.currency)
     }
-    
+
     pub fn divide(&self, rhs: i64) -> Money {
         Money::new_cents(self.cents / rhs, self.currency)
     }
-    
+
     pub fn is_pos(&self) -> bool {
         self.cents >= 0
     }
-    
+
     pub fn zero(currency: Currency) -> Self {
         Self { cents: 0, currency }
     }
@@ -87,7 +87,10 @@ impl Hash for Money {
 
 impl Money {
     pub fn new_dollars(dollars: i64, currency: Currency) -> Self {
-        Self { cents: dollars * 100, currency }
+        Self {
+            cents: dollars * 100,
+            currency,
+        }
     }
     pub fn new_cents(cents: i64, currency: Currency) -> Self {
         Self { cents, currency }
@@ -96,11 +99,10 @@ impl Money {
     pub fn amount_in_cents(&self) -> i64 {
         self.cents
     }
-    
-    pub fn amount_in_dollars(&self) -> i64 { 
+
+    pub fn amount_in_dollars(&self) -> i64 {
         self.cents / 100
     }
-    
 
     pub fn currency(&self) -> Currency {
         self.currency
@@ -109,7 +111,6 @@ impl Money {
         Money::new_cents(self.cents.abs(), self.currency)
     }
 }
-
 
 impl Add for Money {
     type Output = Money;
@@ -130,7 +131,7 @@ impl Mul for Money {
     type Output = Money;
     fn mul(self, rhs: Self) -> Self::Output {
         assert_eq!(self.currency, rhs.currency, "Currency mismatch");
-        Money::new_cents(self.cents * rhs.cents / 100, self.currency)        
+        Money::new_cents(self.cents * rhs.cents / 100, self.currency)
     }
 }
 
@@ -160,20 +161,10 @@ impl Display for Money {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self.currency {
             Currency::SEK => {
-                write!(
-                    f,
-                    "{} {}",
-                    self.amount_in_dollars(),
-                    self.currency
-                )
+                write!(f, "{} {}", self.amount_in_dollars(), self.currency)
             }
             _ => {
-                write!(
-                    f,
-                    " {}{}",
-                    self.currency,
-                    self.amount_in_dollars(),
-                )
+                write!(f, " {}{}", self.currency, self.amount_in_dollars(),)
             }
         }
     }
@@ -327,7 +318,7 @@ mod tests {
         assert!(money2 < money1);
         assert_eq!(money1.partial_cmp(&money2), Some(Ordering::Greater));
         assert_eq!(money2.partial_cmp(&money1), Some(Ordering::Less));
-        
+
         // Different currencies should return None
         assert_eq!(money1.partial_cmp(&money3), None);
     }
@@ -380,7 +371,7 @@ mod tests {
         // Test that Currency implements the expected traits
         let eur = Currency::EUR;
         let eur_clone = eur.clone();
-        
+
         assert_eq!(eur, eur_clone);
         assert_eq!(eur, Currency::EUR);
         assert_ne!(eur, Currency::USD);

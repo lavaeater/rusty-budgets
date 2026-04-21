@@ -26,11 +26,7 @@ pub struct BudgetItem {
 }
 
 impl BudgetItem {
-    pub fn new(
-        id: Uuid,
-        name: &str,
-        budgeting_type: BudgetingType,
-    ) -> Self {
+    pub fn new(id: Uuid, name: &str, budgeting_type: BudgetingType) -> Self {
         Self {
             id,
             name: name.to_string(),
