@@ -5,15 +5,15 @@ edition = "2024"
 
 [dependencies]
 dioxus = { workspace = true, features = ["fullstack"] }
-tokio = { version = "1.51.1", features = ["full"], optional = true }
+tokio = { version = "1.51.1", features = ["full", "macros", "rt-multi-thread"], optional = true }
 uuid = { workspace = true, features = ["v4", "js", "serde"] }
 chrono = { workspace = true, features = ["serde"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 joydb = { features = ["ron"], workspace = true }
-sqlx = { version="0.8.6", default-features = false, features=["chrono", "postgres", "bigdecimal", "uuid", "json", "migrate"], optional = true}
-welds = { version = "0.4.21", default-features = false, features=["postgres", "migrations"], optional = true}
+sqlx = { version = "0.8.6", default-features = false, features = ["chrono", "postgres", "bigdecimal", "uuid", "json", "migrate", "runtime-tokio", "tls-rustls"], optional = true }
+welds = { version = "0.4.21", default-features = false, features = ["postgres", "migrations", "sqlite"], optional = true }
 once_cell = { version = "1.21.3", features = ["parking_lot"] }
 cqrs_macros = { workspace = true }
 calamine = "0.34.0"
@@ -22,6 +22,12 @@ strum = { workspace = true, features = ["derive"] }
 sum = "0.1.7"
 duration-extender = "0.5.0"
 iter_tools = "0.47.0"
+log = "0.4.29"
+pretty_env_logger = "0.5.0"
+dotenvy = "0.15.7"
 
 [features]
 server = ["dioxus/server", "tokio", "sqlx", "welds"]
+welds = ["dep:welds"]
+sqlx = ["dep:sqlx"]
+tokio = ["dep:tokio"]

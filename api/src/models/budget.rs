@@ -374,11 +374,12 @@ impl Budget {
                     continue;
                 }
                 for rule in &self.match_rules {
-                    if let Some(tag_id) = rule.tag_id && rule.matches_transaction(tx) {
-                            matches.push((tx.id, tag_id));
-                            break;
-                        }
-                    
+                    if let Some(tag_id) = rule.tag_id
+                        && rule.matches_transaction(tx)
+                    {
+                        matches.push((tx.id, tag_id));
+                        break;
+                    }
                 }
             }
         }
