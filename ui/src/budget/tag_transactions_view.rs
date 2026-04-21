@@ -1,10 +1,10 @@
+use crate::budget::budget_hero::BudgetState;
+use crate::{Button, ButtonVariant, Input};
 use api::models::{BankTransaction, Periodicity};
 use api::{
     create_tag, get_untagged_transactions, ignore_transaction, preview_rule_matches,
     tag_transaction, update_rule,
 };
-use crate::budget::budget_hero::BudgetState;
-use crate::{Button, ButtonVariant, Input};
 use dioxus::prelude::*;
 use uuid::Uuid;
 
@@ -44,7 +44,7 @@ pub fn TagTransactionsView() -> Element {
         .into_iter()
         .filter(|t| !t.deleted)
         .collect::<Vec<_>>();
-    
+
     tags.sort_by(|a, b| a.name.cmp(&b.name));
 
     // Helper closures for resetting state and re-fetching the next batch

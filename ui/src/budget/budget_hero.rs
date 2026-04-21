@@ -1,5 +1,8 @@
 use crate::Button;
-use crate::budget::{BudgetTabs, CreateBudgetItemsView, RetagTransactionsView, RulesView, TagTransactionsView, TagsView, TransactionsView, TransferPairsView};
+use crate::budget::{
+    BudgetTabs, CreateBudgetItemsView, RetagTransactionsView, RulesView, TagTransactionsView,
+    TagsView, TransactionsView, TransferPairsView,
+};
 use crate::file_chooser::{FileData, FileDialog};
 use api::models::*;
 use api::view_models::BudgetViewModel;

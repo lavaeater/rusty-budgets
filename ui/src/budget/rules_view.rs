@@ -1,6 +1,6 @@
-use api::{delete_rule, update_rule};
-use crate::budget::budget_hero::BudgetState;
 use crate::Input;
+use crate::budget::budget_hero::BudgetState;
+use api::{delete_rule, update_rule};
 use dioxus::prelude::*;
 use uuid::Uuid;
 
@@ -24,7 +24,8 @@ pub fn RulesView() -> Element {
 
     // Group rules by tag_id, filtered by search
     let mut groups: Vec<(Option<Uuid>, String, Vec<_>)> = {
-        let mut map: std::collections::HashMap<Option<Uuid>, Vec<_>> = std::collections::HashMap::new();
+        let mut map: std::collections::HashMap<Option<Uuid>, Vec<_>> =
+            std::collections::HashMap::new();
         for rule in &budget.match_rules {
             let tag_name = rule
                 .tag_id
@@ -34,7 +35,10 @@ pub fn RulesView() -> Element {
             // Filter: keep if tag name or any token matches search
             let matches_search = search_str.is_empty()
                 || tag_name.to_lowercase().contains(&search_str)
-                || rule.transaction_key.iter().any(|tok| tok.contains(&search_str));
+                || rule
+                    .transaction_key
+                    .iter()
+                    .any(|tok| tok.contains(&search_str));
             if matches_search {
                 map.entry(rule.tag_id).or_default().push(rule.clone());
             }

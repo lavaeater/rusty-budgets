@@ -2,20 +2,13 @@ use dioxus::prelude::*;
 
 #[component]
 pub fn Input(
-    #[props(default)]
-    id: Option<String>,
-    #[props(default)]
-    placeholder: Option<String>,
-    #[props(default)]
-    value: Option<String>,
-    #[props(default)]
-    oninput: Option<EventHandler<FormEvent>>,
-    #[props(default)]
-    onchange: Option<EventHandler<FormEvent>>,
-    #[props(default)]
-    class: Option<String>,
-    #[props(default)]
-    r#type: Option<String>,
+    #[props(default)] id: Option<String>,
+    #[props(default)] placeholder: Option<String>,
+    #[props(default)] value: Option<String>,
+    #[props(default)] oninput: Option<EventHandler<FormEvent>>,
+    #[props(default)] onchange: Option<EventHandler<FormEvent>>,
+    #[props(default)] class: Option<String>,
+    #[props(default)] r#type: Option<String>,
     children: Element,
 ) -> Element {
     let combined_class = match class {

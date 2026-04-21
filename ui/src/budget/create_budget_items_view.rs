@@ -1,8 +1,8 @@
+use crate::budget::budget_hero::BudgetState;
+use crate::{Button, ButtonVariant, Input};
 use api::models::{BudgetingType, Periodicity};
 use api::view_models::TagSummary;
 use api::{create_budget_item, get_unbudgeted_tag_summaries, modify_tag};
-use crate::budget::budget_hero::BudgetState;
-use crate::{Button, ButtonVariant, Input};
 use dioxus::prelude::*;
 use uuid::Uuid;
 
@@ -36,7 +36,13 @@ fn periodicity_class(p: Periodicity) -> &'static str {
 }
 
 fn money_class(cents: i64) -> &'static str {
-    if cents < 0 { "cbi-money negative" } else if cents > 0 { "cbi-money positive" } else { "cbi-money neutral" }
+    if cents < 0 {
+        "cbi-money negative"
+    } else if cents > 0 {
+        "cbi-money positive"
+    } else {
+        "cbi-money neutral"
+    }
 }
 
 /// Format cents as "X kr" (whole kronor, no decimals — matches Money::Display for SEK).
@@ -97,9 +103,17 @@ pub fn CreateBudgetItemsView() -> Element {
     let asc = sort_asc();
     summaries.sort_by(|a, b| {
         let ord = match col {
-            "periodicity" => periodicity_sort_key(a.periodicity).cmp(&periodicity_sort_key(b.periodicity)),
-            "monthly" => a.average_monthly.amount_in_cents().cmp(&b.average_monthly.amount_in_cents()),
-            "yearly" => a.average_yearly.amount_in_cents().cmp(&b.average_yearly.amount_in_cents()),
+            "periodicity" => {
+                periodicity_sort_key(a.periodicity).cmp(&periodicity_sort_key(b.periodicity))
+            }
+            "monthly" => a
+                .average_monthly
+                .amount_in_cents()
+                .cmp(&b.average_monthly.amount_in_cents()),
+            "yearly" => a
+                .average_yearly
+                .amount_in_cents()
+                .cmp(&b.average_yearly.amount_in_cents()),
             _ => a.name.cmp(&b.name),
         };
         if asc { ord } else { ord.reverse() }
@@ -117,7 +131,11 @@ pub fn CreateBudgetItemsView() -> Element {
     // Helper: returns header class and onclick that toggles sort
     let header_class = move |col_name: &'static str| {
         if sort_col() == col_name {
-            if sort_asc() { "cbi-col-header sorted asc" } else { "cbi-col-header sorted desc" }
+            if sort_asc() {
+                "cbi-col-header sorted asc"
+            } else {
+                "cbi-col-header sorted desc"
+            }
         } else {
             "cbi-col-header"
         }
@@ -259,10 +277,10 @@ pub fn CreateBudgetItemsView() -> Element {
                                                     )
                                                     .await
                                                 {
-                                                    consume_context::<BudgetState>().0.set(updated); // Update local signal immediately
+                                                    consume_context::<BudgetState>().0.set(updated); // Update local signal immediately // Update local signal immediately
                                                 }
                                             }
-                                        }, // Persist to server
+                                        }, // Persist to server // Persist to server
                                     }
                                 } else {
                                     span {

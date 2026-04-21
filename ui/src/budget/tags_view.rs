@@ -1,7 +1,7 @@
+use crate::Input;
+use crate::budget::budget_hero::BudgetState;
 use api::models::{Money, Periodicity};
 use api::modify_tag;
-use crate::budget::budget_hero::BudgetState;
-use crate::Input;
 use dioxus::prelude::*;
 use uuid::Uuid;
 
@@ -228,9 +228,8 @@ pub fn TagsView() -> Element {
 
 #[component]
 fn TagTransactionsPanel(budget_id: Uuid, tag_id: Uuid) -> Element {
-    let transactions = use_resource(move || async move {
-        api::get_transactions_for_tag(budget_id, tag_id).await
-    });
+    let transactions =
+        use_resource(move || async move { api::get_transactions_for_tag(budget_id, tag_id).await });
 
     match &*transactions.read() {
         None => rsx! {
@@ -246,7 +245,8 @@ fn TagTransactionsPanel(budget_id: Uuid, tag_id: Uuid) -> Element {
         Some(Ok(txs)) => {
             let currency = txs.first().map(|tx| tx.amount.currency());
             let total: Option<Money> = currency.map(|cur| {
-                txs.iter().fold(Money::new_cents(0, cur), |acc, tx| acc + tx.amount)
+                txs.iter()
+                    .fold(Money::new_cents(0, cur), |acc, tx| acc + tx.amount)
             });
 
             rsx! {

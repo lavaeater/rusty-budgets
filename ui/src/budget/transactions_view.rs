@@ -1,11 +1,13 @@
+use crate::budget::budget_hero::BudgetState;
 use crate::budget::{ItemSelector, NewBudgetItem};
+use crate::{Button, ButtonVariant, Input, PopoverContent, PopoverRoot, PopoverTrigger};
 use api::models::{BudgetingType, Periodicity};
-use api::view_models::{AllocationViewModel, BudgetItemViewModel, TransactionViewModel, TransferPair};
+use api::view_models::{
+    AllocationViewModel, BudgetItemViewModel, TransactionViewModel, TransferPair,
+};
+use api::{connect_transaction, reject_transfer_pair, resolve_transfer_pair};
 use dioxus::prelude::*;
 use uuid::Uuid;
-use api::{connect_transaction, reject_transfer_pair, resolve_transfer_pair};
-use crate::{Button, ButtonVariant, Input, PopoverContent, PopoverRoot, PopoverTrigger};
-use crate::budget::budget_hero::BudgetState;
 
 #[component]
 pub fn TransactionsView(ignored: bool) -> Element {

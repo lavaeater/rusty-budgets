@@ -1,26 +1,21 @@
-mod input;
 mod accordion;
-mod collapsible;
-mod tabs;
-mod separator;
 mod button;
+mod collapsible;
 mod dialog;
-mod select;
+mod input;
 mod popover;
+mod select;
+mod separator;
 mod slider;
+mod tabs;
 
-pub use input::*;
 pub use accordion::*;
-pub use collapsible::*;
-pub use tabs::*;
-pub use separator::*;
 pub use button::*;
-pub use select::*;
+pub use collapsible::*;
 pub use dialog::*;
+pub use input::*;
 pub use popover::*;
+pub use select::*;
+pub use separator::*;
 pub use slider::*;
-
-
-
-
-
+pub use tabs::*;

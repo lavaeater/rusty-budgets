@@ -1,7 +1,7 @@
-use api::models::{BankTransaction, Periodicity};
-use api::{create_tag, get_tagged_transactions, tag_transaction};
 use crate::budget::budget_hero::BudgetState;
 use crate::{Button, ButtonVariant, Input};
+use api::models::{BankTransaction, Periodicity};
+use api::{create_tag, get_tagged_transactions, tag_transaction};
 use dioxus::prelude::*;
 use uuid::Uuid;
 
@@ -45,10 +45,9 @@ pub fn RetagTransactionsView() -> Element {
     let visible: Vec<BankTransaction> = transactions()
         .into_iter()
         .filter(|tx| {
-            let matches_search = search_str.is_empty()
-                || tx.description.to_lowercase().contains(&search_str);
-            let matches_tag = active_tag_filter
-                .is_none_or(|tid| tx.tag_id == Some(tid));
+            let matches_search =
+                search_str.is_empty() || tx.description.to_lowercase().contains(&search_str);
+            let matches_tag = active_tag_filter.is_none_or(|tid| tx.tag_id == Some(tid));
             matches_search && matches_tag
         })
         .collect();

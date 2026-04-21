@@ -1,7 +1,7 @@
+use crate::Button;
 use dioxus::logger::tracing::info;
 use dioxus::prelude::*;
 use rfd::AsyncFileDialog;
-use crate::Button;
 
 #[derive(Clone, Debug)]
 pub struct FileData {

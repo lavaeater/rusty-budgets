@@ -1,7 +1,5 @@
 use dioxus::prelude::*;
-use dioxus_primitives::accordion::{
-    self,
-};
+use dioxus_primitives::accordion::{self};
 
 #[derive(Props, Clone, PartialEq)]
 pub struct AccordionProps {
@@ -112,7 +110,6 @@ pub fn AccordionItem(props: AccordionItemProps) -> Element {
     }
 }
 
-
 #[derive(Props, Clone, PartialEq)]
 pub struct AccordionTriggerProps {
     /// THe id of the accordion trigger element.
@@ -152,7 +149,6 @@ pub struct AccordionContentProps {
     /// The children of the accordion content element.
     pub children: Element,
 }
-
 
 #[component]
 pub fn AccordionContent(props: AccordionContentProps) -> Element {
