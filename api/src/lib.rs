@@ -3,10 +3,14 @@
 #![allow(dead_code)]
 pub mod api_error;
 pub mod cqrs;
+pub mod errors;
 pub mod events;
 pub mod holidays;
 pub mod import;
+pub mod migrations;
 pub mod models;
+#[cfg(feature = "server")]
+pub mod pg_models;
 pub mod time_delta;
 pub mod view_models;
 //
