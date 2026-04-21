@@ -39,7 +39,7 @@ use std::path::PathBuf;
 
 use crate::api_error::RustyError;
 use crate::import::ImportError;
-use crate::models::*;
+pub use crate::models::*;
 use chrono::Utc;
 use dioxus::fullstack;
 use dioxus::prelude::*;

@@ -1,15 +1,66 @@
 use crate::api_error::RustyError;
-use crate::cqrs::framework::{CommandError, Runtime, StoredEvent};
+use crate::cqrs::framework::{AsyncRuntime, CommandError, Runtime, StoredEvent};
 use crate::models::*;
+use crate::pg_models::{PgBudget, PgStoredBudgetEvent, PgUser, PgUserBudgets};
+use crate::{cqrs, models};
 use chrono::{DateTime, Utc};
 use dioxus::logger::tracing;
+use dioxus::prelude::info;
 use joydb::Model as JoyModel;
 use joydb::adapters::{FromPath, JsonAdapter};
 use joydb::{Joydb, JoydbConfig, JoydbMode, SyncPolicy};
 use serde::{Deserialize, Serialize};
-use std::path::Path;
+use serde::{Deserializer, Serializer};
+use sqlx::Any;
+use std::env;
+use std::path::{Path, PathBuf};
 use std::time::Duration;
 use uuid::Uuid;
+use welds::Client;
+use welds::connections::any::AnyClient;
+use welds::{Syntax, WeldsError, prelude::*};
+
+fn get_data_file() -> PathBuf {
+    env::var("DATA_FILE")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| {
+            info!("DATA_FILE not set, using default data.json");
+            PathBuf::from("data.json")
+        })
+}
+
+pub async fn migrate_to_postgres() -> Result<(), RustyError> {
+    let jr = JoyDbBudgetRuntime::new(get_data_file());
+    let pr = create_runtime().await;
+    /*
+    StoredBudgetEvent, Budget, User, UserBudgets
+     */
+
+    let users = jr.db.get_all::<User>()?;
+    for user in users {
+        let mut pg_user: DbState<PgUser> = user.into();
+        pg_user.save(pr.client.as_ref()).await?;
+    }
+
+    let events = jr.db.get_all::<StoredBudgetEvent>()?;
+    for event in events {
+        let mut pg_event: DbState<PgStoredBudgetEvent> = event.into();
+        pg_event.save(pr.client.as_ref()).await?;
+    }
+
+    let budgets = jr.db.get_all::<Budget>()?;
+    for budget in budgets {
+        let mut pg_budget: DbState<PgBudget> = budget.into();
+        pg_budget.save(pr.client.as_ref()).await?;
+    }
+
+    let user_budgets = jr.db.get_all::<UserBudgets>()?;
+    for budget in user_budgets {
+        let mut pg_budget: DbState<PgUserBudgets> = budget.into();
+        pg_budget.save(pr.client.as_ref()).await?;
+    }
+    Ok(())
+}
 
 impl JoyDbBudgetRuntime {
     pub fn create_budget(
@@ -388,6 +439,35 @@ pub struct JoyDbBudgetRuntime {
     pub db: Db,
 }
 
+pub struct PgRuntime {
+    client: Box<dyn Client>,
+}
+
+async fn create_runtime() -> PgRuntime {
+    let url = "postgres://postgres:birkobengo@localhost:5432/rusty_budgets";
+    let client = welds::connections::connect(url).await.unwrap();
+    PgRuntime::new(client)
+}
+
+impl PgRuntime {
+    pub fn new(client: AnyClient) -> Self {
+        Self {
+            client: Box::new(client),
+        }
+    }
+
+    async fn cmd<F, E>(&self, user_id: Uuid, id: Uuid, command: F) -> Result<Uuid, RustyError>
+    where
+        F: FnOnce(&Budget) -> Result<E, CommandError>,
+        E: Into<BudgetEvent>,
+    {
+        self.execute(user_id, id, |aggregate| {
+            command(aggregate).map(|event| event.into())
+        })
+        .await
+    }
+}
+
 impl JoyDbBudgetRuntime {
     pub fn new<P: AsRef<Path>>(path: P) -> Self {
         let adapter = JsonAdapter::from_path(path);
@@ -410,7 +490,7 @@ impl JoyDbBudgetRuntime {
 
     /// Ergonomic command execution - eliminates all the boilerplate!
     /// Usage: rt.cmd(id, |budget| budget.create_budget(name, user_id, default))
-    pub fn cmd<F, E>(&self, user_id: Uuid, id: Uuid, command: F) -> Result<Uuid, RustyError>
+    fn cmd<F, E>(&self, user_id: Uuid, id: Uuid, command: F) -> Result<Uuid, RustyError>
     where
         F: FnOnce(&Budget) -> Result<E, CommandError>,
         E: Into<BudgetEvent>,
@@ -418,34 +498,6 @@ impl JoyDbBudgetRuntime {
         self.execute(user_id, id, |aggregate| {
             command(aggregate).map(|event| event.into())
         })
-    }
-
-    fn fetch_events(
-        &self,
-        id: Uuid,
-        last_timestamp: i64,
-    ) -> Result<Vec<StoredBudgetEvent>, RustyError> {
-        let mut events: Vec<StoredBudgetEvent> = self.db.get_all_by(|e: &StoredBudgetEvent| {
-            e.aggregate_id == id && e.timestamp > last_timestamp
-        })?;
-        events.sort_by_key(|e| e.timestamp);
-        Ok(events)
-    }
-
-    fn get_budget(&self, id: Uuid) -> Result<Option<Budget>, RustyError> {
-        let budget = self.db.get::<Budget>(&id)?;
-        Ok(budget)
-    }
-
-    pub fn undo_last(&self, budget_id: Uuid) -> Result<bool, RustyError> {
-        let mut events = self.events(budget_id)?;
-        if events.is_empty() {
-            return Ok(false);
-        }
-        events.sort_by_key(|e| e.timestamp);
-        let last_event_id = events.last().unwrap().id;
-        self.db.delete::<StoredBudgetEvent>(&last_event_id)?;
-        Ok(true)
     }
 }
 
@@ -489,7 +541,147 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
         Ok(())
     }
 
+    fn fetch_events(
+        &self,
+        id: Uuid,
+        last_timestamp: i64,
+    ) -> Result<Vec<StoredBudgetEvent>, RustyError> {
+        let mut events: Vec<StoredBudgetEvent> = self.db.get_all_by(|e: &StoredBudgetEvent| {
+            e.aggregate_id == id && e.timestamp > last_timestamp
+        })?;
+        events.sort_by_key(|e| e.timestamp);
+        Ok(events)
+    }
+    fn get_budget(&self, id: Uuid) -> Result<Option<Budget>, RustyError> {
+        let budget = self.db.get::<Budget>(&id)?;
+        Ok(budget)
+    }
+    fn undo_last(&self, budget_id: Uuid) -> Result<bool, RustyError> {
+        let mut events = self.events(budget_id)?;
+        if events.is_empty() {
+            return Ok(false);
+        }
+        events.sort_by_key(|e| e.timestamp);
+        let last_event_id = events.last().unwrap().id;
+        self.db.delete::<StoredBudgetEvent>(&last_event_id)?;
+        Ok(true)
+    }
     fn events(&self, id: Uuid) -> Result<Vec<StoredBudgetEvent>, RustyError> {
         self.fetch_events(id, 0)
     }
+}
+
+impl AsyncRuntime<Budget, BudgetEvent> for PgRuntime {
+    async fn load(
+        &self,
+        id: <Budget as cqrs::framework::Aggregate>::Id,
+    ) -> Result<Budget, RustyError> {
+        let t = std::time::Instant::now();
+        let pg_budget = PgBudget::find_by_id(self.client.as_ref(), id).await?;
+        tracing::debug!("Loaded budget is some: {}", pg_budget.is_some());
+        let mut budget: Budget = match pg_budget {
+            None => Budget::new(id),
+            Some(pg_budget) => pg_budget.into(),
+        };
+
+        let version = budget.version;
+        tracing::debug!(
+            "Loaded budget has version {} and last event at {}",
+            version,
+            budget.last_event
+        );
+        let events = self.fetch_events(id, budget.last_event).await?;
+        let event_count = events.len();
+        for ev in events {
+            ev.apply(&mut budget);
+        }
+        tracing::info!(
+            "[perf] load: replayed {} events in {:?}",
+            event_count,
+            t.elapsed()
+        );
+        if event_count > 0 {
+            self.snapshot(&budget).await?;
+        }
+        Ok(budget)
+    }
+
+    async fn snapshot(&self, agg: &Budget) -> Result<(), RustyError> {
+        let mut pg_budget: DbState<PgBudget> =
+            match PgBudget::find_by_id(self.client.as_ref(), agg.id).await? {
+                None => DbState::<PgBudget>::from(agg),
+                Some(mut existing) => {
+                    existing.last_event = agg.last_event;
+                    existing.version = agg.version;
+                    existing.data = serde_json::to_value(agg).expect("Budget must be serializable");
+                    existing
+                }
+            };
+        pg_budget.save(self.client.as_ref()).await?;
+        Ok(())
+    }
+
+    async fn append(&self, user_id: Uuid, ev: BudgetEvent) -> Result<(), RustyError> {
+        let mut stored_event: DbState<PgStoredBudgetEvent> = StoredEvent::new(ev, user_id).into();
+        stored_event.save(self.client.as_ref()).await?;
+        Ok(())
+    }
+
+    async fn fetch_events(
+        &self,
+        id: Uuid,
+        last_timestamp: i64,
+    ) -> Result<Vec<StoredEvent<Budget, BudgetEvent>>, RustyError> {
+        let stored_events: Vec<StoredEvent<Budget, BudgetEvent>> =
+            PgStoredBudgetEvent::where_col(|ev| ev.aggregate_id.equal(id))
+                .where_col(|ev| ev.timestamp.gt(last_timestamp))
+                .order_by_asc(|ev| ev.timestamp)
+                .run(self.client.as_ref())
+                .await?
+                .into_iter()
+                .map(|ev| ev.into())
+                .collect();
+
+        Ok(stored_events)
+    }
+
+    async fn get_budget(&self, id: Uuid) -> Result<Option<Budget>, RustyError> {
+        match PgBudget::find_by_id(self.client.as_ref(), id).await? {
+            None => Ok(None),
+            Some(pg_budget) => Ok(Some(pg_budget.into())),
+        }
+    }
+
+    async fn undo_last(&self, budget_id: Uuid) -> Result<bool, RustyError> {
+        let id_s: Vec<EventId> =
+            PgStoredBudgetEvent::where_col(|ev| ev.aggregate_id.equal(budget_id))
+                .order_by_asc(|ev| ev.timestamp)
+                .select_as(|ev| ev.id, "event_id")
+                .limit(1)
+                .run(self.client.as_ref())
+                .await?
+                .collect_into()?;
+
+        if let Some(id) = id_s.first()
+            && let Some(mut event) =
+                PgStoredBudgetEvent::find_by_id(self.client.as_ref(), id.event_id).await?
+        {
+            event.delete(self.client.as_ref()).await?;
+        }
+        Ok(true)
+    }
+
+    async fn events(
+        &self,
+        id: <Budget as cqrs::framework::Aggregate>::Id,
+    ) -> Result<Vec<StoredEvent<Budget, BudgetEvent>>, RustyError> {
+        self.fetch_events(id, 0).await
+    }
+}
+
+/// Define a struct that we want to put the combined selected data into
+/// NOTE: This struct doesn't have a table linked to it.
+#[derive(Debug, WeldsModel)]
+pub struct EventId {
+    pub event_id: Uuid,
 }

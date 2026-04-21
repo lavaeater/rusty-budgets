@@ -20,6 +20,7 @@ use serde::ser::SerializeStruct;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::HashSet;
 use std::sync::{Arc, Mutex};
+use serde_json::Value;
 use uuid::Uuid;
 
 pub_events_enum! {
@@ -67,7 +68,7 @@ pub struct Budget {
     pub updated_at: DateTime<Utc>,
     pub default_budget: bool,
     pub last_event: i64,
-    pub version: u64,
+    pub version: i64,
     pub currency: Currency,
     #[serde(default)]
     pub accounts: Vec<BankAccount>,
@@ -690,7 +691,7 @@ impl Aggregate for Budget {
         }
     }
 
-    fn version(&self) -> u64 {
+    fn version(&self) -> i64 {
         self.version
     }
 }

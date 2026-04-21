@@ -11,6 +11,10 @@ use std::error::Error;
 use std::fmt::{Debug, Display, Formatter};
 use std::hash::Hash;
 use uuid::Uuid;
+use welds::prelude::DbState;
+use crate::cqrs::runtime::StoredBudgetEvent;
+use crate::models::{Budget, BudgetEvent};
+use crate::pg_models::{PgBudget, PgStoredBudgetEvent};
 
 /// Aggregate: domain state that evolves by applying events.
 pub trait Aggregate: Sized + Debug + Clone {
@@ -22,7 +26,7 @@ pub trait Aggregate: Sized + Debug + Clone {
     fn _default() -> Self;
 
     fn update_timestamp(&mut self, timestamp: i64, updated_at: DateTime<Utc>);
-    fn version(&self) -> u64;
+    fn version(&self) -> i64;
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -37,6 +41,18 @@ where
     pub created_at: DateTime<Utc>,
     pub data: E,
     pub user_id: Uuid,
+}
+
+impl From<DbState<PgStoredBudgetEvent>> for StoredEvent<Budget, BudgetEvent> {
+    fn from(value: DbState<PgStoredBudgetEvent>) -> Self {
+        Self::new(serde_json::from_value(value.data.clone()).unwrap(), value.user_id)
+    }
+}
+
+impl From<DbState<PgBudget>> for Budget {
+    fn from(value: DbState<PgBudget>) -> Self {
+        serde_json::from_value(value.data.clone()).expect("failed to deserialize Budget")
+    }
 }
 
 impl<A: Aggregate, E: DomainEvent<A>> StoredEvent<A, E> {
@@ -120,7 +136,64 @@ where
             Ok(latest_id)
         }
     }
+    fn fetch_events(
+        &self,
+        id: Uuid,
+        last_timestamp: i64,
+    ) -> Result<Vec<StoredEvent<A, E>>, RustyError>;
+    fn get_budget(&self, id: Uuid) -> Result<Option<A>, RustyError>;
+    fn undo_last(&self, budget_id: Uuid) -> Result<bool, RustyError>;
 
     /// Inspect raw events (for audit/testing).
     fn events(&self, id: A::Id) -> Result<Vec<StoredEvent<A, E>>, RustyError>;
+}
+
+pub trait AsyncRuntime<A, E>
+where
+    A: Aggregate,
+    E: DomainEvent<A>,
+{
+    /// Load and rebuild current state from stored events.
+    async fn load(&self, id: A::Id) -> Result<A, RustyError>;
+
+    async fn snapshot(&self, agg: &A) -> Result<(), RustyError>;
+
+    /// Append one new event to the stream.
+    async fn append(&self, user_id: Uuid, ev: E) -> Result<(), RustyError>;
+
+    /// Execute a command: decide → append → return event.
+    async fn execute<F>(&self, user_id: Uuid, id: A::Id, command: F) -> Result<Uuid, RustyError>
+    where
+        F: FnOnce(&A) -> Result<E, CommandError>,
+    {
+        let d: A::Id = Default::default();
+        if id == d {
+            tracing::info!("This is ugly trick for creating new aggregates");
+            let mut current = A::_default();
+            let ev = command(&current)?;
+            let latest_id = ev.apply(&mut current);
+            self.append(user_id, ev.clone()).await?;
+            Ok(latest_id)
+        } else {
+            let mut current = self.load(id).await?;
+
+            let ev = command(&current)?;
+
+            let latest_id = ev.apply(&mut current);
+
+            self.append(user_id, ev.clone()).await?;
+            Ok(latest_id)
+        }
+    }
+    
+    async fn fetch_events(
+        &self,
+        id: Uuid,
+        last_timestamp: i64,
+    ) -> Result<Vec<StoredEvent<A, E>>, RustyError>;
+    async fn get_budget(&self, id: Uuid) -> Result<Option<A>, RustyError>;
+    async fn undo_last(&self, budget_id: Uuid) -> Result<bool, RustyError>;
+
+    /// Inspect raw events (for audit/testing).
+    async fn events(&self, id: A::Id) -> Result<Vec<StoredEvent<A, E>>, RustyError>;
 }

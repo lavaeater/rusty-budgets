@@ -2,6 +2,7 @@ use crate::cqrs::framework::CommandError;
 use crate::import::ImportError;
 use dioxus::prelude::ServerFnError;
 use joydb::JoydbError;
+use welds::WeldsError;
 
 #[derive(Debug, thiserror::Error)]
 pub enum RustyError {
@@ -19,11 +20,21 @@ pub enum RustyError {
     SerdeError(serde_json::Error),
     #[error("Parse error: {0}")]
     ParseError(chrono::ParseError),
+    #[error("Welds error: {0}")]
+    WeldsError(WeldsError),
+    #[error("GENERIC ERROR: {0}")]
+    GenericError(String),
 }
 
 impl From<chrono::ParseError> for RustyError {
     fn from(value: chrono::ParseError) -> Self {
         RustyError::ParseError(value)
+    }
+}
+
+impl From<WeldsError> for RustyError {
+    fn from(value: WeldsError) -> Self {
+        RustyError::WeldsError(value)
     }
 }
 
