@@ -13,14 +13,19 @@ use joydb::Model as JoyModel;
 use joydb::adapters::{FromPath, JsonAdapter};
 use joydb::{Joydb, JoydbConfig, JoydbMode, SyncPolicy};
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "server")]
 use serde::{Deserializer, Serializer};
+#[cfg(feature = "server")]
 use sqlx::Any;
 use std::env;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 use uuid::Uuid;
+#[cfg(feature = "server")]
 use welds::Client;
+#[cfg(feature = "server")]
 use welds::connections::any::AnyClient;
+#[cfg(feature = "server")]
 use welds::{Syntax, WeldsError, prelude::*};
 
 fn get_data_file() -> PathBuf {

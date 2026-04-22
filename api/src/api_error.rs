@@ -1,8 +1,10 @@
 use crate::cqrs::framework::CommandError;
-use crate::import::ImportError;
 use dioxus::prelude::ServerFnError;
 use joydb::JoydbError;
+#[cfg(feature = "server")]
 use welds::WeldsError;
+#[cfg(feature = "server")]
+use crate::import::ImportError;
 
 #[derive(Debug, thiserror::Error)]
 pub enum RustyError {
@@ -10,6 +12,7 @@ pub enum RustyError {
     JoydbError(JoydbError),
     #[error("DefaultBudgetNotFound")]
     DefaultBudgetNotFound,
+    #[cfg(feature = "server")]
     #[error("ImportError: {0}")]
     ImportError(ImportError),
     #[error("ItemNotFound: {0}")]
@@ -20,6 +23,7 @@ pub enum RustyError {
     SerdeError(serde_json::Error),
     #[error("Parse error: {0}")]
     ParseError(chrono::ParseError),
+    #[cfg(feature = "server")]
     #[error("Welds error: {0}")]
     WeldsError(WeldsError),
     #[error("GENERIC ERROR: {0}")]
@@ -32,6 +36,7 @@ impl From<chrono::ParseError> for RustyError {
     }
 }
 
+#[cfg(feature = "server")]
 impl From<WeldsError> for RustyError {
     fn from(value: WeldsError) -> Self {
         RustyError::WeldsError(value)
@@ -59,6 +64,7 @@ impl From<JoydbError> for RustyError {
     }
 }
 
+#[cfg(feature = "server")]
 impl From<ImportError> for RustyError {
     fn from(value: ImportError) -> Self {
         RustyError::ImportError(value)
