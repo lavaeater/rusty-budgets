@@ -695,6 +695,7 @@ pub trait BudgetCommandsTrait {
     ) -> Result<User, RustyError>;
 }
 
+#[allow(async_fn_in_trait)]
 pub trait AsyncBudgetCommandsTrait {
     async fn create_budget(
         &self,

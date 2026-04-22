@@ -148,6 +148,7 @@ where
     fn events(&self, id: A::Id) -> Result<Vec<StoredEvent<A, E>>, RustyError>;
 }
 
+#[allow(async_fn_in_trait)]
 pub trait AsyncRuntime<A, E>
 where
     A: Aggregate,

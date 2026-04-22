@@ -22,9 +22,6 @@ fn main() {
     #[cfg(not(feature = "server"))]
     fullstack::set_server_url("http://127.0.0.1");
 
-    #[cfg(feature = "server")]
-    let _ = api::db::CLIENT;
-
     launch(App);
 }
 

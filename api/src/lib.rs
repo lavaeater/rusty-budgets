@@ -6,6 +6,7 @@ pub mod cqrs;
 pub mod errors;
 pub mod events;
 pub mod holidays;
+#[cfg(feature = "server")]
 pub mod import;
 pub mod migrations;
 pub mod models;
@@ -13,43 +14,19 @@ pub mod models;
 pub mod pg_models;
 pub mod time_delta;
 pub mod view_models;
-//
-// #[cfg(test)]
-// #[cfg(not(debug_assertions))]
-// pub fn set_server_url() {
-//
-// }
-//
-// #[cfg(debug_assertions)]
-// #[cfg(not(test))]
-//
-// #[cfg(not(debug_assertions))]
-// #[cfg(not(test))]
-// pub fn set_server_url() {
-//     fullstack::set_server_url("https://rustybudets.kidvs.com");
-// }
 
 #[cfg(feature = "server")]
 pub mod db;
 
 #[cfg(feature = "server")]
 use dioxus::logger::tracing;
-use std::env;
-use std::path::PathBuf;
 
 use crate::api_error::RustyError;
-use crate::import::ImportError;
 pub use crate::models::*;
-use chrono::Utc;
-use dioxus::fullstack;
 use dioxus::prelude::*;
-use joydb::JoydbError;
-use models::*;
 use uuid::Uuid;
-use view_models::BudgetItemViewModel;
 use view_models::BudgetViewModel;
 use view_models::TagSummary;
-use view_models::TransactionViewModel;
 
 #[server(endpoint = "create_budget")]
 pub async fn create_budget(
@@ -57,12 +34,9 @@ pub async fn create_budget(
     period_id: PeriodId,
     default_budget: Option<bool>,
 ) -> ServerFnResult<BudgetViewModel> {
-    let user = db::get_default_user(None)?;
-    let budget_id = db::create_budget(user.id, &name, default_budget.unwrap_or(true))?;
-    Ok(BudgetViewModel::from_budget(
-        &db::get_budget(budget_id)?,
-        period_id,
-    ))
+    let user = db::get_default_user().await?;
+    let budget_id = db::create_budget(user.id, &name, default_budget.unwrap_or(true)).await?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }
 
 #[server(endpoint = "add_actual")]
@@ -72,12 +46,9 @@ pub async fn add_actual(
     budgeted_amount: Money,
     period_id: PeriodId,
 ) -> ServerFnResult<BudgetViewModel> {
-    let user = db::get_default_user(None).expect("Could not get default user");
-    let _ = db::add_actual(user.id, budget_id, item_id, budgeted_amount, period_id)?;
-    Ok(BudgetViewModel::from_budget(
-        &db::get_budget(budget_id)?,
-        period_id,
-    ))
+    let user = db::get_default_user().await?;
+    db::add_actual(user.id, budget_id, item_id, budgeted_amount, period_id).await?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }
 
 #[server(endpoint = "auto_budget_period")]
@@ -85,12 +56,9 @@ pub async fn auto_budget_period(
     budget_id: Uuid,
     period_id: PeriodId,
 ) -> ServerFnResult<BudgetViewModel> {
-    let user = db::get_default_user(None)?;
-    db::auto_budget_period(user.id, budget_id, period_id)?;
-    Ok(BudgetViewModel::from_budget(
-        &db::get_budget(budget_id)?,
-        period_id,
-    ))
+    let user = db::get_default_user().await?;
+    db::auto_budget_period(user.id, budget_id, period_id).await?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }
 
 #[server(endpoint = "add_new_actual_item")]
@@ -102,37 +70,16 @@ pub async fn add_new_actual_item(
     tx_id: Option<Uuid>,
     period_id: PeriodId,
 ) -> ServerFnResult<BudgetViewModel> {
-    let user = db::get_default_user(None)?;
-    let item_id = db::add_item(user.id, budget_id, name, item_type)?;
-    info!("We have a new item with Id: {}", item_id);
+    let user = db::get_default_user().await?;
+    let item_id = db::add_item(user.id, budget_id, name, item_type).await?;
+    let actual_id = db::add_actual(user.id, budget_id, item_id, budgeted_amount, period_id).await?;
 
-    let actual_id = db::add_actual(user.id, budget_id, item_id, budgeted_amount, period_id)?;
-    info!("We have a new actual with Id: {}", actual_id);
-
-    match tx_id {
-        Some(tx_id) => {
-            let _ = db::connect_transaction(
-                user.id,
-                budget_id,
-                tx_id,
-                Some(actual_id),
-                item_id,
-                period_id,
-                String::new(),
-            )?;
-
-            let _ = db::create_rule(user.id, budget_id, tx_id, actual_id)?;
-            let _ = db::evaluate_rules(user.id, budget_id)?;
-            Ok(BudgetViewModel::from_budget(
-                &db::get_budget(budget_id)?,
-                period_id,
-            ))
-        }
-        None => Ok(BudgetViewModel::from_budget(
-            &db::get_budget(budget_id)?,
-            period_id,
-        )),
+    if let Some(tx_id) = tx_id {
+        db::connect_transaction(user.id, budget_id, tx_id, Some(actual_id), item_id, period_id, String::new()).await?;
+        db::create_rule(user.id, budget_id, tx_id, actual_id).await?;
+        db::evaluate_rules(user.id, budget_id).await?;
     }
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }
 
 #[server(endpoint = "modify_item")]
@@ -145,20 +92,9 @@ pub async fn modify_item(
     periodicity: Option<Periodicity>,
     period_id: PeriodId,
 ) -> ServerFnResult<BudgetViewModel> {
-    let user = db::get_default_user(None).expect("Could not get default user");
-    let _ = db::modify_item(
-        user.id,
-        budget_id,
-        item_id,
-        name,
-        item_type,
-        tag_ids,
-        periodicity,
-    )?;
-    Ok(BudgetViewModel::from_budget(
-        &db::get_budget(budget_id)?,
-        period_id,
-    ))
+    let user = db::get_default_user().await?;
+    db::modify_item(user.id, budget_id, item_id, name, item_type, tag_ids, periodicity).await?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }
 
 #[server(endpoint = "set_item_buffer")]
@@ -168,12 +104,9 @@ pub async fn set_item_buffer(
     buffer_target: Option<Money>,
     period_id: PeriodId,
 ) -> ServerFnResult<BudgetViewModel> {
-    let user = db::get_default_user(None)?;
-    let _ = db::set_item_buffer(user.id, budget_id, item_id, buffer_target)?;
-    Ok(BudgetViewModel::from_budget(
-        &db::get_budget(budget_id)?,
-        period_id,
-    ))
+    let user = db::get_default_user().await?;
+    db::set_item_buffer(user.id, budget_id, item_id, buffer_target).await?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }
 
 #[server(endpoint = "create_tag")]
@@ -183,17 +116,14 @@ pub async fn create_tag(
     periodicity: Periodicity,
     period_id: PeriodId,
 ) -> ServerFnResult<BudgetViewModel> {
-    let user = db::get_default_user(None)?;
-    let _ = db::create_tag(user.id, budget_id, name, periodicity)?;
-    Ok(BudgetViewModel::from_budget(
-        &db::get_budget(budget_id)?,
-        period_id,
-    ))
+    let user = db::get_default_user().await?;
+    db::create_tag(user.id, budget_id, name, periodicity).await?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }
 
 #[server(endpoint = "get_tags")]
 pub async fn get_tags(budget_id: Uuid) -> ServerFnResult<Vec<Tag>> {
-    Ok(db::get_tags(budget_id)?)
+    Ok(db::get_tags(budget_id).await?)
 }
 
 #[server(endpoint = "modify_tag")]
@@ -205,12 +135,9 @@ pub async fn modify_tag(
     deleted: Option<bool>,
     period_id: PeriodId,
 ) -> ServerFnResult<BudgetViewModel> {
-    let user = db::get_default_user(None)?;
-    let _ = db::modify_tag(user.id, budget_id, tag_id, name, periodicity, deleted)?;
-    Ok(BudgetViewModel::from_budget(
-        &db::get_budget(budget_id)?,
-        period_id,
-    ))
+    let user = db::get_default_user().await?;
+    db::modify_tag(user.id, budget_id, tag_id, name, periodicity, deleted).await?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }
 
 #[server(endpoint = "modify_actual")]
@@ -221,24 +148,14 @@ pub async fn modify_actual(
     budgeted_amount: Option<Money>,
     actual_amount: Option<Money>,
 ) -> ServerFnResult<BudgetViewModel> {
-    let user = db::get_default_user(None).expect("Could not get default user");
-    let _ = db::modify_actual(
-        user.id,
-        budget_id,
-        actual_id,
-        period_id,
-        budgeted_amount,
-        actual_amount,
-    )?;
-    Ok(BudgetViewModel::from_budget(
-        &db::get_budget(budget_id)?,
-        period_id,
-    ))
+    let user = db::get_default_user().await?;
+    db::modify_actual(user.id, budget_id, actual_id, period_id, budgeted_amount, actual_amount).await?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }
 
 #[server(endpoint = "get_default_user")]
 pub async fn get_default_user() -> ServerFnResult<User> {
-    Ok(db::get_default_user(None)?)
+    Ok(db::get_default_user().await?)
 }
 
 #[server(endpoint = "get_budget")]
@@ -246,22 +163,16 @@ pub async fn get_budget(
     budget_id: Option<Uuid>,
     period_id: PeriodId,
 ) -> ServerFnResult<Option<BudgetViewModel>> {
-    let user = db::get_default_user(None)?;
+    let user = db::get_default_user().await?;
     match budget_id {
         Some(budget_id) => {
-            _ = db::evaluate_rules(user.id, budget_id)?;
-            Ok(Some(BudgetViewModel::from_budget(
-                &db::get_budget(budget_id)?,
-                period_id,
-            )))
+            db::evaluate_rules(user.id, budget_id).await?;
+            Ok(Some(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id)))
         }
-        None => match db::get_default_budget(user.id) {
+        None => match db::get_default_budget(user.id).await {
             Ok(default_budget) => {
-                let _ = db::evaluate_rules(user.id, default_budget.id)?;
-                Ok(Some(BudgetViewModel::from_budget(
-                    &default_budget,
-                    period_id,
-                )))
+                db::evaluate_rules(user.id, default_budget.id).await?;
+                Ok(Some(BudgetViewModel::from_budget(&default_budget, period_id)))
             }
             Err(_) => Ok(None),
         },
@@ -274,13 +185,10 @@ pub async fn import_transactions(
     file_name: String,
     period_id: PeriodId,
 ) -> ServerFnResult<BudgetViewModel> {
-    let user = db::get_default_user(None)?;
-    let _ = db::import_transactions(user.id, budget_id, &file_name)?;
-    let _ = db::evaluate_rules(user.id, budget_id)?;
-    Ok(BudgetViewModel::from_budget(
-        &db::get_budget(budget_id)?,
-        period_id,
-    ))
+    let user = db::get_default_user().await?;
+    db::import_transactions(user.id, budget_id, &file_name).await?;
+    db::evaluate_rules(user.id, budget_id).await?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }
 
 #[server(endpoint = "import_transactions_bytes")]
@@ -289,14 +197,10 @@ pub async fn import_transactions_bytes(
     file_contents: Vec<u8>,
     period_id: PeriodId,
 ) -> ServerFnResult<BudgetViewModel> {
-    info!("Importing transaction from bytes");
-    let user = db::get_default_user(None)?;
-    let _ = db::import_transactions_bytes(user.id, budget_id, file_contents)?;
-    let _ = db::evaluate_rules(user.id, budget_id)?;
-    Ok(BudgetViewModel::from_budget(
-        &db::get_budget(budget_id)?,
-        period_id,
-    ))
+    let user = db::get_default_user().await?;
+    db::import_transactions_bytes(user.id, budget_id, file_contents).await?;
+    db::evaluate_rules(user.id, budget_id).await?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }
 
 #[server(endpoint = "connect_transaction")]
@@ -308,22 +212,11 @@ pub async fn connect_transaction(
     tag: Option<String>,
     period_id: PeriodId,
 ) -> ServerFnResult<BudgetViewModel> {
-    let user = db::get_default_user(None)?;
-    let actual_id = db::connect_transaction(
-        user.id,
-        budget_id,
-        tx_id,
-        actual_id,
-        budget_item_id,
-        period_id,
-        tag.unwrap_or_default(),
-    )?;
-    let _ = db::create_rule(user.id, budget_id, tx_id, actual_id)?;
-    let _ = db::evaluate_rules(user.id, budget_id)?;
-    Ok(BudgetViewModel::from_budget(
-        &db::get_budget(budget_id)?,
-        period_id,
-    ))
+    let user = db::get_default_user().await?;
+    let actual_id = db::connect_transaction(user.id, budget_id, tx_id, actual_id, budget_item_id, period_id, tag.unwrap_or_default()).await?;
+    db::create_rule(user.id, budget_id, tx_id, actual_id).await?;
+    db::evaluate_rules(user.id, budget_id).await?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }
 
 #[server(endpoint = "ignore_transaction")]
@@ -332,12 +225,9 @@ pub async fn ignore_transaction(
     tx_id: Uuid,
     period_id: PeriodId,
 ) -> ServerFnResult<BudgetViewModel> {
-    let user = db::get_default_user(None)?;
-    let _ = db::ignore_transaction(budget_id, user.id, tx_id)?;
-    Ok(BudgetViewModel::from_budget(
-        &db::get_budget(budget_id)?,
-        period_id,
-    ))
+    let user = db::get_default_user().await?;
+    db::ignore_transaction(budget_id, user.id, tx_id).await?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }
 
 #[server(endpoint = "adjust_actual_funds")]
@@ -347,12 +237,9 @@ pub async fn adjust_actual_funds(
     amount: Money,
     period_id: PeriodId,
 ) -> ServerFnResult<BudgetViewModel> {
-    let user = db::get_default_user(None)?;
-    let _ = db::adjust_actual_funds(user.id, budget_id, actual_id, period_id, amount)?;
-    Ok(BudgetViewModel::from_budget(
-        &db::get_budget(budget_id)?,
-        period_id,
-    ))
+    let user = db::get_default_user().await?;
+    db::adjust_actual_funds(user.id, budget_id, actual_id, period_id, amount).await?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }
 
 #[server(endpoint = "create_allocation")]
@@ -364,12 +251,9 @@ pub async fn create_allocation(
     tag: String,
     period_id: PeriodId,
 ) -> ServerFnResult<BudgetViewModel> {
-    let user = db::get_default_user(None)?;
-    let _ = db::create_allocation(user.id, budget_id, transaction_id, actual_id, amount, tag)?;
-    Ok(BudgetViewModel::from_budget(
-        &db::get_budget(budget_id)?,
-        period_id,
-    ))
+    let user = db::get_default_user().await?;
+    db::create_allocation(user.id, budget_id, transaction_id, actual_id, amount, tag).await?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }
 
 #[server(endpoint = "delete_allocation")]
@@ -379,44 +263,29 @@ pub async fn delete_allocation(
     transaction_id: Uuid,
     period_id: PeriodId,
 ) -> ServerFnResult<BudgetViewModel> {
-    let user = db::get_default_user(None)?;
-    let _ = db::delete_allocation(user.id, budget_id, allocation_id, transaction_id)?;
-    Ok(BudgetViewModel::from_budget(
-        &db::get_budget(budget_id)?,
-        period_id,
-    ))
+    let user = db::get_default_user().await?;
+    db::delete_allocation(user.id, budget_id, allocation_id, transaction_id).await?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }
 
 #[server(endpoint = "get_next_untagged_transaction")]
-pub async fn get_next_untagged_transaction(
-    budget_id: Uuid,
-) -> ServerFnResult<Option<BankTransaction>> {
-    Ok(db::get_next_untagged_transaction(budget_id)?)
+pub async fn get_next_untagged_transaction(budget_id: Uuid) -> ServerFnResult<Option<BankTransaction>> {
+    Ok(db::get_next_untagged_transaction(budget_id).await?)
 }
 
 #[server(endpoint = "get_transactions_for_tag")]
-pub async fn get_transactions_for_tag(
-    budget_id: Uuid,
-    tag_id: Uuid,
-) -> ServerFnResult<Vec<BankTransaction>> {
-    Ok(db::get_transactions_for_tag(budget_id, tag_id)?)
+pub async fn get_transactions_for_tag(budget_id: Uuid, tag_id: Uuid) -> ServerFnResult<Vec<BankTransaction>> {
+    Ok(db::get_transactions_for_tag(budget_id, tag_id).await?)
 }
 
 #[server(endpoint = "get_tagged_transactions")]
-pub async fn get_tagged_transactions(
-    budget_id: Uuid,
-    limit: usize,
-    offset: usize,
-) -> ServerFnResult<Vec<BankTransaction>> {
-    Ok(db::get_tagged_transactions(budget_id, limit, offset)?)
+pub async fn get_tagged_transactions(budget_id: Uuid, limit: usize, offset: usize) -> ServerFnResult<Vec<BankTransaction>> {
+    Ok(db::get_tagged_transactions(budget_id, limit, offset).await?)
 }
 
 #[server(endpoint = "get_untagged_transactions")]
-pub async fn get_untagged_transactions(
-    budget_id: Uuid,
-    limit: usize,
-) -> ServerFnResult<Vec<BankTransaction>> {
-    Ok(db::get_untagged_transactions(budget_id, limit)?)
+pub async fn get_untagged_transactions(budget_id: Uuid, limit: usize) -> ServerFnResult<Vec<BankTransaction>> {
+    Ok(db::get_untagged_transactions(budget_id, limit).await?)
 }
 
 #[server(endpoint = "tag_transaction")]
@@ -426,20 +295,14 @@ pub async fn tag_transaction(
     tag_id: Uuid,
     period_id: PeriodId,
 ) -> ServerFnResult<BudgetViewModel> {
-    let user = db::get_default_user(None)?;
-    let _ = db::tag_transaction(user.id, budget_id, tx_id, tag_id)?;
-    Ok(BudgetViewModel::from_budget(
-        &db::get_budget(budget_id)?,
-        period_id,
-    ))
+    let user = db::get_default_user().await?;
+    db::tag_transaction(user.id, budget_id, tx_id, tag_id).await?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }
 
 #[server(endpoint = "preview_rule_matches")]
-pub async fn preview_rule_matches(
-    budget_id: Uuid,
-    tx_id: Uuid,
-) -> ServerFnResult<Vec<BankTransaction>> {
-    Ok(db::preview_rule_matches(budget_id, tx_id)?)
+pub async fn preview_rule_matches(budget_id: Uuid, tx_id: Uuid) -> ServerFnResult<Vec<BankTransaction>> {
+    Ok(db::preview_rule_matches(budget_id, tx_id).await?)
 }
 
 #[server(endpoint = "reject_transfer_pair")]
@@ -449,12 +312,9 @@ pub async fn reject_transfer_pair(
     incoming_tx_id: Uuid,
     period_id: PeriodId,
 ) -> ServerFnResult<BudgetViewModel> {
-    let user = db::get_default_user(None)?;
-    let _ = db::reject_transfer_pair(user.id, budget_id, outgoing_tx_id, incoming_tx_id)?;
-    Ok(BudgetViewModel::from_budget(
-        &db::get_budget(budget_id)?,
-        period_id,
-    ))
+    let user = db::get_default_user().await?;
+    db::reject_transfer_pair(user.id, budget_id, outgoing_tx_id, incoming_tx_id).await?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }
 
 #[server(endpoint = "resolve_transfer_pair")]
@@ -465,18 +325,15 @@ pub async fn resolve_transfer_pair(
     tag_id: Option<Uuid>,
     period_id: PeriodId,
 ) -> ServerFnResult<BudgetViewModel> {
-    let user = db::get_default_user(None)?;
-    let _ = db::resolve_transfer_pair(user.id, budget_id, outgoing_tx_id, incoming_tx_id, tag_id)?;
-    Ok(BudgetViewModel::from_budget(
-        &db::get_budget(budget_id)?,
-        period_id,
-    ))
+    let user = db::get_default_user().await?;
+    db::resolve_transfer_pair(user.id, budget_id, outgoing_tx_id, incoming_tx_id, tag_id).await?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }
 
 #[server(endpoint = "get_unbudgeted_tag_summaries")]
 pub async fn get_unbudgeted_tag_summaries(budget_id: Uuid) -> ServerFnResult<Vec<TagSummary>> {
     use std::collections::HashSet;
-    let budget = db::get_budget(budget_id)?;
+    let budget = db::get_budget(budget_id).await?;
     let budgeted_tag_ids: HashSet<Uuid> = budget
         .items
         .iter()
@@ -498,19 +355,17 @@ pub async fn create_budget_item(
     budgeted_amount: Option<Money>,
     period_id: PeriodId,
 ) -> ServerFnResult<BudgetViewModel> {
-    let user = db::get_default_user(None)?;
-    let item_id = db::add_item(user.id, budget_id, name, budgeting_type)?;
+    let user = db::get_default_user().await?;
+    let item_id = db::add_item(user.id, budget_id, name, budgeting_type).await?;
     if !tag_ids.is_empty() {
-        db::modify_item(user.id, budget_id, item_id, None, None, Some(tag_ids), None)?;
+        db::modify_item(user.id, budget_id, item_id, None, None, Some(tag_ids), None).await?;
     }
     if let Some(amount) = budgeted_amount
-        && !amount.is_zero() {
-            db::add_actual(user.id, budget_id, item_id, amount, period_id)?;
-        }
-    Ok(BudgetViewModel::from_budget(
-        &db::get_budget(budget_id)?,
-        period_id,
-    ))
+        && !amount.is_zero()
+    {
+        db::add_actual(user.id, budget_id, item_id, amount, period_id).await?;
+    }
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }
 
 #[server(endpoint = "delete_rule")]
@@ -519,12 +374,9 @@ pub async fn delete_rule(
     rule_id: Uuid,
     period_id: PeriodId,
 ) -> ServerFnResult<BudgetViewModel> {
-    let user = db::get_default_user(None)?;
-    let _ = db::delete_rule(user.id, budget_id, rule_id)?;
-    Ok(BudgetViewModel::from_budget(
-        &db::get_budget(budget_id)?,
-        period_id,
-    ))
+    let user = db::get_default_user().await?;
+    db::delete_rule(user.id, budget_id, rule_id).await?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }
 
 #[server(endpoint = "update_rule")]
@@ -534,12 +386,8 @@ pub async fn update_rule(
     transaction_key: Vec<String>,
     period_id: PeriodId,
 ) -> ServerFnResult<BudgetViewModel> {
-    info!("new transaction key ${:#?}", transaction_key);
-    let user = db::get_default_user(None)?;
-    let _ = db::modify_rule(user.id, budget_id, rule_id, transaction_key)?;
-    db::evaluate_tag_rules(user.id, budget_id)?;
-    Ok(BudgetViewModel::from_budget(
-        &db::get_budget(budget_id)?,
-        period_id,
-    ))
+    let user = db::get_default_user().await?;
+    db::modify_rule(user.id, budget_id, rule_id, transaction_key).await?;
+    db::evaluate_tag_rules(user.id, budget_id).await?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }

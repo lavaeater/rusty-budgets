@@ -1,6 +1,6 @@
 use api::api_error::RustyError;
 use api::cqrs::framework::Runtime;
-use api::cqrs::runtime::{BudgetCommands, JoyDbBudgetRuntime};
+use api::cqrs::runtime::{BudgetCommandsTrait, JoyDbBudgetRuntime};
 use api::import::import_from_skandia_excel;
 use api::models::*;
 use chrono::{DateTime, NaiveDate, Utc};
@@ -699,7 +699,8 @@ pub fn evaluate_rules_matches_transaction_to_actual() -> Result<(), RustyError> 
         budget_id,
         vec!["groceries".to_string()],
         vec!["groceries".to_string()],
-        true,
+        true, None
+        
     )?;
 
     let budget = rt.load(budget_id)?;
@@ -756,7 +757,7 @@ pub fn evaluate_rules_matches_transaction_to_item_when_no_actual() -> Result<(),
         budget_id,
         vec!["rent".to_string(), "payment".to_string()],
         vec!["rent".to_string()],
-        true,
+        true,None
     )?;
 
     let budget = rt.load(budget_id)?;
@@ -810,7 +811,7 @@ pub fn evaluate_rules_no_match_for_unrelated_transaction() -> Result<(), RustyEr
         budget_id,
         vec!["groceries".to_string()],
         vec!["groceries".to_string()],
-        true,
+        true, None
     )?;
 
     let budget = rt.load(budget_id)?;
@@ -890,7 +891,7 @@ pub fn evaluate_rules_multiple_transactions_multiple_rules() -> Result<(), Rusty
         budget_id,
         vec!["groceries".to_string()],
         vec!["groceries".to_string()],
-        true,
+        true, None
     )?;
 
     let _ = rt.add_rule(
@@ -898,7 +899,7 @@ pub fn evaluate_rules_multiple_transactions_multiple_rules() -> Result<(), Rusty
         budget_id,
         vec!["utilities".to_string()],
         vec!["utilities".to_string()],
-        true,
+        true, None
     )?;
 
     let budget = rt.load(budget_id)?;
@@ -999,7 +1000,7 @@ pub fn evaluate_rules_across_multiple_periods() -> Result<(), RustyError> {
         budget_id,
         vec!["salary".to_string()],
         vec!["salary".to_string()],
-        true,
+        true, None
     )?;
 
     let budget = rt.load(budget_id)?;
