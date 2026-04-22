@@ -1,5 +1,5 @@
 use crate::cqrs::framework::Runtime;
-use crate::cqrs::runtime::JoyDbBudgetRuntime;
+use crate::cqrs::runtime::{BudgetCommandsTrait, JoyDbBudgetRuntime};
 use crate::models::{Currency, Money};
 use calamine::{DataType, Reader, Xlsx, XlsxError, open_workbook, open_workbook_from_rs};
 use chrono::{DateTime, NaiveDate, ParseError, Utc};

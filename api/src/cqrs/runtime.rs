@@ -1,11 +1,12 @@
 use crate::api_error::RustyError;
 use crate::cqrs::framework::{AsyncRuntime, CommandError, Runtime, StoredEvent};
+use crate::db::{DEFAULT_USER_EMAIL, create_user};
 use crate::models::*;
 use crate::pg_models::{PgBudget, PgStoredBudgetEvent, PgUser, PgUserBudgets};
 use crate::{cqrs, models};
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, NaiveDate, Utc};
 use dioxus::logger::tracing;
-use dioxus::prelude::info;
+use dioxus::prelude::{error, info};
 use joydb::Model as JoyModel;
 use joydb::adapters::{FromPath, JsonAdapter};
 use joydb::{Joydb, JoydbConfig, JoydbMode, SyncPolicy};
@@ -62,8 +63,8 @@ pub async fn migrate_to_postgres() -> Result<(), RustyError> {
     Ok(())
 }
 
-impl JoyDbBudgetRuntime {
-    pub fn create_budget(
+impl BudgetCommandsTrait for JoyDbBudgetRuntime {
+    fn create_budget(
         &self,
         user_id: Uuid,
         budget_name: &str,
@@ -81,8 +82,7 @@ impl JoyDbBudgetRuntime {
             )
         })
     }
-
-    pub fn add_item(
+    fn add_item(
         &self,
         user_id: Uuid,
         budget_id: Uuid,
@@ -93,8 +93,7 @@ impl JoyDbBudgetRuntime {
             budget.add_item(item_name.to_string(), item_type)
         })
     }
-
-    pub fn add_actual(
+    fn add_actual(
         &self,
         user_id: Uuid,
         budget_id: Uuid,
@@ -106,9 +105,8 @@ impl JoyDbBudgetRuntime {
             budget.add_actual(item_id, period_id, amount)
         })
     }
-
     #[allow(clippy::too_many_arguments)]
-    pub fn modify_item(
+    fn modify_item(
         &self,
         user_id: Uuid,
         budget_id: Uuid,
@@ -122,8 +120,7 @@ impl JoyDbBudgetRuntime {
             budget.modify_item(item_id, name, item_type, tag_ids, periodicity)
         })
     }
-
-    pub fn create_tag(
+    fn create_tag(
         &self,
         user_id: Uuid,
         budget_id: Uuid,
@@ -134,8 +131,7 @@ impl JoyDbBudgetRuntime {
             budget.create_tag(name, periodicity)
         })
     }
-
-    pub fn modify_tag(
+    fn modify_tag(
         &self,
         user_id: Uuid,
         budget_id: Uuid,
@@ -148,9 +144,8 @@ impl JoyDbBudgetRuntime {
             budget.modify_tag(tag_id, name, periodicity, deleted)
         })
     }
-
     #[allow(clippy::too_many_arguments)]
-    pub fn modify_actual(
+    fn modify_actual(
         &self,
         user_id: Uuid,
         budget_id: Uuid,
@@ -170,9 +165,8 @@ impl JoyDbBudgetRuntime {
             )
         })
     }
-
     #[allow(clippy::too_many_arguments)]
-    pub fn add_and_connect_tx(
+    fn add_and_connect_tx(
         &self,
         user_id: Uuid,
         budget_id: Uuid,
@@ -194,9 +188,8 @@ impl JoyDbBudgetRuntime {
         )?;
         self.connect_transaction(user_id, budget_id, tx_id, actual_id)
     }
-
     #[allow(clippy::too_many_arguments)]
-    pub fn add_transaction(
+    fn add_transaction(
         &self,
         user_id: Uuid,
         budget_id: Uuid,
@@ -216,8 +209,7 @@ impl JoyDbBudgetRuntime {
             )
         })
     }
-
-    pub fn connect_transaction(
+    fn connect_transaction(
         &self,
         user_id: Uuid,
         budget_id: Uuid,
@@ -244,8 +236,7 @@ impl JoyDbBudgetRuntime {
         }
         self.create_allocation(user_id, budget_id, tx_id, actual_id, amount, String::new())
     }
-
-    pub fn ensure_account(
+    fn ensure_account(
         &self,
         user_id: Uuid,
         budget_id: Uuid,
@@ -260,8 +251,7 @@ impl JoyDbBudgetRuntime {
             budget.create_bank_account(account_number.to_string(), description.to_string())
         })
     }
-
-    pub fn ignore_transaction(
+    fn ignore_transaction(
         &self,
         budget_id: Uuid,
         tx_id: Uuid,
@@ -271,8 +261,7 @@ impl JoyDbBudgetRuntime {
             budget.ignore_transaction(tx_id)
         })
     }
-
-    pub fn reallocate_budgeted_funds(
+    fn reallocate_budgeted_funds(
         &self,
         user_id: Uuid,
         budget_id: Uuid,
@@ -285,8 +274,7 @@ impl JoyDbBudgetRuntime {
             budget.reallocate_budgeted_funds(period_id, from_actual_id, to_actual_id, amount)
         })
     }
-
-    pub fn adjust_budgeted_amount(
+    fn adjust_budgeted_amount(
         &self,
         user_id: Uuid,
         budget_id: Uuid,
@@ -298,8 +286,7 @@ impl JoyDbBudgetRuntime {
             budget.adjust_actual_budgeted_funds(actual_id, period_id, budgeted_amount)
         })
     }
-
-    pub fn add_rule(
+    fn add_rule(
         &self,
         user_id: Uuid,
         budget_id: Uuid,
@@ -312,8 +299,7 @@ impl JoyDbBudgetRuntime {
             budget.add_rule(transaction_key, item_key, always_apply, tag_id)
         })
     }
-
-    pub fn tag_transaction(
+    fn tag_transaction(
         &self,
         user_id: Uuid,
         budget_id: Uuid,
@@ -324,8 +310,7 @@ impl JoyDbBudgetRuntime {
             budget.do_transaction_tagged(tx_id, tag_id)
         })
     }
-
-    pub fn untag_transaction(
+    fn untag_transaction(
         &self,
         user_id: Uuid,
         budget_id: Uuid,
@@ -335,8 +320,7 @@ impl JoyDbBudgetRuntime {
             budget.do_transaction_untagged(tx_id)
         })
     }
-
-    pub fn reject_transfer_pair(
+    fn reject_transfer_pair(
         &self,
         user_id: Uuid,
         budget_id: Uuid,
@@ -347,8 +331,7 @@ impl JoyDbBudgetRuntime {
             budget.reject_transfer_pair(outgoing_tx_id, incoming_tx_id)
         })
     }
-
-    pub fn modify_rule(
+    fn modify_rule(
         &self,
         user_id: Uuid,
         budget_id: Uuid,
@@ -359,8 +342,7 @@ impl JoyDbBudgetRuntime {
             budget.modify_rule(rule_id, transaction_key)
         })
     }
-
-    pub fn delete_rule(
+    fn delete_rule(
         &self,
         user_id: Uuid,
         budget_id: Uuid,
@@ -368,8 +350,7 @@ impl JoyDbBudgetRuntime {
     ) -> Result<Uuid, RustyError> {
         self.cmd(user_id, budget_id, |budget| budget.delete_rule(rule_id))
     }
-
-    pub fn set_item_buffer(
+    fn set_item_buffer(
         &self,
         user_id: Uuid,
         budget_id: Uuid,
@@ -380,8 +361,7 @@ impl JoyDbBudgetRuntime {
             budget.set_item_buffer(item_id, buffer_target)
         })
     }
-
-    pub fn create_allocation(
+    fn create_allocation(
         &self,
         user_id: Uuid,
         budget_id: Uuid,
@@ -394,8 +374,7 @@ impl JoyDbBudgetRuntime {
             budget.create_allocation(transaction_id, actual_id, amount, tag)
         })
     }
-
-    pub fn delete_allocation(
+    fn delete_allocation(
         &self,
         user_id: Uuid,
         budget_id: Uuid,
@@ -406,6 +385,521 @@ impl JoyDbBudgetRuntime {
             budget.delete_allocation(allocation_id, transaction_id)
         })
     }
+
+    fn user_exists(&self, email: &str) -> Result<bool, RustyError> {
+        let users = self.db.get_all_by(|u: &User| u.email == email)?;
+        Ok(!users.is_empty())
+    }
+
+    fn get_default_user(&self) -> Result<User, RustyError> {
+        match self.db.get_all_by(|u: &User| u.email == DEFAULT_USER_EMAIL) {
+            Ok(mut users) => {
+                if users.is_empty() {
+                    self.create_user(
+                        "tommie",
+                        DEFAULT_USER_EMAIL,
+                        "Tommie",
+                        "Nygren",
+                        Some("0704382781".to_string()),
+                        Some(
+                            NaiveDate::parse_from_str("1973-05-12", "%Y-%m-%d").unwrap_or_default(),
+                        ),
+                    )
+                } else {
+                    Ok(users.remove(0))
+                }
+            }
+            Err(e) => {
+                error!(error = %e, "Could not get default user");
+                Err(RustyError::JoydbError(e))
+            }
+        }
+    }
+
+    fn get_default_budget(&self, user_id: Uuid) -> Result<Budget, RustyError> {
+        let user_budgets = self.db.get::<UserBudgets>(&user_id)?;
+        match user_budgets {
+            None => {
+                info!("User has no budgets");
+                Err(RustyError::DefaultBudgetNotFound)
+            }
+            Some(b) => match b.budgets.iter().find(|(_, default)| *default) {
+                Some((budget_id, _)) => Ok(self.load(*budget_id)?),
+                None => {
+                    info!("User had budgets but none were default");
+                    Err(RustyError::DefaultBudgetNotFound)
+                }
+            },
+        }
+    }
+
+    fn add_budget_to_user(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        default: bool,
+    ) -> Result<Uuid, RustyError> {
+        let user_budgets = self.db.get::<UserBudgets>(&user_id)?;
+        match user_budgets {
+            None => {
+                match self
+                    .db
+                    .insert(&UserBudgets {
+                        id: user_id,
+                        budgets: vec![(budget_id, default)],
+                    })
+                    .map(|_| user_id)
+                {
+                    Ok(_) => Ok(user_id),
+                    Err(e) => Err(RustyError::JoydbError(e)),
+                }
+            }
+            Some(list) => {
+                if !list.budgets.contains(&(budget_id, default)) {
+                    let mut budgets = list.budgets.clone();
+                    budgets.push((budget_id, default));
+                    let list = UserBudgets {
+                        id: user_id,
+                        budgets,
+                    };
+                    match self.db.upsert(&list) {
+                        Ok(_) => Ok(user_id),
+                        Err(e) => Err(RustyError::JoydbError(e)),
+                    }
+                } else {
+                    Ok(user_id)
+                }
+            }
+        }
+    }
+
+    fn create_user(
+        &self,
+        user_name: &str,
+        email: &str,
+        first_name: &str,
+        last_name: &str,
+        phone: Option<String>,
+        birthday: Option<NaiveDate>,
+    ) -> Result<User, RustyError> {
+        let user = User::new(user_name, email, first_name, last_name, phone, birthday);
+        self.db.insert(&user)?;
+        Ok(user)
+    }
+}
+
+pub trait BudgetCommandsTrait {
+    fn create_budget(
+        &self,
+        user_id: Uuid,
+        budget_name: &str,
+        default_budget: bool,
+        month_begins_on: MonthBeginsOn,
+        currency: Currency,
+    ) -> Result<Uuid, RustyError>;
+    fn add_item(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        item_name: String,
+        item_type: BudgetingType,
+    ) -> Result<Uuid, RustyError>;
+    fn add_actual(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        item_id: Uuid,
+        amount: Money,
+        period_id: PeriodId,
+    ) -> Result<Uuid, RustyError>;
+    #[allow(clippy::too_many_arguments)]
+    fn modify_item(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        item_id: Uuid,
+        name: Option<String>,
+        item_type: Option<BudgetingType>,
+        tag_ids: Option<Vec<Uuid>>,
+        periodicity: Option<Periodicity>,
+    ) -> Result<Uuid, RustyError>;
+    fn create_tag(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        name: String,
+        periodicity: Periodicity,
+    ) -> Result<Uuid, RustyError>;
+    fn modify_tag(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        tag_id: Uuid,
+        name: Option<String>,
+        periodicity: Option<Periodicity>,
+        deleted: Option<bool>,
+    ) -> Result<Uuid, RustyError>;
+    #[allow(clippy::too_many_arguments)]
+    fn modify_actual(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        actual_id: Uuid,
+        period_id: PeriodId,
+        budgeted_amount: Option<Money>,
+        actual_amount: Option<Money>,
+    ) -> Result<Uuid, RustyError>;
+    #[allow(clippy::too_many_arguments)]
+    fn add_and_connect_tx(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        actual_id: Uuid,
+        bank_account_number: &str,
+        amount: Money,
+        balance: Money,
+        description: &str,
+        date: DateTime<Utc>,
+    ) -> Result<Uuid, RustyError>;
+    #[allow(clippy::too_many_arguments)]
+    fn add_transaction(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        bank_account_number: &str,
+        amount: Money,
+        balance: Money,
+        description: &str,
+        date: DateTime<Utc>,
+    ) -> Result<Uuid, RustyError>;
+    fn connect_transaction(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        tx_id: Uuid,
+        actual_id: Uuid,
+    ) -> Result<Uuid, RustyError>;
+    fn ensure_account(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        account_number: &str,
+        description: &str,
+    ) -> Result<Uuid, RustyError>;
+    fn ignore_transaction(
+        &self,
+        budget_id: Uuid,
+        tx_id: Uuid,
+        user_id: Uuid,
+    ) -> Result<Uuid, RustyError>;
+    fn reallocate_budgeted_funds(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        period_id: PeriodId,
+        from_actual_id: Uuid,
+        to_actual_id: Uuid,
+        amount: Money,
+    ) -> Result<Uuid, RustyError>;
+    fn adjust_budgeted_amount(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        actual_id: Uuid,
+        period_id: PeriodId,
+        budgeted_amount: Money,
+    ) -> Result<Uuid, RustyError>;
+    fn add_rule(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        transaction_key: Vec<String>,
+        item_key: Vec<String>,
+        always_apply: bool,
+        tag_id: Option<Uuid>,
+    ) -> Result<Uuid, RustyError>;
+    fn tag_transaction(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        tx_id: Uuid,
+        tag_id: Uuid,
+    ) -> Result<Uuid, RustyError>;
+    fn untag_transaction(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        tx_id: Uuid,
+    ) -> Result<Uuid, RustyError>;
+    fn reject_transfer_pair(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        outgoing_tx_id: Uuid,
+        incoming_tx_id: Uuid,
+    ) -> Result<Uuid, RustyError>;
+    fn modify_rule(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        rule_id: Uuid,
+        transaction_key: Vec<String>,
+    ) -> Result<Uuid, RustyError>;
+    fn delete_rule(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        rule_id: Uuid,
+    ) -> Result<Uuid, RustyError>;
+    fn set_item_buffer(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        item_id: Uuid,
+        buffer_target: Option<Money>,
+    ) -> Result<Uuid, RustyError>;
+    fn create_allocation(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        transaction_id: Uuid,
+        actual_id: Uuid,
+        amount: Money,
+        tag: String,
+    ) -> Result<Uuid, RustyError>;
+    fn delete_allocation(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        allocation_id: Uuid,
+        transaction_id: Uuid,
+    ) -> Result<Uuid, RustyError>;
+
+    fn user_exists(&self, email: &str) -> Result<bool, RustyError>;
+    fn get_default_user(&self) -> Result<User, RustyError>;
+    fn get_default_budget(&self, user_id: Uuid) -> Result<Budget, RustyError>;
+    fn add_budget_to_user(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        default: bool,
+    ) -> Result<Uuid, RustyError>;
+    fn create_user(
+        &self,
+        user_name: &str,
+        email: &str,
+        first_name: &str,
+        last_name: &str,
+        phone: Option<String>,
+        birthday: Option<NaiveDate>,
+    ) -> Result<User, RustyError>;
+}
+
+pub trait AsyncBudgetCommandsTrait {
+    async fn create_budget(
+        &self,
+        user_id: Uuid,
+        budget_name: &str,
+        default_budget: bool,
+        month_begins_on: MonthBeginsOn,
+        currency: Currency,
+    ) -> Result<Uuid, RustyError>;
+    async fn add_item(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        item_name: String,
+        item_type: BudgetingType,
+    ) -> Result<Uuid, RustyError>;
+    async fn add_actual(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        item_id: Uuid,
+        amount: Money,
+        period_id: PeriodId,
+    ) -> Result<Uuid, RustyError>;
+    #[allow(clippy::too_many_arguments)]
+    async fn modify_item(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        item_id: Uuid,
+        name: Option<String>,
+        item_type: Option<BudgetingType>,
+        tag_ids: Option<Vec<Uuid>>,
+        periodicity: Option<Periodicity>,
+    ) -> Result<Uuid, RustyError>;
+    async fn create_tag(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        name: String,
+        periodicity: Periodicity,
+    ) -> Result<Uuid, RustyError>;
+    async fn modify_tag(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        tag_id: Uuid,
+        name: Option<String>,
+        periodicity: Option<Periodicity>,
+        deleted: Option<bool>,
+    ) -> Result<Uuid, RustyError>;
+    #[allow(clippy::too_many_arguments)]
+    async fn modify_actual(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        actual_id: Uuid,
+        period_id: PeriodId,
+        budgeted_amount: Option<Money>,
+        actual_amount: Option<Money>,
+    ) -> Result<Uuid, RustyError>;
+    #[allow(clippy::too_many_arguments)]
+    async fn add_and_connect_tx(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        actual_id: Uuid,
+        bank_account_number: &str,
+        amount: Money,
+        balance: Money,
+        description: &str,
+        date: DateTime<Utc>,
+    ) -> Result<Uuid, RustyError>;
+    #[allow(clippy::too_many_arguments)]
+    async fn add_transaction(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        bank_account_number: &str,
+        amount: Money,
+        balance: Money,
+        description: &str,
+        date: DateTime<Utc>,
+    ) -> Result<Uuid, RustyError>;
+    async fn connect_transaction(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        tx_id: Uuid,
+        actual_id: Uuid,
+    ) -> Result<Uuid, RustyError>;
+    async fn ensure_account(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        account_number: &str,
+        description: &str,
+    ) -> Result<Uuid, RustyError>;
+    async fn ignore_transaction(
+        &self,
+        budget_id: Uuid,
+        tx_id: Uuid,
+        user_id: Uuid,
+    ) -> Result<Uuid, RustyError>;
+    async fn reallocate_budgeted_funds(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        period_id: PeriodId,
+        from_actual_id: Uuid,
+        to_actual_id: Uuid,
+        amount: Money,
+    ) -> Result<Uuid, RustyError>;
+    async fn adjust_budgeted_amount(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        actual_id: Uuid,
+        period_id: PeriodId,
+        budgeted_amount: Money,
+    ) -> Result<Uuid, RustyError>;
+    async fn add_rule(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        transaction_key: Vec<String>,
+        item_key: Vec<String>,
+        always_apply: bool,
+        tag_id: Option<Uuid>,
+    ) -> Result<Uuid, RustyError>;
+    async fn tag_transaction(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        tx_id: Uuid,
+        tag_id: Uuid,
+    ) -> Result<Uuid, RustyError>;
+    async fn untag_transaction(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        tx_id: Uuid,
+    ) -> Result<Uuid, RustyError>;
+    async fn reject_transfer_pair(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        outgoing_tx_id: Uuid,
+        incoming_tx_id: Uuid,
+    ) -> Result<Uuid, RustyError>;
+    async fn modify_rule(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        rule_id: Uuid,
+        transaction_key: Vec<String>,
+    ) -> Result<Uuid, RustyError>;
+    async fn delete_rule(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        rule_id: Uuid,
+    ) -> Result<Uuid, RustyError>;
+    async fn set_item_buffer(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        item_id: Uuid,
+        buffer_target: Option<Money>,
+    ) -> Result<Uuid, RustyError>;
+    async fn create_allocation(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        transaction_id: Uuid,
+        actual_id: Uuid,
+        amount: Money,
+        tag: String,
+    ) -> Result<Uuid, RustyError>;
+    async fn delete_allocation(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        allocation_id: Uuid,
+        transaction_id: Uuid,
+    ) -> Result<Uuid, RustyError>;
+
+    async fn user_exists(&self, email: &str) -> Result<bool, RustyError>;
+    async fn get_default_user(&self) -> Result<User, RustyError>;
+    async fn get_default_budget(&self, user_id: Uuid) -> Result<Budget, RustyError>;
+    async fn add_budget_to_user(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        default: bool,
+    ) -> Result<Uuid, RustyError>;
+    async fn create_user(
+        &self,
+        user_name: &str,
+        email: &str,
+        first_name: &str,
+        last_name: &str,
+        phone: Option<String>,
+        birthday: Option<NaiveDate>,
+    ) -> Result<User, RustyError>;
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JoyModel)]
@@ -443,8 +937,8 @@ pub struct PgRuntime {
     client: Box<dyn Client>,
 }
 
-async fn create_runtime() -> PgRuntime {
-    let url = "postgres://postgres:birkobengo@localhost:5432/rusty_budgets";
+pub async fn create_runtime() -> PgRuntime {
+    let url = env::var("DATABASE_URL").unwrap();
     let client = welds::connections::connect(url).await.unwrap();
     PgRuntime::new(client)
 }
@@ -519,7 +1013,7 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
         for ev in events {
             ev.apply(&mut budget);
         }
-        tracing::info!(
+        info!(
             "[perf] load: replayed {} events in {:?}",
             event_count,
             t.elapsed()
@@ -595,7 +1089,7 @@ impl AsyncRuntime<Budget, BudgetEvent> for PgRuntime {
         for ev in events {
             ev.apply(&mut budget);
         }
-        tracing::info!(
+        info!(
             "[perf] load: replayed {} events in {:?}",
             event_count,
             t.elapsed()
@@ -676,6 +1170,460 @@ impl AsyncRuntime<Budget, BudgetEvent> for PgRuntime {
         id: <Budget as cqrs::framework::Aggregate>::Id,
     ) -> Result<Vec<StoredEvent<Budget, BudgetEvent>>, RustyError> {
         self.fetch_events(id, 0).await
+    }
+}
+impl AsyncBudgetCommandsTrait for PgRuntime {
+    async fn create_budget(
+        &self,
+        user_id: Uuid,
+        budget_name: &str,
+        default_budget: bool,
+        month_begins_on: MonthBeginsOn,
+        currency: Currency,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, Uuid::default(), |budget| {
+            budget.create_budget(
+                budget_name.to_string(),
+                user_id,
+                month_begins_on,
+                default_budget,
+                currency,
+            )
+        })
+        .await
+    }
+    async fn add_item(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        item_name: String,
+        item_type: BudgetingType,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.add_item(item_name.to_string(), item_type)
+        })
+        .await
+    }
+    async fn add_actual(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        item_id: Uuid,
+        amount: Money,
+        period_id: PeriodId,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.add_actual(item_id, period_id, amount)
+        })
+        .await
+    }
+    #[allow(clippy::too_many_arguments)]
+    async fn modify_item(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        item_id: Uuid,
+        name: Option<String>,
+        item_type: Option<BudgetingType>,
+        tag_ids: Option<Vec<Uuid>>,
+        periodicity: Option<Periodicity>,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.modify_item(item_id, name, item_type, tag_ids, periodicity)
+        })
+        .await
+    }
+    async fn create_tag(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        name: String,
+        periodicity: Periodicity,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.create_tag(name, periodicity)
+        })
+        .await
+    }
+    async fn modify_tag(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        tag_id: Uuid,
+        name: Option<String>,
+        periodicity: Option<Periodicity>,
+        deleted: Option<bool>,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.modify_tag(tag_id, name, periodicity, deleted)
+        })
+        .await
+    }
+    #[allow(clippy::too_many_arguments)]
+    async fn modify_actual(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        actual_id: Uuid,
+        period_id: PeriodId,
+        budgeted_amount: Option<Money>,
+        actual_amount: Option<Money>,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.modify_actual(
+                actual_id,
+                period_id,
+                budgeted_amount,
+                actual_amount,
+                None,
+                None,
+            )
+        })
+        .await
+    }
+    #[allow(clippy::too_many_arguments)]
+    async fn add_and_connect_tx(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        actual_id: Uuid,
+        bank_account_number: &str,
+        amount: Money,
+        balance: Money,
+        description: &str,
+        date: DateTime<Utc>,
+    ) -> Result<Uuid, RustyError> {
+        let tx_id = self
+            .add_transaction(
+                user_id,
+                budget_id,
+                bank_account_number,
+                amount,
+                balance,
+                description,
+                date,
+            )
+            .await?;
+        self.connect_transaction(user_id, budget_id, tx_id, actual_id)
+            .await
+    }
+    #[allow(clippy::too_many_arguments)]
+    async fn add_transaction(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        bank_account_number: &str,
+        amount: Money,
+        balance: Money,
+        description: &str,
+        date: DateTime<Utc>,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.add_transaction(
+                bank_account_number.to_string(),
+                amount,
+                balance,
+                description.to_string(),
+                date,
+            )
+        })
+        .await
+    }
+    async fn connect_transaction(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        tx_id: Uuid,
+        actual_id: Uuid,
+    ) -> Result<Uuid, RustyError> {
+        let (amount, existing_allocations) = {
+            let budget = self.load(budget_id).await?;
+            let amount = budget
+                .get_transaction(tx_id)
+                .map(|tx| tx.amount)
+                .ok_or_else(|| {
+                    RustyError::ItemNotFound(tx_id.to_string(), "Transaction not found".to_string())
+                })?;
+            let existing = budget
+                .allocations_for_transaction(tx_id)
+                .iter()
+                .map(|a| (a.id, a.transaction_id))
+                .collect::<Vec<_>>();
+            (amount, existing)
+        };
+        for (alloc_id, transaction_id) in existing_allocations {
+            self.delete_allocation(user_id, budget_id, alloc_id, transaction_id)
+                .await?;
+        }
+        self.create_allocation(user_id, budget_id, tx_id, actual_id, amount, String::new())
+            .await
+    }
+    async fn ensure_account(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        account_number: &str,
+        description: &str,
+    ) -> Result<Uuid, RustyError> {
+        let budget = self.load(budget_id).await?;
+        if let Some(existing) = budget.get_account(account_number) {
+            return Ok(existing.id);
+        }
+        self.cmd(user_id, budget_id, |budget| {
+            budget.create_bank_account(account_number.to_string(), description.to_string())
+        })
+        .await
+    }
+    async fn ignore_transaction(
+        &self,
+        budget_id: Uuid,
+        tx_id: Uuid,
+        user_id: Uuid,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.ignore_transaction(tx_id)
+        })
+        .await
+    }
+    async fn reallocate_budgeted_funds(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        period_id: PeriodId,
+        from_actual_id: Uuid,
+        to_actual_id: Uuid,
+        amount: Money,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.reallocate_budgeted_funds(period_id, from_actual_id, to_actual_id, amount)
+        })
+        .await
+    }
+    async fn adjust_budgeted_amount(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        actual_id: Uuid,
+        period_id: PeriodId,
+        budgeted_amount: Money,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.adjust_actual_budgeted_funds(actual_id, period_id, budgeted_amount)
+        })
+        .await
+    }
+    async fn add_rule(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        transaction_key: Vec<String>,
+        item_key: Vec<String>,
+        always_apply: bool,
+        tag_id: Option<Uuid>,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.add_rule(transaction_key, item_key, always_apply, tag_id)
+        })
+        .await
+    }
+    async fn tag_transaction(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        tx_id: Uuid,
+        tag_id: Uuid,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.do_transaction_tagged(tx_id, tag_id)
+        })
+        .await
+    }
+    async fn untag_transaction(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        tx_id: Uuid,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.do_transaction_untagged(tx_id)
+        })
+        .await
+    }
+    async fn reject_transfer_pair(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        outgoing_tx_id: Uuid,
+        incoming_tx_id: Uuid,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.reject_transfer_pair(outgoing_tx_id, incoming_tx_id)
+        })
+        .await
+    }
+    async fn modify_rule(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        rule_id: Uuid,
+        transaction_key: Vec<String>,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.modify_rule(rule_id, transaction_key)
+        })
+        .await
+    }
+    async fn delete_rule(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        rule_id: Uuid,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| budget.delete_rule(rule_id))
+            .await
+    }
+    async fn set_item_buffer(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        item_id: Uuid,
+        buffer_target: Option<Money>,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.set_item_buffer(item_id, buffer_target)
+        })
+        .await
+    }
+    async fn create_allocation(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        transaction_id: Uuid,
+        actual_id: Uuid,
+        amount: Money,
+        tag: String,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.create_allocation(transaction_id, actual_id, amount, tag)
+        })
+        .await
+    }
+    async fn delete_allocation(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        allocation_id: Uuid,
+        transaction_id: Uuid,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.delete_allocation(allocation_id, transaction_id)
+        })
+        .await
+    }
+
+    async fn user_exists(&self, email: &str) -> Result<bool, RustyError> {
+        Ok(!PgUser::where_col(|u| u.email.equal(email))
+            .run(self.client.as_ref())
+            .await?
+            .is_empty())
+    }
+
+    async fn get_default_user(&self) -> Result<User, RustyError> {
+        match PgUser::where_col(|u| u.email.equal(DEFAULT_USER_EMAIL))
+            .run(self.client.as_ref())
+            .await
+        {
+            Ok(users) => {
+                if users.is_empty() {
+                    self.create_user(
+                        "tommie",
+                        DEFAULT_USER_EMAIL,
+                        "Tommie",
+                        "Nygren",
+                        Some("0704382781".to_string()),
+                        Some(
+                            NaiveDate::parse_from_str("1973-05-12", "%Y-%m-%d").unwrap_or_default(),
+                        ),
+                    )
+                    .await
+                } else {
+                    Ok(users.first().unwrap().into())
+                }
+            }
+            Err(e) => {
+                error!(error = %e, "Could not get default user");
+                Err(RustyError::WeldsError(e))
+            }
+        }
+    }
+
+    async fn get_default_budget(&self, user_id: Uuid) -> Result<Budget, RustyError> {
+        match PgUserBudgets::find_by_id(self.client.as_ref(), user_id).await? {
+            None => {
+                info!("User has no budgets");
+                Err(RustyError::DefaultBudgetNotFound)
+            }
+            Some(b) => {
+                let ub: UserBudgets = b.into();
+                if let Some(budget) = ub.budgets.iter().find(|(_, default)| *default) {
+                    self.load(budget.0).await
+                } else {
+                    info!("User has no default budget");
+                    Err(RustyError::DefaultBudgetNotFound)
+                }
+            }
+        }
+    }
+
+    async fn add_budget_to_user(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        default: bool,
+    ) -> Result<Uuid, RustyError> {
+        match PgUserBudgets::find_by_id(self.client.as_ref(), user_id).await {
+            Ok(ub) => {
+                let mut pg_ub = match ub {
+                    None => {
+                        let mut n_pg_ub = PgUserBudgets::new();
+                        n_pg_ub.id = user_id;
+                        n_pg_ub.budgets = serde_json::to_value(UserBudgets {
+                            id: user_id,
+                            budgets: vec![],
+                        })
+                        .expect("Could not serialize user budgets");
+                        n_pg_ub
+                    }
+                    Some(pg_ub) => pg_ub,
+                };
+                let mut ub: UserBudgets = pg_ub.clone().into();
+                if !ub.budgets.contains(&(budget_id, default)) {
+                    if default && let Some(budget) = ub.budgets.iter_mut().find(|(_, default)| *default)
+                    {
+                        budget.1 = false;
+                    }
+                    ub.budgets.push((budget_id, default));
+                    pg_ub.budgets = serde_json::to_value(ub).expect("Could not serialize user budgets");
+                    pg_ub.save(self.client.as_ref()).await?;
+                }
+                Ok(user_id)
+            }
+            Err(e) => Err(RustyError::WeldsError(e)),
+        }
+    }
+
+    async fn create_user(
+        &self,
+        user_name: &str,
+        email: &str,
+        first_name: &str,
+        last_name: &str,
+        phone: Option<String>,
+        birthday: Option<NaiveDate>,
+    ) -> Result<User, RustyError> {
+        let mut pg_user: DbState<PgUser> = User::new(user_name, email, first_name, last_name, phone, birthday).into();
+        pg_user.save(self.client.as_ref()).await?;
+        Ok(pg_user.into())
     }
 }
 

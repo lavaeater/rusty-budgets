@@ -1,8 +1,8 @@
-const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
+pub const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 
 use crate::api_error::RustyError;
 use crate::cqrs::framework::{CommandError, Runtime};
-use crate::cqrs::runtime::{Db, JoyDbBudgetRuntime, UserBudgets};
+use crate::cqrs::runtime::{create_runtime, AsyncBudgetCommandsTrait, BudgetCommandsTrait, Db, JoyDbBudgetRuntime, PgRuntime, UserBudgets};
 use crate::events::TransactionConnected;
 use crate::import::{import_from_path, import_from_skandia_excel, import_from_skandia_excel_bytes};
 use crate::models::*;
@@ -12,9 +12,11 @@ use dioxus::logger::tracing;
 use dioxus::logger::tracing::error;
 use dioxus::logger::tracing::info;
 use joydb::JoydbError;
-use once_cell::sync::Lazy;
 use std::env;
 use std::path::PathBuf;
+use std::sync::Arc;
+use dioxus::fullstack::Lazy;
+use sqlx::__rt::JoinHandle::Tokio;
 use uuid::Uuid;
 
 fn get_data_file() -> PathBuf {
@@ -26,7 +28,11 @@ fn get_data_file() -> PathBuf {
         })
 }
 
-pub static CLIENT: Lazy<JoyDbBudgetRuntime> = Lazy::new(|| {
+pub struct JoyDbRuntimeHolder {
+    pub joydb_runtime: JoyDbBudgetRuntime
+}
+
+pub static CLIENT: once_cell::sync::Lazy<JoyDbRuntimeHolder> = once_cell::sync::Lazy::new(|| {
     info!("Init DB Client");
 
     let client = JoyDbBudgetRuntime::new(get_data_file());
@@ -41,15 +47,35 @@ pub static CLIENT: Lazy<JoyDbBudgetRuntime> = Lazy::new(|| {
             panic!("Could not get default user");
         }
     }
-    client
+    JoyDbRuntimeHolder {joydb_runtime: client}
+});
+
+pub static PG_RUNTIME: Lazy<PgRuntime> = Lazy::new(|| async move {
+    let pg_runtime = create_runtime().await;
+    // Run migrations
+    info!("Insert Default Data");
+    match pg_runtime.get_default_user().await {
+        Ok(_) => {
+            info!("Default user exists");
+        }
+        Err(e) => {
+            error!(error = %e, "Could not get default user");
+            panic!("Could not get default user");
+        }
+    }
+    dioxus::Ok(pg_runtime)
 });
 
 fn with_client(client: Option<&Db>) -> &Db {
-    if let Some(c) = client { c } else { &CLIENT.db }
+    if let Some(c) = client { c } else { &CLIENT.joydb_runtime.db }
 }
 
 fn with_runtime(client: Option<&JoyDbBudgetRuntime>) -> &JoyDbBudgetRuntime {
-    if let Some(c) = client { c } else { &CLIENT }
+    if let Some(c) = client { c } else { &CLIENT.joydb_runtime }
+}
+
+fn with_pg_runtime(runtime: Option<&PgRuntime>) -> &PgRuntime {
+    if let Some(c) = runtime { c } else { &PG_RUNTIME }
 }
 
 pub fn user_exists(email: &str, client: Option<&Db>) -> Result<bool, RustyError> {
@@ -498,7 +524,7 @@ pub fn get_transactions_for_tag(
         .filter(|tx| tx.tag_id == Some(tag_id) && !tx.ignored)
         .cloned()
         .collect();
-    txs.sort_by(|a, b| b.date.cmp(&a.date));
+    txs.sort_by_key(|b| std::cmp::Reverse(b.date));
     Ok(txs)
 }
 

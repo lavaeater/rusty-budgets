@@ -3,11 +3,11 @@ use crate::models::{BankTransaction, BudgetItem};
 use core::fmt::Display;
 use dioxus::logger::tracing;
 use iter_tools::Itertools;
-use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::hash::{DefaultHasher, Hash, Hasher};
 use uuid::Uuid;
+use once_cell::sync::Lazy;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MatchRule {

@@ -1,12 +1,12 @@
+use crate::User;
+use crate::cqrs::framework::StoredEvent;
+use crate::cqrs::runtime::{StoredBudgetEvent, UserBudgets};
+use crate::models::{Budget, BudgetEvent};
 use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use uuid::Uuid;
 use welds::{Syntax, WeldsError, prelude::*};
-use crate::cqrs::framework::StoredEvent;
-use crate::cqrs::runtime::{StoredBudgetEvent, UserBudgets};
-use crate::models::{Budget, BudgetEvent};
-use crate::User;
 
 /// Append-only event log. `data` holds the serialised `BudgetEvent` JSON.
 #[derive(Debug, Clone, WeldsModel, Serialize, Deserialize)]
@@ -24,11 +24,11 @@ pub struct PgStoredBudgetEvent {
 impl From<StoredEvent<Budget, BudgetEvent>> for DbState<PgStoredBudgetEvent> {
     fn from(event: StoredEvent<Budget, BudgetEvent>) -> Self {
         let mut pg_event = PgStoredBudgetEvent::new();
-        pg_event.id= event.id;
+        pg_event.id = event.id;
         pg_event.aggregate_id = event.aggregate_id;
-        pg_event.timestamp= event.timestamp;
-        pg_event.user_id= event.user_id;
-        pg_event.created_at= event.created_at;
+        pg_event.timestamp = event.timestamp;
+        pg_event.user_id = event.user_id;
+        pg_event.created_at = event.created_at;
         pg_event.data = serde_json::to_value(event.data).unwrap();
         pg_event
     }
@@ -81,6 +81,33 @@ impl From<User> for DbState<PgUser> {
     }
 }
 
+impl From<DbState<PgUser>> for User {
+    fn from(value: DbState<PgUser>) -> Self {
+        User::new(
+            &value.user_name,
+            &value.email,
+            &value.first_name,
+            &value.last_name,
+            value.phone.clone(),
+            value.birthday,
+        )
+    }
+}
+
+impl From<&DbState<PgUser>> for User {
+    fn from(value: &DbState<PgUser>) -> Self {
+        Self {
+            id: value.id,
+            user_name: value.user_name.clone(),
+            birthday: value.birthday,
+            phone: value.phone.clone(),
+            last_name: value.last_name.clone(),
+            first_name: value.first_name.clone(),
+            email: value.email.clone(),
+        }
+    }
+}
+
 /// Application user.
 #[derive(Debug, Clone, WeldsModel, Serialize, Deserialize)]
 #[welds(table = "users")]
@@ -95,7 +122,6 @@ pub struct PgUser {
     pub birthday: Option<NaiveDate>,
 }
 
-
 impl From<UserBudgets> for DbState<PgUserBudgets> {
     fn from(ub: UserBudgets) -> Self {
         let mut pg_ub = PgUserBudgets::new();
@@ -104,6 +130,25 @@ impl From<UserBudgets> for DbState<PgUserBudgets> {
         pg_ub
     }
 }
+
+impl From<DbState<PgUserBudgets>> for UserBudgets {
+    fn from(pg_ub: DbState<PgUserBudgets>) -> Self {
+        UserBudgets {
+            id: pg_ub.id,
+            budgets: serde_json::from_value(pg_ub.budgets.clone()).expect("Budgets must be serializable"),
+        }
+    }
+}
+
+impl From<PgUserBudgets> for UserBudgets {
+    fn from(pg_ub: PgUserBudgets) -> Self {
+        UserBudgets {
+            id: pg_ub.id,
+            budgets: serde_json::from_value(pg_ub.budgets).expect("Budgets must be serializable"),
+        }
+    }
+}
+
 /// Maps a user to their list of budget IDs + default flag.
 /// `budgets` stores `Vec<(Uuid, bool)>` as JSONB.
 #[derive(Debug, Clone, WeldsModel, Serialize, Deserialize)]
