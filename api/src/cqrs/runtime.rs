@@ -1642,8 +1642,7 @@ impl AsyncBudgetCommandsTrait for PgRuntime {
     }
 }
 
-/// Define a struct that we want to put the combined selected data into
-/// NOTE: This struct doesn't have a table linked to it.
+#[cfg(feature = "server")]
 #[derive(Debug, WeldsModel)]
 pub struct EventId {
     pub event_id: Uuid,
