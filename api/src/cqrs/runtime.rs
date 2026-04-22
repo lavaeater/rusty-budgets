@@ -47,24 +47,28 @@ pub async fn migrate_to_postgres() -> Result<(), RustyError> {
 
     let users = jr.db.get_all::<User>()?;
     for user in users {
+        info!("Migrating user {}", user.id);
         let mut pg_user: DbState<PgUser> = user.into();
         pg_user.save(pr.client.as_ref()).await?;
     }
 
     let events = jr.db.get_all::<StoredBudgetEvent>()?;
     for event in events {
+        info!("Migrating event {:?}", event);
         let mut pg_event: DbState<PgStoredBudgetEvent> = event.into();
         pg_event.save(pr.client.as_ref()).await?;
     }
 
     let budgets = jr.db.get_all::<Budget>()?;
     for budget in budgets {
+        info!("Migrating budget {:?}", budget);
         let mut pg_budget: DbState<PgBudget> = budget.into();
         pg_budget.save(pr.client.as_ref()).await?;
     }
 
     let user_budgets = jr.db.get_all::<UserBudgets>()?;
     for budget in user_budgets {
+        info!("Migrating user budgets {:?}", budget);
         let mut pg_budget: DbState<PgUserBudgets> = budget.into();
         pg_budget.save(pr.client.as_ref()).await?;
     }
