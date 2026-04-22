@@ -6,7 +6,6 @@ pub mod cqrs;
 pub mod errors;
 pub mod events;
 pub mod holidays;
-#[cfg(feature = "server")]
 pub mod import;
 pub mod migrations;
 pub mod models;

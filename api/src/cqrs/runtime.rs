@@ -1,7 +1,9 @@
 use crate::api_error::RustyError;
 use crate::cqrs::framework::{AsyncRuntime, CommandError, Runtime, StoredEvent};
+#[cfg(feature = "server")]
 use crate::db::{DEFAULT_USER_EMAIL, create_user};
 use crate::models::*;
+#[cfg(feature = "server")]
 use crate::pg_models::{PgBudget, PgStoredBudgetEvent, PgUser, PgUserBudgets};
 use crate::{cqrs, models};
 use chrono::{DateTime, NaiveDate, Utc};
@@ -30,6 +32,7 @@ fn get_data_file() -> PathBuf {
         })
 }
 
+#[cfg(feature = "server")]
 pub async fn migrate_to_postgres() -> Result<(), RustyError> {
     let jr = JoyDbBudgetRuntime::new(get_data_file());
     let pr = create_runtime().await;
@@ -63,6 +66,7 @@ pub async fn migrate_to_postgres() -> Result<(), RustyError> {
     Ok(())
 }
 
+#[cfg(feature = "server")]
 impl BudgetCommandsTrait for JoyDbBudgetRuntime {
     fn create_budget(
         &self,
@@ -934,16 +938,19 @@ pub struct JoyDbBudgetRuntime {
     pub db: Db,
 }
 
+#[cfg(feature = "server")]
 pub struct PgRuntime {
     client: Box<dyn Client>,
 }
 
+#[cfg(feature = "server")]
 pub async fn create_runtime() -> PgRuntime {
     let url = env::var("DATABASE_URL").unwrap();
     let client = welds::connections::connect(url).await.unwrap();
     PgRuntime::new(client)
 }
 
+#[cfg(feature = "server")]
 impl PgRuntime {
     pub fn new(client: AnyClient) -> Self {
         Self {
@@ -1066,6 +1073,7 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
     }
 }
 
+#[cfg(feature = "server")]
 impl AsyncRuntime<Budget, BudgetEvent> for PgRuntime {
     async fn load(
         &self,
@@ -1173,6 +1181,7 @@ impl AsyncRuntime<Budget, BudgetEvent> for PgRuntime {
         self.fetch_events(id, 0).await
     }
 }
+#[cfg(feature = "server")]
 impl AsyncBudgetCommandsTrait for PgRuntime {
     async fn create_budget(
         &self,

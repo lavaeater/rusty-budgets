@@ -12,8 +12,8 @@ serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 joydb = { features = ["ron"], workspace = true }
-sqlx = { version = "0.8.6", default-features = false, features = ["chrono", "postgres", "bigdecimal", "uuid", "json", "migrate", "runtime-tokio", "tls-rustls"], optional = true }
-welds = { version = "0.4.21", default-features = false, features = ["postgres", "migrations", "sqlite"], optional = true }
+sqlx = { version = "0.8.6", default-features = false, features = ["chrono", "postgres", "bigdecimal", "uuid", "json", "migrate", "runtime-tokio", "tls-rustls"], optional = false }
+welds = { version = "0.4.21", default-features = false, features = ["postgres", "migrations", "sqlite"], optional = false }
 once_cell = { version = "1.21.3", features = ["parking_lot"] }
 cqrs_macros = { workspace = true }
 calamine = "0.34.0"
@@ -26,8 +26,10 @@ log = "0.4.29"
 pretty_env_logger = "0.5.0"
 dotenvy = "0.15.7"
 
+[[bin]]
+name = "api"
+required-features = ["server"]
+
 [features]
-server = ["dioxus/server", "tokio", "sqlx", "welds"]
-welds = ["dep:welds"]
-sqlx = ["dep:sqlx"]
+server = ["dioxus/server", "tokio"]
 tokio = ["dep:tokio"]

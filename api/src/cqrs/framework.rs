@@ -11,9 +11,13 @@ use std::error::Error;
 use std::fmt::{Debug, Display, Formatter};
 use std::hash::Hash;
 use uuid::Uuid;
+#[cfg(feature = "server")]
 use welds::prelude::DbState;
+#[cfg(feature = "server")]
 use crate::cqrs::runtime::StoredBudgetEvent;
+#[cfg(feature = "server")]
 use crate::models::{Budget, BudgetEvent};
+#[cfg(feature = "server")]
 use crate::pg_models::{PgBudget, PgStoredBudgetEvent};
 
 /// Aggregate: domain state that evolves by applying events.
@@ -43,12 +47,14 @@ where
     pub user_id: Uuid,
 }
 
+#[cfg(feature = "server")]
 impl From<DbState<PgStoredBudgetEvent>> for StoredEvent<Budget, BudgetEvent> {
     fn from(value: DbState<PgStoredBudgetEvent>) -> Self {
         Self::new(serde_json::from_value(value.data.clone()).unwrap(), value.user_id)
     }
 }
 
+#[cfg(feature = "server")]
 impl From<DbState<PgBudget>> for Budget {
     fn from(value: DbState<PgBudget>) -> Self {
         serde_json::from_value(value.data.clone()).expect("failed to deserialize Budget")
