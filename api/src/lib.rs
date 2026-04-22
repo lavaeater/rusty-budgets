@@ -503,11 +503,10 @@ pub async fn create_budget_item(
     if !tag_ids.is_empty() {
         db::modify_item(user.id, budget_id, item_id, None, None, Some(tag_ids), None)?;
     }
-    if let Some(amount) = budgeted_amount {
-        if !amount.is_zero() {
+    if let Some(amount) = budgeted_amount
+        && !amount.is_zero() {
             db::add_actual(user.id, budget_id, item_id, amount, period_id)?;
         }
-    }
     Ok(BudgetViewModel::from_budget(
         &db::get_budget(budget_id)?,
         period_id,

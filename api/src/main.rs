@@ -13,7 +13,7 @@ async fn main() -> Result<(), RustyError> {
     pretty_env_logger::init();
 
     let connection_string = env::var("DATABASE_URL").unwrap();
-    let client = welds::connections::connect(&connection_string)
+    let _client = welds::connections::connect(&connection_string)
         .await
         .expect("Unable to connect to Database");
 
