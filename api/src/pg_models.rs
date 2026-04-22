@@ -126,7 +126,7 @@ impl From<UserBudgets> for DbState<PgUserBudgets> {
     fn from(ub: UserBudgets) -> Self {
         let mut pg_ub = PgUserBudgets::new();
         pg_ub.id = ub.id;
-        pg_ub.budgets = serde_json::to_value(ub).expect("Budgets must be serializable");
+        pg_ub.budgets = serde_json::to_value(ub.budgets).expect("Budgets must be serializable");
         pg_ub
     }
 }

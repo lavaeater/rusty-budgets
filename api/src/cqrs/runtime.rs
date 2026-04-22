@@ -8,7 +8,7 @@ use crate::pg_models::{PgBudget, PgStoredBudgetEvent, PgUser, PgUserBudgets};
 use crate::{cqrs, models};
 use chrono::{DateTime, NaiveDate, Utc};
 use dioxus::logger::tracing;
-use dioxus::prelude::{error, info};
+use dioxus::prelude::{debug, error, info};
 use joydb::Model as JoyModel;
 use joydb::adapters::{FromPath, JsonAdapter};
 use joydb::{Joydb, JoydbConfig, JoydbMode, SyncPolicy};
@@ -950,6 +950,16 @@ pub struct PgRuntime {
 
 #[cfg(feature = "server")]
 pub async fn create_runtime() -> PgRuntime {
+    dotenvy::dotenv().ok();
+    // Try workspace root (two levels up from packages/web)
+    let workspace_env = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|p| p.parent())
+        .map(|p| p.join(".env"));
+    if let Some(env_path) = workspace_env {
+        debug!("Trying to load .env from: {:?}", env_path);
+        dotenvy::from_path(&env_path).ok();
+    }
     let url = env::var("DATABASE_URL").unwrap();
     let client = welds::connections::connect(url).await.unwrap();
     PgRuntime::new(client)

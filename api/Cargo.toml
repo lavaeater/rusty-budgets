@@ -24,7 +24,7 @@ duration-extender = "0.5.0"
 iter_tools = "0.47.0"
 log = { version = "0.4.29", optional = true }
 pretty_env_logger = { version = "0.5.0", optional = true }
-dotenvy = { version = "0.15.7", optional = true }
+dotenvy = { workspace = true, optional = true }
 
 [[bin]]
 name = "api"
