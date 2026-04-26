@@ -7,7 +7,7 @@ use crate::file_chooser::{FileData, FileDialog};
 use api::models::*;
 use api::view_models::BudgetViewModel;
 use api::view_models::*;
-use api::{auto_budget_period, get_budget, import_transactions_bytes};
+use api::{auto_budget_all, auto_budget_period, get_budget, import_transactions_bytes};
 use chrono::Utc;
 use dioxus::core::internal::generational_box::GenerationalRef;
 use dioxus::logger::tracing;
@@ -189,6 +189,14 @@ pub fn BudgetOverview(mut budget_id: Signal<Uuid>, mut period_id: Signal<PeriodI
                             "Auto budget"
                         }
                     }
+                    Button {
+                        onclick: move |_| async move {
+                            if let Ok(bv) = auto_budget_all(budget_id(), period_id()).await {
+                                consume_context::<BudgetState>().0.set(bv);
+                            }
+                        },
+                        "Auto budget alla perioder"
+                    }
                 }
                 div { class: "header-actions",
                     FileDialog { on_chosen: import_file }
@@ -236,6 +244,10 @@ pub fn BudgetOverview(mut budget_id: Signal<Uuid>, mut period_id: Signal<PeriodI
                 h3 { style: "margin: 0 0 16px 0;", "Taggningsregler" }
                 RulesView {}
             }
+            div { class: "transactions-section-prominent",
+                h3 { style: "margin: 0 0 16px 0;", "Löpande underskott / överskott" }
+                RunningDeficitView {}
+            }
             if budget.to_connect.is_empty() {
                 div { class: "transactions-section-minimal",
                     p { class: "success-message", "✓ Alla transaktioner är hanterade!" }
@@ -252,6 +264,57 @@ pub fn BudgetOverview(mut budget_id: Signal<Uuid>, mut period_id: Signal<PeriodI
             } else {
                 div { class: "transactions-section-prominent",
                     TransactionsView { ignored: true }
+                }
+            }
+        }
+    }
+}
+
+#[component]
+fn RunningDeficitView() -> Element {
+    let budget = use_context::<BudgetState>().0();
+    let summaries = &budget.period_summaries;
+    if summaries.is_empty() {
+        return rsx! { p { "Ingen perioddata ännu." } };
+    }
+    let final_running = summaries.last().map(|s| s.running_net).unwrap_or_default();
+    let banner_color = if final_running.amount_in_cents() < 0 { "#f44336" } else { "#4caf50" };
+    rsx! {
+        div {
+            div {
+                style: "padding: 8px 12px; border-radius: 4px; margin-bottom: 12px; background: {banner_color}; color: white; font-weight: bold;",
+                if final_running.amount_in_cents() < 0 {
+                    "Totalt underskott: {final_running}"
+                } else {
+                    "Totalt överskott: {final_running}"
+                }
+            }
+            table { style: "width: 100%; border-collapse: collapse; font-size: 0.9em;",
+                thead {
+                    tr {
+                        th { style: "text-align: left; padding: 4px 8px;", "Period" }
+                        th { style: "text-align: right; padding: 4px 8px;", "Inkomst" }
+                        th { style: "text-align: right; padding: 4px 8px;", "Utgifter" }
+                        th { style: "text-align: right; padding: 4px 8px;", "Netto" }
+                        th { style: "text-align: right; padding: 4px 8px;", "Löpande" }
+                    }
+                }
+                tbody {
+                    for summary in summaries.iter().rev().take(24) {
+                        {
+                            let net_color = if summary.net.amount_in_cents() < 0 { "#f44336" } else { "#4caf50" };
+                            let running_color = if summary.running_net.amount_in_cents() < 0 { "#f44336" } else { "#4caf50" };
+                            rsx! {
+                                tr { style: "border-top: 1px solid #eee;",
+                                    td { style: "padding: 4px 8px;", "{summary.period_id}" }
+                                    td { style: "text-align: right; padding: 4px 8px;", "{summary.income_actual}" }
+                                    td { style: "text-align: right; padding: 4px 8px;", "{summary.expense_actual}" }
+                                    td { style: "text-align: right; padding: 4px 8px; color: {net_color};", "{summary.net}" }
+                                    td { style: "text-align: right; padding: 4px 8px; color: {running_color};", "{summary.running_net}" }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

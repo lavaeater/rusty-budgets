@@ -63,6 +63,13 @@ pub async fn auto_budget_period(
     Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }
 
+#[server(endpoint = "auto_budget_all")]
+pub async fn auto_budget_all(budget_id: Uuid, period_id: PeriodId) -> ServerFnResult<BudgetViewModel> {
+    let user = db::get_default_user().await?;
+    db::auto_budget_all(user.id, budget_id).await?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
+}
+
 #[server(endpoint = "add_new_actual_item")]
 pub async fn add_new_actual_item(
     budget_id: Uuid,

@@ -320,17 +320,56 @@ pub async fn auto_budget_period(
         period_id.to_string(),
         "Period not found".to_string(),
     ))?;
-    info!("Auto budgeting period {}", period_id);
-    info!("Number of items: {}", period.actual_items.len());
-    for actual in &period.actual_items {
-        if actual.budgeted_amount.is_zero() {
-            match rt
-                .modify_actual(user_id, budget_id, actual.id, period_id, Some(actual.actual_amount), None)
-                .await
-            {
-                Ok(_) => {}
-                Err(e) => error!(error = %e, "Could not modify actual"),
+    info!("Auto budgeting period {} ({} items)", period_id, budget.items.len());
+
+    for item in &budget.items {
+        let tag_ids: std::collections::HashSet<Uuid> = item.tag_ids.iter().cloned().collect();
+        let raw_sum: Money = period
+            .transactions
+            .iter()
+            .filter(|tx| !tx.ignored && tx.tag_id.is_some_and(|tid| tag_ids.contains(&tid)))
+            .map(|tx| tx.amount)
+            .sum();
+        let actual_amount = match item.budgeting_type {
+            BudgetingType::Expense | BudgetingType::Savings => raw_sum.abs(),
+            _ => raw_sum,
+        };
+
+        if actual_amount.is_zero() {
+            continue;
+        }
+
+        let existing = period.actual_items.iter().find(|a| a.budget_item_id == item.id);
+        let (actual_id, already_budgeted) = if let Some(a) = existing {
+            (a.id, !a.budgeted_amount.is_zero())
+        } else {
+            match rt.add_actual(user_id, budget_id, item.id, Money::zero(budget.currency), period_id).await {
+                Ok(id) => (id, false),
+                Err(e) => {
+                    error!(error = %e, "Could not create actual for item {} in period {}", item.id, period_id);
+                    continue;
+                }
             }
+        };
+
+        if !already_budgeted {
+            match rt.modify_actual(user_id, budget_id, actual_id, period_id, Some(actual_amount), None).await {
+                Ok(_) => {}
+                Err(e) => error!(error = %e, "Could not set budgeted amount for actual {}", actual_id),
+            }
+        }
+    }
+    Ok(())
+}
+
+pub async fn auto_budget_all(user_id: Uuid, budget_id: Uuid) -> Result<(), RustyError> {
+    let budget = runtime().await.load(budget_id).await?;
+    let mut period_ids: Vec<PeriodId> = budget.periods.iter().map(|p| p.id).collect();
+    period_ids.sort();
+    info!("Auto budgeting all {} periods", period_ids.len());
+    for period_id in period_ids {
+        if let Err(e) = auto_budget_period(user_id, budget_id, period_id).await {
+            error!(error = %e, "Could not auto budget period {}", period_id);
         }
     }
     Ok(())

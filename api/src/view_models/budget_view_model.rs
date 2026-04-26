@@ -2,6 +2,7 @@ use crate::models::{Budget, BudgetingType, Currency, MatchRule, MonthBeginsOn, P
 use crate::view_models::allocation_view_model::AllocationViewModel;
 use crate::view_models::budget_item_view_model::BudgetItemViewModel;
 use crate::view_models::budgeting_type_overview::BudgetingTypeOverview;
+use crate::view_models::period_summary::PeriodSummary;
 use crate::view_models::transaction_view_model::TransactionViewModel;
 use dioxus::logger::tracing;
 use serde::{Deserialize, Serialize};
@@ -29,6 +30,8 @@ pub struct BudgetViewModel {
     pub tags: Vec<Tag>,
     pub match_rules: Vec<MatchRule>,
     pub untagged_transaction_count: usize,
+    /// Per-period net and running deficit/surplus, sorted oldest-first.
+    pub period_summaries: Vec<PeriodSummary>,
 }
 
 impl BudgetViewModel {
@@ -169,6 +172,47 @@ impl BudgetViewModel {
             .filter(|tx| tx.tag_id.is_none() && !tx.ignored && !transfer_ids.contains(&tx.id))
             .count();
         let match_rules = budget.match_rules.iter().cloned().collect::<Vec<_>>();
+
+        // Running deficit/surplus across all periods
+        let mut sorted_periods: Vec<_> = budget.periods.iter().collect();
+        sorted_periods.sort_by_key(|p| p.id);
+        let mut running_net = crate::models::Money::zero(budget.currency);
+        let period_summaries: Vec<PeriodSummary> = sorted_periods
+            .iter()
+            .map(|period| {
+                let income: crate::models::Money = period
+                    .transactions
+                    .iter()
+                    .filter(|tx| !tx.ignored && tx.tag_id.is_some_and(|tid| {
+                        budget.items.iter().any(|item| {
+                            item.budgeting_type == BudgetingType::Income && item.tag_ids.contains(&tid)
+                        })
+                    }))
+                    .map(|tx| tx.amount)
+                    .sum();
+                let expense: crate::models::Money = period
+                    .transactions
+                    .iter()
+                    .filter(|tx| !tx.ignored && tx.tag_id.is_some_and(|tid| {
+                        budget.items.iter().any(|item| {
+                            matches!(item.budgeting_type, BudgetingType::Expense | BudgetingType::Savings)
+                                && item.tag_ids.contains(&tid)
+                        })
+                    }))
+                    .map(|tx| tx.amount.abs())
+                    .sum();
+                let net = income - expense;
+                running_net = running_net + net;
+                PeriodSummary {
+                    period_id: period.id,
+                    income_actual: income,
+                    expense_actual: expense,
+                    net,
+                    running_net,
+                }
+            })
+            .collect();
+
         tracing::info!("[perf] from_budget/total: {:?}", t.elapsed());
 
         Self {
@@ -186,6 +230,7 @@ impl BudgetViewModel {
             tags: budget.tags.clone(),
             match_rules,
             untagged_transaction_count,
+            period_summaries,
         }
     }
 }
