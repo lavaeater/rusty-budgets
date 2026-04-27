@@ -456,6 +456,41 @@
     gap: 4px;
 }
 
+.buffer-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #0369a1;
+    background: #e0f2fe;
+    border-radius: 10px;
+    padding: 1px 7px;
+    margin-left: 8px;
+    white-space: nowrap;
+}
+
+.buffer-target-field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.buffer-contribution-hint {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #0369a1;
+    white-space: nowrap;
+}
+
+.buffer-contribution-preview {
+    color: #94a3b8;
+    font-weight: 400;
+}
+
+.buffer-target-hint {
+    font-size: 0.78rem;
+    color: #94a3b8;
+    margin: 0;
+}
+
 .budget-item-edit-label {
     font-size: 0.875rem;
     font-weight: 500;
@@ -643,6 +678,19 @@
     color: #4338ca;
     font-size: 0.78rem;
     font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+}
+
+.tag-chip:hover {
+    background: #c7d2fe;
+    border-color: #818cf8;
+}
+
+.tag-chip-selected {
+    background: #667eea;
+    color: white;
+    border-color: #4f46e5;
 }
 
 .tag-chip-text {
@@ -703,4 +751,28 @@
 .tag-connect-row input {
     max-width: 140px;
     font-size: 0.8rem;
+}
+
+/* Transfer pair savings resolution */
+.transfer-savings-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 16px;
+    background: #f0fdf4;
+    border-top: 1px solid #86efac;
+    border-radius: 0 0 8px 8px;
+}
+
+.transfer-savings-hint {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #15803d;
+    font-weight: 500;
+}
+
+.transfer-savings-new-tag {
+    display: flex;
+    gap: 8px;
+    align-items: center;
 }

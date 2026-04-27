@@ -23,7 +23,7 @@ impl PartialEq for ActualItem {
     fn eq(&self, other: &Self) -> bool {
         self.id == other.id
             && self.budget_item_id == other.budget_item_id
-            && self.budgeting_type == other.budgeting_type  
+            && self.budgeting_type == other.budgeting_type
             && self.period_id == other.period_id
             && self.budgeted_amount == other.budgeted_amount
             && self.actual_amount == other.actual_amount
@@ -61,27 +61,24 @@ impl ActualItem {
 
 #[cfg(test)]
 pub mod actual_item_tests {
-    use crate::models::{ActualItem, BudgetingType, Currency};
     use crate::models::BudgetItem;
     use crate::models::Money;
     use crate::models::PeriodId;
+    use crate::models::{ActualItem, BudgetingType, Currency};
     use std::sync::Arc;
     use std::sync::Mutex;
     use uuid::Uuid;
 
     #[test]
     pub fn serde_round_trip() {
-        let budget_item = BudgetItem::new(
-            Uuid::new_v4(),
-            "Test Budget Item",
-            BudgetingType::Expense
-        );
+        let budget_item =
+            BudgetItem::new(Uuid::new_v4(), "Test Budget Item", BudgetingType::Expense);
         let actual_item = ActualItem::new(
             Uuid::new_v4(),
             &budget_item.name,
             budget_item.id,
             budget_item.budgeting_type,
-            PeriodId::new(2025,12),
+            PeriodId::new(2025, 12),
             Money::new_dollars(1000, Currency::USD),
             Money::new_dollars(1000, Currency::USD),
             None,

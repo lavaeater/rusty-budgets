@@ -5,20 +5,22 @@ members = [
     "web",
     "desktop",
     "mobile",
-    "api", "cqrs_macros",
+    "api", 
+    "cqrs_macros",
 ]
 
 [workspace.dependencies]
-dioxus = { version = "0.7.3", features = ["fullstack"] }
-lucide-dioxus = { version = "2.46.0", features = ["all-icons"] }
-uuid = { version = "1.19.0", features = ["v4", "js", "serde"] }
-chrono = { version = "0.4.42", features = ["serde"] }
+dioxus = { version = "0.7.6", features = ["fullstack"] }
+lucide-dioxus = { version = "2.577.0", features = ["all-icons"] }
+uuid = { version = "1.23.0", features = ["v4", "js", "serde"] }
+chrono = { version = "0.4.44", features = ["serde"] }
 serde = { version = "1.0.228", features = ["derive"] }
-serde_json = { version = "1.0.145" }
-thiserror = "2.0.17"
+serde_json = { version = "1.0.149" }
+thiserror = "2.0.18"
 joydb = { version = "0.1.0", features = ["json"] }
 strum = { version = "0.28.0", features = ["derive"] }
 env = "1.0.1"
+dotenvy = { version = "0.15.7" }
 
 # workspace
 ui = { path = "ui" }

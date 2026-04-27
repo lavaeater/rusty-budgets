@@ -1,14 +1,14 @@
+use crate::budget::budget_hero::BudgetState;
+use crate::budget::{BudgetItemView, NewBudgetItem};
+use crate::components::{Collapsible, CollapsibleContent, CollapsibleTrigger};
+use crate::{Button, Separator};
+use api::models::BudgetingType;
+use api::view_models::*;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use dioxus_primitives::select::*;
-use crate::components::{Collapsible, CollapsibleContent, CollapsibleTrigger};
-use uuid::Uuid;
-use api::models::BudgetingType;
-use api::view_models::*;
-use crate::{Button, Separator};
-use crate::budget::{BudgetItemView, NewBudgetItem};
 use std::cmp::Ordering;
-use crate::budget::budget_hero::BudgetState;
+use uuid::Uuid;
 
 #[derive(Clone, Copy, PartialEq, Default)]
 pub enum SortField {
@@ -37,8 +37,12 @@ pub fn BudgetingTypeCard(budgeting_type: BudgetingType) -> Element {
             .cloned()
             .collect::<Vec<_>>()
     });
-    
-    info!("Budgeting type: {}, item count: {}", budgeting_type, items.len());
+
+    info!(
+        "Budgeting type: {}, item count: {}",
+        budgeting_type,
+        items.len()
+    );
     let budgeting_type_name = use_signal(|| budgeting_type.to_string());
     let new_item_label = format!("Ny {}", budgeting_type);
     let mut show_new_item = use_signal(|| items.is_empty());
@@ -50,9 +54,18 @@ pub fn BudgetingTypeCard(budgeting_type: BudgetingType) -> Element {
         sorted.sort_by(|a, b| {
             let ordering = match sort_field() {
                 SortField::Name => a.name.cmp(&b.name),
-                SortField::BudgetedAmount => a.budgeted_amount.partial_cmp(&b.budgeted_amount).unwrap_or(Ordering::Equal),
-                SortField::ActualAmount => a.actual_amount.partial_cmp(&b.actual_amount).unwrap_or(Ordering::Equal),
-                SortField::RemainingBudget => a.remaining_budget.partial_cmp(&b.remaining_budget).unwrap_or(Ordering::Equal),
+                SortField::BudgetedAmount => a
+                    .budgeted_amount
+                    .partial_cmp(&b.budgeted_amount)
+                    .unwrap_or(Ordering::Equal),
+                SortField::ActualAmount => a
+                    .actual_amount
+                    .partial_cmp(&b.actual_amount)
+                    .unwrap_or(Ordering::Equal),
+                SortField::RemainingBudget => a
+                    .remaining_budget
+                    .partial_cmp(&b.remaining_budget)
+                    .unwrap_or(Ordering::Equal),
             };
             match sort_direction() {
                 SortDirection::Ascending => ordering,
@@ -130,9 +143,7 @@ pub fn BudgetingTypeCard(budgeting_type: BudgetingType) -> Element {
             }
         }
         for item in sorted_items() {
-            BudgetItemView { 
-                key: "{item.item_id}",
-                item: item.clone() }
+            BudgetItemView { key: "{item.item_id}", item: item.clone() }
             Separator {
                 style: "margin: 15px 0; width: 50%;",
                 horizontal: true,

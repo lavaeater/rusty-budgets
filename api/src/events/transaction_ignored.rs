@@ -1,8 +1,8 @@
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
-use crate::models::{Budget, PeriodId, BudgetingType};
+use crate::models::{Budget, BudgetingType, PeriodId};
 use core::fmt::Display;
-use dioxus::logger::tracing;
 use cqrs_macros::DomainEvent;
+use dioxus::logger::tracing;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -11,7 +11,7 @@ use uuid::Uuid;
 #[domain_event(aggregate = "Budget")]
 pub struct TransactionIgnored {
     budget_id: Uuid,
-    tx_id: Uuid
+    tx_id: Uuid,
 }
 
 impl Display for TransactionIgnored {
@@ -33,28 +33,29 @@ impl TransactionIgnoredHandler for Budget {
         let tx_amount = tx.amount;
         let previous_actual_id = tx.actual_id;
         let period_id = PeriodId::from_date(tx.date, self.month_begins_on());
-        
+
         if let Some(previous_actual_id) = previous_actual_id {
-            let previous_actual = self.with_period(period_id).get_actual(previous_actual_id).unwrap();
+            let previous_actual = self
+                .with_period(period_id)
+                .get_actual(previous_actual_id)
+                .unwrap();
             let bt = previous_actual.budgeting_type;
-            self.with_period_mut(period_id).mutate_actual(previous_actual_id, |a| {
-                let adjusted_amount = if cost_types.contains(&bt) {
-                    -tx_amount
-                } else {
-                    tx_amount
-                };
-                a.actual_amount -= adjusted_amount;
-            });
+            self.with_period_mut(period_id)
+                .mutate_actual(previous_actual_id, |a| {
+                    let adjusted_amount = if cost_types.contains(&bt) {
+                        -tx_amount
+                    } else {
+                        tx_amount
+                    };
+                    a.actual_amount -= adjusted_amount;
+                });
         }
 
         self.set_transaction_ignored(event.tx_id);
         event.tx_id
     }
 
-    fn ignore_transaction_impl(
-        &self,
-        tx_id: Uuid
-    ) -> Result<TransactionIgnored, CommandError> {
+    fn ignore_transaction_impl(&self, tx_id: Uuid) -> Result<TransactionIgnored, CommandError> {
         if self.contains_transaction(tx_id) {
             Ok(TransactionIgnored {
                 budget_id: self.id,
@@ -63,9 +64,10 @@ impl TransactionIgnoredHandler for Budget {
         } else {
             let bork = &self.all_transactions();
             tracing::error!("These are the transactions: {:?}", bork);
-            Err(CommandError::Validation(
-                format!("Transaction {} does not exist", tx_id),
-            ))
+            Err(CommandError::Validation(format!(
+                "Transaction {} does not exist",
+                tx_id
+            )))
         }
     }
 }

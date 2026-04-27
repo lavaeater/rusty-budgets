@@ -1,34 +1,62 @@
-use core::fmt::Display;
+use crate::models::actual_item::ActualItem;
 use crate::models::{BankTransaction, BudgetItem};
+use core::fmt::Display;
+use dioxus::logger::tracing;
+use iter_tools::Itertools;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::hash::{DefaultHasher, Hash, Hasher};
-use dioxus::logger::tracing;
-use iter_tools::Itertools;
-use once_cell::sync::Lazy;
 use uuid::Uuid;
-use crate::models::actual_item::ActualItem;
+use once_cell::sync::Lazy;
 
-#[derive(Debug, Clone, Serialize, Deserialize, Hash, Eq, PartialEq)]
-pub struct  MatchRule {
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MatchRule {
+    #[serde(default = "Uuid::new_v4")]
+    pub id: Uuid,
     pub transaction_key: Vec<String>,
     pub item_key: Vec<String>,
-    pub always_apply: bool
+    pub always_apply: bool,
+    #[serde(default)]
+    pub tag_id: Option<Uuid>,
 }
+
+impl Hash for MatchRule {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.transaction_key.hash(state);
+        self.item_key.hash(state);
+        self.always_apply.hash(state);
+        self.tag_id.hash(state);
+    }
+}
+
+impl PartialEq for MatchRule {
+    fn eq(&self, other: &Self) -> bool {
+        self.transaction_key == other.transaction_key
+            && self.item_key == other.item_key
+            && self.always_apply == other.always_apply
+            && self.tag_id == other.tag_id
+    }
+}
+
+impl Eq for MatchRule {}
 
 impl Display for MatchRule {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "MatchRule {{ transaction_key: {:?}, item_name: {:?}, always_apply: {} }}", self.transaction_key, self.item_key, self.always_apply)
+        write!(
+            f,
+            "MatchRule {{ transaction_key: {:?}, item_name: {:?}, always_apply: {} }}",
+            self.transaction_key, self.item_key, self.always_apply
+        )
     }
 }
 
 // Default stopwords to filter out from tokenized descriptions
 static DEFAULT_STOPWORDS: Lazy<HashSet<&'static str>> = Lazy::new(|| {
     /*
-                "orebro",
-            "vastha,",
+               "orebro",
+           "vastha,",
 
-     */
+    */
     let mut set = HashSet::new();
     set.insert("kontaktlös");
     set.insert("zettle");
@@ -41,17 +69,15 @@ static DEFAULT_STOPWORDS: Lazy<HashSet<&'static str>> = Lazy::new(|| {
 // Default stopwords to filter out from tokenized descriptions
 static DEFAULT_PLACE_NAMES: Lazy<HashSet<&'static str>> = Lazy::new(|| {
     /*
-                "orebro",
-            "vastha,",
+               "orebro",
+           "vastha,",
 
-     */
+    */
     let mut set = HashSet::new();
     set.insert("orebro");
     set.insert("vastha");
     set
 });
-
-
 
 /// Checks if a string matches a date pattern (YYYY-MM-DD or similar)
 fn is_date_pattern(s: &str) -> bool {
@@ -69,9 +95,12 @@ fn is_date_pattern(s: &str) -> bool {
         };
 
         if parts.len() == 3 {
-            return parts[0].len() == 4 && parts[0].chars().all(|c| c.is_numeric())
-                && parts[1].len() == 2 && parts[1].chars().all(|c| c.is_numeric())
-                && parts[2].len() == 2 && parts[2].chars().all(|c| c.is_numeric());
+            return parts[0].len() == 4
+                && parts[0].chars().all(|c| c.is_numeric())
+                && parts[1].len() == 2
+                && parts[1].chars().all(|c| c.is_numeric())
+                && parts[2].len() == 2
+                && parts[2].chars().all(|c| c.is_numeric());
         }
     }
 
@@ -144,9 +173,9 @@ pub fn tokenize_description_with_stopwords(
         .split_whitespace()
         .map(|s| s.to_string())
         .filter(|token| {
-            !is_date_pattern(token) &&
-                !DEFAULT_STOPWORDS.contains(token.as_str()) &&
-                !custom_stopwords.contains(token)
+            !is_date_pattern(token)
+                && !DEFAULT_STOPWORDS.contains(token.as_str())
+                && !custom_stopwords.contains(token)
         })
         .collect()
 }
@@ -159,7 +188,7 @@ mod tests {
     fn test_tokenize_description_new_china_trading() {
         let description = "2025-11-26 NEW CHINA TRADING, OREBRO";
         let tokens = tokenize_description(description);
-        
+
         // Date "2025-11-26" should be filtered out
         // "OREBRO" should be filtered out (stopword)
         // Remaining tokens should be lowercase
@@ -169,8 +198,13 @@ mod tests {
 
 impl MatchRule {
     pub fn matches_transaction(&self, transaction: &BankTransaction) -> bool {
+        if self.transaction_key.is_empty() {
+            return false;
+        }
         let tokenized_transaction_description = tokenize_description(&transaction.description);
-        self.transaction_key == tokenized_transaction_description
+        self.transaction_key
+            .iter()
+            .all(|token| tokenized_transaction_description.contains(token))
     }
 
     pub fn matches_actual(&self, actual: &ActualItem) -> bool {
@@ -182,22 +216,39 @@ impl MatchRule {
         let tokenized_item_name = tokenize_description(&item.name);
         self.item_key == tokenized_item_name
     }
-    
-    pub fn create_rule_for_transaction_and_item(transaction: &BankTransaction, item: &ActualItem) -> MatchRule {
+
+    pub fn create_rule_for_transaction_and_item(
+        transaction: &BankTransaction,
+        item: &ActualItem,
+    ) -> MatchRule {
         let transaction_key = Self::create_transaction_key(transaction);
         MatchRule {
+            id: Uuid::new_v4(),
             transaction_key,
             item_key: Self::create_item_key(item),
-            always_apply: true
+            always_apply: true,
+            tag_id: None,
         }
     }
-    
+
+    pub fn create_rule_for_transaction_and_tag(
+        transaction: &BankTransaction,
+        tag_id: Uuid,
+    ) -> MatchRule {
+        MatchRule {
+            id: Uuid::new_v4(),
+            transaction_key: Self::create_transaction_key(transaction),
+            item_key: Vec::new(),
+            always_apply: true,
+            tag_id: Some(tag_id),
+        }
+    }
+
     pub fn create_item_key(item: &ActualItem) -> Vec<String> {
         tokenize_description(&item.item_name)
     }
-    
+
     pub fn create_transaction_key(transaction: &BankTransaction) -> Vec<String> {
         tokenize_description(&transaction.description)
     }
 }
-

@@ -81,7 +81,6 @@ pub struct CollapsibleTriggerProps {
     pub children: Element,
 }
 
-
 #[component]
 pub fn CollapsibleTrigger(props: CollapsibleTriggerProps) -> Element {
     rsx! {

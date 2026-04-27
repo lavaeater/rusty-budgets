@@ -1,16 +1,16 @@
-use dioxus::prelude::*;
-use strum::{EnumCount, IntoEnumIterator};
+use crate::*;
 use api::models::BudgetItem;
 use api::view_models::BudgetItemViewModel;
-use crate::*;
+use dioxus::prelude::*;
+use strum::{EnumCount, IntoEnumIterator};
 
 #[component]
-pub fn ItemSelector(items: Vec<BudgetItemViewModel>, on_change: EventHandler<Option<BudgetItemViewModel>>) -> Element {
+pub fn ItemSelector(
+    items: Vec<BudgetItemViewModel>,
+    on_change: EventHandler<Option<BudgetItemViewModel>>,
+) -> Element {
     items.sort_by_key(|it| it.name.clone());
-    let selector_items = items
-        .into_iter()
-        .enumerate()
-        .map(|(ix, it)| {
+    let selector_items = items.into_iter().enumerate().map(|(ix, it)| {
         rsx! {
             SelectOption::<BudgetItemViewModel> {
                 key: "{it.item_id}",

@@ -1,4 +1,3 @@
-use dioxus::fullstack;
 use dioxus::logger::tracing::Level;
 use dioxus::prelude::*;
 

@@ -1,9 +1,9 @@
-use uuid::Uuid;
-use serde::{Deserialize, Serialize};
-use cqrs_macros::DomainEvent;
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
-use crate::models::{Budget, MonthBeginsOn};
 use crate::models::Currency;
+use crate::models::{Budget, MonthBeginsOn};
+use cqrs_macros::DomainEvent;
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]
 #[domain_event(aggregate = "Budget")]
@@ -45,7 +45,9 @@ impl BudgetCreatedHandler for Budget {
                 currency,
             })
         } else {
-            Err(CommandError::Validation("Budget already exists".to_string()))
+            Err(CommandError::Validation(
+                "Budget already exists".to_string(),
+            ))
         }
     }
 }

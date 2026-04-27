@@ -2,21 +2,25 @@ use crate::cqrs::framework::Aggregate;
 use crate::cqrs::framework::DomainEvent;
 use crate::events::*;
 use crate::models::budget_item::{BudgetItem, Periodicity};
+use crate::models::budget_period::RuleMatch;
 use crate::models::budget_period_id::PeriodId;
 use crate::models::budgeting_type::BudgetingType;
 use crate::models::money::{Currency, Money};
 use crate::models::rule_packages::RulePackages;
-use crate::models::{ActualItem, BankAccount, BankTransaction, BudgetPeriod, MatchRule, MonthBeginsOn, TransactionAllocation};
-use crate::models::budget_period::RuleMatch;
+use crate::models::{
+    ActualItem, BankAccount, BankTransaction, BudgetPeriod, MatchRule, MonthBeginsOn, Tag,
+    TransactionAllocation,
+};
 use crate::pub_events_enum;
-use crate::view_models::BudgetingTypeOverview;
+use crate::view_models::{BudgetingTypeOverview, TagSummary};
 use chrono::{DateTime, Utc};
-use joydb::Model;
+use joydb::Model as JoyModel;
 use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeStruct;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::HashSet;
 use std::sync::{Arc, Mutex};
+use serde_json::Value;
 use uuid::Uuid;
 
 pub_events_enum! {
@@ -36,11 +40,19 @@ pub_events_enum! {
         AllocationCreated,
         AllocationDeleted,
         BankAccountCreated,
+        TagCreated,
+        TagModified,
+        TransactionTagged,
+        TransactionUntagged,
+        RuleModified,
+        RuleDeleted,
+        ItemBufferSet,
+        TransferPairRejected,
     }
 }
 
 // --- Budget Domain ---
-#[derive(Debug, Clone, Serialize, Deserialize, Model)]
+#[derive(Debug, Clone, Serialize, Deserialize, JoyModel)]
 pub struct Budget {
     pub id: Uuid,
     pub name: String,
@@ -56,10 +68,14 @@ pub struct Budget {
     pub updated_at: DateTime<Utc>,
     pub default_budget: bool,
     pub last_event: i64,
-    pub version: u64,
+    pub version: i64,
     pub currency: Currency,
     #[serde(default)]
     pub accounts: Vec<BankAccount>,
+    #[serde(default)]
+    pub tags: Vec<Tag>,
+    #[serde(default)]
+    pub rejected_transfer_pairs: HashSet<(Uuid, Uuid)>,
 }
 
 impl Default for Budget {
@@ -81,6 +97,8 @@ impl Default for Budget {
             month_begins_on: Default::default(),
             transaction_hashes: Default::default(),
             accounts: Default::default(),
+            tags: Default::default(),
+            rejected_transfer_pairs: Default::default(),
         }
     }
 }
@@ -98,11 +116,15 @@ impl Budget {
     }
 
     pub fn get_account(&self, account_number: &str) -> Option<&BankAccount> {
-        self.accounts.iter().find(|a| a.account_number == account_number)
+        self.accounts
+            .iter()
+            .find(|a| a.account_number == account_number)
     }
 
     pub fn has_account(&self, account_number: &str) -> bool {
-        self.accounts.iter().any(|a| a.account_number == account_number)
+        self.accounts
+            .iter()
+            .any(|a| a.account_number == account_number)
     }
 
     pub fn add_account(&mut self, account: BankAccount) {
@@ -235,7 +257,7 @@ impl Budget {
         id: Uuid,
         name: Option<String>,
         budgeting_type: Option<BudgetingType>,
-        tags: Option<Vec<String>>,
+        tag_ids: Option<Vec<Uuid>>,
         periodicity: Option<Periodicity>,
     ) {
         let mut was_updated = false;
@@ -246,8 +268,8 @@ impl Budget {
             if let Some(item_type) = budgeting_type {
                 item.budgeting_type = item_type;
             }
-            if let Some(tags) = tags {
-                item.tags = tags;
+            if let Some(tag_ids) = tag_ids {
+                item.tag_ids = tag_ids;
             }
             if let Some(periodicity) = periodicity {
                 item.periodicity = periodicity;
@@ -258,6 +280,125 @@ impl Budget {
         if was_updated {
             self.update_actuals_for_item(id);
         }
+    }
+
+    pub fn contains_tag_with_name(&self, name: &str) -> bool {
+        self.tags.iter().any(|t| t.name == name)
+    }
+
+    pub fn contains_tag(&self, tag_id: Uuid) -> bool {
+        self.tags.iter().any(|t| t.id == tag_id)
+    }
+
+    pub fn get_tags(&self) -> &Vec<Tag> {
+        &self.tags
+    }
+
+    pub fn get_active_tags(&self) -> Vec<&Tag> {
+        self.tags.iter().filter(|t| !t.deleted).collect()
+    }
+
+    /// Compute average monthly and yearly spend per active tag, across all transaction history.
+    ///
+    /// The denominator is the number of calendar months spanned by the full transaction dataset
+    /// (from earliest to latest transaction, inclusive). Amounts are signed — expenses are
+    /// negative, income positive.
+    pub fn get_tag_summaries(&self) -> Vec<TagSummary> {
+        use chrono::Datelike;
+        use std::collections::HashMap;
+
+        let all_txs: Vec<&BankTransaction> = self
+            .periods
+            .iter()
+            .flat_map(|p| p.transactions.iter())
+            .filter(|tx| !tx.ignored)
+            .collect();
+
+        if all_txs.is_empty() {
+            return vec![];
+        }
+
+        let min_date = all_txs.iter().map(|tx| tx.date).min().unwrap();
+        let max_date = all_txs.iter().map(|tx| tx.date).max().unwrap();
+        let months_covered = {
+            let months = (max_date.year() as i64 - min_date.year() as i64) * 12
+                + (max_date.month() as i64 - min_date.month() as i64)
+                + 1;
+            months.max(1)
+        };
+
+        let mut per_tag: HashMap<Uuid, (Money, u32)> = HashMap::new();
+        for tx in &all_txs {
+            if let Some(tag_id) = tx.tag_id {
+                let entry = per_tag
+                    .entry(tag_id)
+                    .or_insert((Money::zero(self.currency), 0));
+                entry.0 += tx.amount;
+                entry.1 += 1;
+            }
+        }
+
+        self.tags
+            .iter()
+            .filter(|t| !t.deleted)
+            .map(|tag| {
+                let (total, count) = per_tag
+                    .get(&tag.id)
+                    .copied()
+                    .unwrap_or((Money::zero(self.currency), 0));
+                let average_monthly = total.divide(months_covered);
+                let average_yearly = average_monthly.multiply(12);
+                TagSummary {
+                    tag_id: tag.id,
+                    name: tag.name.clone(),
+                    periodicity: tag.periodicity,
+                    average_monthly,
+                    average_yearly,
+                    transaction_count: count,
+                }
+            })
+            .collect()
+    }
+
+    pub fn get_next_untagged_transaction(&self) -> Option<&BankTransaction> {
+        self.periods
+            .iter()
+            .flat_map(|p| p.transactions.iter())
+            .find(|tx| tx.tag_id.is_none() && !tx.ignored)
+    }
+
+    pub fn evaluate_tag_rules(&self) -> Vec<(Uuid, Uuid)> {
+        let mut matches = Vec::new();
+        for period in &self.periods {
+            for tx in &period.transactions {
+                if tx.tag_id.is_some() || tx.ignored {
+                    continue;
+                }
+                for rule in &self.match_rules {
+                    if let Some(tag_id) = rule.tag_id
+                        && rule.matches_transaction(tx)
+                    {
+                        matches.push((tx.id, tag_id));
+                        break;
+                    }
+                }
+            }
+        }
+        matches
+    }
+
+    pub fn preview_rule_matches(&self, tx_id: Uuid) -> Vec<BankTransaction> {
+        let tx = match self.get_transaction(tx_id) {
+            Some(t) => t,
+            None => return Vec::new(),
+        };
+        let key = MatchRule::create_transaction_key(tx);
+        self.periods
+            .iter()
+            .flat_map(|p| p.transactions.iter())
+            .filter(|t| t.id != tx_id && MatchRule::create_transaction_key(t) == key)
+            .cloned()
+            .collect()
     }
 
     pub fn get_budgeted_by_type(
@@ -336,6 +477,7 @@ impl Budget {
                     .filter(|t| {
                         !t.ignored
                             && t.actual_id.is_none()
+                            && t.tag_id.is_none()
                             && !p.allocations.iter().any(|a| a.transaction_id == t.id)
                     })
                     .collect()
@@ -416,22 +558,39 @@ impl Budget {
             .iter()
             .flat_map(|p| p.allocations.iter().map(|a| a.transaction_id))
             .collect();
-        let unallocated: Vec<&&BankTransaction> = all_txs
-            .iter()
+        let unallocated: Vec<&BankTransaction> = all_txs
+            .into_iter()
             .filter(|tx| !tx.ignored && tx.actual_id.is_none() && !allocated_ids.contains(&tx.id))
             .collect();
+
+        // Group by abs(cents) so each tx only checks candidates with the matching amount.
+        let mut by_amount: std::collections::HashMap<i64, Vec<&BankTransaction>> =
+            std::collections::HashMap::new();
+        for tx in &unallocated {
+            by_amount
+                .entry(tx.amount.abs().amount_in_cents())
+                .or_default()
+                .push(tx);
+        }
+
         let mut pairs: Vec<(Uuid, Uuid)> = Vec::new();
         let mut used: std::collections::HashSet<Uuid> = std::collections::HashSet::new();
         for tx in &unallocated {
             if used.contains(&tx.id) {
                 continue;
             }
-            if let Some(counterpart) = unallocated.iter().find(|other| {
+            let candidates = match by_amount.get(&tx.amount.abs().amount_in_cents()) {
+                Some(c) => c,
+                None => continue,
+            };
+            if let Some(counterpart) = candidates.iter().find(|other| {
                 other.id != tx.id
                     && !used.contains(&other.id)
                     && other.account_number != tx.account_number
                     && other.amount == -tx.amount
                     && (other.date - tx.date).num_days().abs() <= 3
+                    && !self.rejected_transfer_pairs.contains(&(tx.id, other.id))
+                    && !self.rejected_transfer_pairs.contains(&(other.id, tx.id))
             }) {
                 used.insert(tx.id);
                 used.insert(counterpart.id);
@@ -491,20 +650,13 @@ impl Budget {
             .unwrap_or_default()
     }
 
-    pub fn allocations_for_transaction(
-        &self,
-        transaction_id: Uuid,
-    ) -> Vec<&TransactionAllocation> {
+    pub fn allocations_for_transaction(&self, transaction_id: Uuid) -> Vec<&TransactionAllocation> {
         self.get_period_for_transaction(transaction_id)
             .map(|p| p.allocations_for_transaction(transaction_id))
             .unwrap_or_default()
     }
 
-    pub fn allocated_amount_for_actual(
-        &self,
-        period_id: PeriodId,
-        actual_id: Uuid,
-    ) -> Money {
+    pub fn allocated_amount_for_actual(&self, period_id: PeriodId, actual_id: Uuid) -> Money {
         self.get_period(period_id)
             .map(|p| p.allocated_amount_for_actual(actual_id))
             .unwrap_or(Money::zero(self.currency))
@@ -539,7 +691,7 @@ impl Aggregate for Budget {
         }
     }
 
-    fn version(&self) -> u64 {
+    fn version(&self) -> i64 {
         self.version
     }
 }

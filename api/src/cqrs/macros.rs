@@ -1,4 +1,3 @@
-
 /// Macro to define an enum of events with optional derives, automatic `From` impls, and `apply` dispatcher
 #[macro_export]
 macro_rules! pub_events_enum {
@@ -26,7 +25,7 @@ macro_rules! pub_events_enum {
         )*
 
         // Auto-generated DomainEvent trait implementation
-        impl<A: Aggregate> DomainEvent<A> for $name 
+        impl<A: Aggregate> DomainEvent<A> for $name
         where
         $(
             $variant: DomainEvent<A>,
@@ -38,7 +37,7 @@ macro_rules! pub_events_enum {
                     )*
                 }
             }
-            
+
             fn apply(&self, state: &mut A)-> Uuid {
                 match self {
                     $(

@@ -39,7 +39,6 @@ pub struct DialogDescriptionProps {
     children: Element,
 }
 
-
 #[derive(Props, Clone, PartialEq)]
 pub struct DialogRootProps {
     /// The ID of the dialog root element.

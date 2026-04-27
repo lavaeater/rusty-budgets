@@ -1,0 +1,260 @@
+.create-budget-items-view {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.create-budget-items-done {
+    text-align: center;
+    padding: 30px;
+}
+
+/* Tag summary table */
+.cbi-tag-table {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.cbi-tag-header {
+    display: grid;
+    grid-template-columns: 32px 1fr 160px 130px 130px;
+    padding: 10px 16px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+    gap: 8px;
+}
+
+.cbi-col-header {
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.cbi-col-header:hover {
+    color: #64748b;
+}
+
+.cbi-col-header.sorted {
+    color: #4338ca;
+}
+
+.cbi-col-header.sorted.asc::after {
+    content: ' ↑';
+}
+
+.cbi-col-header.sorted.desc::after {
+    content: ' ↓';
+}
+
+.cbi-tag-row {
+    display: grid;
+    grid-template-columns: 32px 1fr 160px 130px 130px;
+    padding: 12px 16px;
+    gap: 8px;
+    align-items: center;
+    border-bottom: 1px solid #f1f5f9;
+    cursor: pointer;
+    transition: background 0.12s;
+}
+
+.cbi-tag-row:last-child {
+    border-bottom: none;
+}
+
+.cbi-tag-row:hover {
+    background: #f8fafc;
+}
+
+.cbi-tag-row.selected {
+    background: #eef2ff;
+}
+
+.cbi-tag-checkbox {
+    width: 18px;
+    height: 18px;
+    accent-color: #667eea;
+    cursor: pointer;
+}
+
+.cbi-tag-name {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #1e293b;
+}
+
+.cbi-tag-name-editable {
+    cursor: text;
+    border-radius: 4px;
+    padding: 1px 3px;
+    margin: -1px -3px;
+    transition: background 0.1s;
+}
+
+.cbi-tag-name-editable:hover {
+    background: #e0e7ff;
+}
+
+.cbi-tag-name-input {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #1e293b;
+    border: 1px solid #a5b4fc;
+    border-radius: 4px;
+    padding: 1px 5px;
+    outline: none;
+    background: white;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.cbi-tag-name-input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.cbi-periodicity-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    background: #eef2ff;
+    color: #4338ca;
+}
+
+.cbi-periodicity-badge.annual {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.cbi-periodicity-badge.quarterly {
+    background: #ecfdf5;
+    color: #065f46;
+}
+
+.cbi-periodicity-badge.oneoff {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+/* Inline periodicity dropdown — styled to look like the badge */
+.cbi-periodicity-select {
+    border: none;
+    border-radius: 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    cursor: pointer;
+    appearance: auto;
+    max-width: 140px;
+}
+
+/* Match badge colours by reusing the badge modifier classes */
+.cbi-periodicity-badge.cbi-periodicity-select {
+    background: #eef2ff;
+    color: #4338ca;
+}
+
+.cbi-periodicity-badge.annual.cbi-periodicity-select {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.cbi-periodicity-badge.quarterly.cbi-periodicity-select {
+    background: #ecfdf5;
+    color: #065f46;
+}
+
+.cbi-periodicity-badge.oneoff.cbi-periodicity-select {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.cbi-money {
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+    text-align: right;
+}
+
+.cbi-money.negative {
+    color: #dc2626;
+}
+
+.cbi-money.positive {
+    color: #16a34a;
+}
+
+.cbi-money.neutral {
+    color: #64748b;
+}
+
+/* Create item panel */
+.cbi-create-panel {
+    background: white;
+    border: 1px solid #c7d2fe;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+}
+
+.cbi-create-panel-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    margin: 0 0 14px 0;
+}
+
+.cbi-create-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.cbi-create-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cbi-create-field label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.cbi-type-select {
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: #334155;
+    background: white;
+    cursor: pointer;
+    min-width: 140px;
+}
+
+.cbi-selected-total {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin-top: 10px;
+}
+
+.cbi-selected-total strong {
+    color: #1e293b;
+}

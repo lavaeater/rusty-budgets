@@ -1,33 +1,34 @@
-use crate::models::{
-    ActualItem, BudgetItem, Currency, Money,
-    PeriodId,
-};
+use crate::models::{ActualItem, BudgetItem, Currency, Money, PeriodId};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-mod budget_item_view_model;
+mod allocation_view_model;
 mod budget_item_status;
-mod transaction_view_model;
+mod budget_item_view_model;
 mod budget_view_model;
 mod budgeting_type_overview;
-mod allocation_view_model;
+mod period_summary;
 pub mod rule;
+mod tag_summary;
+mod transaction_view_model;
 pub mod value_kind;
 
-pub use budgeting_type_overview::BudgetingTypeOverview;
-pub use rule::Rule;
-pub use value_kind::ValueKind;
-pub use budget_item_view_model::BudgetItemViewModel;
-pub use transaction_view_model::TransactionViewModel;
-pub use budget_view_model::{BudgetViewModel, TransferPair};
-pub use budget_item_status::BudgetItemStatus;
 pub use allocation_view_model::AllocationViewModel;
+pub use budget_item_status::BudgetItemStatus;
+pub use budget_item_view_model::BudgetItemViewModel;
+pub use budget_view_model::{BudgetViewModel, TransferPair};
+pub use budgeting_type_overview::BudgetingTypeOverview;
+pub use period_summary::PeriodSummary;
+pub use rule::Rule;
+pub use tag_summary::TagSummary;
+pub use transaction_view_model::TransactionViewModel;
+pub use value_kind::ValueKind;
 
 #[cfg(test)]
 #[test]
 fn test_calculate_rules() {
     use crate::models::BudgetingType::*;
-    use std::sync::{Arc, Mutex};
     use rule::Rule::*;
+    use std::sync::{Arc, Mutex};
     use value_kind::ValueKind;
     let period_id = PeriodId::new(2025, 12);
     let budget_items = [

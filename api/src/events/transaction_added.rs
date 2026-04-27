@@ -1,7 +1,7 @@
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
 use crate::models::Budget;
 use crate::models::Money;
-use crate::models::{get_transaction_hash, BankTransaction, PeriodId};
+use crate::models::{BankTransaction, PeriodId, get_transaction_hash};
 use chrono::{DateTime, Utc};
 use cqrs_macros::DomainEvent;
 use dioxus::logger::tracing;

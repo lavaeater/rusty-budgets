@@ -1,8 +1,8 @@
+use crate::models::{BankTransaction, Money, strip_dates};
+use crate::view_models::AllocationViewModel;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
-use crate::models::{strip_dates, BankTransaction, Money};
-use crate::view_models::AllocationViewModel;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct TransactionViewModel {

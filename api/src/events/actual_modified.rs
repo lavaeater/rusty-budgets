@@ -1,7 +1,7 @@
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
-use crate::models::{Budget, PeriodId};
 use crate::models::BudgetingType;
 use crate::models::Money;
+use crate::models::{Budget, PeriodId};
 use cqrs_macros::DomainEvent;
 use dioxus::logger::tracing;
 use serde::{Deserialize, Serialize};
@@ -22,7 +22,7 @@ pub struct ActualModified {
 impl ActualModifiedHandler for Budget {
     fn apply_modify_actual(&mut self, event: &ActualModified) -> Uuid {
         self.with_period_mut(event.period_id)
-            .mutate_actual(event.actual_id, | actual| {
+            .mutate_actual(event.actual_id, |actual| {
                 if let Some(budgeted_amount) = event.budgeted_amount {
                     actual.budgeted_amount = budgeted_amount;
                 }

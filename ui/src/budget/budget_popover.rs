@@ -1,7 +1,6 @@
 use dioxus::prelude::*;
 use dioxus_primitives::popover::*;
 
-
 #[component]
 pub fn BudgetPopover(max_amount: f32) -> Element {
     let mut open = use_signal(|| false);

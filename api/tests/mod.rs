@@ -1,12 +1,12 @@
+use api::api_error::RustyError;
 use api::cqrs::framework::Runtime;
-use api::cqrs::runtime::JoyDbBudgetRuntime;
+use api::cqrs::runtime::{BudgetCommandsTrait, JoyDbBudgetRuntime};
 use api::import::import_from_skandia_excel;
 use api::models::*;
 use chrono::{DateTime, NaiveDate, Utc};
 use std::collections::HashSet;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use uuid::Uuid;
-use api::api_error::RustyError;
 
 #[cfg(test)]
 #[test]
@@ -26,7 +26,7 @@ pub fn create_budget_test() -> Result<(), RustyError> {
     assert!(res.default_budget);
     assert_eq!(res.currency, Currency::SEK);
     assert_eq!(res.version, 1);
-    
+
     let ser = serde_json::to_string(&res)?;
     let _: Budget = serde_json::from_str(&ser)?;
 
@@ -152,7 +152,7 @@ pub fn connect_bank_transaction() -> Result<(), RustyError> {
     let period_id = PeriodId::from_date(now, MonthBeginsOn::PreviousMonthWorkDayBefore(25));
     let actual_id = rt.add_actual(user_id, budget_id, item_id, hundred_money, period_id)?;
 
-    let tx_id= rt.add_transaction(
+    let tx_id = rt.add_transaction(
         user_id,
         budget_id,
         &bank_account_number,
@@ -182,7 +182,7 @@ pub fn add_bank_transaction() -> Result<(), RustyError> {
     let user_id = Uuid::new_v4();
     let bank_account_number = "1234567890".to_string();
 
-    let budget_id= rt.create_budget(
+    let budget_id = rt.create_budget(
         user_id,
         "Test Budget",
         true,
@@ -314,7 +314,6 @@ pub fn reconnect_bank_transaction() -> Result<(), RustyError> {
         period_id,
     )?;
 
-
     let tx_id = rt.add_transaction(
         user_id,
         budget_id,
@@ -325,8 +324,7 @@ pub fn reconnect_bank_transaction() -> Result<(), RustyError> {
         now,
     )?;
 
-    let _returned_tx_id =
-        rt.connect_transaction(user_id, budget_id, tx_id, original_id)?;
+    let _returned_tx_id = rt.connect_transaction(user_id, budget_id, tx_id, original_id)?;
 
     let expected_money = Money::new_dollars(100, Currency::SEK);
 
@@ -378,7 +376,13 @@ pub fn reallocate_item_funds() -> Result<(), RustyError> {
     let now = Utc::now();
     let period_id = PeriodId::from_date(now, MonthBeginsOn::default());
 
-    let budget_id = rt.create_budget(user_id,"Test Budget", true, MonthBeginsOn::default(), Currency::SEK)?;
+    let budget_id = rt.create_budget(
+        user_id,
+        "Test Budget",
+        true,
+        MonthBeginsOn::default(),
+        Currency::SEK,
+    )?;
 
     let from_item_id = rt.add_item(
         user_id,
@@ -418,9 +422,18 @@ pub fn reallocate_item_funds() -> Result<(), RustyError> {
         Money::new_dollars(50, Currency::SEK),
     )?;
     let mut budget = rt.load(budget_id)?;
-    let from_item = budget.with_period(period_id).get_actual(from_actual_id).unwrap();
-    assert_eq!(from_item.budgeted_amount, Money::new_dollars(50, Currency::SEK));
-    let to_item = budget.with_period(period_id).get_actual(to_actual_id).unwrap();
+    let from_item = budget
+        .with_period(period_id)
+        .get_actual(from_actual_id)
+        .unwrap();
+    assert_eq!(
+        from_item.budgeted_amount,
+        Money::new_dollars(50, Currency::SEK)
+    );
+    let to_item = budget
+        .with_period(period_id)
+        .get_actual(to_actual_id)
+        .unwrap();
     assert_eq!(
         to_item.budgeted_amount,
         Money::new_dollars(100, Currency::SEK)
@@ -428,8 +441,19 @@ pub fn reallocate_item_funds() -> Result<(), RustyError> {
     Ok(())
 }
 
-pub fn create_budget_with_items(rt: &JoyDbBudgetRuntime, user_id: Uuid, budget_name: &str, items: Vec<(String, BudgetingType, Money, PeriodId)>) -> Result<(Uuid, Vec<(Uuid, Uuid)>), RustyError> {
-    let budget_id = rt.create_budget(user_id, budget_name, true, MonthBeginsOn::default(), Currency::SEK)?;
+pub fn create_budget_with_items(
+    rt: &JoyDbBudgetRuntime,
+    user_id: Uuid,
+    budget_name: &str,
+    items: Vec<(String, BudgetingType, Money, PeriodId)>,
+) -> Result<(Uuid, Vec<(Uuid, Uuid)>), RustyError> {
+    let budget_id = rt.create_budget(
+        user_id,
+        budget_name,
+        true,
+        MonthBeginsOn::default(),
+        Currency::SEK,
+    )?;
     let mut item_ids = Vec::new();
     for item in items {
         let item_id = rt.add_item(user_id, budget_id, item.0, item.1)?;
@@ -444,8 +468,18 @@ pub fn adjust_item_funds() -> Result<(), RustyError> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
     let user_id = Uuid::new_v4();
     let period_id = PeriodId::from_date(Utc::now(), MonthBeginsOn::default());
-    
-    let (budget_id, items) = create_budget_with_items(&rt, user_id, "Test Budget", vec![("Hyra".to_string(), BudgetingType::Expense, Money::new_dollars(100, Currency::SEK), period_id)])?;
+
+    let (budget_id, items) = create_budget_with_items(
+        &rt,
+        user_id,
+        "Test Budget",
+        vec![(
+            "Hyra".to_string(),
+            BudgetingType::Expense,
+            Money::new_dollars(100, Currency::SEK),
+            period_id,
+        )],
+    )?;
     let (_, actual_id) = items.first().unwrap();
     let _ = rt.adjust_budgeted_amount(
         user_id,
@@ -454,14 +488,16 @@ pub fn adjust_item_funds() -> Result<(), RustyError> {
         period_id,
         Money::new_dollars(-50, Currency::SEK),
     )?;
-    
+
     let mut budget = rt.load(budget_id)?;
-    
-    let item = budget.with_period(period_id).get_actual(*actual_id).unwrap();
+
+    let item = budget
+        .with_period(period_id)
+        .get_actual(*actual_id)
+        .unwrap();
     assert_eq!(item.budgeted_amount, Money::new_dollars(50, Currency::SEK));
     Ok(())
 }
-
 
 #[test]
 pub fn test_budeting_overview() -> Result<(), RustyError> {
@@ -474,17 +510,35 @@ pub fn test_budeting_overview() -> Result<(), RustyError> {
     let fivehundred_money = hundred_money.multiply(5);
     let now = Utc::now();
     let period_id = PeriodId::from_date(now, MonthBeginsOn::default());
-    
-    let (budget_id, items) = create_budget_with_items(&rt, user_id, "Test Budget", vec![
-        ("Hyra".to_string(), BudgetingType::Expense, fivehundred_money, period_id),
-        ("Lön T".to_string(), BudgetingType::Income, thousand_money, period_id),
-        ("Spara".to_string(), BudgetingType::Savings, hundred_money, period_id),
-    ])?;
 
+    let (budget_id, items) = create_budget_with_items(
+        &rt,
+        user_id,
+        "Test Budget",
+        vec![
+            (
+                "Hyra".to_string(),
+                BudgetingType::Expense,
+                fivehundred_money,
+                period_id,
+            ),
+            (
+                "Lön T".to_string(),
+                BudgetingType::Income,
+                thousand_money,
+                period_id,
+            ),
+            (
+                "Spara".to_string(),
+                BudgetingType::Savings,
+                hundred_money,
+                period_id,
+            ),
+        ],
+    )?;
 
     let budget = rt.load(budget_id)?;
-    let income_overview = budget
-        .get_budgeting_overview(BudgetingType::Income, period_id);
+    let income_overview = budget.get_budgeting_overview(BudgetingType::Income, period_id);
     assert_eq!(income_overview.budgeted_amount, thousand_money);
     assert_eq!(income_overview.actual_amount, zero_money);
     assert_eq!(
@@ -492,14 +546,12 @@ pub fn test_budeting_overview() -> Result<(), RustyError> {
         fivehundred_money - hundred_money
     );
 
-    let expense_overview = budget
-        .get_budgeting_overview(BudgetingType::Expense, period_id);
+    let expense_overview = budget.get_budgeting_overview(BudgetingType::Expense, period_id);
     assert_eq!(expense_overview.budgeted_amount, fivehundred_money);
     assert_eq!(expense_overview.actual_amount, zero_money);
     assert_eq!(expense_overview.remaining_budget, fivehundred_money);
 
-    let savings_overview = budget
-        .get_budgeting_overview(BudgetingType::Savings, period_id);
+    let savings_overview = budget.get_budgeting_overview(BudgetingType::Savings, period_id);
     assert_eq!(savings_overview.budgeted_amount, hundred_money);
     assert_eq!(savings_overview.actual_amount, zero_money);
     assert_eq!(savings_overview.remaining_budget, hundred_money);
@@ -537,8 +589,7 @@ pub fn test_budeting_overview() -> Result<(), RustyError> {
     )?;
 
     let budget = rt.load(budget_id)?;
-    let income_overview = budget
-        .get_budgeting_overview(BudgetingType::Income, period_id);
+    let income_overview = budget.get_budgeting_overview(BudgetingType::Income, period_id);
     assert_eq!(income_overview.budgeted_amount, thousand_money);
     assert_eq!(income_overview.actual_amount, hundred_money.multiply(9));
     assert_eq!(
@@ -546,8 +597,7 @@ pub fn test_budeting_overview() -> Result<(), RustyError> {
         fivehundred_money - hundred_money
     );
 
-    let expense_overview = budget
-        .get_budgeting_overview(BudgetingType::Expense, period_id);
+    let expense_overview = budget.get_budgeting_overview(BudgetingType::Expense, period_id);
     assert_eq!(expense_overview.budgeted_amount, fivehundred_money);
     assert_eq!(
         expense_overview.actual_amount,
@@ -558,8 +608,7 @@ pub fn test_budeting_overview() -> Result<(), RustyError> {
         Money::new_dollars(950, Currency::SEK)
     );
 
-    let savings_overview = budget
-        .get_budgeting_overview(BudgetingType::Savings, period_id);
+    let savings_overview = budget.get_budgeting_overview(BudgetingType::Savings, period_id);
     assert_eq!(savings_overview.budgeted_amount, hundred_money);
     assert_eq!(savings_overview.actual_amount, -hundred_money);
     assert_eq!(savings_overview.remaining_budget, hundred_money.multiply(2));
@@ -582,7 +631,12 @@ pub fn evaluate_rules_no_rules_returns_empty() -> Result<(), RustyError> {
         &rt,
         user_id,
         "Test Budget",
-        vec![("Groceries".to_string(), BudgetingType::Expense, Money::new_dollars(500, Currency::SEK), period_id)],
+        vec![(
+            "Groceries".to_string(),
+            BudgetingType::Expense,
+            Money::new_dollars(500, Currency::SEK),
+            period_id,
+        )],
     )?;
 
     // Add a transaction
@@ -597,10 +651,13 @@ pub fn evaluate_rules_no_rules_returns_empty() -> Result<(), RustyError> {
     )?;
 
     let budget = rt.load(budget_id)?;
-    
+
     // No rules added, so evaluate_rules should return empty
     let matches = budget.evaluate_rules();
-    assert!(matches.is_empty(), "Expected no matches when no rules exist");
+    assert!(
+        matches.is_empty(),
+        "Expected no matches when no rules exist"
+    );
 
     Ok(())
 }
@@ -616,7 +673,12 @@ pub fn evaluate_rules_matches_transaction_to_actual() -> Result<(), RustyError> 
         &rt,
         user_id,
         "Test Budget",
-        vec![("groceries".to_string(), BudgetingType::Expense, Money::new_dollars(500, Currency::SEK), period_id)],
+        vec![(
+            "groceries".to_string(),
+            BudgetingType::Expense,
+            Money::new_dollars(500, Currency::SEK),
+            period_id,
+        )],
     )?;
     let (_item_id, actual_id) = items[0];
 
@@ -637,7 +699,8 @@ pub fn evaluate_rules_matches_transaction_to_actual() -> Result<(), RustyError> 
         budget_id,
         vec!["groceries".to_string()],
         vec!["groceries".to_string()],
-        true,
+        true, None
+        
     )?;
 
     let budget = rt.load(budget_id)?;
@@ -647,7 +710,10 @@ pub fn evaluate_rules_matches_transaction_to_actual() -> Result<(), RustyError> 
     let m = &matches[0];
     assert_eq!(m.tx_id, tx_id);
     assert_eq!(m.actual_id, Some(actual_id), "Should match to actual");
-    assert!(m.item_id.is_none(), "Item ID should be None when actual is found");
+    assert!(
+        m.item_id.is_none(),
+        "Item ID should be None when actual is found"
+    );
 
     Ok(())
 }
@@ -691,7 +757,7 @@ pub fn evaluate_rules_matches_transaction_to_item_when_no_actual() -> Result<(),
         budget_id,
         vec!["rent".to_string(), "payment".to_string()],
         vec!["rent".to_string()],
-        true,
+        true,None
     )?;
 
     let budget = rt.load(budget_id)?;
@@ -700,7 +766,10 @@ pub fn evaluate_rules_matches_transaction_to_item_when_no_actual() -> Result<(),
     assert_eq!(matches.len(), 1, "Expected one match");
     let m = &matches[0];
     assert_eq!(m.tx_id, tx_id);
-    assert!(m.actual_id.is_none(), "Actual ID should be None when no actual exists");
+    assert!(
+        m.actual_id.is_none(),
+        "Actual ID should be None when no actual exists"
+    );
     assert_eq!(m.item_id, Some(item_id), "Should match to item");
 
     Ok(())
@@ -717,7 +786,12 @@ pub fn evaluate_rules_no_match_for_unrelated_transaction() -> Result<(), RustyEr
         &rt,
         user_id,
         "Test Budget",
-        vec![("groceries".to_string(), BudgetingType::Expense, Money::new_dollars(500, Currency::SEK), period_id)],
+        vec![(
+            "groceries".to_string(),
+            BudgetingType::Expense,
+            Money::new_dollars(500, Currency::SEK),
+            period_id,
+        )],
     )?;
 
     // Add a transaction with different description
@@ -737,13 +811,16 @@ pub fn evaluate_rules_no_match_for_unrelated_transaction() -> Result<(), RustyEr
         budget_id,
         vec!["groceries".to_string()],
         vec!["groceries".to_string()],
-        true,
+        true, None
     )?;
 
     let budget = rt.load(budget_id)?;
     let matches = budget.evaluate_rules();
 
-    assert!(matches.is_empty(), "Expected no matches for unrelated transaction");
+    assert!(
+        matches.is_empty(),
+        "Expected no matches for unrelated transaction"
+    );
 
     Ok(())
 }
@@ -760,8 +837,18 @@ pub fn evaluate_rules_multiple_transactions_multiple_rules() -> Result<(), Rusty
         user_id,
         "Test Budget",
         vec![
-            ("groceries".to_string(), BudgetingType::Expense, Money::new_dollars(500, Currency::SEK), period_id),
-            ("utilities".to_string(), BudgetingType::Expense, Money::new_dollars(200, Currency::SEK), period_id),
+            (
+                "groceries".to_string(),
+                BudgetingType::Expense,
+                Money::new_dollars(500, Currency::SEK),
+                period_id,
+            ),
+            (
+                "utilities".to_string(),
+                BudgetingType::Expense,
+                Money::new_dollars(200, Currency::SEK),
+                period_id,
+            ),
         ],
     )?;
     let (_groceries_item_id, groceries_actual_id) = items[0];
@@ -804,7 +891,7 @@ pub fn evaluate_rules_multiple_transactions_multiple_rules() -> Result<(), Rusty
         budget_id,
         vec!["groceries".to_string()],
         vec!["groceries".to_string()],
-        true,
+        true, None
     )?;
 
     let _ = rt.add_rule(
@@ -812,7 +899,7 @@ pub fn evaluate_rules_multiple_transactions_multiple_rules() -> Result<(), Rusty
         budget_id,
         vec!["utilities".to_string()],
         vec!["utilities".to_string()],
-        true,
+        true, None
     )?;
 
     let budget = rt.load(budget_id)?;
@@ -839,10 +926,16 @@ pub fn evaluate_rules_across_multiple_periods() -> Result<(), RustyError> {
     let user_id = Uuid::new_v4();
 
     // Use dates to derive periods
-    let date1 = NaiveDate::from_ymd_opt(2025, 10, 15).unwrap()
-        .and_hms_opt(0, 0, 0).unwrap().and_utc();
-    let date2 = NaiveDate::from_ymd_opt(2025, 11, 15).unwrap()
-        .and_hms_opt(0, 0, 0).unwrap().and_utc();
+    let date1 = NaiveDate::from_ymd_opt(2025, 10, 15)
+        .unwrap()
+        .and_hms_opt(0, 0, 0)
+        .unwrap()
+        .and_utc();
+    let date2 = NaiveDate::from_ymd_opt(2025, 11, 15)
+        .unwrap()
+        .and_hms_opt(0, 0, 0)
+        .unwrap()
+        .and_utc();
 
     let period1 = PeriodId::from_date(date1, MonthBeginsOn::default());
     let period2 = PeriodId::from_date(date2, MonthBeginsOn::default());
@@ -907,7 +1000,7 @@ pub fn evaluate_rules_across_multiple_periods() -> Result<(), RustyError> {
         budget_id,
         vec!["salary".to_string()],
         vec!["salary".to_string()],
-        true,
+        true, None
     )?;
 
     let budget = rt.load(budget_id)?;
