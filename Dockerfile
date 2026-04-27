@@ -34,4 +34,4 @@ ENV IP=0.0.0.0
 EXPOSE 8666
 
 WORKDIR /usr/local/app
-ENTRYPOINT [ "/usr/local/app/web" ]
+ENTRYPOINT [ "/usr/local/app/server" ]
