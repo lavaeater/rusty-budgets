@@ -1,7 +1,7 @@
 use api::api_error::RustyError;
 use api::cqrs::framework::Runtime;
 use api::cqrs::runtime::{BudgetCommandsTrait, JoyDbBudgetRuntime};
-use api::import::import_from_skandia_excel;
+use api::import::import_from_skandia_excel_sync;
 use api::models::*;
 use chrono::{DateTime, NaiveDate, Utc};
 use std::collections::HashSet;
@@ -255,11 +255,13 @@ pub fn test_import_from_skandia_excel() -> Result<(), RustyError> {
     )?;
 
     let (imported, _, _) =
-        import_from_skandia_excel(&rt, user_id, budget_id, "./tests/unit-test-data.xlsx")?;
+        import_from_skandia_excel_sync(&rt, user_id, budget_id, "./tests/unit-test-data.xlsx")
+            .unwrap();
     assert_eq!(imported, 296);
     println!("Imported {} transactions", imported);
     let (omp, not_imported, _) =
-        import_from_skandia_excel(&rt, user_id, budget_id, "./tests/unit-test-data.xlsx")?;
+        import_from_skandia_excel_sync(&rt, user_id, budget_id, "./tests/unit-test-data.xlsx")
+            .unwrap();
 
     assert_eq!(not_imported, 296);
     assert_eq!(omp, 0);
@@ -1019,4 +1021,280 @@ pub fn evaluate_rules_across_multiple_periods() -> Result<(), RustyError> {
     assert_eq!(tx2_match.unwrap().actual_id, Some(actual2_id));
 
     Ok(())
+}
+
+// ============================================================================
+// tag_created / tag_modified events
+// ============================================================================
+
+#[test]
+pub fn create_and_modify_tag() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let budget_id = rt.create_budget(user_id, "Tags Budget", true, MonthBeginsOn::default(), Currency::SEK)?;
+
+    let tag_id = rt.create_tag(user_id, budget_id, "Electricity".to_string(), Periodicity::Monthly)?;
+    let budget = rt.load(budget_id)?;
+    let tag = budget.tags.iter().find(|t| t.id == tag_id).unwrap();
+    assert_eq!(tag.name, "Electricity");
+    assert_eq!(tag.periodicity, Periodicity::Monthly);
+    assert!(!tag.deleted);
+
+    rt.modify_tag(user_id, budget_id, tag_id, Some("El".to_string()), Some(Periodicity::Annual), None)?;
+    let budget = rt.load(budget_id)?;
+    let tag = budget.tags.iter().find(|t| t.id == tag_id).unwrap();
+    assert_eq!(tag.name, "El");
+    assert_eq!(tag.periodicity, Periodicity::Annual);
+
+    rt.modify_tag(user_id, budget_id, tag_id, None, None, Some(true))?;
+    let budget = rt.load(budget_id)?;
+    let tag = budget.tags.iter().find(|t| t.id == tag_id).unwrap();
+    assert!(tag.deleted);
+
+    Ok(())
+}
+
+// ============================================================================
+// item_modified / item_buffer_set events
+// ============================================================================
+
+#[test]
+pub fn modify_item_and_set_buffer() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let budget_id = rt.create_budget(user_id, "Buffer Budget", true, MonthBeginsOn::default(), Currency::SEK)?;
+    let item_id = rt.add_item(user_id, budget_id, "Rent".to_string(), BudgetingType::Expense)?;
+
+    rt.modify_item(user_id, budget_id, item_id, Some("Hyra".to_string()), Some(BudgetingType::Savings), None, None)?;
+    let budget = rt.load(budget_id)?;
+    let item = budget.get_item(item_id).unwrap();
+    assert_eq!(item.name, "Hyra");
+    assert_eq!(item.budgeting_type, BudgetingType::Savings);
+
+    let buffer = Money::new_dollars(12000, Currency::SEK);
+    rt.set_item_buffer(user_id, budget_id, item_id, Some(buffer))?;
+    let budget = rt.load(budget_id)?;
+    let item = budget.get_item(item_id).unwrap();
+    assert_eq!(item.buffer_target, Some(buffer));
+
+    rt.set_item_buffer(user_id, budget_id, item_id, None)?;
+    let budget = rt.load(budget_id)?;
+    let item = budget.get_item(item_id).unwrap();
+    assert!(item.buffer_target.is_none());
+
+    Ok(())
+}
+
+// ============================================================================
+// rule_modified / rule_deleted events
+// ============================================================================
+
+#[test]
+pub fn modify_and_delete_rule() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let budget_id = rt.create_budget(user_id, "Rules Budget", true, MonthBeginsOn::default(), Currency::SEK)?;
+
+    let rule_id = rt.add_rule(user_id, budget_id, vec!["willys".to_string()], vec!["groceries".to_string()], true, None)?;
+
+    rt.modify_rule(user_id, budget_id, rule_id, vec!["coop".to_string(), "willys".to_string()])?;
+    let budget = rt.load(budget_id)?;
+    let rule = budget.match_rules.iter().find(|r| r.id == rule_id).unwrap();
+    assert!(rule.transaction_key.contains(&"coop".to_string()));
+
+    rt.delete_rule(user_id, budget_id, rule_id)?;
+    let budget = rt.load(budget_id)?;
+    assert!(!budget.match_rules.iter().any(|r| r.id == rule_id));
+
+    Ok(())
+}
+
+// ============================================================================
+// transaction_tagged / transaction_untagged events
+// ============================================================================
+
+#[test]
+pub fn tag_and_untag_transaction() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let now = Utc::now();
+    let budget_id = rt.create_budget(user_id, "Tag Tx Budget", true, MonthBeginsOn::default(), Currency::SEK)?;
+    let tag_id = rt.create_tag(user_id, budget_id, "Groceries".to_string(), Periodicity::Monthly)?;
+    let tx_id = rt.add_transaction(user_id, budget_id, "acc123", Money::new_dollars(-50, Currency::SEK), Money::new_dollars(1000, Currency::SEK), "WILLYS", now)?;
+
+    rt.tag_transaction(user_id, budget_id, tx_id, tag_id)?;
+    let budget = rt.load(budget_id)?;
+    let tx = budget.get_transaction(tx_id).unwrap();
+    assert_eq!(tx.tag_id, Some(tag_id));
+
+    rt.untag_transaction(user_id, budget_id, tx_id)?;
+    let budget = rt.load(budget_id)?;
+    let tx = budget.get_transaction(tx_id).unwrap();
+    assert!(tx.tag_id.is_none());
+
+    Ok(())
+}
+
+// ============================================================================
+// transaction_ignored event
+// ============================================================================
+
+#[test]
+pub fn ignore_transaction_test() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let now = Utc::now();
+    let budget_id = rt.create_budget(user_id, "Ignore Budget", true, MonthBeginsOn::default(), Currency::SEK)?;
+    let tx_id = rt.add_transaction(user_id, budget_id, "acc456", Money::new_dollars(-200, Currency::SEK), Money::new_dollars(5000, Currency::SEK), "Random purchase", now)?;
+
+    rt.ignore_transaction(budget_id, tx_id, user_id)?;
+    let budget = rt.load(budget_id)?;
+    let tx = budget.get_transaction(tx_id).unwrap();
+    assert!(tx.ignored);
+
+    Ok(())
+}
+
+// ============================================================================
+// transfer_pair_rejected event
+// ============================================================================
+
+#[test]
+pub fn reject_transfer_pair_test() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let now = Utc::now();
+    let budget_id = rt.create_budget(user_id, "Transfer Budget", true, MonthBeginsOn::default(), Currency::SEK)?;
+    let out_id = rt.add_transaction(user_id, budget_id, "acc1", Money::new_dollars(-1000, Currency::SEK), Money::new_dollars(9000, Currency::SEK), "Transfer out", now)?;
+    let in_id = rt.add_transaction(user_id, budget_id, "acc2", Money::new_dollars(1000, Currency::SEK), Money::new_dollars(11000, Currency::SEK), "Transfer in", now)?;
+
+    rt.reject_transfer_pair(user_id, budget_id, out_id, in_id)?;
+    let budget = rt.load(budget_id)?;
+    assert!(budget.rejected_transfer_pairs.contains(&(out_id, in_id)));
+
+    Ok(())
+}
+
+// ============================================================================
+// actual_modified event
+// ============================================================================
+
+#[test]
+pub fn modify_actual_test() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let now = Utc::now();
+    let period_id = PeriodId::from_date(now, MonthBeginsOn::default());
+    let budget_id = rt.create_budget(user_id, "Modify Actual Budget", true, MonthBeginsOn::default(), Currency::SEK)?;
+    let item_id = rt.add_item(user_id, budget_id, "Rent".to_string(), BudgetingType::Expense)?;
+    let actual_id = rt.add_actual(user_id, budget_id, item_id, Money::new_dollars(500, Currency::SEK), period_id)?;
+
+    rt.modify_actual(user_id, budget_id, actual_id, period_id, Some(Money::new_dollars(600, Currency::SEK)), None)?;
+    let mut budget = rt.load(budget_id)?;
+    let actual = budget.with_period(period_id).get_actual(actual_id).unwrap();
+    assert_eq!(actual.budgeted_amount, Money::new_dollars(600, Currency::SEK));
+
+    Ok(())
+}
+
+// ============================================================================
+// allocation_created / allocation_deleted events
+// ============================================================================
+
+#[test]
+pub fn create_and_delete_allocation() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let now = Utc::now();
+    let period_id = PeriodId::from_date(now, MonthBeginsOn::default());
+    let budget_id = rt.create_budget(user_id, "Alloc Budget", true, MonthBeginsOn::default(), Currency::SEK)?;
+    let item_id = rt.add_item(user_id, budget_id, "Food".to_string(), BudgetingType::Expense)?;
+    let actual_id = rt.add_actual(user_id, budget_id, item_id, Money::new_dollars(300, Currency::SEK), period_id)?;
+    let amount = Money::new_dollars(-80, Currency::SEK);
+    let tx_id = rt.add_transaction(user_id, budget_id, "acc789", amount, Money::new_dollars(2000, Currency::SEK), "Coop", now)?;
+
+    let alloc_id = rt.create_allocation(user_id, budget_id, tx_id, actual_id, amount, String::new())?;
+    let budget = rt.load(budget_id)?;
+    assert!(budget.get_period(period_id).unwrap().allocations.iter().any(|a| a.id == alloc_id));
+
+    rt.delete_allocation(user_id, budget_id, alloc_id, tx_id)?;
+    let budget = rt.load(budget_id)?;
+    assert!(!budget.get_period(period_id).unwrap().allocations.iter().any(|a| a.id == alloc_id));
+
+    Ok(())
+}
+
+// ============================================================================
+// BudgetViewModel / view model tests
+// ============================================================================
+
+#[test]
+pub fn budget_view_model_basic() -> Result<(), RustyError> {
+    use api::view_models::BudgetViewModel;
+
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let now = Utc::now();
+    let period_id = PeriodId::from_date(now, MonthBeginsOn::default());
+
+    let budget_id = rt.create_budget(user_id, "VM Budget", true, MonthBeginsOn::default(), Currency::SEK)?;
+    let income_id = rt.add_item(user_id, budget_id, "Salary".to_string(), BudgetingType::Income)?;
+    let expense_id = rt.add_item(user_id, budget_id, "Rent".to_string(), BudgetingType::Expense)?;
+    rt.add_actual(user_id, budget_id, income_id, Money::new_dollars(20000, Currency::SEK), period_id)?;
+    rt.add_actual(user_id, budget_id, expense_id, Money::new_dollars(8000, Currency::SEK), period_id)?;
+    rt.add_transaction(user_id, budget_id, "acc1", Money::new_dollars(-500, Currency::SEK), Money::new_dollars(10000, Currency::SEK), "Willys mat", now)?;
+
+    let budget = rt.load(budget_id)?;
+    let vm = BudgetViewModel::from_budget(&budget, period_id);
+
+    assert_eq!(vm.id, budget_id);
+    assert_eq!(vm.name, "VM Budget");
+    assert_eq!(vm.currency, Currency::SEK);
+    assert_eq!(vm.items.len(), 2);
+    assert_eq!(vm.to_connect.len(), 1);
+    assert_eq!(vm.untagged_transaction_count, 1);
+
+    let income_ov = vm.overviews.iter().find(|o| o.budgeting_type == BudgetingType::Income).unwrap();
+    assert_eq!(income_ov.budgeted_amount, Money::new_dollars(20000, Currency::SEK));
+
+    let expense_ov = vm.overviews.iter().find(|o| o.budgeting_type == BudgetingType::Expense).unwrap();
+    assert_eq!(expense_ov.budgeted_amount, Money::new_dollars(8000, Currency::SEK));
+
+    Ok(())
+}
+
+#[test]
+pub fn transaction_view_model_from_transaction() {
+    use api::view_models::TransactionViewModel;
+
+    let account = "acc999".to_string();
+    let now = Utc::now();
+    let tx = BankTransaction::new(
+        Uuid::new_v4(),
+        &account,
+        Money::new_dollars(-100, Currency::SEK),
+        Money::new_dollars(900, Currency::SEK),
+        "Test",
+        now,
+    );
+    let vm = TransactionViewModel::from_transaction(&tx);
+    assert_eq!(vm.tx_id, tx.id);
+    assert_eq!(vm.amount, Money::new_dollars(-100, Currency::SEK));
+    assert!(vm.allocations.is_empty());
+}
+
+#[test]
+pub fn allocation_view_model_from_allocation() {
+    use api::models::TransactionAllocation;
+    use api::view_models::AllocationViewModel;
+
+    let alloc = TransactionAllocation::new(
+        Uuid::new_v4(),
+        Uuid::new_v4(),
+        Money::new_dollars(200, Currency::SEK),
+        "food".to_string(),
+    );
+    let vm = AllocationViewModel::from_allocation(&alloc);
+    assert_eq!(vm.allocation_id, alloc.id);
+    assert_eq!(vm.amount, Money::new_dollars(200, Currency::SEK));
 }

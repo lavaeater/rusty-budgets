@@ -34,3 +34,41 @@ impl User {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new_user_fields() {
+        let dob = NaiveDate::from_ymd_opt(1990, 6, 15).unwrap();
+        let user = User::new(
+            "alice",
+            "alice@example.com",
+            "Alice",
+            "Smith",
+            Some("0701234567".to_string()),
+            Some(dob),
+        );
+        assert_eq!(user.user_name, "alice");
+        assert_eq!(user.email, "alice@example.com");
+        assert_eq!(user.first_name, "Alice");
+        assert_eq!(user.last_name, "Smith");
+        assert_eq!(user.phone, Some("0701234567".to_string()));
+        assert_eq!(user.birthday, Some(dob));
+    }
+
+    #[test]
+    fn new_user_no_optional_fields() {
+        let user = User::new("bob", "bob@example.com", "Bob", "Jones", None, None);
+        assert!(user.phone.is_none());
+        assert!(user.birthday.is_none());
+    }
+
+    #[test]
+    fn unique_ids() {
+        let a = User::new("a", "a@a.com", "A", "A", None, None);
+        let b = User::new("a", "a@a.com", "A", "A", None, None);
+        assert_ne!(a.id, b.id);
+    }
+}

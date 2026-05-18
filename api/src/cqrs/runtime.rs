@@ -1,7 +1,6 @@
 use crate::api_error::RustyError;
 use crate::cqrs::framework::{AsyncRuntime, CommandError, Runtime, StoredEvent};
-#[cfg(feature = "server")]
-use crate::db::{DEFAULT_USER_EMAIL, create_user};
+const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 use crate::models::*;
 #[cfg(feature = "server")]
 use crate::pg_models::{PgBudget, PgStoredBudgetEvent, PgUser, PgUserBudgets};
@@ -75,7 +74,6 @@ pub async fn migrate_to_postgres() -> Result<(), RustyError> {
     Ok(())
 }
 
-#[cfg(feature = "server")]
 impl BudgetCommandsTrait for JoyDbBudgetRuntime {
     fn create_budget(
         &self,

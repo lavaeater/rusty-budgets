@@ -1,4 +1,4 @@
-use crate::cqrs::runtime::AsyncBudgetCommandsTrait;
+use crate::cqrs::runtime::{AsyncBudgetCommandsTrait, BudgetCommandsTrait};
 use crate::models::{Currency, Money};
 use calamine::{DataType, Reader, Xlsx, XlsxError, open_workbook, open_workbook_from_rs};
 use chrono::{DateTime, NaiveDate, ParseError, Utc};
@@ -140,6 +140,52 @@ pub async fn import_from_skandia_excel(
             "Imported {} transactions, skipped {} transactions, total {} transactions",
             imported, not_imported, total_rows
         );
+    }
+
+    Ok((imported, not_imported, total_rows))
+}
+
+pub fn import_from_skandia_excel_sync(
+    runtime: &impl BudgetCommandsTrait,
+    user_id: Uuid,
+    budget_id: Uuid,
+    path: &str,
+) -> Result<(u64, u64, u64), ImportError> {
+    let mut imported = 0u64;
+    let mut not_imported = 0u64;
+    let mut total_rows = 0u64;
+    let mut excel: Xlsx<_> = open_workbook(path)?;
+    if let Ok(r) = excel.worksheet_range("Kontoutdrag") {
+        let mut account_number: Option<String> = None;
+
+        for (row_num, row) in r.rows().enumerate() {
+            if row_num == 0 {
+                account_number = Some(row[1].to_string());
+                let acct_no = row[1].to_string();
+                let _ = runtime.ensure_account(user_id, budget_id, &acct_no, "Skandiabanken");
+            } else if row_num > 3 && row.len() > 3 {
+                let amount =
+                    Money::new_cents((row[2].as_f64().unwrap() * 100.0) as i64, Currency::SEK);
+                let balance =
+                    Money::new_cents((row[3].as_f64().unwrap() * 100.0) as i64, Currency::SEK);
+                let date_str = row[0].to_string();
+                let naive_date = NaiveDate::parse_from_str(&date_str, "%Y-%m-%d")?;
+                let date: DateTime<Utc> = naive_date.and_hms_opt(0, 0, 0).unwrap().and_utc();
+                let description = row[1].to_string();
+
+                if let Some(counterpart) = extract_transfer_account_number(&description) {
+                    let _ = runtime.ensure_account(user_id, budget_id, &counterpart, "Skandiabanken");
+                }
+
+                let acct_no = account_number.clone().ok_or(ImportError::AccountNumberMissing)?;
+                match runtime.add_transaction(
+                    user_id, budget_id, &acct_no, amount, balance, &description, date,
+                ) {
+                    Ok(_) => { imported += 1; total_rows += 1; }
+                    Err(_) => { not_imported += 1; total_rows += 1; }
+                }
+            }
+        }
     }
 
     Ok((imported, not_imported, total_rows))

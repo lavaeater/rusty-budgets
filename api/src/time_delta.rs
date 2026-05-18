@@ -109,3 +109,39 @@ impl TimeDeltaExt for i32 {
         TimeDelta::days(self as i64)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn u64_conversions() {
+        assert_eq!(3u64.seconds(), TimeDelta::seconds(3));
+        assert_eq!(2u64.minutes(), TimeDelta::minutes(2));
+        assert_eq!(1u64.hours(), TimeDelta::hours(1));
+        assert_eq!(500u64.millis(), TimeDelta::milliseconds(500));
+        assert_eq!(200u64.micros(), TimeDelta::microseconds(200));
+        assert_eq!(100u64.nanos(), TimeDelta::nanoseconds(100));
+        assert_eq!(7u64.days(), TimeDelta::days(7));
+    }
+
+    #[test]
+    fn i64_conversions() {
+        assert_eq!((-5i64).seconds(), TimeDelta::seconds(-5));
+        assert_eq!(10i64.minutes(), TimeDelta::minutes(10));
+        assert_eq!(24i64.hours(), TimeDelta::hours(24));
+        assert_eq!(30i64.days(), TimeDelta::days(30));
+    }
+
+    #[test]
+    fn u32_conversions() {
+        assert_eq!(60u32.seconds(), TimeDelta::seconds(60));
+        assert_eq!(1u32.days(), TimeDelta::days(1));
+    }
+
+    #[test]
+    fn i32_conversions() {
+        assert_eq!((-1i32).days(), TimeDelta::days(-1));
+        assert_eq!(5i32.hours(), TimeDelta::hours(5));
+    }
+}

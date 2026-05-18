@@ -22,3 +22,36 @@ impl TransactionAllocation {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::models::Currency;
+
+    #[test]
+    fn new_assigns_unique_id() {
+        let tx_id = Uuid::new_v4();
+        let actual_id = Uuid::new_v4();
+        let amount = Money::new_dollars(100, Currency::SEK);
+        let a = TransactionAllocation::new(tx_id, actual_id, amount, "groceries".to_string());
+        let b = TransactionAllocation::new(tx_id, actual_id, amount, "groceries".to_string());
+        assert_ne!(a.id, b.id);
+        assert_eq!(a.transaction_id, tx_id);
+        assert_eq!(a.actual_id, actual_id);
+        assert_eq!(a.amount, amount);
+        assert_eq!(a.tag, "groceries");
+    }
+
+    #[test]
+    fn serde_round_trip() {
+        let a = TransactionAllocation::new(
+            Uuid::new_v4(),
+            Uuid::new_v4(),
+            Money::new_dollars(50, Currency::SEK),
+            "rent".to_string(),
+        );
+        let json = serde_json::to_string(&a).unwrap();
+        let back: TransactionAllocation = serde_json::from_str(&json).unwrap();
+        assert_eq!(a, back);
+    }
+}

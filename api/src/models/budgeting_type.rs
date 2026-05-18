@@ -38,3 +38,28 @@ impl Display for BudgetingType {
         )
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn display_variants() {
+        assert_eq!(BudgetingType::Income.to_string(), "Inkomst");
+        assert_eq!(BudgetingType::Expense.to_string(), "Utgift");
+        assert_eq!(BudgetingType::Savings.to_string(), "Sparande");
+        assert_eq!(BudgetingType::InternalTransfer.to_string(), "Intern överföring");
+    }
+
+    #[test]
+    fn default_is_income() {
+        assert_eq!(BudgetingType::default(), BudgetingType::Income);
+    }
+
+    #[test]
+    fn ordering() {
+        assert!(BudgetingType::Income < BudgetingType::Expense);
+        assert!(BudgetingType::Expense < BudgetingType::Savings);
+        assert!(BudgetingType::Savings < BudgetingType::InternalTransfer);
+    }
+}
