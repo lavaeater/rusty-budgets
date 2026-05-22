@@ -159,50 +159,84 @@ pub fn BudgetOverview(mut budget_id: Signal<Uuid>, mut period_id: Signal<PeriodI
             }
         });
     };
+
+    // "Att fördela" = income budgeted minus what is allocated to expenses + savings.
+    // The Income overview already carries this as remaining_budget.
+    use api::models::BudgetingType;
+    let ready_to_assign = budget
+        .overviews
+        .iter()
+        .find(|ov| ov.budgeting_type == BudgetingType::Income)
+        .map(|ov| ov.remaining_budget);
+
     rsx! {
         document::Link { rel: "stylesheet", href: HERO_CSS }
         div { class: "budget-hero-a-container",
-            // Header with quick stats
             div { class: "budget-header-a",
                 div { class: "header-title",
                     h1 { {budget.name.clone()} }
-                    h2 { {period_id().to_string()} }
-                    Button {
-                        onclick: move |_| {
-                            period_id.set(period_id().month_before());
-                        },
-                        "Föregående period"
-                    }
-                    Button {
-                        onclick: move |_| {
-                            period_id.set(period_id().month_after());
-                        },
-                        "Nästa period"
-                    }
-                    if auto_budget_enabled {
-                        Button {
-                            onclick: move |_| async move {
-                                if let Ok(bv) = auto_budget_period(budget_id(), period_id()).await {
-                                    consume_context::<BudgetState>().0.set(bv);
-                                }
-                            },
-                            "Auto budget"
+                    // Compact period navigator
+                    div { class: "period-nav",
+                        button {
+                            class: "period-nav-btn",
+                            onclick: move |_| { period_id.set(period_id().month_before()); },
+                            "‹"
+                        }
+                        span { class: "period-nav-label", {period_id().to_string()} }
+                        button {
+                            class: "period-nav-btn",
+                            onclick: move |_| { period_id.set(period_id().month_after()); },
+                            "›"
                         }
                     }
-                    Button {
-                        onclick: move |_| async move {
-                            if let Ok(bv) = auto_budget_all(budget_id(), period_id()).await {
-                                consume_context::<BudgetState>().0.set(bv);
+                    // Auto-budget tools collapsed by default
+                    details { class: "tools-menu",
+                        summary { class: "tools-menu-trigger", "Verktyg" }
+                        div { class: "tools-menu-content",
+                            if auto_budget_enabled {
+                                Button {
+                                    onclick: move |_| async move {
+                                        if let Ok(bv) = auto_budget_period(budget_id(), period_id()).await {
+                                            consume_context::<BudgetState>().0.set(bv);
+                                        }
+                                    },
+                                    "Auto budget period"
+                                }
                             }
-                        },
-                        "Auto budget alla perioder"
+                            Button {
+                                onclick: move |_| async move {
+                                    if let Ok(bv) = auto_budget_all(budget_id(), period_id()).await {
+                                        consume_context::<BudgetState>().0.set(bv);
+                                    }
+                                },
+                                "Auto budget alla perioder"
+                            }
+                        }
                     }
                 }
                 div { class: "header-actions",
+                    // "Att fördela" ready-to-assign indicator
+                    if let Some(rta) = ready_to_assign {
+                        {
+                            let cents = rta.amount_in_cents();
+                            let rta_class = if cents < 0 {
+                                "rta-badge rta-over"
+                            } else if cents == 0 {
+                                "rta-badge rta-balanced"
+                            } else {
+                                "rta-badge rta-under"
+                            };
+                            let label = if cents < 0 { "Överbudgeterat" } else { "Att fördela" };
+                            rsx! {
+                                div { class: rta_class,
+                                    span { class: "rta-label", {label} }
+                                    span { class: "rta-amount", {rta.to_string()} }
+                                }
+                            }
+                        }
+                    }
                     FileDialog { on_chosen: import_file }
                     if !budget.to_connect.is_empty() {
-                        // Main content area with tabs
-                        // Transactions section - prominent if there are unassigned
                         div { class: "unassigned-badge",
                             "{budget.to_connect.len()} transaktioner att hantera"
                         }
@@ -214,7 +248,11 @@ pub fn BudgetOverview(mut budget_id: Signal<Uuid>, mut period_id: Signal<PeriodI
                     }
                 }
             }
+
+            // Main budget tabs — always visible
             div { class: "budget-main-content", BudgetTabs {} }
+
+            // Action sections — shown only when relevant
             if budget.untagged_transaction_count > 0 {
                 div { class: "transactions-section-prominent",
                     h3 { style: "margin: 0 0 16px 0;",
@@ -232,22 +270,6 @@ pub fn BudgetOverview(mut budget_id: Signal<Uuid>, mut period_id: Signal<PeriodI
                     CreateBudgetItemsView {}
                 }
             }
-            div { class: "transactions-section-prominent",
-                h3 { style: "margin: 0 0 16px 0;", "Taggade transaktioner" }
-                RetagTransactionsView {}
-            }
-            div { class: "transactions-section-prominent",
-                h3 { style: "margin: 0 0 16px 0;", "Taggar" }
-                TagsView {}
-            }
-            div { class: "transactions-section-prominent",
-                h3 { style: "margin: 0 0 16px 0;", "Taggningsregler" }
-                RulesView {}
-            }
-            div { class: "transactions-section-prominent",
-                h3 { style: "margin: 0 0 16px 0;", "Löpande underskott / överskott" }
-                RunningDeficitView {}
-            }
             if budget.to_connect.is_empty() {
                 div { class: "transactions-section-minimal",
                     p { class: "success-message", "✓ Alla transaktioner är hanterade!" }
@@ -264,6 +286,22 @@ pub fn BudgetOverview(mut budget_id: Signal<Uuid>, mut period_id: Signal<PeriodI
             } else {
                 div { class: "transactions-section-prominent",
                     TransactionsView { ignored: true }
+                }
+            }
+
+            // Maintenance sections — collapsed by default to reduce page length
+            div { class: "maintenance-sections",
+                details { class: "maintenance-section",
+                    summary { class: "maintenance-section-trigger", "Taggade transaktioner" }
+                    div { class: "maintenance-section-content", RetagTransactionsView {} }
+                }
+                details { class: "maintenance-section",
+                    summary { class: "maintenance-section-trigger", "Taggar" }
+                    div { class: "maintenance-section-content", TagsView {} }
+                }
+                details { class: "maintenance-section",
+                    summary { class: "maintenance-section-trigger", "Taggningsregler" }
+                    div { class: "maintenance-section-content", RulesView {} }
                 }
             }
         }

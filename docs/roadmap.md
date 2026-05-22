@@ -1,44 +1,45 @@
-# Current Roadmap
+# Rusty Budgets — Roadmap
 
-Issues with current auto_budget_period
+## UX Overhaul (May 2026)
 
-The current implementation (db.rs:312) only sets budgeted_amount = actual_amount for actuals that already exist and
-have zero budget. It doesn't create missing actuals for budget items that have transactions in that period but no      
-ActualItem yet — so it silently skips them. For old periods this is the main problem: actuals need to be created first.
-                                                                                                                         
----                                                                                                                    
-Recommendations
+Goal: make the app match the YNAB mental model — every dollar has a job, the budget must balance — and reduce the cognitive load of the main view.
 
-1. Fix auto_budget_period to also create missing actuals
+---
 
-For each BudgetItem, check if an ActualItem exists in that period — if not, create one (via add_actual) before setting
-the budgeted amount. The budget has items and the period has actual_items; cross-reference by budget_item_id. The
-actual amount should then be derived from the sum of transaction allocations for that item in that period.
+### Sprint 1: Clean up the main view ✓ Done 2026-05-22
 
-2. Auto-budget all periods (auto_budget_all)
+- [x] **1.1 Hide running deficit feature** — removed `RunningDeficitView` section from `BudgetOverview`; component kept in file for later revival.
+- [x] **1.2 Collapse maintenance sections** — "Taggade transaktioner", "Taggar", "Taggningsregler" moved into collapsible `<details>` elements at bottom of page.
+- [x] **1.3 "Att fördela" banner** — prominent badge in header right column. Uses `Income.remaining_budget` (already computed server-side). Red=over-assigned, amber=money left to assign, green=balanced.
+- [x] **1.4 Compact period navigation** — replaced full-text buttons with `‹ 2025-05 ›` chevron style.
+- [x] **1.5 Move auto-budget buttons** — collapsed behind "Verktyg ▾" `<details>` in header, keeping header clean.
 
-A new server function that iterates budget.periods, skips any period where every ActualItem already has a non-zero     
-budgeted_amount (i.e. "already properly budgeted"), and calls the fixed auto_budget_period logic on the rest. "Properly
-budgeted" = has at least one actual with a nonzero budgeted amount. This gives you the "don't touch months I've       
-already touched" behavior.
+---
 
-3. Running deficit tracking
+### Sprint 2: Budget balance enforcement
 
-The cleanest approach given your data model:
+- [ ] **2.1 Over-budget warning** — inline banner when total budgeted expenses + savings exceeds budgeted income, with the exact shortfall.
+- [ ] **2.2 "Ta från..." quick reallocation** — on any over-budget item, a button that lets the user pick another item to pull funds from. Writes a `FundsReallocated` event.
+- [ ] **2.3 Unassigned income guard** — prevent navigating away from the budget tab when "Att fördela" is still positive, with a gentle nudge to assign the remaining income.
 
-- Compute per-period net = sum of Income actuals (actual_amount) − sum of Expense + Savings actuals (actual_amount),   
-  per period
-- Accumulate over time (sorted by PeriodId) → running deficit/surplus Money value
-- Resolution: Add a DeficitResolved event with a source tag (e.g. a Savings or TaxReturn BudgetItem) and an amount,    
-  which offsets the running total. Without resolution it just accumulates
+---
 
-For the UI: a simple timeline table showing each month's net and the running cumulative, with an "unresolved deficit"  
-banner if the current value is negative.
-                                                                                                                         
----             
-Want me to start implementing? I'd suggest this order:
-1. Fix auto_budget_period to create missing actuals
-2. Add auto_budget_all server function
-3. Add running deficit calculation to BudgetViewModel (no new events needed yet, just a computed field)
+### Sprint 3: Better landing snapshot
 
-✻ Cogitated for 2m 7s                           
+- [ ] **3.1 Spending progress bars** — replace the plain "Budgeterat / Faktiskt / Återstår" numbers in `BudgetingTypeOverviewView` with a visual progress bar (actual vs budgeted) per type.
+- [ ] **3.2 Per-item progress in collapsed view** — `BudgetItemView` collapsed row shows a mini bar so you can scan the list and immediately see which items are close to or over budget.
+- [ ] **3.3 Current month callout** — if viewing a past period, show a banner "Du ser {period} — klicka här för nuvarande månad."
+
+---
+
+### Sprint 4: Workflow speed-ups
+
+- [ ] **4.1 Bulk-accept auto-matched transactions** — in `TagTransactionsView`, a "Godkänn alla regelträffar" button that accepts all transactions already matched by an existing rule in one click.
+- [ ] **4.2 Keyboard navigation in tagging** — arrow keys to select tag chip, Enter to confirm, Space to skip.
+
+---
+
+### Deferred / Mothballed
+
+- **Running deficit / surplus table** (`RunningDeficitView`) — useful data but the wrong place in the UX. Will revisit once the main view is clean. Hidden as of Sprint 1.
+- **Billing buffer** (`buffer_target` on `BudgetItem`) — already modelled in the domain; UI deferred until Sprint 3+ is done.
