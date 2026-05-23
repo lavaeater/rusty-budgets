@@ -2,8 +2,8 @@ use crate::budget::budget_hero::BudgetState;
 use crate::{Button, ButtonVariant, Input};
 use api::models::{BankTransaction, Periodicity};
 use api::{
-    create_tag, get_untagged_transactions, ignore_transaction, preview_rule_matches,
-    tag_transaction, update_rule,
+    apply_all_rules, create_tag, get_untagged_transactions, ignore_transaction,
+    preview_rule_matches, tag_transaction, update_rule,
 };
 use dioxus::prelude::*;
 use uuid::Uuid;
@@ -55,9 +55,33 @@ pub fn TagTransactionsView() -> Element {
         preview_count.set(0);
     };
 
+    let has_rules = !budget_signal().match_rules.is_empty();
+
     rsx! {
         document::Link { rel: "stylesheet", href: TAG_TX_CSS }
         div { class: "tag-transactions-view",
+            if has_rules && total_remaining > 0 {
+                div { class: "bulk-rules-bar",
+                    span { class: "bulk-rules-hint",
+                        "Du har {budget_signal().match_rules.len()} regler — tillämpa dem på alla omärkta transaktioner direkt."
+                    }
+                    Button {
+                        variant: ButtonVariant::Secondary,
+                        r#type: "button",
+                        onclick: move |_| async move {
+                            if let Ok(updated) = apply_all_rules(budget_id, period_id).await {
+                                consume_context::<BudgetState>().0.set(updated);
+                                // Refresh local tx list
+                                if let Ok(txs) = get_untagged_transactions(budget_id, BATCH_SIZE).await {
+                                    untagged_txs.set(txs);
+                                    current_index.set(0);
+                                }
+                            }
+                        },
+                        "Godkänn alla regelträffar"
+                    }
+                }
+            }
             if total_remaining == 0 && batch_size == 0 {
                 div { class: "tag-tx-all-done",
                     p { class: "success-message", "✓ Alla transaktioner är taggade!" }

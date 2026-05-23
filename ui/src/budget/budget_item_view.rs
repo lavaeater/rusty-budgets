@@ -552,6 +552,16 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
             }
         }
     } else {
+        let (bar_pct, bar_over) = if item.budgeted_amount.amount_in_cents() > 0 {
+            let actual = item.actual_amount.amount_in_cents().abs();
+            let budgeted = item.budgeted_amount.amount_in_cents().abs();
+            let pct = (actual * 100 / budgeted).min(100) as u32;
+            (pct, actual > budgeted)
+        } else {
+            (0, false)
+        };
+        let mini_bar_class = if bar_over { "mini-bar-fill over" } else { "mini-bar-fill" };
+
         rsx! {
             div { class: "budget-item", key: "{item.item_id}",
                 div {
@@ -564,6 +574,9 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                                 span { class: "tag-chip-small", "{tag}" }
                             }
                         }
+                    }
+                    div { class: "mini-bar",
+                        div { class: mini_bar_class, style: "width: {bar_pct}%;" }
                     }
                 }
                 Button {

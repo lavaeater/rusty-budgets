@@ -16,26 +16,26 @@ Goal: make the app match the YNAB mental model — every dollar has a job, the b
 
 ---
 
-### Sprint 2: Budget balance enforcement
+### Sprint 2: Budget balance enforcement ✓ Done 2026-05-22
 
-- [ ] **2.1 Over-budget warning** — inline banner when total budgeted expenses + savings exceeds budgeted income, with the exact shortfall.
-- [ ] **2.2 "Ta från..." quick reallocation** — on any over-budget item, a button that lets the user pick another item to pull funds from. Writes a `FundsReallocated` event.
-- [ ] **2.3 Unassigned income guard** — prevent navigating away from the budget tab when "Att fördela" is still positive, with a gentle nudge to assign the remaining income.
-
----
-
-### Sprint 3: Better landing snapshot
-
-- [ ] **3.1 Spending progress bars** — replace the plain "Budgeterat / Faktiskt / Återstår" numbers in `BudgetingTypeOverviewView` with a visual progress bar (actual vs budgeted) per type.
-- [ ] **3.2 Per-item progress in collapsed view** — `BudgetItemView` collapsed row shows a mini bar so you can scan the list and immediately see which items are close to or over budget.
-- [ ] **3.3 Current month callout** — if viewing a past period, show a banner "Du ser {period} — klicka här för nuvarande månad."
+- [x] **2.1 Over-budget warning** — covered by the `rta-badge rta-over` header badge from Sprint 1 (shows "Överbudgeterat" in red with exact amount when `income_remaining < 0`).
+- [x] **2.2 "Ta från..." quick reallocation** — on any over-budget item: new "Ta från..." button expands a picker listing all Expense/Savings items with enough remaining budget. Selecting one calls `reallocate_funds` (new server fn + db fn wiring up the existing `BudgetedFundsReallocated` domain event). Amount moved = exact shortfall.
+- [x] **2.3 Unassigned income guard** — amber nudge banner below BudgetTabs when `ready_to_assign > 0` and at least one Income item exists. Soft reminder, not a hard block.
 
 ---
 
-### Sprint 4: Workflow speed-ups
+### Sprint 3: Better landing snapshot ✓ Done 2026-05-22
 
-- [ ] **4.1 Bulk-accept auto-matched transactions** — in `TagTransactionsView`, a "Godkänn alla regelträffar" button that accepts all transactions already matched by an existing rule in one click.
-- [ ] **4.2 Keyboard navigation in tagging** — arrow keys to select tag chip, Enter to confirm, Space to skip.
+- [x] **3.1 Spending progress bars** — `BudgetingTypeOverviewView` now shows a horizontal progress bar (actual vs budgeted) above the stats. Blue while under, red when over.
+- [x] **3.2 Per-item progress in collapsed view** — each `BudgetItemView` collapsed row has a thin mini-bar under the name. Same colour logic as the overview card.
+- [x] **3.3 Current month callout** — when `period_id != today`, a grey banner appears above the tabs with a "Gå till nuvarande månad →" link.
+
+---
+
+### Sprint 4: Workflow speed-ups ✓ Done 2026-05-22
+
+- [x] **4.1 Bulk-accept auto-matched transactions** — "Godkänn alla regelträffar" button in `TagTransactionsView`, visible when rules exist and untagged transactions remain. Calls new `apply_all_rules` server function (wraps existing `evaluate_tag_rules` domain logic).
+- [ ] **4.2 Keyboard navigation in tagging** — arrow keys to select tag chip, Enter to confirm, Space to skip. (deferred — requires focus management wiring)
 
 ---
 

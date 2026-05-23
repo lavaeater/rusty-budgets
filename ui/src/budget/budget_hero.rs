@@ -249,8 +249,34 @@ pub fn BudgetOverview(mut budget_id: Signal<Uuid>, mut period_id: Signal<PeriodI
                 }
             }
 
+            // Past-period callout
+            if period_id() != period_id_now {
+                div { class: "past-period-banner",
+                    span { "Du ser en tidigare period — " {period_id().to_string()} }
+                    button {
+                        class: "past-period-go-now",
+                        onclick: move |_| period_id.set(period_id_now),
+                        "Gå till nuvarande månad →"
+                    }
+                }
+            }
+
             // Main budget tabs — always visible
             div { class: "budget-main-content", BudgetTabs {} }
+
+            // Nudge when income is budgeted but money is left to assign
+            if let Some(rta) = ready_to_assign {
+                if rta.amount_in_cents() > 0 && budget.items.iter().any(|i| i.budgeting_type == BudgetingType::Income) {
+                    div { class: "assign-nudge",
+                        span { class: "assign-nudge-icon", "💡" }
+                        span {
+                            "Du har "
+                            strong { {rta.to_string()} }
+                            " kvar att fördela. Tilldela dem till en budgetpost så att varje krona har ett syfte."
+                        }
+                    }
+                }
+            }
 
             // Action sections — shown only when relevant
             if budget.untagged_transaction_count > 0 {

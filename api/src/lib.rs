@@ -250,6 +250,20 @@ pub async fn adjust_actual_funds(
     Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }
 
+#[server(endpoint = "reallocate_funds")]
+pub async fn reallocate_funds(
+    budget_id: Uuid,
+    period_id: PeriodId,
+    from_actual_id: Uuid,
+    to_actual_id: Uuid,
+    amount: Money,
+) -> ServerFnResult<BudgetViewModel> {
+    let user = db::get_default_user().await?;
+    db::reallocate_funds(user.id, budget_id, period_id, from_actual_id, to_actual_id, amount)
+        .await?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
+}
+
 #[server(endpoint = "create_allocation")]
 pub async fn create_allocation(
     budget_id: Uuid,
@@ -396,6 +410,16 @@ pub async fn update_rule(
 ) -> ServerFnResult<BudgetViewModel> {
     let user = db::get_default_user().await?;
     db::modify_rule(user.id, budget_id, rule_id, transaction_key).await?;
+    db::evaluate_tag_rules(user.id, budget_id).await?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
+}
+
+#[server(endpoint = "apply_all_rules")]
+pub async fn apply_all_rules(
+    budget_id: Uuid,
+    period_id: PeriodId,
+) -> ServerFnResult<BudgetViewModel> {
+    let user = db::get_default_user().await?;
     db::evaluate_tag_rules(user.id, budget_id).await?;
     Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }

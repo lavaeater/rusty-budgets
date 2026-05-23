@@ -186,3 +186,22 @@
     align-items: center;
     padding-top: 4px;
 }
+
+
+/* Bulk-apply rules bar */
+.bulk-rules-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    padding: 10px 16px;
+    margin-bottom: 16px;
+}
+
+.bulk-rules-hint {
+    font-size: 0.875rem;
+    color: #1e40af;
+}

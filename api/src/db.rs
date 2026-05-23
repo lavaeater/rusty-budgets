@@ -238,6 +238,21 @@ pub async fn adjust_actual_funds(
     Ok(budget_id)
 }
 
+pub async fn reallocate_funds(
+    user_id: Uuid,
+    budget_id: Uuid,
+    period_id: PeriodId,
+    from_actual_id: Uuid,
+    to_actual_id: Uuid,
+    amount: Money,
+) -> Result<Uuid, RustyError> {
+    runtime()
+        .await
+        .reallocate_budgeted_funds(user_id, budget_id, period_id, from_actual_id, to_actual_id, amount)
+        .await?;
+    Ok(budget_id)
+}
+
 pub async fn create_allocation(
     user_id: Uuid,
     budget_id: Uuid,

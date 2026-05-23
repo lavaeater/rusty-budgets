@@ -777,6 +777,139 @@
     align-items: center;
 }
 
+/* Past-period callout */
+.past-period-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 0.9rem;
+    color: #475569;
+    margin-bottom: 12px;
+}
+
+.past-period-go-now {
+    background: none;
+    border: none;
+    color: #667eea;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 0;
+}
+
+.past-period-go-now:hover {
+    text-decoration: underline;
+}
+
+/* Overview card progress bar */
+.overview-progress-bar {
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 14px;
+}
+
+.overview-bar-fill {
+    height: 100%;
+    background: #667eea;
+    border-radius: 3px;
+    transition: width 0.4s ease;
+}
+
+.overview-bar-fill.over {
+    background: #ef4444;
+}
+
+/* Per-item mini progress bar */
+.mini-bar {
+    height: 3px;
+    background: #e2e8f0;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 4px;
+    width: 100%;
+}
+
+.mini-bar-fill {
+    height: 100%;
+    background: #667eea;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+.mini-bar-fill.over {
+    background: #ef4444;
+}
+
+/* Assign-nudge banner */
+.assign-nudge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fffbeb;
+    border: 1px solid #fcd34d;
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-size: 0.95rem;
+    color: #78350f;
+    margin-bottom: 12px;
+}
+
+.assign-nudge-icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+/* Take-from picker (reallocation) */
+.take-from-picker {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    padding: 8px 12px;
+    background: #f0fdf4;
+    border: 1px solid #86efac;
+    border-radius: 8px;
+}
+
+.take-from-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #15803d;
+    white-space: nowrap;
+    margin-right: 4px;
+}
+
+.take-from-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: white;
+    border: 1px solid #86efac;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    color: #15803d;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.take-from-option:hover {
+    background: #dcfce7;
+    border-color: #4ade80;
+}
+
+.take-from-remaining {
+    color: #86efac;
+    font-size: 0.75rem;
+}
+
 /* Period navigation */
 .period-nav {
     display: flex;
