@@ -297,6 +297,20 @@ mod tests {
     }
 
     #[test]
+    #[should_panic(expected = "Currency mismatch")]
+    fn test_money_arithmetic_currency_mismatch_add_assign() {
+        let mut money1 = Money::new_dollars(100, Currency::USD);
+        money1 += Money::new_dollars(50, Currency::EUR);
+    }
+
+    #[test]
+    #[should_panic(expected = "Currency mismatch")]
+    fn test_money_arithmetic_currency_mismatch_sub_assign() {
+        let mut money1 = Money::new_dollars(100, Currency::USD);
+        money1 -= Money::new_dollars(50, Currency::EUR);
+    }
+
+    #[test]
     fn test_money_equality() {
         let money1 = Money::new_dollars(100, Currency::USD);
         let money2 = Money::new_dollars(100, Currency::USD);

@@ -14,7 +14,7 @@ mod tag_transactions_view;
 mod tags_view;
 mod transactions_view;
 
-pub use budget_hero::BudgetHero;
+pub use budget_hero::{BudgetHero, BudgetState};
 pub use budget_item_status_view::BudgetItemStatusView;
 pub use budget_item_view::BudgetItemView;
 pub use budget_tabs::BudgetTabs;

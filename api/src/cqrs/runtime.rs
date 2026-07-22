@@ -1614,11 +1614,13 @@ impl AsyncBudgetCommandsTrait for PgRuntime {
                     None => {
                         let mut n_pg_ub = PgUserBudgets::new();
                         n_pg_ub.id = user_id;
-                        n_pg_ub.budgets = serde_json::to_value(UserBudgets {
-                            id: user_id,
-                            budgets: vec![],
-                        })
-                        .expect("Could not serialize user budgets");
+                        // The `budgets` column stores just the `Vec<(Uuid, bool)>`
+                        // list (see `From<PgUserBudgets> for UserBudgets`), not the
+                        // whole `UserBudgets` struct — otherwise the row round-trips
+                        // as a map and deserialisation fails with
+                        // "invalid type: map, expected a sequence".
+                        n_pg_ub.budgets = serde_json::to_value(Vec::<(Uuid, bool)>::new())
+                            .expect("Could not serialize user budgets");
                         n_pg_ub
                     }
                     Some(pg_ub) => pg_ub,
@@ -1630,7 +1632,8 @@ impl AsyncBudgetCommandsTrait for PgRuntime {
                         budget.1 = false;
                     }
                     ub.budgets.push((budget_id, default));
-                    pg_ub.budgets = serde_json::to_value(ub).expect("Could not serialize user budgets");
+                    pg_ub.budgets =
+                        serde_json::to_value(&ub.budgets).expect("Could not serialize user budgets");
                     pg_ub.save(self.client.as_ref()).await?;
                 }
                 Ok(user_id)
