@@ -1,0 +1,14 @@
+{
+  "name": "rusty-budgets-e2e",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Playwright end-to-end tests for Rusty Budgets (Layer 4, see docs/testing.md)",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0"
+  }
+}

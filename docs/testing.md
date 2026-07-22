@@ -329,9 +329,15 @@ cd e2e && npm test             # E2E (auto-starts `dx run --package web`)
    `pretty_assertions` dev-deps added to `ui`; `ui/tests/component_render.rs`
    holds the `render_element` helper and the context-provider pattern.* Still
    open: the heavy workflow views (`tag_transactions_view`, budget-item creation).
-4. ⬜ **Playwright scaffold (Layer 4)** — copy oxidian's `e2e/`, wire the
-   throwaway-DB strategy, write the import → tagging → items happy path first.
-5. ⬜ **Snapshots + CI wiring**, then broaden E2E workflow-by-workflow.
+4. ✅ **Playwright scaffold (Layer 4)** — *Done & green (2 tests): `e2e/` holds
+   the Playwright project with the throwaway-SQLite strategy (`DATABASE_URL` +
+   empty `DATA_FILE`) wired into `webServer.command`, and an `onboarding` spec
+   (fresh-DB create-budget screen → overview). It immediately caught and we fixed
+   a real first-budget-creation panic in the SQL runtime.* Next: import →
+   tagging → items.
+5. ◐ **Snapshots + CI wiring** — *CI done: `.github/workflows/{ci,e2e}.yml`
+   (fast native gate + the Playwright job).* Snapshots (`insta`) still open.
+   Then broaden E2E workflow-by-workflow.
 
 ## Implementation status
 
@@ -378,7 +384,35 @@ cd e2e && npm test             # E2E (auto-starts `dx run --package web`)
   > A single `rebuild_in_place`/`render_element` pass renders **initial state
   > only** — effects, `document::eval` JS, and event handlers don't run, so
   > interaction (button clicks, the take-from picker) stays in Layer 4.
-- **Layer 4 (Playwright E2E)** — not started; no `e2e/` dir yet.
+- **Layer 4 (Playwright E2E) — green (2 passing).** `e2e/` holds a working
+  Playwright project (`npm test`). Because Rusty Budgets is *fullstack* over a
+  SQL DB (welds/SQLite via `DATABASE_URL`), the harness needed a **real server +
+  a throwaway database**, not the localStorage/route-mocking a client-only app
+  would use. The `webServer.command` runs the `api` migration binary against a
+  per-run temp SQLite file (with `DATA_FILE` pointed at an empty file so the
+  binary's JoyDB→SQL copy is a no-op → a clean, empty, migrated DB), then boots
+  `dx serve -p web --fullstack true --web --hot-reload false`. On first request
+  the server auto-creates the default user; a budget-less DB boots into the
+  "Ingen budget hittad" screen. Spec: `onboarding.spec.js` (`describe.serial`) —
+  the create-budget screen renders on a fresh DB, and creating a budget lands on
+  the overview (name heading + "Verktyg" tools).
+  > **Bug surfaced by the onboarding spec (now fixed):** creating the *first*
+  > budget for any user panicked server-side in `add_budget_to_user`
+  > (`api/src/cqrs/runtime.rs`) — the freshly-initialised `user_budgets` row
+  > serialised the whole `UserBudgets` struct into the `budgets` JSON column
+  > instead of just its `Vec<(Uuid, bool)>`, so the immediate read-back failed
+  > with *"invalid type: map, expected a sequence"* (`pg_models.rs:147`). Two
+  > write sites were storing the struct-shaped value; both now serialise the bare
+  > vec, matching `From<UserBudgets> for DbState<PgUserBudgets>`. The in-memory
+  > JoyDB unit/CQRS tests never exercised the SQL runtime, so **only the
+  > fullstack E2E could catch this** — a textbook case for the top of the pyramid.
+  > A targeted SQLite integration test for the `PgRuntime` (`sqlite::memory:` +
+  > `migrations::up`) is the recommended follow-up to guard it at the fast layer.
+  Next: import a Skandia fixture, the tagging loop, transfer-pair resolution,
+  budget-item creation.
+- **CI — wired.** `.github/workflows/ci.yml` runs `cargo test --workspace` +
+  `cargo clippy -D warnings` (the fast Layers 1–3 gate); `e2e.yml` installs
+  `dx` + Node + Playwright and runs the E2E suite, uploading the HTML report.
 
 ## Non-goals
 - Testing the vendored `dioxus-primitives` components in `ui/src/components/*`
