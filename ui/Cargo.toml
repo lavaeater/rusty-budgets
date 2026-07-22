@@ -13,5 +13,12 @@ chrono = {workspace = true}
 lucide-dioxus = { workspace = true }
 rfd = { version = "0.17.2", features = ["xdg-portal"] }
 
+[dev-dependencies]
+# Layer 3 test harness: render components to HTML on the native target (no
+# browser). See docs/testing.md. dioxus-ssr is used purely as a test harness —
+# there is no SSR in production for the UI crate.
+dioxus-ssr = "0.7"
+pretty_assertions = "1"
+
 [features]
 server = ["api/server"]

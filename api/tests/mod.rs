@@ -1298,3 +1298,181 @@ pub fn allocation_view_model_from_allocation() {
     assert_eq!(vm.allocation_id, alloc.id);
     assert_eq!(vm.amount, Money::new_dollars(200, Currency::SEK));
 }
+
+// ============================================================================
+// potential_internal_transfers (pure aggregate detection)
+// ============================================================================
+
+/// Helper: a UTC datetime at midnight for a given calendar date.
+fn at(year: i32, month: u32, day: u32) -> DateTime<Utc> {
+    NaiveDate::from_ymd_opt(year, month, day)
+        .unwrap()
+        .and_hms_opt(0, 0, 0)
+        .unwrap()
+        .and_utc()
+}
+
+#[test]
+pub fn potential_transfers_detects_matching_pair() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let budget_id = rt.create_budget(user_id, "T", true, MonthBeginsOn::default(), Currency::SEK)?;
+
+    let out_id = rt.add_transaction(user_id, budget_id, "accA", Money::new_dollars(-1000, Currency::SEK), Money::new_dollars(9000, Currency::SEK), "Överföring ut", at(2025, 6, 10))?;
+    let in_id = rt.add_transaction(user_id, budget_id, "accB", Money::new_dollars(1000, Currency::SEK), Money::new_dollars(11000, Currency::SEK), "Överföring in", at(2025, 6, 11))?;
+
+    let budget = rt.load(budget_id)?;
+    let pairs = budget.potential_internal_transfers();
+    assert_eq!(pairs.len(), 1);
+    // The pair is (outgoing, incoming) — the negative side is discovered first.
+    let (a, b) = pairs[0];
+    assert!((a == out_id && b == in_id) || (a == in_id && b == out_id));
+    Ok(())
+}
+
+#[test]
+pub fn potential_transfers_respects_three_day_window() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let budget_id = rt.create_budget(user_id, "T", true, MonthBeginsOn::default(), Currency::SEK)?;
+
+    // Exactly 3 days apart -> still a pair (boundary is inclusive).
+    rt.add_transaction(user_id, budget_id, "accA", Money::new_dollars(-500, Currency::SEK), Money::new_dollars(9000, Currency::SEK), "ut", at(2025, 6, 10))?;
+    rt.add_transaction(user_id, budget_id, "accB", Money::new_dollars(500, Currency::SEK), Money::new_dollars(11000, Currency::SEK), "in", at(2025, 6, 13))?;
+    let budget = rt.load(budget_id)?;
+    assert_eq!(budget.potential_internal_transfers().len(), 1, "3 days apart should pair");
+
+    // 4 days apart -> no pair.
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let budget_id = rt.create_budget(user_id, "T", true, MonthBeginsOn::default(), Currency::SEK)?;
+    rt.add_transaction(user_id, budget_id, "accA", Money::new_dollars(-500, Currency::SEK), Money::new_dollars(9000, Currency::SEK), "ut", at(2025, 6, 10))?;
+    rt.add_transaction(user_id, budget_id, "accB", Money::new_dollars(500, Currency::SEK), Money::new_dollars(11000, Currency::SEK), "in", at(2025, 6, 14))?;
+    let budget = rt.load(budget_id)?;
+    assert!(budget.potential_internal_transfers().is_empty(), "4 days apart should not pair");
+    Ok(())
+}
+
+#[test]
+pub fn potential_transfers_requires_different_accounts() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let budget_id = rt.create_budget(user_id, "T", true, MonthBeginsOn::default(), Currency::SEK)?;
+
+    // Same account, opposite amounts -> not an internal transfer.
+    rt.add_transaction(user_id, budget_id, "accA", Money::new_dollars(-500, Currency::SEK), Money::new_dollars(9000, Currency::SEK), "ut", at(2025, 6, 10))?;
+    rt.add_transaction(user_id, budget_id, "accA", Money::new_dollars(500, Currency::SEK), Money::new_dollars(9500, Currency::SEK), "in", at(2025, 6, 11))?;
+    let budget = rt.load(budget_id)?;
+    assert!(budget.potential_internal_transfers().is_empty());
+    Ok(())
+}
+
+#[test]
+pub fn potential_transfers_excludes_rejected_pairs() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let budget_id = rt.create_budget(user_id, "T", true, MonthBeginsOn::default(), Currency::SEK)?;
+
+    let out_id = rt.add_transaction(user_id, budget_id, "accA", Money::new_dollars(-750, Currency::SEK), Money::new_dollars(9000, Currency::SEK), "ut", at(2025, 6, 10))?;
+    let in_id = rt.add_transaction(user_id, budget_id, "accB", Money::new_dollars(750, Currency::SEK), Money::new_dollars(11000, Currency::SEK), "in", at(2025, 6, 11))?;
+
+    // Before rejection: detected.
+    assert_eq!(rt.load(budget_id)?.potential_internal_transfers().len(), 1);
+
+    // After rejection: excluded.
+    rt.reject_transfer_pair(user_id, budget_id, out_id, in_id)?;
+    assert!(rt.load(budget_id)?.potential_internal_transfers().is_empty());
+    Ok(())
+}
+
+// ============================================================================
+// Transfer pair resolution semantics (the CLAUDE.md savings model)
+//
+// resolve_transfer_pair lives in the async db layer as a composition of
+// tag_transaction + ignore_transaction. These tests assert the two resulting
+// end-states directly against the runtime:
+//   - float:   both sides ignored, neither tagged
+//   - savings: outgoing (spending) side tagged, incoming (receipt) side ignored
+// ============================================================================
+
+#[test]
+pub fn resolve_transfer_pair_float_ignores_both() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let budget_id = rt.create_budget(user_id, "T", true, MonthBeginsOn::default(), Currency::SEK)?;
+
+    let out_id = rt.add_transaction(user_id, budget_id, "accA", Money::new_dollars(-1000, Currency::SEK), Money::new_dollars(9000, Currency::SEK), "ut", at(2025, 6, 10))?;
+    let in_id = rt.add_transaction(user_id, budget_id, "accB", Money::new_dollars(1000, Currency::SEK), Money::new_dollars(11000, Currency::SEK), "in", at(2025, 6, 11))?;
+
+    // Float path: tag_id = None -> ignore both.
+    rt.ignore_transaction(budget_id, out_id, user_id)?;
+    rt.ignore_transaction(budget_id, in_id, user_id)?;
+
+    let budget = rt.load(budget_id)?;
+    let out = budget.get_transaction(out_id).unwrap();
+    let inc = budget.get_transaction(in_id).unwrap();
+    assert!(out.ignored && inc.ignored, "both sides ignored");
+    assert!(out.tag_id.is_none() && inc.tag_id.is_none(), "neither side tagged");
+    // Resolved pair no longer surfaces as a potential transfer.
+    assert!(budget.potential_internal_transfers().is_empty());
+    Ok(())
+}
+
+#[test]
+pub fn resolve_transfer_pair_savings_tags_outgoing_ignores_incoming() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let budget_id = rt.create_budget(user_id, "T", true, MonthBeginsOn::default(), Currency::SEK)?;
+
+    let savings_tag = rt.create_tag(user_id, budget_id, "Buffert".to_string(), Periodicity::Monthly)?;
+    let out_id = rt.add_transaction(user_id, budget_id, "accA", Money::new_dollars(-1000, Currency::SEK), Money::new_dollars(9000, Currency::SEK), "ut", at(2025, 6, 10))?;
+    let in_id = rt.add_transaction(user_id, budget_id, "accB", Money::new_dollars(1000, Currency::SEK), Money::new_dollars(11000, Currency::SEK), "in", at(2025, 6, 11))?;
+
+    // Savings path: tag the outgoing (spending) side, ignore the incoming (receipt).
+    rt.tag_transaction(user_id, budget_id, out_id, savings_tag)?;
+    rt.ignore_transaction(budget_id, in_id, user_id)?;
+
+    let budget = rt.load(budget_id)?;
+    let out = budget.get_transaction(out_id).unwrap();
+    let inc = budget.get_transaction(in_id).unwrap();
+    assert_eq!(out.tag_id, Some(savings_tag), "outgoing (spending) side carries the savings tag");
+    assert!(!out.ignored, "outgoing side is the budget event, not ignored");
+    assert!(inc.ignored, "incoming (receipt) side is ignored");
+    assert!(inc.tag_id.is_none());
+    Ok(())
+}
+
+// ============================================================================
+// Event-store durability: replay + serde round-trip after many commands.
+// ============================================================================
+
+#[test]
+pub fn aggregate_survives_serde_round_trip_after_workflow() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let now = Utc::now();
+    let period_id = PeriodId::from_date(now, MonthBeginsOn::default());
+    let budget_id = rt.create_budget(user_id, "RT Budget", true, MonthBeginsOn::default(), Currency::SEK)?;
+
+    // Exercise a spread of events: tag, item, actual, transaction, rule.
+    let tag_id = rt.create_tag(user_id, budget_id, "Mat".to_string(), Periodicity::Monthly)?;
+    let item_id = rt.add_item(user_id, budget_id, "Livsmedel".to_string(), BudgetingType::Expense)?;
+    rt.add_actual(user_id, budget_id, item_id, Money::new_dollars(3000, Currency::SEK), period_id)?;
+    let tx_id = rt.add_transaction(user_id, budget_id, "accA", Money::new_dollars(-120, Currency::SEK), Money::new_dollars(9000, Currency::SEK), "WILLYS MAT", now)?;
+    rt.tag_transaction(user_id, budget_id, tx_id, tag_id)?;
+    rt.add_rule(user_id, budget_id, vec!["willys".to_string()], vec![], true, Some(tag_id))?;
+
+    // Load the replayed aggregate, serialise, deserialise, and assert it is stable.
+    let budget = rt.load(budget_id)?;
+    let json = serde_json::to_string(&budget)?;
+    let restored: Budget = serde_json::from_str(&json)?;
+
+    assert_eq!(restored.id, budget.id);
+    assert_eq!(restored.version, budget.version);
+    assert_eq!(restored.tags.len(), budget.tags.len());
+    assert_eq!(restored.items.len(), budget.items.len());
+    assert_eq!(restored.match_rules.len(), budget.match_rules.len());
+    assert_eq!(restored.get_transaction(tx_id).unwrap().tag_id, Some(tag_id));
+    // Re-serialising the restored aggregate must be byte-identical (stable form).
+    assert_eq!(serde_json::to_string(&restored)?, json);
+    Ok(())
+}
