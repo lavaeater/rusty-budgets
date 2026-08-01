@@ -9,7 +9,6 @@ use api::view_models::*;
 use api::{create_tag, ignore_transaction, set_item_buffer, tag_transaction};
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
-use dioxus_primitives::slider::SliderValue;
 use lucide_dioxus::Pen;
 use std::collections::HashSet;
 use uuid::Uuid;
@@ -430,14 +429,13 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                             },
                         }
                         Slider {
-                            value: SliderValue::Single(budgeted_amount().amount_in_dollars() as f64),
+                            value: Some(budgeted_amount().amount_in_dollars() as f64),
                             min: 0.0,
                             max: (budgeted_amount() + remaining_to_budget).amount_in_dollars() as f64,
                             step: 1.0,
                             label: "MONEEYYY",
                             horizontal: true,
-                            on_value_change: move |v| {
-                                let SliderValue::Single(v) = v;
+                            on_value_change: move |v: f64| {
                                 budgeted_amount.set(Money::new_dollars(v as i64, budget_signal().currency));
                             },
                             SliderTrack {

@@ -25,9 +25,10 @@ pub fn ItemSelector(
 
     rsx! {
         Select::<BudgetItemViewModel> {
-            placeholder: "Välj en budgetpost",
             on_value_change: move |e| on_change.call(e),
-            SelectTrigger { aria_label: "Select Trigger", width: "12rem", SelectValue {} }
+            SelectTrigger { aria_label: "Select Trigger", width: "12rem",
+                SelectValue { placeholder: "Välj en budgetpost" }
+            }
             SelectList { aria_label: "Select Demo",
                 SelectGroup {
                     SelectGroupLabel { "Budgetposter" }
