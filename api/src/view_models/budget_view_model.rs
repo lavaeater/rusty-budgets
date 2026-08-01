@@ -202,7 +202,7 @@ impl BudgetViewModel {
                     .map(|tx| tx.amount.abs())
                     .sum();
                 let net = income - expense;
-                running_net = running_net + net;
+                running_net += net;
                 PeriodSummary {
                     period_id: period.id,
                     income_actual: income,
