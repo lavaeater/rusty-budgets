@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 dioxus = { workspace = true }
-dioxus-primitives = { git = "https://github.com/DioxusLabs/components", version = "0.0.1", default-features = false }
+dioxus-primitives = { git = "https://github.com/lavaeater/dioxus-components.git", branch = "0.8", version = "0.0.1", default-features = false }
 api = { workspace = true }
 uuid = { workspace = true  }
 strum = { workspace = true }
@@ -17,7 +17,7 @@ rfd = { version = "0.17.2", features = ["xdg-portal"] }
 # Layer 3 test harness: render components to HTML on the native target (no
 # browser). See docs/testing.md. dioxus-ssr is used purely as a test harness —
 # there is no SSR in production for the UI crate.
-dioxus-ssr = "0.7"
+dioxus-ssr = "0.8.0-alpha.1"
 pretty_assertions = "1"
 
 [features]

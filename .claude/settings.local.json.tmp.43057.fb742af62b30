@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cargo check:*)",
+      "Bash(xargs ls:*)",
+      "Bash(find /home/tommie/projects/rusty-budgets/web/assets -name *.css)",
+      "Bash(cargo build:*)",
+      "Bash(xargs cat *)",
+      "Bash(cargo clippy *)",
+      "Bash(dx build *)",
+      "Bash(cargo test *)",
+      "Bash(grep -E \"^error|^test |FAILED|ok$|PASSED\")",
+      "Bash(cargo llvm-cov *)",
+      "Bash(awk '/^Filename/{printf \"%-50s %9s %8s %13s %9s\\\\n\",\"File\",\"MissLine\",\"Line%\",\"MissBranch\",\"Branch%\"; printf \"%s\\\\n\",\"--------------------------------------------------\"; next} /^-/{next} NF==13{printf \"%-50s %9s %8s %13s %9s\\\\n\",$1,$9,$10,$12,$13; next} {print}')",
+      "Bash(awk '/^Filename/{printf \"%-50s %8s %13s\\\\n\",\"File\",\"Line%\",\"Branch%\"; printf \"%s\\\\n\",\"--------------------------------------------------\"; next} /^-/{next} NF==13{printf \"%-50s %8s %13s\\\\n\",$1,$10,$13; next} /^TOTAL/{print}')",
+      "Bash(dx --version)",
+      "Bash(dx serve *)",
+      "Bash(npm install *)",
+      "Bash(npx playwright *)",
+      "Bash(npm test *)",
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(rm -rf test-results)",
+      "Bash(cargo tree *)",
+      "Bash(cargo update *)",
+      "Bash(cargo generate-lockfile *)",
+      "Read(//home/tommie/.cargo/git/checkouts/dioxus-components-255988700d9042e0/1e47832/**)",
+      "Bash(cargo search *)",
+      "Read(//home/tommie/.cargo/registry/src/**)",
+      "Bash(grep -rn 'pub fn sleep\\\\|pub async fn sleep\\\\|fn sleep' __CMDSUB_OUTPUT__/src/)",
+      "Bash(grep -A30 '\\\\[dependencies\\\\]' __CMDSUB_OUTPUT__/Cargo.toml)",
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "Bash(git commit -q -m 'Upgrade to Dioxus 0.8.0-alpha.1 *)"
+    ]
+  }
+}
