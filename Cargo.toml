@@ -9,6 +9,11 @@ members = [
     "cqrs_macros",
 ]
 
+[workspace.lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+must_use_candidate = "allow"
+missing_errors_doc = "allow"
+
 [workspace.dependencies]
 dioxus = { version = "0.8.0-alpha.1", features = ["fullstack"] }
 lucide-dioxus = { git="https://github.com/lavaeater/lucide.git", branch="main", features = ["all-icons"] }
