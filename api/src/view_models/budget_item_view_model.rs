@@ -27,7 +27,7 @@ pub struct BudgetItemViewModel {
     pub transactions: Vec<TransactionViewModel>,
     /// The total amount this item needs to have available (e.g. 1200 kr for annual insurance).
     pub buffer_target: Option<Money>,
-    /// Computed: buffer_target ÷ periodicity_months. None if no buffer target is set.
+    /// Computed: `buffer_target` ÷ `periodicity_months`. None if no buffer target is set.
     pub required_monthly_contribution: Option<Money>,
 }
 
@@ -58,8 +58,7 @@ impl BudgetItemViewModel {
 
         // Determine effective budgeting type (actual_item takes precedence over budget_item)
         let effective_budgeting_type = actual_item
-            .map(|ai| ai.budgeting_type)
-            .unwrap_or(budget_item.budgeting_type);
+            .map_or(budget_item.budgeting_type, |ai| ai.budgeting_type);
 
         // Compute required monthly buffer contribution from tag periodicities
         let required_monthly_contribution = budget_item.buffer_target.map(|target| {
@@ -115,12 +114,7 @@ impl BudgetItemViewModel {
             };
 
             // Transactions: prefer tag-based; fall back to connected/allocation-based
-            let txs = if !tagged_txs.is_empty() {
-                tagged_txs
-                    .iter()
-                    .map(|tx| TransactionViewModel::from_transaction(tx))
-                    .collect()
-            } else {
+            let txs = if tagged_txs.is_empty() {
                 let mut old_txs = transactions
                     .iter()
                     .filter(|tx| {
@@ -131,6 +125,11 @@ impl BudgetItemViewModel {
                     .collect::<Vec<_>>();
                 old_txs.sort_by_key(|tx| tx.date);
                 old_txs
+            } else {
+                tagged_txs
+                    .iter()
+                    .map(|tx| TransactionViewModel::from_transaction(tx))
+                    .collect()
             };
 
             let status = if actual_item.budgeted_amount.is_zero() {

@@ -62,6 +62,8 @@ impl From<DbState<PgBudget>> for Budget {
 }
 
 impl<A: Aggregate, E: DomainEvent<A>> StoredEvent<A, E> {
+    /// # Panics
+    /// Panics if the current time cannot be represented as nanoseconds since the Unix epoch.
     pub fn new(data: E, user_id: Uuid) -> Self {
         let aggregate_id = data.aggregate_id();
         let event_id = Uuid::new_v4();

@@ -4,6 +4,9 @@ use chrono::{DateTime, Datelike, Days, Months, TimeZone, Utc};
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
+/// # Panics
+/// Never panics for valid `DateTime<Utc>` inputs: adding a month, setting day 1, and
+/// subtracting a day always stay within representable date bounds.
 pub fn last_day_of_month(dt: DateTime<Utc>) -> DateTime<Utc> {
     let first_next_month = dt
         .checked_add_months(Months::new(1))
@@ -28,14 +31,15 @@ impl Display for PeriodId {
 }
 
 impl PeriodId {
+    /// # Panics
+    /// Panics if `month_begins_on` is `MonthBeginsOn::PreviousMonth(1)` — use
+    /// `PreviousMonth1stDayOfMonth` instead.
     pub fn from_date(date: DateTime<Utc>, month_begins_on: MonthBeginsOn) -> Self {
         // Determine which period this date falls into
         // The period ID represents the END month of the period
         match month_begins_on {
             MonthBeginsOn::PreviousMonth(day) => {
-                if day == 1 {
-                    panic!("Cannot start on day 1, use PreviousMonth1stDayOfMonth")
-                }
+                assert!(day != 1, "Cannot start on day 1, use PreviousMonth1stDayOfMonth");
                 // Period runs from day D of previous month to day D-1 of current month
                 // If date is >= day D, it belongs to NEXT month's period
                 // If date is < day D, it belongs to CURRENT month's period
@@ -55,9 +59,7 @@ impl PeriodId {
                 }
             }
             MonthBeginsOn::CurrentMonth(day) => {
-                if day == 1 {
-                    panic!("Cannot start on day 1, use CurrentMonth1stDayOfMonth")
-                }
+                assert!(day != 1, "Cannot start on day 1, use CurrentMonth1stDayOfMonth");
                 // Period runs from day D of current month to day D-1 of next month
                 // If date is >= day D, it belongs to NEXT month's period
                 // If date is < day D, it belongs to CURRENT month's period
@@ -90,9 +92,7 @@ impl PeriodId {
                 }
             }
             MonthBeginsOn::PreviousMonthWorkDayBefore(day) => {
-                if day == 1 {
-                    panic!("Cannot start on day 1, use PreviousMonth1stDayOfMonth")
-                }
+                assert!(day != 1, "Cannot start on day 1, use PreviousMonth1stDayOfMonth");
 
                 // Get the target day in the current month
                 let target_date = Utc
@@ -122,9 +122,7 @@ impl PeriodId {
                 }
             }
             MonthBeginsOn::CurrentMonthWorkDayBefore(day) => {
-                if day == 1 {
-                    panic!("Cannot start on day 1, use PreviousMonth1stDayOfMonth")
-                }
+                assert!(day != 1, "Cannot start on day 1, use PreviousMonth1stDayOfMonth");
 
                 // Get the target day in the current month
                 let target_day = day;
@@ -160,6 +158,7 @@ impl PeriodId {
         Self { year, month }
     }
 
+    #[must_use]
     pub fn month_before(&self) -> Self {
         if self.month == 1 {
             Self {
@@ -174,6 +173,7 @@ impl PeriodId {
         }
     }
 
+    #[must_use]
     pub fn month_after(&self) -> Self {
         if self.month == 12 {
             Self {

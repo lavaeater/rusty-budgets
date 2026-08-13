@@ -51,7 +51,7 @@ impl Display for MatchRule {
 }
 
 // Default stopwords to filter out from tokenized descriptions
-static DEFAULT_STOPWORDS: Lazy<HashSet<&'static str>> = Lazy::new(|| {
+static DEFAULT_STOPWORDS: std::sync::LazyLock<HashSet<&'static str>> = std::sync::LazyLock::new(|| {
     /*
                "orebro",
            "vastha,",
@@ -67,7 +67,7 @@ static DEFAULT_STOPWORDS: Lazy<HashSet<&'static str>> = Lazy::new(|| {
 });
 
 // Default stopwords to filter out from tokenized descriptions
-static DEFAULT_PLACE_NAMES: Lazy<HashSet<&'static str>> = Lazy::new(|| {
+static DEFAULT_PLACE_NAMES: std::sync::LazyLock<HashSet<&'static str>> = std::sync::LazyLock::new(|| {
     /*
                "orebro",
            "vastha,",
@@ -96,16 +96,16 @@ fn is_date_pattern(s: &str) -> bool {
 
         if parts.len() == 3 {
             return parts[0].len() == 4
-                && parts[0].chars().all(|c| c.is_numeric())
+                && parts[0].chars().all(char::is_numeric)
                 && parts[1].len() == 2
-                && parts[1].chars().all(|c| c.is_numeric())
+                && parts[1].chars().all(char::is_numeric)
                 && parts[2].len() == 2
-                && parts[2].chars().all(|c| c.is_numeric());
+                && parts[2].chars().all(char::is_numeric);
         }
     }
 
     // Pattern: YYYYMMDD
-    if s.len() == 8 && s.chars().all(|c| c.is_numeric()) {
+    if s.len() == 8 && s.chars().all(char::is_numeric) {
         return true;
     }
 
@@ -134,7 +134,7 @@ pub fn tokenize_description(description: &str) -> Vec<String> {
     description
         .to_lowercase()
         .split_whitespace()
-        .map(|s| s.to_string())
+        .map(std::string::ToString::to_string)
         .filter(|token| {
             // Filter out dates
             !is_date_pattern(token) &&
@@ -148,7 +148,7 @@ pub fn tokenize_description(description: &str) -> Vec<String> {
 pub fn strip_dates(description: &str) -> String {
     description
         .split_whitespace()
-        .map(|s| s.to_string())
+        .map(std::string::ToString::to_string)
         .filter(|token| {
             // Filter out dates
             !is_date_pattern(token)
@@ -164,6 +164,7 @@ pub fn strip_dates(description: &str) -> String {
 ///
 /// # Returns
 /// A vector of filtered tokens
+#[allow(clippy::implicit_hasher)]
 pub fn tokenize_description_with_stopwords(
     description: &str,
     custom_stopwords: &HashSet<String>,
@@ -171,7 +172,7 @@ pub fn tokenize_description_with_stopwords(
     description
         .to_lowercase()
         .split_whitespace()
-        .map(|s| s.to_string())
+        .map(std::string::ToString::to_string)
         .filter(|token| {
             !is_date_pattern(token)
                 && !DEFAULT_STOPWORDS.contains(token.as_str())

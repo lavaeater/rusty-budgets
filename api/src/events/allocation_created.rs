@@ -68,8 +68,7 @@ impl AllocationCreatedHandler for Budget {
     ) -> Result<AllocationCreated, CommandError> {
         if !self.contains_transaction(transaction_id) {
             return Err(CommandError::NotFound(format!(
-                "Transaction {} not found",
-                transaction_id
+                "Transaction {transaction_id} not found"
             )));
         }
         let period = self
@@ -79,8 +78,7 @@ impl AllocationCreatedHandler for Budget {
             })?;
         if !period.contains_actual(actual_id) {
             return Err(CommandError::NotFound(format!(
-                "ActualItem {} not found in period",
-                actual_id
+                "ActualItem {actual_id} not found in period"
             )));
         }
         Ok(AllocationCreated {

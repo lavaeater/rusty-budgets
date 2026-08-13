@@ -7,6 +7,7 @@ use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]
 #[domain_event(aggregate = "Budget")]
+#[allow(clippy::struct_field_names)]
 pub struct TransactionConnected {
     budget_id: Uuid,
     tx_id: Uuid,

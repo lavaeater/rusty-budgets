@@ -74,8 +74,7 @@ impl BudgetedFundsReallocatedHandler for Budget {
             })
         } else {
             Err(CommandError::Validation(format!(
-                "Period does not exist: {}",
-                period_id
+                "Period does not exist: {period_id}"
             )))
         }
     }

@@ -10,7 +10,7 @@ use uuid::Uuid;
 fn extract_transfer_account_number(description: &str) -> Option<String> {
     let desc = description.trim();
     if let Some(rest) = desc.strip_prefix("Överföring ") {
-        let digits: String = rest.chars().filter(|c| c.is_ascii_digit()).collect();
+        let digits: String = rest.chars().filter(char::is_ascii_digit).collect();
         if digits.starts_with("915") {
             return Some(digits);
         }
@@ -127,13 +127,9 @@ pub async fn import_from_skandia_excel(
                 }
 
                 let acct_no = account_number.clone().ok_or(ImportError::AccountNumberMissing)?;
-                match runtime
+                if let Ok(_) = runtime
                     .add_transaction(user_id, budget_id, &acct_no, amount, balance, &description, date)
-                    .await
-                {
-                    Ok(_) => { imported += 1; total_rows += 1; }
-                    Err(_) => { not_imported += 1; total_rows += 1; }
-                }
+                    .await { imported += 1; total_rows += 1; } else { not_imported += 1; total_rows += 1; }
             }
         }
         info!(
@@ -178,12 +174,9 @@ pub fn import_from_skandia_excel_sync(
                 }
 
                 let acct_no = account_number.clone().ok_or(ImportError::AccountNumberMissing)?;
-                match runtime.add_transaction(
+                if let Ok(_) = runtime.add_transaction(
                     user_id, budget_id, &acct_no, amount, balance, &description, date,
-                ) {
-                    Ok(_) => { imported += 1; total_rows += 1; }
-                    Err(_) => { not_imported += 1; total_rows += 1; }
-                }
+                ) { imported += 1; total_rows += 1; } else { not_imported += 1; total_rows += 1; }
             }
         }
     }
@@ -231,13 +224,9 @@ pub async fn import_from_skandia_excel_bytes(
                 }
 
                 let acct_no = account_number.clone().ok_or(ImportError::AccountNumberMissing)?;
-                match runtime
+                if let Ok(_) = runtime
                     .add_transaction(user_id, budget_id, &acct_no, amount, balance, &description, date)
-                    .await
-                {
-                    Ok(_) => { imported += 1; total_rows += 1; }
-                    Err(_) => { not_imported += 1; total_rows += 1; }
-                }
+                    .await { imported += 1; total_rows += 1; } else { not_imported += 1; total_rows += 1; }
             }
         }
         info!(

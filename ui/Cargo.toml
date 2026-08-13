@@ -3,6 +3,9 @@ name = "ui"
 version = "0.1.0"
 edition = "2024"
 
+[lints]
+workspace = true
+
 [dependencies]
 dioxus = { workspace = true }
 dioxus-primitives = { git = "https://github.com/lavaeater/dioxus-components.git", branch = "0.8", version = "0.0.1", default-features = false }

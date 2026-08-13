@@ -9,7 +9,7 @@ pub async fn up(db: &dyn welds::TransactStart) -> Result<()> {
     Ok(())
 }
 
-/// Creates the four tables that back the joydb AppState models.
+/// Creates the four tables that back the joydb `AppState` models.
 ///
 /// `budget_events` and `budgets` are intentionally schema-light: all domain
 /// state lives in a `data` JSONB column so schema migrations aren't needed

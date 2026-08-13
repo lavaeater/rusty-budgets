@@ -8,7 +8,7 @@ pub struct PeriodSummary {
     pub income_actual: Money,
     /// Actual expenses + savings this period (positive).
     pub expense_actual: Money,
-    /// net = income_actual - expense_actual (negative = deficit).
+    /// net = `income_actual` - `expense_actual` (negative = deficit).
     pub net: Money,
     /// Cumulative net from the earliest period up to and including this one.
     pub running_net: Money,

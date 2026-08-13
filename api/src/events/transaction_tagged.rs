@@ -6,6 +6,7 @@ use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]
 #[domain_event(aggregate = "Budget")]
+#[allow(clippy::struct_field_names)]
 pub struct TransactionTagged {
     budget_id: Uuid,
     tx_id: Uuid,
@@ -27,14 +28,12 @@ impl TransactionTaggedHandler for Budget {
     ) -> Result<TransactionTagged, CommandError> {
         if !self.contains_transaction(tx_id) {
             return Err(CommandError::Validation(format!(
-                "Transaction {} does not exist",
-                tx_id
+                "Transaction {tx_id} does not exist"
             )));
         }
         if !self.contains_tag(tag_id) {
             return Err(CommandError::Validation(format!(
-                "Tag {} does not exist",
-                tag_id
+                "Tag {tag_id} does not exist"
             )));
         }
         Ok(TransactionTagged {

@@ -47,6 +47,9 @@ fn derive_command_fn_name(struct_name: &str) -> String {
     format!("do_{}", words.join("_"))
 }
 
+/// # Panics
+/// Panics if a `#[domain_event]` attribute is missing its `aggregate = "..."` argument.
+#[allow(clippy::too_many_lines)]
 #[proc_macro_derive(DomainEvent, attributes(domain_event, event_id))]
 pub fn derive_domain_event(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -109,12 +112,12 @@ pub fn derive_domain_event(input: TokenStream) -> TokenStream {
         syn::Ident::new(&fn_name, Span::call_site())
     };
 
-    let apply_fn_name = format!("apply_{}", command_fn_ident);
+    let apply_fn_name = format!("apply_{command_fn_ident}");
     let apply_fn_ident = syn::Ident::new(&apply_fn_name, Span::call_site());
 
-    let command_fn_impl_name = format!("{}_impl", command_fn_ident);
+    let command_fn_impl_name = format!("{command_fn_ident}_impl");
     let command_fn_impl_ident = syn::Ident::new(&command_fn_impl_name, Span::call_site());
-    let trait_name = syn::Ident::new(&format!("{}Handler", name), Span::call_site());
+    let trait_name = syn::Ident::new(&format!("{name}Handler"), Span::call_site());
 
     // --- Infer aggregate_id field ---
     let mut id_field_ident = None;
@@ -126,9 +129,7 @@ pub fn derive_domain_event(input: TokenStream) -> TokenStream {
             id_field_ident = fields_named
                 .named
                 .iter()
-                .find(|f| *f.ident.as_ref().unwrap() == override_name)
-                .map(|f| f.ident.clone())
-                .unwrap_or_else(|| panic!("No field named `{}` found in {}", override_name, name));
+                .find(|f| *f.ident.as_ref().unwrap() == override_name).map_or_else(|| panic!("No field named `{override_name}` found in {name}"), |f| f.ident.clone());
         } else {
             let conv_names = [
                 "aggregate_id".to_string(),
@@ -149,8 +150,7 @@ pub fn derive_domain_event(input: TokenStream) -> TokenStream {
 
     let id_field_ident = id_field_ident.unwrap_or_else(|| {
         panic!(
-            "Could not infer aggregate id field for `{}`. Use #[domain_event(id = \"...\")]",
-            name
+            "Could not infer aggregate id field for `{name}`. Use #[domain_event(id = \"...\")]"
         )
     });
 

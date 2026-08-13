@@ -18,7 +18,7 @@ impl TagModifiedHandler for Budget {
     fn apply_modify_tag(&mut self, event: &TagModified) -> Uuid {
         if let Some(tag) = self.tags.iter_mut().find(|t| t.id == event.tag_id) {
             if let Some(name) = &event.name {
-                tag.name = name.clone();
+                tag.name.clone_from(name);
             }
             if let Some(periodicity) = event.periodicity {
                 tag.periodicity = periodicity;

@@ -21,13 +21,13 @@ impl Default for MonthBeginsOn {
 impl Display for MonthBeginsOn {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            MonthBeginsOn::PreviousMonth(day) => write!(f, "PreviousMonth({})", day),
+            MonthBeginsOn::PreviousMonth(day) => write!(f, "PreviousMonth({day})"),
             MonthBeginsOn::PreviousMonthWorkDayBefore(day) => {
-                write!(f, "PreviousMonthWorkDayBefore({})", day)
+                write!(f, "PreviousMonthWorkDayBefore({day})")
             }
-            MonthBeginsOn::CurrentMonth(day) => write!(f, "CurrentMonth({})", day),
+            MonthBeginsOn::CurrentMonth(day) => write!(f, "CurrentMonth({day})"),
             MonthBeginsOn::CurrentMonthWorkDayBefore(day) => {
-                write!(f, "CurrentMonthWorkDayBefore({})", day)
+                write!(f, "CurrentMonthWorkDayBefore({day})")
             }
             MonthBeginsOn::PreviousMonth1stDayOfMonth => write!(f, "PreviousMonth1stDayOfMonth"),
             MonthBeginsOn::CurrentMonth1stDayOfMonth => write!(f, "CurrentMonth1stDayOfMonth"),

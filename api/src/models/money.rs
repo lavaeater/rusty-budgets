@@ -38,10 +38,12 @@ impl Money {
 }
 
 impl Money {
+    #[must_use]
     pub fn multiply(&self, rhs: i64) -> Money {
         Money::new_cents(self.cents * rhs, self.currency)
     }
 
+    #[must_use]
     pub fn divide(&self, rhs: i64) -> Money {
         Money::new_cents(self.cents / rhs, self.currency)
     }
@@ -64,10 +66,10 @@ impl Neg for Money {
 
 impl PartialOrd for Money {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        if self.currency != other.currency {
-            None
-        } else {
+        if self.currency == other.currency {
             Some(self.cents.cmp(&other.cents))
+        } else {
+            None
         }
     }
 }
@@ -164,7 +166,7 @@ impl Display for Money {
                 write!(f, "{} {}", self.amount_in_dollars(), self.currency)
             }
             _ => {
-                write!(f, " {}{}", self.currency, self.amount_in_dollars(),)
+                write!(f, " {}{}", self.currency, self.amount_in_dollars())
             }
         }
     }

@@ -4,7 +4,7 @@ use crate::api_error::RustyError;
 use crate::cqrs::framework::AsyncRuntime;
 use crate::cqrs::runtime::{AsyncBudgetCommandsTrait, PgRuntime, create_runtime};
 use crate::import::{import_from_path, import_from_skandia_excel_bytes};
-use crate::models::*;
+use crate::models::{User, Budget, MonthBeginsOn, Currency, BudgetingType, Money, PeriodId, Periodicity, MatchRule, Tag, BankTransaction};
 use chrono::NaiveDate;
 use dioxus::logger::tracing;
 use dioxus::logger::tracing::error;
@@ -15,12 +15,10 @@ use tokio::sync::OnceCell;
 use uuid::Uuid;
 
 fn get_data_file() -> PathBuf {
-    env::var("DATA_FILE")
-        .map(PathBuf::from)
-        .unwrap_or_else(|_| {
+    env::var("DATA_FILE").map_or_else(|_| {
             info!("DATA_FILE not set, using default data.json");
             PathBuf::from("data.json")
-        })
+        }, PathBuf::from)
 }
 
 static PG: OnceCell<PgRuntime> = OnceCell::const_new();
@@ -111,7 +109,7 @@ pub async fn add_item(
 pub async fn evaluate_rules(user_id: Uuid, budget_id: Uuid) -> Result<Uuid, RustyError> {
     let rt = runtime().await;
     let budget = rt.load(budget_id).await?;
-    for rule_match in budget.evaluate_rules().iter() {
+    for rule_match in &budget.evaluate_rules() {
         let tx_id = rule_match.tx_id;
         let amount = rule_match.amount;
 
@@ -338,7 +336,7 @@ pub async fn auto_budget_period(
     info!("Auto budgeting period {} ({} items)", period_id, budget.items.len());
 
     for item in &budget.items {
-        let tag_ids: std::collections::HashSet<Uuid> = item.tag_ids.iter().cloned().collect();
+        let tag_ids: std::collections::HashSet<Uuid> = item.tag_ids.iter().copied().collect();
         let raw_sum: Money = period
             .transactions
             .iter()

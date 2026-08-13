@@ -39,9 +39,9 @@ impl BudgetPeriod {
     }
 
     pub fn update_actuals_from_item(&mut self, item: &BudgetItem) {
-        for actual in self.actual_items.iter_mut() {
+        for actual in &mut self.actual_items {
             if actual.budget_item_id == item.id {
-                actual.item_name = item.name.clone();
+                actual.item_name.clone_from(&item.name);
                 actual.budgeting_type = item.budgeting_type;
             }
         }
@@ -114,6 +114,8 @@ impl BudgetPeriod {
             .sum()
     }
 
+    /// # Panics
+    /// Panics if `rules` has no package for `BudgetingType::Income`.
     pub fn get_income_overview(&self, rules: &RulePackages) -> BudgetingTypeOverview {
         let rules = &rules
             .rule_packages
@@ -142,6 +144,8 @@ impl BudgetPeriod {
         }
     }
 
+    /// # Panics
+    /// Panics if `rules` has no package for `BudgetingType::Expense`.
     pub fn get_expense_overview(&self, rules: &RulePackages) -> BudgetingTypeOverview {
         let rules = &rules
             .rule_packages
@@ -165,6 +169,8 @@ impl BudgetPeriod {
         }
     }
 
+    /// # Panics
+    /// Panics if `rules` has no package for `BudgetingType::Savings`.
     pub fn get_savings_overview(&self, rules: &RulePackages) -> BudgetingTypeOverview {
         let rules = &rules
             .rule_packages
@@ -188,6 +194,8 @@ impl BudgetPeriod {
         }
     }
 
+    /// # Panics
+    /// Panics if `rules` has no package for `BudgetingType::InternalTransfer`.
     pub fn get_transfer_overview(&self, rules: &RulePackages) -> BudgetingTypeOverview {
         let rules = &rules
             .rule_packages
@@ -234,6 +242,7 @@ impl BudgetPeriod {
     fn clear_hashmaps_and_transactions(&mut self) {
         self.transactions.clear();
     }
+    #[must_use]
     pub fn clone_to(&self, id: PeriodId) -> Self {
         let mut period = self.clone();
         period.id = id;

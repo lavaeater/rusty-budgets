@@ -1,6 +1,6 @@
 use crate::cqrs::framework::Aggregate;
 use crate::cqrs::framework::DomainEvent;
-use crate::events::*;
+use crate::events::{BudgetCreated, ItemAdded, ActualAdded, TransactionAdded, TransactionConnected, TransactionIgnored, BudgetedFundsReallocated, ActualBudgetedFundsAdjusted, ItemModified, ActualModified, RuleAdded, AllocationCreated, AllocationDeleted, BankAccountCreated, TagCreated, TagModified, TransactionTagged, TransactionUntagged, RuleModified, RuleDeleted, ItemBufferSet, TransferPairRejected};
 use crate::models::budget_item::{BudgetItem, Periodicity};
 use crate::models::budget_period::RuleMatch;
 use crate::models::budget_period_id::PeriodId;
@@ -53,6 +53,7 @@ pub_events_enum! {
 
 // --- Budget Domain ---
 #[derive(Debug, Clone, Serialize, Deserialize, JoyModel)]
+#[derive(Default)]
 pub struct Budget {
     pub id: Uuid,
     pub name: String,
@@ -78,30 +79,6 @@ pub struct Budget {
     pub rejected_transfer_pairs: HashSet<(Uuid, Uuid)>,
 }
 
-impl Default for Budget {
-    fn default() -> Self {
-        Self {
-            id: Default::default(),
-            name: "".to_string(),
-            user_id: Default::default(),
-            periods: Default::default(),
-            rules: Default::default(),
-            items: Default::default(),
-            match_rules: HashSet::default(),
-            created_at: Default::default(),
-            updated_at: Default::default(),
-            default_budget: false,
-            last_event: 0,
-            version: 0,
-            currency: Default::default(),
-            month_begins_on: Default::default(),
-            transaction_hashes: Default::default(),
-            accounts: Default::default(),
-            tags: Default::default(),
-            rejected_transfer_pairs: Default::default(),
-        }
-    }
-}
 
 impl Budget {
     pub fn new(id: Uuid) -> Self {
@@ -275,7 +252,7 @@ impl Budget {
                 item.periodicity = periodicity;
             }
             was_updated = true;
-        };
+        }
 
         if was_updated {
             self.update_actuals_for_item(id);
@@ -303,6 +280,9 @@ impl Budget {
     /// The denominator is the number of calendar months spanned by the full transaction dataset
     /// (from earliest to latest transaction, inclusive). Amounts are signed — expenses are
     /// negative, income positive.
+    ///
+    /// # Panics
+    /// Never panics: the `min`/`max` unwraps below are guarded by the preceding `is_empty` check.
     pub fn get_tag_summaries(&self) -> Vec<TagSummary> {
         use chrono::Datelike;
         use std::collections::HashMap;
@@ -321,8 +301,8 @@ impl Budget {
         let min_date = all_txs.iter().map(|tx| tx.date).min().unwrap();
         let max_date = all_txs.iter().map(|tx| tx.date).max().unwrap();
         let months_covered = {
-            let months = (max_date.year() as i64 - min_date.year() as i64) * 12
-                + (max_date.month() as i64 - min_date.month() as i64)
+            let months = (i64::from(max_date.year()) - i64::from(min_date.year())) * 12
+                + (i64::from(max_date.month()) - i64::from(min_date.month()))
                 + 1;
             months.max(1)
         };
@@ -388,9 +368,8 @@ impl Budget {
     }
 
     pub fn preview_rule_matches(&self, tx_id: Uuid) -> Vec<BankTransaction> {
-        let tx = match self.get_transaction(tx_id) {
-            Some(t) => t,
-            None => return Vec::new(),
+        let Some(tx) = self.get_transaction(tx_id) else {
+            return Vec::new();
         };
         let key = MatchRule::create_transaction_key(tx);
         self.periods
@@ -518,6 +497,8 @@ impl Budget {
         self.get_or_create_period(period_id)
     }
 
+    /// # Panics
+    /// Never panics: the `key` was just found in `self.periods`, so `find` always succeeds.
     pub fn get_period_before(&self, id: PeriodId) -> Option<&BudgetPeriod> {
         if self.periods.is_empty() {
             return None;
@@ -579,9 +560,8 @@ impl Budget {
             if used.contains(&tx.id) {
                 continue;
             }
-            let candidates = match by_amount.get(&tx.amount.abs().amount_in_cents()) {
-                Some(c) => c,
-                None => continue,
+            let Some(candidates) = by_amount.get(&tx.amount.abs().amount_in_cents()) else {
+                continue;
             };
             if let Some(counterpart) = candidates.iter().find(|other| {
                 other.id != tx.id
@@ -658,8 +638,7 @@ impl Budget {
 
     pub fn allocated_amount_for_actual(&self, period_id: PeriodId, actual_id: Uuid) -> Money {
         self.get_period(period_id)
-            .map(|p| p.allocated_amount_for_actual(actual_id))
-            .unwrap_or(Money::zero(self.currency))
+            .map_or(Money::zero(self.currency), |p| p.allocated_amount_for_actual(actual_id))
     }
 }
 

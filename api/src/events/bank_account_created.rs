@@ -34,8 +34,7 @@ impl BankAccountCreatedHandler for Budget {
     ) -> Result<BankAccountCreated, CommandError> {
         if self.has_account(&account_number) {
             Err(CommandError::Validation(format!(
-                "Account {} already exists",
-                account_number
+                "Account {account_number} already exists"
             )))
         } else {
             Ok(BankAccountCreated {

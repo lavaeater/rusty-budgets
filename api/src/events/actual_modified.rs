@@ -29,9 +29,9 @@ impl ActualModifiedHandler for Budget {
                 if let Some(actual_amount) = event.actual_amount {
                     actual.actual_amount = actual_amount;
                 }
-                actual.notes = event.notes.clone();
+                actual.notes.clone_from(&event.notes);
                 if let Some(tags) = &event.tags {
-                    actual.tags = tags.clone();
+                    actual.tags.clone_from(tags);
                 }
             });
         event.actual_id

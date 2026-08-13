@@ -62,51 +62,51 @@ impl TimeDeltaExt for i64 {
 
 impl TimeDeltaExt for u32 {
     fn seconds(self) -> TimeDelta {
-        TimeDelta::seconds(self as i64)
+        TimeDelta::seconds(i64::from(self))
     }
     fn minutes(self) -> TimeDelta {
-        TimeDelta::minutes(self as i64)
+        TimeDelta::minutes(i64::from(self))
     }
     fn hours(self) -> TimeDelta {
-        TimeDelta::hours(self as i64)
+        TimeDelta::hours(i64::from(self))
     }
     fn millis(self) -> TimeDelta {
-        TimeDelta::milliseconds(self as i64)
+        TimeDelta::milliseconds(i64::from(self))
     }
     fn micros(self) -> TimeDelta {
-        TimeDelta::microseconds(self as i64)
+        TimeDelta::microseconds(i64::from(self))
     }
     fn nanos(self) -> TimeDelta {
-        TimeDelta::nanoseconds(self as i64)
+        TimeDelta::nanoseconds(i64::from(self))
     }
 
     fn days(self) -> TimeDelta {
-        TimeDelta::days(self as i64)
+        TimeDelta::days(i64::from(self))
     }
 }
 
 impl TimeDeltaExt for i32 {
     fn seconds(self) -> TimeDelta {
-        TimeDelta::seconds(self as i64)
+        TimeDelta::seconds(i64::from(self))
     }
     fn minutes(self) -> TimeDelta {
-        TimeDelta::minutes(self as i64)
+        TimeDelta::minutes(i64::from(self))
     }
     fn hours(self) -> TimeDelta {
-        TimeDelta::hours(self as i64)
+        TimeDelta::hours(i64::from(self))
     }
     fn millis(self) -> TimeDelta {
-        TimeDelta::milliseconds(self as i64)
+        TimeDelta::milliseconds(i64::from(self))
     }
     fn micros(self) -> TimeDelta {
-        TimeDelta::microseconds(self as i64)
+        TimeDelta::microseconds(i64::from(self))
     }
     fn nanos(self) -> TimeDelta {
-        TimeDelta::nanoseconds(self as i64)
+        TimeDelta::nanoseconds(i64::from(self))
     }
 
     fn days(self) -> TimeDelta {
-        TimeDelta::days(self as i64)
+        TimeDelta::days(i64::from(self))
     }
 }
 

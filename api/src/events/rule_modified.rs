@@ -22,7 +22,7 @@ impl RuleModifiedHandler for Budget {
         {
             self.match_rules.remove(&old_rule);
             let mut updated = old_rule;
-            updated.transaction_key = event.transaction_key.clone();
+            updated.transaction_key.clone_from(&event.transaction_key);
             self.match_rules.insert(updated);
         }
         event.rule_id

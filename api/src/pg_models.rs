@@ -9,6 +9,7 @@ use uuid::Uuid;
 use welds::{Syntax, WeldsError, prelude::*};
 
 /// Append-only event log. `data` holds the serialised `BudgetEvent` JSON.
+#[allow(clippy::unused_async_trait_impl)]
 #[derive(Debug, Clone, WeldsModel, Serialize, Deserialize)]
 #[welds(table = "budget_events")]
 pub struct PgStoredBudgetEvent {
@@ -57,6 +58,7 @@ impl From<Budget> for DbState<PgBudget> {
 }
 
 /// Snapshot of a `Budget` aggregate. `data` holds the full JSON snapshot.
+#[allow(clippy::unused_async_trait_impl)]
 #[derive(Debug, Clone, WeldsModel, Serialize, Deserialize)]
 #[welds(table = "budgets")]
 pub struct PgBudget {
@@ -109,6 +111,7 @@ impl From<&DbState<PgUser>> for User {
 }
 
 /// Application user.
+#[allow(clippy::unused_async_trait_impl)]
 #[derive(Debug, Clone, WeldsModel, Serialize, Deserialize)]
 #[welds(table = "users")]
 pub struct PgUser {
@@ -151,6 +154,7 @@ impl From<PgUserBudgets> for UserBudgets {
 
 /// Maps a user to their list of budget IDs + default flag.
 /// `budgets` stores `Vec<(Uuid, bool)>` as JSONB.
+#[allow(clippy::unused_async_trait_impl)]
 #[derive(Debug, Clone, WeldsModel, Serialize, Deserialize)]
 #[welds(table = "user_budgets")]
 pub struct PgUserBudgets {

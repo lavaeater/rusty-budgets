@@ -10,7 +10,7 @@ pub struct TagSummary {
     pub periodicity: Periodicity,
     /// Average monthly amount (signed — negative for expenses, positive for income).
     pub average_monthly: Money,
-    /// Average yearly amount (average_monthly × 12).
+    /// Average yearly amount (`average_monthly` × 12).
     pub average_yearly: Money,
     /// Number of tagged transactions included in the average.
     pub transaction_count: u32,

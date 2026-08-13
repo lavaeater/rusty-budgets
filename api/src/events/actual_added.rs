@@ -44,8 +44,7 @@ impl ActualAddedHandler for Budget {
         if let Some(period) = self.get_period(period_id) {
             if period.contains_actual_for_item(item_id) {
                 Err(CommandError::Validation(format!(
-                    "Item already exists for period: {}",
-                    period_id
+                    "Item already exists for period: {period_id}"
                 )))
             } else {
                 Ok(ActualAdded {
@@ -58,8 +57,7 @@ impl ActualAddedHandler for Budget {
             }
         } else {
             Err(CommandError::Validation(format!(
-                "Period does not exist: {}",
-                period_id
+                "Period does not exist: {period_id}"
             )))
         }
     }

@@ -65,8 +65,7 @@ impl TransactionIgnoredHandler for Budget {
             let bork = &self.all_transactions();
             tracing::error!("These are the transactions: {:?}", bork);
             Err(CommandError::Validation(format!(
-                "Transaction {} does not exist",
-                tx_id
+                "Transaction {tx_id} does not exist"
             )))
         }
     }

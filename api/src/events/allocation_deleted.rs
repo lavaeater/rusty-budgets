@@ -62,14 +62,12 @@ impl AllocationDeletedHandler for Budget {
             .get_period_for_transaction(transaction_id)
             .ok_or_else(|| {
                 CommandError::NotFound(format!(
-                    "Transaction {} not found in any period",
-                    transaction_id
+                    "Transaction {transaction_id} not found in any period"
                 ))
             })?;
         if !period.contains_allocation(allocation_id) {
             return Err(CommandError::NotFound(format!(
-                "Allocation {} not found",
-                allocation_id
+                "Allocation {allocation_id} not found"
             )));
         }
         Ok(AllocationDeleted {

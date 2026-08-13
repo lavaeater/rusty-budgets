@@ -12,18 +12,12 @@ fn is_swedish_holiday(date: &DateTime<Utc>) -> bool {
     let day = date.day();
     let easter_sunday = calculate_easter_sunday(year);
     // Fixed date holidays
-    let fixed_date = match (month, day) {
-        (1, 1) => true,   // New Year's Day
-        (1, 5) => true,   // Twelfth Night
-        (1, 6) => true,   // Epiphany
-        (5, 1) => true,   // May Day
-        (6, 6) => true,   // National Day of Sweden
-        (12, 24) => true, // Christmas Eve
-        (12, 25) => true, // Christmas Day
-        (12, 26) => true, // Second Day of Christmas
-        (12, 31) => true, // New Year's Eve
-        _ => false,
-    };
+    // New Year's Day, Twelfth Night, Epiphany, May Day, National Day of Sweden,
+    // Christmas Eve, Christmas Day, Second Day of Christmas, New Year's Eve
+    let fixed_date = matches!(
+        (month, day),
+        (1, 1) | (1, 5) | (1, 6) | (5, 1) | (6, 6) | (12, 24) | (12, 25) | (12, 26) | (12, 31)
+    );
     let moving_holidays = {
         // Moving holidays (based on Easter)
         let good_friday = easter_sunday - 2.days();
@@ -70,6 +64,7 @@ pub fn next_workday(mut date: DateTime<Utc>) -> DateTime<Utc> {
 }
 
 /// Calculates Easter Sunday for a given year using the Meeus/Jones/Butcher algorithm
+#[allow(clippy::many_single_char_names)]
 fn calculate_easter_sunday(year: i32) -> DateTime<Utc> {
     let a = year % 19;
     let b = year / 100;
@@ -86,7 +81,7 @@ fn calculate_easter_sunday(year: i32) -> DateTime<Utc> {
     let month = (h + l - 7 * m + 114) / 31;
     let day = ((h + l - 7 * m + 114) % 31) + 1;
 
-    Utc.with_ymd_and_hms(year, month as u32, day as u32, 0, 0, 0)
+    Utc.with_ymd_and_hms(year, month.cast_unsigned(), day.cast_unsigned(), 0, 0, 0)
         .unwrap()
 }
 

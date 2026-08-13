@@ -264,7 +264,7 @@ pub fn CreateBudgetItemsView() -> Element {
                                                 }
                                                 let mut sums = tag_summaries();
                                                 if let Some(s) = sums.iter_mut().find(|s| s.tag_id == tag_id) {
-                                                    s.name = name.clone();
+                                                    s.name.clone_from(&name);
                                                 }
                                                 tag_summaries.set(sums);
                                                 if let Ok(updated) = modify_tag(

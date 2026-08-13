@@ -20,7 +20,7 @@ pub struct BudgetCreated {
 impl BudgetCreatedHandler for Budget {
     fn apply_create_budget(&mut self, event: &BudgetCreated) -> Uuid {
         self.id = event.budget_id;
-        self.name = event.name.clone();
+        self.name.clone_from(&event.name);
         self.user_id = event.user_id;
         self.default_budget = event.default_budget;
         self.currency = event.currency;

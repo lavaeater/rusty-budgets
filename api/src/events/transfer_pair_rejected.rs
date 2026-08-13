@@ -7,6 +7,7 @@ use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize, DomainEvent)]
 #[domain_event(aggregate = "Budget", command_fn = "reject_transfer_pair")]
+#[allow(clippy::struct_field_names)]
 pub struct TransferPairRejected {
     budget_id: Uuid,
     outgoing_tx_id: Uuid,

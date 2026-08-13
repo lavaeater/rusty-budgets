@@ -1,7 +1,7 @@
 use crate::api_error::RustyError;
 use crate::cqrs::framework::{AsyncRuntime, CommandError, Runtime, StoredEvent};
 const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
-use crate::models::*;
+use crate::models::{User, Budget, MonthBeginsOn, Currency, BudgetingType, Money, PeriodId, Periodicity, BudgetEvent};
 #[cfg(feature = "server")]
 use crate::pg_models::{PgBudget, PgStoredBudgetEvent, PgUser, PgUserBudgets};
 use crate::{cqrs, models};
@@ -28,12 +28,10 @@ use welds::connections::any::AnyClient;
 use welds::{Syntax, WeldsError, prelude::*};
 
 fn get_data_file() -> PathBuf {
-    env::var("DATA_FILE")
-        .map(PathBuf::from)
-        .unwrap_or_else(|_| {
+    env::var("DATA_FILE").map_or_else(|_| {
             info!("DATA_FILE not set, using default data.json");
             PathBuf::from("data.json")
-        })
+        }, PathBuf::from)
 }
 
 #[cfg(feature = "server")]
@@ -101,7 +99,7 @@ impl BudgetCommandsTrait for JoyDbBudgetRuntime {
         item_type: BudgetingType,
     ) -> Result<Uuid, RustyError> {
         self.cmd(user_id, budget_id, |budget| {
-            budget.add_item(item_name.to_string(), item_type)
+            budget.add_item(item_name.clone(), item_type)
         })
     }
     fn add_actual(
@@ -434,12 +432,9 @@ impl BudgetCommandsTrait for JoyDbBudgetRuntime {
                 info!("User has no budgets");
                 Err(RustyError::DefaultBudgetNotFound)
             }
-            Some(b) => match b.budgets.iter().find(|(_, default)| *default) {
-                Some((budget_id, _)) => Ok(self.load(*budget_id)?),
-                None => {
-                    info!("User had budgets but none were default");
-                    Err(RustyError::DefaultBudgetNotFound)
-                }
+            Some(b) => if let Some((budget_id, _)) = b.budgets.iter().find(|(_, default)| *default) { Ok(self.load(*budget_id)?) } else {
+                info!("User had budgets but none were default");
+                Err(RustyError::DefaultBudgetNotFound)
             },
         }
     }
@@ -459,14 +454,16 @@ impl BudgetCommandsTrait for JoyDbBudgetRuntime {
                         id: user_id,
                         budgets: vec![(budget_id, default)],
                     })
-                    .map(|_| user_id)
+                    .map(|()| user_id)
                 {
                     Ok(_) => Ok(user_id),
                     Err(e) => Err(RustyError::JoydbError(e)),
                 }
             }
             Some(list) => {
-                if !list.budgets.contains(&(budget_id, default)) {
+                if list.budgets.contains(&(budget_id, default)) {
+                    Ok(user_id)
+                } else {
                     let mut budgets = list.budgets.clone();
                     budgets.push((budget_id, default));
                     let list = UserBudgets {
@@ -474,11 +471,9 @@ impl BudgetCommandsTrait for JoyDbBudgetRuntime {
                         budgets,
                     };
                     match self.db.upsert(&list) {
-                        Ok(_) => Ok(user_id),
+                        Ok(()) => Ok(user_id),
                         Err(e) => Err(RustyError::JoydbError(e)),
                     }
-                } else {
-                    Ok(user_id)
                 }
             }
         }
@@ -950,6 +945,8 @@ pub struct PgRuntime {
     client: Box<dyn Client>,
 }
 
+/// # Panics
+/// Panics if `DATABASE_URL` is not set or the database connection cannot be established.
 #[cfg(feature = "server")]
 pub async fn create_runtime() -> PgRuntime {
     dotenvy::dotenv().ok();
@@ -981,13 +978,15 @@ impl PgRuntime {
         E: Into<BudgetEvent>,
     {
         self.execute(user_id, id, |aggregate| {
-            command(aggregate).map(|event| event.into())
+            command(aggregate).map(std::convert::Into::into)
         })
         .await
     }
 }
 
 impl JoyDbBudgetRuntime {
+    /// # Panics
+    /// Panics if the database cannot be opened at the given path.
     pub fn new<P: AsRef<Path>>(path: P) -> Self {
         let adapter = JsonAdapter::from_path(path);
         let config = JoydbConfig {
@@ -1001,6 +1000,8 @@ impl JoyDbBudgetRuntime {
         }
     }
 
+    /// # Panics
+    /// Panics if the in-memory database cannot be created.
     pub fn new_in_memory() -> Self {
         Self {
             db: Db::new_in_memory().unwrap(),
@@ -1008,14 +1009,14 @@ impl JoyDbBudgetRuntime {
     }
 
     /// Ergonomic command execution - eliminates all the boilerplate!
-    /// Usage: rt.cmd(id, |budget| budget.create_budget(name, user_id, default))
+    /// Usage: rt.cmd(id, |budget| `budget.create_budget(name`, `user_id`, default))
     fn cmd<F, E>(&self, user_id: Uuid, id: Uuid, command: F) -> Result<Uuid, RustyError>
     where
         F: FnOnce(&Budget) -> Result<E, CommandError>,
         E: Into<BudgetEvent>,
     {
         self.execute(user_id, id, |aggregate| {
-            command(aggregate).map(|event| event.into())
+            command(aggregate).map(std::convert::Into::into)
         })
     }
 }
@@ -1159,7 +1160,7 @@ impl AsyncRuntime<Budget, BudgetEvent> for PgRuntime {
                 .run(self.client.as_ref())
                 .await?
                 .into_iter()
-                .map(|ev| ev.into())
+                .map(std::convert::Into::into)
                 .collect();
 
         Ok(stored_events)
@@ -1227,7 +1228,7 @@ impl AsyncBudgetCommandsTrait for PgRuntime {
         item_type: BudgetingType,
     ) -> Result<Uuid, RustyError> {
         self.cmd(user_id, budget_id, |budget| {
-            budget.add_item(item_name.to_string(), item_type)
+            budget.add_item(item_name.clone(), item_type)
         })
         .await
     }
@@ -1658,6 +1659,7 @@ impl AsyncBudgetCommandsTrait for PgRuntime {
 }
 
 #[cfg(feature = "server")]
+#[allow(clippy::unused_async_trait_impl)]
 #[derive(Debug, WeldsModel)]
 pub struct EventId {
     pub event_id: Uuid,
