@@ -14,6 +14,7 @@ pub async fn up(db: &dyn welds::TransactStart) -> Result<()> {
 /// `budget_events` and `budgets` are intentionally schema-light: all domain
 /// state lives in a `data` JSONB column so schema migrations aren't needed
 /// as the domain model evolves.
+#[allow(clippy::unnecessary_wraps)]
 fn m001_initial_schema(_state: &TableState) -> Result<MigrationStep> {
     let steps = Steps::new()
         .add(

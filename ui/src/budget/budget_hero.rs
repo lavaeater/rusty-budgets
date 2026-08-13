@@ -4,7 +4,7 @@ use crate::budget::{
     TagsView, TransactionsView, TransferPairsView,
 };
 use crate::file_chooser::{FileData, FileDialog};
-use api::models::*;
+use api::models::{BudgetingType, MonthBeginsOn, PeriodId};
 use api::view_models::BudgetViewModel;
 use api::view_models::*;
 use api::{auto_budget_all, auto_budget_period, get_budget, import_transactions_bytes};
@@ -37,7 +37,7 @@ pub fn BudgetHero() -> Element {
 
     let budget_resource = use_server_future(move || get_budget(None, period_id()))?;
 
-    let mut budget_name = use_signal(|| "".to_string());
+    let mut budget_name = use_signal(String::new);
     let state_signal = use_signal(BudgetViewModel::default);
     use_context_provider(|| BudgetState(state_signal));
 
@@ -162,7 +162,6 @@ pub fn BudgetOverview(mut budget_id: Signal<Uuid>, mut period_id: Signal<PeriodI
 
     // "Att fördela" = income budgeted minus what is allocated to expenses + savings.
     // The Income overview already carries this as remaining_budget.
-    use api::models::BudgetingType;
     let ready_to_assign = budget
         .overviews
         .iter()
@@ -219,12 +218,10 @@ pub fn BudgetOverview(mut budget_id: Signal<Uuid>, mut period_id: Signal<PeriodI
                     if let Some(rta) = ready_to_assign {
                         {
                             let cents = rta.amount_in_cents();
-                            let rta_class = if cents < 0 {
-                                "rta-badge rta-over"
-                            } else if cents == 0 {
-                                "rta-badge rta-balanced"
-                            } else {
-                                "rta-badge rta-under"
+                            let rta_class = match cents.cmp(&0) {
+                                std::cmp::Ordering::Less => "rta-badge rta-over",
+                                std::cmp::Ordering::Equal => "rta-badge rta-balanced",
+                                std::cmp::Ordering::Greater => "rta-badge rta-under",
                             };
                             let label = if cents < 0 { "Överbudgeterat" } else { "Att fördela" };
                             rsx! {

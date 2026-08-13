@@ -8,7 +8,7 @@ async fn main() -> Result<(), RustyError> {
     if let Err(err) = dotenvy::dotenv() {
         match err {
             dotenvy::Error::Io(_) => {}
-            _ => eprintln!("DOTENV: {:?}", err),
+            _ => eprintln!("DOTENV: {err:?}"),
         }
     }
     pretty_env_logger::init();

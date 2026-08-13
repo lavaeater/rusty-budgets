@@ -14,6 +14,11 @@ use std::collections::HashSet;
 use uuid::Uuid;
 
 #[component]
+#[allow(
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss
+)]
 pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
     let mut expanded = use_signal(|| false);
 
@@ -53,7 +58,7 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                         if !item.tags.is_empty() {
                             span { class: "budget-item-tags-inline",
                                 for tag in item.tags.iter() {
-                                    span { class: "tag-chip-small", "{tag}" }
+                                    span { class: "tag-chip-small", {tag.as_str()} }
                                 }
                             }
                         }
@@ -511,7 +516,7 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                                     {
                                         Ok(updated_budget) => {
                                             consume_context::<BudgetState>().0.set(updated_budget);
-                                            edit_item.set(false)
+                                            edit_item.set(false);
                                         }
                                         Err(_) => {
                                             edit_item.set(false);
@@ -528,7 +533,7 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                                     {
                                         Ok(updated_budget) => {
                                             consume_context::<BudgetState>().0.set(updated_budget);
-                                            edit_item.set(false)
+                                            edit_item.set(false);
                                         }
                                         Err(_) => {
                                             edit_item.set(false);
@@ -569,7 +574,7 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                     if !item.tags.is_empty() {
                         span { class: "budget-item-tags-inline",
                             for tag in item.tags.iter() {
-                                span { class: "tag-chip-small", "{tag}" }
+                                span { class: "tag-chip-small", {tag.as_str()} }
                             }
                         }
                     }

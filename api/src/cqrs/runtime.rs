@@ -1,3 +1,5 @@
+#![allow(clippy::unused_async_trait_impl)]
+
 use crate::api_error::RustyError;
 use crate::cqrs::framework::{AsyncRuntime, CommandError, Runtime, StoredEvent};
 const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
@@ -1659,7 +1661,6 @@ impl AsyncBudgetCommandsTrait for PgRuntime {
 }
 
 #[cfg(feature = "server")]
-#[allow(clippy::unused_async_trait_impl)]
 #[derive(Debug, WeldsModel)]
 pub struct EventId {
     pub event_id: Uuid,

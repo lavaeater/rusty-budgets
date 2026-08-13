@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use dioxus_primitives::popover::*;
+use dioxus_primitives::popover::{PopoverContent, PopoverRoot, PopoverTrigger};
 
 #[component]
 pub fn BudgetPopover(max_amount: f32) -> Element {

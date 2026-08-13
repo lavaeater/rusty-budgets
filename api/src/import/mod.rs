@@ -91,6 +91,9 @@ pub async fn import_from_path(
     }
 }
 
+/// # Panics
+/// Panics if an amount/balance cell cannot be parsed as a number.
+#[allow(clippy::cast_possible_truncation)]
 pub async fn import_from_skandia_excel(
     runtime: &impl AsyncBudgetCommandsTrait,
     user_id: Uuid,
@@ -111,10 +114,14 @@ pub async fn import_from_skandia_excel(
                 let acct_no = row[1].to_string();
                 let _ = runtime.ensure_account(user_id, budget_id, &acct_no, "Skandiabanken").await;
             } else if row_num > 3 && row.len() > 3 {
-                let amount =
-                    Money::new_cents((row[2].as_f64().unwrap() * 100.0) as i64, Currency::SEK);
-                let balance =
-                    Money::new_cents((row[3].as_f64().unwrap() * 100.0) as i64, Currency::SEK);
+                let amount = Money::new_cents(
+                    (row[2].as_f64().unwrap() * 100.0) as i64,
+                    Currency::SEK,
+                );
+                let balance = Money::new_cents(
+                    (row[3].as_f64().unwrap() * 100.0) as i64,
+                    Currency::SEK,
+                );
                 let date_str = row[0].to_string();
                 let naive_date = NaiveDate::parse_from_str(&date_str, "%Y-%m-%d")?;
                 let date: DateTime<Utc> = naive_date.and_hms_opt(0, 0, 0).unwrap().and_utc();
@@ -127,9 +134,16 @@ pub async fn import_from_skandia_excel(
                 }
 
                 let acct_no = account_number.clone().ok_or(ImportError::AccountNumberMissing)?;
-                if let Ok(_) = runtime
+                if runtime
                     .add_transaction(user_id, budget_id, &acct_no, amount, balance, &description, date)
-                    .await { imported += 1; total_rows += 1; } else { not_imported += 1; total_rows += 1; }
+                    .await
+                    .is_ok()
+                {
+                    imported += 1;
+                } else {
+                    not_imported += 1;
+                }
+                total_rows += 1;
             }
         }
         info!(
@@ -141,6 +155,9 @@ pub async fn import_from_skandia_excel(
     Ok((imported, not_imported, total_rows))
 }
 
+/// # Panics
+/// Panics if an amount/balance cell cannot be parsed as a number.
+#[allow(clippy::cast_possible_truncation)]
 pub fn import_from_skandia_excel_sync(
     runtime: &impl BudgetCommandsTrait,
     user_id: Uuid,
@@ -174,9 +191,15 @@ pub fn import_from_skandia_excel_sync(
                 }
 
                 let acct_no = account_number.clone().ok_or(ImportError::AccountNumberMissing)?;
-                if let Ok(_) = runtime.add_transaction(
-                    user_id, budget_id, &acct_no, amount, balance, &description, date,
-                ) { imported += 1; total_rows += 1; } else { not_imported += 1; total_rows += 1; }
+                if runtime
+                    .add_transaction(user_id, budget_id, &acct_no, amount, balance, &description, date)
+                    .is_ok()
+                {
+                    imported += 1;
+                } else {
+                    not_imported += 1;
+                }
+                total_rows += 1;
             }
         }
     }
@@ -184,6 +207,9 @@ pub fn import_from_skandia_excel_sync(
     Ok((imported, not_imported, total_rows))
 }
 
+/// # Panics
+/// Panics if an amount/balance cell cannot be parsed as a number.
+#[allow(clippy::cast_possible_truncation)]
 pub async fn import_from_skandia_excel_bytes(
     runtime: &impl AsyncBudgetCommandsTrait,
     user_id: Uuid,
@@ -224,9 +250,16 @@ pub async fn import_from_skandia_excel_bytes(
                 }
 
                 let acct_no = account_number.clone().ok_or(ImportError::AccountNumberMissing)?;
-                if let Ok(_) = runtime
+                if runtime
                     .add_transaction(user_id, budget_id, &acct_no, amount, balance, &description, date)
-                    .await { imported += 1; total_rows += 1; } else { not_imported += 1; total_rows += 1; }
+                    .await
+                    .is_ok()
+                {
+                    imported += 1;
+                } else {
+                    not_imported += 1;
+                }
+                total_rows += 1;
             }
         }
         info!(

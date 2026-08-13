@@ -101,7 +101,7 @@ pub fn BudgetItemStatusView(item: BudgetItemViewModel) -> Element {
                                                     }
                                                 }
                                             },
-                                            "{donor_name}"
+                                            {donor_name}
                                             span { class: "take-from-remaining", " ({donor_remaining} kvar)" }
                                         }
                                     }

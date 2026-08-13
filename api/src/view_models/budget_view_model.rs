@@ -35,6 +35,7 @@ pub struct BudgetViewModel {
 }
 
 impl BudgetViewModel {
+    #[allow(clippy::too_many_lines)]
     pub fn from_budget(budget: &Budget, period_id: PeriodId) -> Self {
         let t = std::time::Instant::now();
         let actual_items = budget.all_actuals(period_id);

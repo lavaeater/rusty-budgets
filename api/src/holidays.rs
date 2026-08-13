@@ -6,6 +6,7 @@ fn is_weekend(date: &DateTime<Utc>) -> bool {
 }
 
 /// Checks if a date is a Swedish public holiday
+#[allow(clippy::unnested_or_patterns)]
 fn is_swedish_holiday(date: &DateTime<Utc>) -> bool {
     let year = date.year();
     let month = date.month();

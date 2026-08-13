@@ -11,20 +11,23 @@ pub enum Rule {
 }
 
 impl Rule {
-    pub fn evaluate(&self, store: &[ActualItem], kind: Option<ValueKind>) -> Money {
+    /// # Panics
+    /// Panics if `kind` is `None` while `self` is `Rule::Sum` or `Rule::Difference` —
+    /// those variants require a `ValueKind` to pick the value to sum.
+    pub fn evaluate(&self, store: &[ActualItem], kind: Option<&ValueKind>) -> Money {
         match self {
             Rule::Sum(types) => types
                 .iter()
-                .map(|t| Self::get_sum(store, kind.as_ref().unwrap(), t))
+                .map(|t| Self::get_sum(store, kind.unwrap(), t))
                 .sum(),
             Rule::Difference(base, subtracts) => {
                 tracing::info!("Base: {:?}", base);
                 tracing::info!("Subtracts: {:?}", subtracts);
                 tracing::info!("Kind: {:?}", kind);
-                let base_sum = Self::get_sum(store, kind.as_ref().unwrap(), base);
+                let base_sum = Self::get_sum(store, kind.unwrap(), base);
                 let subtract_sum: Money = subtracts
                     .iter()
-                    .map(|t| Self::get_sum(store, kind.as_ref().unwrap(), t))
+                    .map(|t| Self::get_sum(store, kind.unwrap(), t))
                     .sum();
                 base_sum - subtract_sum
             }

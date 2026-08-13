@@ -77,11 +77,11 @@ fn test_calculate_rules() {
     let remaining_rule = Difference(Income, vec![Expense, Savings]);
 
     assert_eq!(
-        income_rule.evaluate(&store, Some(ValueKind::Budgeted)),
+        income_rule.evaluate(&store, Some(&ValueKind::Budgeted)),
         Money::new_dollars(5000, Currency::SEK)
     );
     assert_eq!(
-        remaining_rule.evaluate(&store, Some(ValueKind::Budgeted)),
+        remaining_rule.evaluate(&store, Some(&ValueKind::Budgeted)),
         Money::new_dollars(1000, Currency::SEK)
     );
 }

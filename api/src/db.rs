@@ -106,6 +106,10 @@ pub async fn add_item(
     runtime().await.add_item(user_id, budget_id, name, item_type).await
 }
 
+/// # Panics
+/// Panics if a rule match's transaction cannot be located in any budget period —
+/// this would indicate a data inconsistency, since rule matches are derived from
+/// the budget's own transactions.
 pub async fn evaluate_rules(user_id: Uuid, budget_id: Uuid) -> Result<Uuid, RustyError> {
     let rt = runtime().await;
     let budget = rt.load(budget_id).await?;

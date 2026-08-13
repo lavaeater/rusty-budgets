@@ -1,7 +1,7 @@
 use crate::budget::budget_hero::BudgetState;
 use crate::budget::{BudgetingTypeCard, BudgetingTypeOverviewView};
 use crate::components::{TabContent, TabList, TabTrigger, Tabs};
-use api::models::*;
+use api::models::BudgetingType;
 use api::view_models::BudgetItemViewModel;
 use api::view_models::BudgetViewModel;
 use api::view_models::BudgetingTypeOverview;

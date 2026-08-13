@@ -125,15 +125,15 @@ impl BudgetPeriod {
 
         let budgeted_income = rules
             .budgeted_rule
-            .evaluate(&self.actual_items, Some(ValueKind::Budgeted));
+            .evaluate(&self.actual_items, Some(&ValueKind::Budgeted));
 
         let spent_income = rules
             .actual_rule
-            .evaluate(&self.actual_items, Some(ValueKind::Spent));
+            .evaluate(&self.actual_items, Some(&ValueKind::Spent));
 
         let remaining_income = rules
             .remaining_rule
-            .evaluate(&self.actual_items, Some(ValueKind::Budgeted));
+            .evaluate(&self.actual_items, Some(&ValueKind::Budgeted));
 
         BudgetingTypeOverview {
             budgeting_type: Income,
@@ -154,10 +154,10 @@ impl BudgetPeriod {
             .unwrap();
         let budgeted_expenses = rules
             .budgeted_rule
-            .evaluate(&self.actual_items, Some(ValueKind::Budgeted));
+            .evaluate(&self.actual_items, Some(&ValueKind::Budgeted));
         let spent_expenses = rules
             .actual_rule
-            .evaluate(&self.actual_items, Some(ValueKind::Spent));
+            .evaluate(&self.actual_items, Some(&ValueKind::Spent));
         let self_diff = rules.remaining_rule.evaluate(&self.actual_items, None);
 
         BudgetingTypeOverview {
@@ -179,10 +179,10 @@ impl BudgetPeriod {
             .unwrap();
         let budgeted_savings = rules
             .budgeted_rule
-            .evaluate(&self.actual_items, Some(ValueKind::Budgeted));
+            .evaluate(&self.actual_items, Some(&ValueKind::Budgeted));
         let spent_savings = rules
             .actual_rule
-            .evaluate(&self.actual_items, Some(ValueKind::Spent));
+            .evaluate(&self.actual_items, Some(&ValueKind::Spent));
         let self_diff = rules.remaining_rule.evaluate(&self.actual_items, None);
 
         BudgetingTypeOverview {
@@ -204,10 +204,10 @@ impl BudgetPeriod {
             .unwrap();
         let budgeted = rules
             .budgeted_rule
-            .evaluate(&self.actual_items, Some(ValueKind::Budgeted));
+            .evaluate(&self.actual_items, Some(&ValueKind::Budgeted));
         let spent = rules
             .actual_rule
-            .evaluate(&self.actual_items, Some(ValueKind::Spent));
+            .evaluate(&self.actual_items, Some(&ValueKind::Spent));
         let self_diff = rules.remaining_rule.evaluate(&self.actual_items, None);
 
         BudgetingTypeOverview {
