@@ -109,6 +109,7 @@ impl Money {
     pub fn currency(&self) -> Currency {
         self.currency
     }
+    #[must_use]
     pub fn abs(&self) -> Money {
         Money::new_cents(self.cents.abs(), self.currency)
     }

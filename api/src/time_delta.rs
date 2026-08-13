@@ -12,26 +12,26 @@ pub trait TimeDeltaExt {
 
 impl TimeDeltaExt for u64 {
     fn seconds(self) -> TimeDelta {
-        TimeDelta::seconds(self as i64)
+        TimeDelta::seconds(self.cast_signed())
     }
     fn minutes(self) -> TimeDelta {
-        TimeDelta::minutes(self as i64)
+        TimeDelta::minutes(self.cast_signed())
     }
     fn hours(self) -> TimeDelta {
-        TimeDelta::hours(self as i64)
+        TimeDelta::hours(self.cast_signed())
     }
     fn millis(self) -> TimeDelta {
-        TimeDelta::milliseconds(self as i64)
+        TimeDelta::milliseconds(self.cast_signed())
     }
     fn micros(self) -> TimeDelta {
-        TimeDelta::microseconds(self as i64)
+        TimeDelta::microseconds(self.cast_signed())
     }
     fn nanos(self) -> TimeDelta {
-        TimeDelta::nanoseconds(self as i64)
+        TimeDelta::nanoseconds(self.cast_signed())
     }
 
     fn days(self) -> TimeDelta {
-        TimeDelta::days(self as i64)
+        TimeDelta::days(self.cast_signed())
     }
 }
 

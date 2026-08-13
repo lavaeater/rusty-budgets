@@ -32,6 +32,7 @@ pub struct BudgetItemViewModel {
 }
 
 impl BudgetItemViewModel {
+    #[allow(clippy::too_many_lines)]
     pub fn from_item(
         budget_item: &BudgetItem,
         actual_items: &[&ActualItem],
@@ -67,10 +68,9 @@ impl BudgetItemViewModel {
                 .iter()
                 .filter_map(|tid| budget_tags.iter().find(|t| t.id == *tid))
                 .map(|t| match t.periodicity {
-                    Periodicity::Monthly => 1i64,
+                    Periodicity::Monthly | Periodicity::OneOff => 1i64,
                     Periodicity::Quarterly => 3,
                     Periodicity::Annual => 12,
-                    Periodicity::OneOff => 1,
                 })
                 .max()
                 .unwrap_or(12);
