@@ -44,7 +44,7 @@ pub fn BudgetingTypeCard(budgeting_type: BudgetingType) -> Element {
         items.len()
     );
     let budgeting_type_name = use_signal(|| budgeting_type.to_string());
-    let new_item_label = format!("Ny {}", budgeting_type);
+    let new_item_label = format!("Ny {budgeting_type}");
     let mut show_new_item = use_signal(|| items.is_empty());
     let mut sort_field = use_signal(SortField::default);
     let mut sort_direction = use_signal(SortDirection::default);

@@ -30,8 +30,7 @@ pub fn RulesView() -> Element {
             let tag_name = rule
                 .tag_id
                 .and_then(|tid| tags.iter().find(|t| t.id == tid))
-                .map(|t| t.name.as_str())
-                .unwrap_or("(utan tagg)");
+                .map_or("(utan tagg)", |t| t.name.as_str());
             // Filter: keep if tag name or any token matches search
             let matches_search = search_str.is_empty()
                 || tag_name.to_lowercase().contains(&search_str)
@@ -47,8 +46,7 @@ pub fn RulesView() -> Element {
             .map(|(tag_id, rules)| {
                 let tag_name = tag_id
                     .and_then(|tid| tags.iter().find(|t| t.id == tid))
-                    .map(|t| t.name.clone())
-                    .unwrap_or_else(|| "(utan tagg)".to_string());
+                    .map_or_else(|| "(utan tagg)".to_string(), |t| t.name.clone());
                 (tag_id, tag_name, rules)
             })
             .collect()
@@ -82,7 +80,7 @@ pub fn RulesView() -> Element {
                     for (_tag_id, tag_name, rules) in groups {
                         div { class: "rules-group",
                             div { class: "rules-group-header",
-                                span { class: "rules-tag-badge", "{tag_name}" }
+                                span { class: "rules-tag-badge", {tag_name} }
                                 span { class: "rules-group-count", "{rules.len()}" }
                             }
                             div { class: "rules-group-body",
@@ -97,7 +95,7 @@ pub fn RulesView() -> Element {
                                                 div { class: "rules-tokens",
                                                     for (i, token) in tokens.iter().enumerate() {
                                                         span { key: "{i}", class: "tag-tx-rule-token",
-                                                            "{token}"
+                                                            {token.as_str()}
                                                             button {
                                                                 r#type: "button",
                                                                 class: "tag-tx-token-remove",

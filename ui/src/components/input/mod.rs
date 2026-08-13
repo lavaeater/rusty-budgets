@@ -12,7 +12,7 @@ pub fn Input(
     children: Element,
 ) -> Element {
     let combined_class = match class {
-        Some(custom_class) => format!("input {}", custom_class),
+        Some(custom_class) => format!("input {custom_class}"),
         None => "input".to_string(),
     };
 

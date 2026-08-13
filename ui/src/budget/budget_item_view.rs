@@ -13,12 +13,12 @@ use lucide_dioxus::Pen;
 use std::collections::HashSet;
 use uuid::Uuid;
 
-#[component]
 #[allow(
     clippy::cast_precision_loss,
     clippy::cast_possible_truncation,
     clippy::cast_sign_loss
 )]
+#[component]
 pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
     let mut expanded = use_signal(|| false);
 

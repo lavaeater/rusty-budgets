@@ -36,16 +36,14 @@ fn periodicity_class(p: Periodicity) -> &'static str {
 }
 
 fn money_class(cents: i64) -> &'static str {
-    if cents < 0 {
-        "cbi-money negative"
-    } else if cents > 0 {
-        "cbi-money positive"
-    } else {
-        "cbi-money neutral"
+    match cents.cmp(&0) {
+        std::cmp::Ordering::Less => "cbi-money negative",
+        std::cmp::Ordering::Equal => "cbi-money neutral",
+        std::cmp::Ordering::Greater => "cbi-money positive",
     }
 }
 
-/// Format cents as "X kr" (whole kronor, no decimals — matches Money::Display for SEK).
+/// Format cents as "X kr" (whole kronor, no decimals — matches `Money::Display` for SEK).
 fn fmt_sek(cents: i64) -> String {
     format!("{} kr", cents / 100)
 }
@@ -291,7 +289,7 @@ pub fn CreateBudgetItemsView() -> Element {
                                             editing_name.set(tag_name_click.clone());
                                             editing_tag_id.set(Some(tag_id));
                                         },
-                                        "{tag_name}"
+                                        {tag_name}
                                     }
                                 }
                                 // Inline periodicity editor

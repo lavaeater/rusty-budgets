@@ -13,7 +13,7 @@ pub fn BudgetingTypeOverviewView(
     let (bar_pct, bar_over) = if overview.budgeted_amount.amount_in_cents() > 0 {
         let actual = overview.actual_amount.amount_in_cents().abs();
         let budgeted = overview.budgeted_amount.amount_in_cents().abs();
-        let pct = (actual * 100 / budgeted).min(100) as u32;
+        let pct = u32::try_from((actual * 100 / budgeted).min(100)).unwrap_or(100);
         let over = actual > budgeted;
         (pct, over)
     } else {
@@ -21,10 +21,12 @@ pub fn BudgetingTypeOverviewView(
     };
 
     let bar_class = if bar_over { "overview-bar-fill over" } else { "overview-bar-fill" };
+    let card_modifier = if overview.is_ok { "" } else { "over-budget" };
+    let title_class = if overview.is_ok { "" } else { "warning" };
 
     rsx! {
-        div { class: format!("overview-card {}", if !overview.is_ok { "over-budget" } else { "" }),
-            h3 { class: if !overview.is_ok { "warning" } else { "" }, {budgeting_type.to_string()} }
+        div { class: format!("overview-card {card_modifier}"),
+            h3 { class: title_class, {budgeting_type.to_string()} }
             div { class: "overview-progress-bar",
                 div { class: bar_class, style: "width: {bar_pct}%;" }
             }

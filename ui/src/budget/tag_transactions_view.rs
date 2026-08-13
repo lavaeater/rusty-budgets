@@ -134,9 +134,9 @@ pub fn TagTransactionsView() -> Element {
                                 strong { "{tx.description}" }
                             }
                             div { class: "tag-tx-meta",
-                                span { class: "tag-tx-date", "{date_str}" }
+                                span { class: "tag-tx-date", {date_str} }
                                 span { class: if tx_amount_pos { "tag-tx-amount positive" } else { "tag-tx-amount negative" },
-                                    "{amount_str}"
+                                    {amount_str}
                                 }
                             }
                         }
@@ -245,7 +245,7 @@ pub fn TagTransactionsView() -> Element {
                                 div { class: "tag-tx-rule-tokens",
                                     for (i, token) in rule_tokens().into_iter().enumerate() {
                                         span { key: "{i}", class: "tag-tx-rule-token",
-                                            "{token}"
+                                            {token}
                                             button {
                                                 r#type: "button",
                                                 class: "tag-tx-token-remove",

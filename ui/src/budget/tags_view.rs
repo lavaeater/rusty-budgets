@@ -143,7 +143,7 @@ pub fn TagsView() -> Element {
                                                     editing_name.set(tag_name_click.clone());
                                                     editing_tag_id.set(Some(tag_id));
                                                 },
-                                                "{tag_name}"
+                                                {tag_name}
                                             }
                                         }
 
@@ -192,7 +192,7 @@ pub fn TagsView() -> Element {
 
                                         // Budget item connection
                                         if let Some(name) = item_name {
-                                            span { class: "tags-item-badge", "{name}" }
+                                            span { class: "tags-item-badge", {name} }
                                         } else {
                                             span { class: "tags-item-none", "—" }
                                         }

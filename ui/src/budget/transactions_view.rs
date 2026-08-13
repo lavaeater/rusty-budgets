@@ -47,7 +47,7 @@ fn TransactionCard(tx: TransactionViewModel, ignored: bool) -> Element {
         div { class: "transaction-card", key: "{tx.tx_id}",
             div { class: "transaction-info",
                 div { class: "transaction-description",
-                    strong { {tx.description.to_string()} }
+                    strong { {tx.description.clone()} }
                 }
                 div { class: "transaction-meta",
                     span { class: "transaction-date", {tx.date.format("%Y-%m-%d").to_string()} }
@@ -245,6 +245,7 @@ fn SplitTransactionPopover(tx: TransactionViewModel) -> Element {
                                         let Ok(cents) = amount_str.trim().replace(',', ".").parse::<f64>() else {
                                             return
                                         };
+                                        #[allow(clippy::cast_possible_truncation)]
                                         let amount = api::models::Money::new_cents(
                                             (cents * 100.0) as i64,
                                             budget_signal().currency,

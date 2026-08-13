@@ -112,7 +112,7 @@ pub fn AccordionItem(props: AccordionItemProps) -> Element {
 
 #[derive(Props, Clone, PartialEq)]
 pub struct AccordionTriggerProps {
-    /// THe id of the accordion trigger element.
+    /// The id of the accordion trigger element.
     pub id: Option<String>,
     /// Additional attributes to extend the trigger element.
     #[props(extends = GlobalAttributes)]

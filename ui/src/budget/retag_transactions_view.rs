@@ -114,9 +114,9 @@ pub fn RetagTransactionsView() -> Element {
 
                             rsx! {
                                 div { key: "{tx_id}", class: "retag-row",
-                                    span { class: "retag-date", "{date_str}" }
-                                    span { class: "retag-description", title: "{description}", "{description}" }
-                                    span { class: if amount_pos { "retag-amount positive" } else { "retag-amount negative" }, "{amount_str}" }
+                                    span { class: "retag-date", {date_str} }
+                                    span { class: "retag-description", title: description.as_str(), {description.as_str()} }
+                                    span { class: if amount_pos { "retag-amount positive" } else { "retag-amount negative" }, {amount_str} }
                                     if is_creating {
                                         div { class: "retag-create-tag-row",
                                             input {

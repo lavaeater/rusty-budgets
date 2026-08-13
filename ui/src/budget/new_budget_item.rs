@@ -12,7 +12,7 @@ pub fn NewBudgetItem(
     close_signal: Option<Signal<bool>>,
 ) -> Element {
     let budget_signal = use_context::<BudgetState>().0;
-    let mut new_item_name = use_signal(|| "".to_string());
+    let mut new_item_name = use_signal(String::new);
     let mut new_item_amount = use_signal(|| Money::new_dollars(0, Currency::SEK));
 
     let budget_id = budget_signal().id;
