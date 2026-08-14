@@ -1,0 +1,397 @@
+/* Workspace tab bar — the top-level task switcher within a budget period. */
+
+.workspace-tabs {
+    display: block;
+    margin-bottom: 24px;
+}
+
+.workspace-tab-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    border-bottom: 2px solid #e2e8f0;
+    margin-bottom: 24px;
+    padding: 0;
+}
+
+.workspace-tab-list .tabs-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 18px;
+    border: none;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    background: transparent;
+    color: #718096;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    border-radius: 8px 8px 0 0;
+}
+
+.workspace-tab-list .tabs-trigger:hover {
+    color: #4a5568;
+    background: #f7fafc;
+}
+
+.workspace-tab-list .tabs-trigger[data-state="active"] {
+    color: #667eea;
+    border-bottom-color: #667eea;
+}
+
+.workspace-tab-list .tabs-trigger:focus-visible {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+}
+
+.workspace-tab-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    background: #ff6b6b;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.tab-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Overview — attention list */
+
+.attention-list {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.attention-list-title {
+    margin: 0 0 12px 0;
+    font-size: 1.1rem;
+    color: #2d3748;
+}
+
+.attention-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: #fff5f5;
+    color: #2d3748;
+    font-size: 0.95rem;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.attention-row + .attention-row {
+    margin-top: 8px;
+}
+
+.attention-row:hover {
+    background: #fed7d7;
+}
+
+.attention-row-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 8px;
+    border-radius: 14px;
+    background: #ff6b6b;
+    color: white;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+.attention-row-label {
+    flex: 1;
+}
+
+.attention-row-go {
+    color: #718096;
+    font-weight: 700;
+}
+
+.attention-clear {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 20px;
+    border: 2px solid #48bb78;
+    border-radius: 12px;
+    background: #f0fff4;
+    color: #22543d;
+    font-weight: 600;
+}
+
+.attention-clear-icon {
+    font-size: 1.2rem;
+}
+
+.empty-state {
+    padding: 32px;
+    border: 2px dashed #cbd5e0;
+    border-radius: 12px;
+    background: #f7fafc;
+    text-align: center;
+}
+
+.empty-state h3 {
+    margin: 0 0 8px 0;
+    color: #2d3748;
+}
+
+.empty-state p {
+    margin: 0 0 16px 0;
+    color: #718096;
+}
+
+.empty-state-action {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    background: #667eea;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Att göra */
+
+.todo-section {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.todo-section-title {
+    margin: 0 0 16px 0;
+    font-size: 1.15rem;
+    color: #2d3748;
+}
+
+/* Transactions filter bar */
+
+.filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    background: white;
+    color: #4a5568;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.filter-chip:hover {
+    border-color: #667eea;
+    color: #667eea;
+}
+
+.filter-chip-active {
+    background: #667eea;
+    border-color: #667eea;
+    color: white;
+}
+
+.filter-chip-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.12);
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.filter-chip-active .filter-chip-count {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+/* Budget tab — collapsible item-creation workflow */
+
+.workflow-section {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.workflow-section-trigger {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 20px;
+    font-weight: 600;
+    color: #2d3748;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+}
+
+.workflow-section-trigger::-webkit-details-marker {
+    display: none;
+}
+
+.workflow-section-trigger::after {
+    content: "▾";
+    margin-left: auto;
+    color: #718096;
+    transition: transform 0.15s;
+}
+
+.workflow-section[open] .workflow-section-trigger::after {
+    transform: rotate(180deg);
+}
+
+.workflow-section-trigger:hover {
+    background: #f7fafc;
+}
+
+.workflow-section-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    background: #667eea;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.workflow-section-content {
+    padding: 0 20px 20px 20px;
+}
+
+/* Reports */
+
+.report-section {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.report-section-title {
+    margin: 0 0 16px 0;
+    font-size: 1.15rem;
+    color: #2d3748;
+}
+
+.report-empty {
+    color: #718096;
+}
+
+.running-banner {
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    color: white;
+    font-weight: 700;
+}
+
+.running-banner-positive {
+    background: #48bb78;
+}
+
+.running-banner-negative {
+    background: #f56565;
+}
+
+.report-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.report-table th {
+    padding: 8px;
+    text-align: left;
+    color: #718096;
+    font-weight: 600;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.report-table th.num,
+.report-table td.num {
+    text-align: right;
+}
+
+.report-table td {
+    padding: 8px;
+    border-top: 1px solid #edf2f7;
+}
+
+.report-table td.pos {
+    color: #2f855a;
+}
+
+.report-table td.neg {
+    color: #c53030;
+}
+
+/* Settings */
+
+.settings-section {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.settings-section-title {
+    margin: 0 0 16px 0;
+    font-size: 1.15rem;
+    color: #2d3748;
+}
+
+.settings-tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+@media (max-width: 640px) {
+    .workspace-tab-list .tabs-trigger {
+        padding: 10px 12px;
+        font-size: 0.85rem;
+    }
+}

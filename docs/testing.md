@@ -1,5 +1,36 @@
 # Testing plan for Rusty Budgets
 
+> **Status audit: 2026-08-14 — plan is accurate, counts verified, one gap found.**
+>
+> | Layer | Claimed | Verified | State |
+> | --- | --- | --- | --- |
+> | 1 — Unit (pure) | — | **85** passing (`api` lib) | ◐ in progress |
+> | 2 — CQRS/aggregate | 34 | **34** passing (`api/tests/mod.rs`) | ✅ saturated |
+> | 3 — Component (SSR) | 7 | **7** passing (`ui/tests/component_render.rs`) | ◐ bootstrapped |
+> | 4 — E2E (Playwright) | 2 | **2** specs (`e2e/tests/onboarding.spec.js`) | ◐ scaffold only |
+> | CI | wired | `.github/workflows/{ci,e2e}.yml` present | ✅ |
+>
+> **Total: 127 tests green** via `cargo test --workspace`.
+> Clippy pedantic is enabled workspace-wide and clean (2026-08-13).
+>
+> ### 🔴 Gap found by the audit: Layer 2 tests the wrong runtime
+>
+> All 34 CQRS tests construct `JoyDbBudgetRuntime::new_in_memory()`
+> (`api/tests/mod.rs:14`), but **production now runs `PgRuntime`** (welds/sqlx,
+> `api/src/db.rs:24`). JoyDB is a test-only harness. The fast layer therefore
+> proves the *aggregate logic* but not the *persistence layer users actually run*.
+>
+> This is not hypothetical — it is exactly the hole that let the
+> `add_budget_to_user` serialisation panic reach production, where only the
+> slow E2E layer caught it (see Layer 4 notes below). The recommended fix is
+> already named there and should be promoted to the top of the rollout order:
+> **a `PgRuntime` integration test against `sqlite::memory:` + `migrations::up`**,
+> ideally re-running the existing command→replay→assert matrix against both
+> runtimes so they cannot drift.
+>
+> Related doc drift: this file and `CLAUDE.md` still describe JoyDB as the
+> production database. `CLAUDE.md` needs updating (tracked in `docs/roadmap.md`).
+
 This document is the plan for building a comprehensive, layered test suite for
 Rusty Budgets. It mirrors the approach we landed in the sibling `oxidian`
 project (and the official Dioxus 0.7/0.8 testing guide,
@@ -338,10 +369,19 @@ cd e2e && npm test             # E2E (auto-starts `dx run --package web`)
 5. ◐ **Snapshots + CI wiring** — *CI done: `.github/workflows/{ci,e2e}.yml`
    (fast native gate + the Playwright job).* Snapshots (`insta`) still open.
    Then broaden E2E workflow-by-workflow.
+6. 🔴 **`PgRuntime` integration tests — NEW, now the top priority (2026-08-14).**
+   Layers 1–3 all run against `JoyDbBudgetRuntime`, which is no longer the
+   production persistence layer. Add `api/tests/pg_runtime.rs` driving
+   `PgRuntime` over `sqlite::memory:` with `migrations::up`, and re-run the
+   Layer 2 command→replay→assert matrix against it. Best shape: make the
+   existing test bodies generic over the `Runtime` trait and instantiate them
+   twice, so the two runtimes cannot silently diverge again.
 
 ## Implementation status
 
-- **Layer 1 (pure units) — in progress.**
+*Verified 2026-08-14 — counts below match `cargo test --workspace`.*
+
+- **Layer 1 (pure units) — in progress.** 85 passing in the `api` lib target.
   - ✅ `money` — arithmetic, display, ordering, hashing, and **all four**
     currency-mismatch panics (`+`, `-`, `*`, `+=`, `-=`) asserted with
     `#[should_panic]`.
@@ -354,9 +394,15 @@ cd e2e && npm test             # E2E (auto-starts `dx run --package web`)
     (all-tokens-present / near-miss / empty-key). 5 new tests.
   - ⬜ Skandia import fixture beyond the existing 296-row smoke; period-bounds vs
     `MonthBeginsOn`; `budget_item` periodicity override.
-- **Layer 2 (CQRS/aggregate) — largely saturated.** `api/tests/mod.rs` now has
-  **34 tests** on `JoyDbBudgetRuntime::new_in_memory()`, with at least one test
-  per event type. Added this pass:
+- **Layer 2 (CQRS/aggregate) — largely saturated, but against the wrong
+  runtime.** `api/tests/mod.rs` has **34 tests** on
+  `JoyDbBudgetRuntime::new_in_memory()`, with at least one test per event type
+  (all 23 event types in `api/src/events/` are covered).
+  > 🔴 **Caveat (2026-08-14):** production runs `PgRuntime`, not JoyDB. These
+  > tests prove aggregate/replay logic, *not* the SQL persistence layer. See the
+  > status banner at the top of this file and rollout item 6.
+
+  Added this pass:
   - ✅ `potential_internal_transfers` boundaries — matching pair detected; the
     3-day window (inclusive at 3, excluded at 4); different-account requirement;
     rejected pairs excluded.

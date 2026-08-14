@@ -1,20 +1,10 @@
-use crate::Button;
-use crate::budget::{
-    BudgetTabs, CreateBudgetItemsView, RetagTransactionsView, RulesView, TagTransactionsView,
-    TagsView, TransactionsView, TransferPairsView,
-};
-use crate::file_chooser::{FileData, FileDialog};
-use api::models::{BudgetingType, MonthBeginsOn, PeriodId};
+use crate::budget::workspace::{BudgetTab, BudgetWorkspace};
+use api::models::{MonthBeginsOn, PeriodId};
 use api::view_models::BudgetViewModel;
-use api::view_models::*;
-use api::{auto_budget_all, auto_budget_period, get_budget, import_transactions_bytes};
+use api::get_budget;
 use chrono::Utc;
-use dioxus::core::internal::generational_box::GenerationalRef;
-use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use dioxus_primitives::label::Label;
-use std::cell::Ref;
-use std::future::Future;
 use uuid::Uuid;
 
 #[derive(Clone, Copy)]
@@ -28,12 +18,98 @@ pub enum BudgetLoadingState {
     NoDefaultBudget,
 }
 
+/// Where the user is within the budget: which period, and which task view.
+///
+/// Platforms that have a router (web) map this to and from the URL; platforms
+/// that don't (desktop, mobile) simply let `BudgetHero` own it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct BudgetLocation {
+    pub period_id: PeriodId,
+    pub tab: BudgetTab,
+}
+
+impl BudgetLocation {
+    /// The period containing today, on the default tab — where a session with
+    /// no explicit destination should land.
+    pub fn current() -> Self {
+        Self {
+            period_id: PeriodId::from_date(Utc::now(), MonthBeginsOn::default()),
+            tab: BudgetTab::default(),
+        }
+    }
+
+    /// Parses the two URL segments produced by [`Self::period_slug`] and
+    /// [`BudgetTab::slug`]. Returns `None` if either segment is unrecognised.
+    pub fn from_slugs(period: &str, tab: &str) -> Option<Self> {
+        Some(Self {
+            period_id: period.parse().ok()?,
+            tab: tab.parse().ok()?,
+        })
+    }
+
+    pub fn period_slug(&self) -> String {
+        self.period_id.to_string()
+    }
+
+    pub fn tab_slug(&self) -> &'static str {
+        self.tab.slug()
+    }
+}
+
 const HERO_CSS: Asset = asset!("assets/styling/budget-hero.css");
+
+/// Loads the budget and hands off to [`BudgetWorkspace`].
+///
+/// `location` and `on_navigate` are optional: pass both to let a router drive
+/// (and observe) the current period and tab; omit them and `BudgetHero` keeps
+/// that state internally.
 #[component]
-pub fn BudgetHero() -> Element {
+pub fn BudgetHero(
+    location: Option<BudgetLocation>,
+    on_navigate: Option<EventHandler<BudgetLocation>>,
+) -> Element {
     let mut budget_loading_state = use_signal(|| BudgetLoadingState::Loading);
     let budget_id = use_signal(Uuid::default);
-    let period_id = use_signal(|| PeriodId::from_date(Utc::now(), MonthBeginsOn::default()));
+    let mut period_id = use_signal(|| {
+        location.map_or_else(
+            || PeriodId::from_date(Utc::now(), MonthBeginsOn::default()),
+            |l| l.period_id,
+        )
+    });
+    let mut tab = use_signal(|| location.map(|l| l.tab).unwrap_or_default());
+
+    // The last location we handed to the router. Guards both directions so a
+    // URL echo doesn't bounce back as a fresh navigation.
+    let mut published = use_signal(|| location);
+
+    // Inbound: the router changed the URL (back/forward, or a deep link).
+    // `use_reactive!` is required because `location` is a plain prop — a bare
+    // `use_effect` would capture the first render's value and never see a change.
+    use_effect(use_reactive!(|location| {
+        if let Some(location) = location {
+            published.set(Some(location));
+            if *period_id.peek() != location.period_id {
+                period_id.set(location.period_id);
+            }
+            if *tab.peek() != location.tab {
+                tab.set(location.tab);
+            }
+        }
+    }));
+
+    // Outbound: the user navigated inside the workspace.
+    use_effect(move || {
+        let current = BudgetLocation {
+            period_id: period_id(),
+            tab: tab(),
+        };
+        if *published.peek() != Some(current) {
+            published.set(Some(current));
+            if let Some(on_navigate) = on_navigate {
+                on_navigate.call(current);
+            }
+        }
+    });
 
     let budget_resource = use_server_future(move || get_budget(None, period_id()))?;
 
@@ -85,7 +161,7 @@ pub fn BudgetHero() -> Element {
         }
         BudgetLoadingState::Loaded => {
             rsx! {
-                BudgetOverview { budget_id, period_id }
+                BudgetOverview { budget_id, period_id, tab }
             }
         }
         BudgetLoadingState::Error => {
@@ -137,247 +213,13 @@ pub fn BudgetHero() -> Element {
         }
     }
 }
-
 #[component]
-pub fn BudgetOverview(mut budget_id: Signal<Uuid>, mut period_id: Signal<PeriodId>) -> Element {
-    let period_id_now = PeriodId::from_date(Utc::now(), MonthBeginsOn::default());
-    let budget_signal = use_context::<BudgetState>().0;
-    let budget = budget_signal();
-    info!("The budget signal was updated: {}", budget.id);
-    budget_id.set(budget.id);
-
-    let auto_budget_enabled = budget.period_id != period_id_now;
-    let import_file = move |file: FileData| {
-        let contents = file.contents;
-        spawn(async move {
-            if !contents.is_empty()
-                && let Ok(updated_budget) =
-                    import_transactions_bytes(budget_id(), contents, period_id()).await
-            {
-                info!("Import went well and we update the context bro");
-                consume_context::<BudgetState>().0.set(updated_budget);
-            }
-        });
-    };
-
-    // "Att fördela" = income budgeted minus what is allocated to expenses + savings.
-    // The Income overview already carries this as remaining_budget.
-    let ready_to_assign = budget
-        .overviews
-        .iter()
-        .find(|ov| ov.budgeting_type == BudgetingType::Income)
-        .map(|ov| ov.remaining_budget);
-
+pub fn BudgetOverview(
+    budget_id: Signal<Uuid>,
+    period_id: Signal<PeriodId>,
+    tab: Signal<BudgetTab>,
+) -> Element {
     rsx! {
-        document::Link { rel: "stylesheet", href: HERO_CSS }
-        div { class: "budget-hero-a-container",
-            div { class: "budget-header-a",
-                div { class: "header-title",
-                    h1 { {budget.name.clone()} }
-                    // Compact period navigator
-                    div { class: "period-nav",
-                        button {
-                            class: "period-nav-btn",
-                            onclick: move |_| { period_id.set(period_id().month_before()); },
-                            "‹"
-                        }
-                        span { class: "period-nav-label", {period_id().to_string()} }
-                        button {
-                            class: "period-nav-btn",
-                            onclick: move |_| { period_id.set(period_id().month_after()); },
-                            "›"
-                        }
-                    }
-                    // Auto-budget tools collapsed by default
-                    details { class: "tools-menu",
-                        summary { class: "tools-menu-trigger", "Verktyg" }
-                        div { class: "tools-menu-content",
-                            if auto_budget_enabled {
-                                Button {
-                                    onclick: move |_| async move {
-                                        if let Ok(bv) = auto_budget_period(budget_id(), period_id()).await {
-                                            consume_context::<BudgetState>().0.set(bv);
-                                        }
-                                    },
-                                    "Auto budget period"
-                                }
-                            }
-                            Button {
-                                onclick: move |_| async move {
-                                    if let Ok(bv) = auto_budget_all(budget_id(), period_id()).await {
-                                        consume_context::<BudgetState>().0.set(bv);
-                                    }
-                                },
-                                "Auto budget alla perioder"
-                            }
-                        }
-                    }
-                }
-                div { class: "header-actions",
-                    // "Att fördela" ready-to-assign indicator
-                    if let Some(rta) = ready_to_assign {
-                        {
-                            let cents = rta.amount_in_cents();
-                            let rta_class = match cents.cmp(&0) {
-                                std::cmp::Ordering::Less => "rta-badge rta-over",
-                                std::cmp::Ordering::Equal => "rta-badge rta-balanced",
-                                std::cmp::Ordering::Greater => "rta-badge rta-under",
-                            };
-                            let label = if cents < 0 { "Överbudgeterat" } else { "Att fördela" };
-                            rsx! {
-                                div { class: rta_class,
-                                    span { class: "rta-label", {label} }
-                                    span { class: "rta-amount", {rta.to_string()} }
-                                }
-                            }
-                        }
-                    }
-                    FileDialog { on_chosen: import_file }
-                    if !budget.to_connect.is_empty() {
-                        div { class: "unassigned-badge",
-                            "{budget.to_connect.len()} transaktioner att hantera"
-                        }
-                    }
-                    if !budget.ignored_transactions.is_empty() {
-                        div { class: "unassigned-badge",
-                            "{budget.ignored_transactions.len()} ignorerade transaktioner"
-                        }
-                    }
-                }
-            }
-
-            // Past-period callout
-            if period_id() != period_id_now {
-                div { class: "past-period-banner",
-                    span { "Du ser en tidigare period — " {period_id().to_string()} }
-                    button {
-                        class: "past-period-go-now",
-                        onclick: move |_| period_id.set(period_id_now),
-                        "Gå till nuvarande månad →"
-                    }
-                }
-            }
-
-            // Main budget tabs — always visible
-            div { class: "budget-main-content", BudgetTabs {} }
-
-            // Nudge when income is budgeted but money is left to assign
-            if let Some(rta) = ready_to_assign {
-                if rta.amount_in_cents() > 0 && budget.items.iter().any(|i| i.budgeting_type == BudgetingType::Income) {
-                    div { class: "assign-nudge",
-                        span { class: "assign-nudge-icon", "💡" }
-                        span {
-                            "Du har "
-                            strong { {rta.to_string()} }
-                            " kvar att fördela. Tilldela dem till en budgetpost så att varje krona har ett syfte."
-                        }
-                    }
-                }
-            }
-
-            // Action sections — shown only when relevant
-            if budget.untagged_transaction_count > 0 {
-                div { class: "transactions-section-prominent",
-                    h3 { style: "margin: 0 0 16px 0;",
-                        "{budget.untagged_transaction_count} transaktioner att tagga"
-                    }
-                    TagTransactionsView {}
-                }
-            }
-            if !budget.potential_transfers.is_empty() {
-                div { class: "transactions-section-prominent", TransferPairsView {} }
-            }
-            if budget.untagged_transaction_count == 0 && budget.potential_transfer_count == 0 {
-                div { class: "transactions-section-prominent",
-                    h3 { style: "margin: 0 0 16px 0;", "Skapa budgetposter" }
-                    CreateBudgetItemsView {}
-                }
-            }
-            if budget.to_connect.is_empty() {
-                div { class: "transactions-section-minimal",
-                    p { class: "success-message", "✓ Alla transaktioner är hanterade!" }
-                }
-            } else {
-                div { class: "transactions-section-prominent",
-                    TransactionsView { ignored: false }
-                }
-            }
-            if budget.ignored_transactions.is_empty() {
-                div { class: "transactions-section-minimal",
-                    p { class: "success-message", "✓ Inga ignorerade transaktioner!" }
-                }
-            } else {
-                div { class: "transactions-section-prominent",
-                    TransactionsView { ignored: true }
-                }
-            }
-
-            // Maintenance sections — collapsed by default to reduce page length
-            div { class: "maintenance-sections",
-                details { class: "maintenance-section",
-                    summary { class: "maintenance-section-trigger", "Taggade transaktioner" }
-                    div { class: "maintenance-section-content", RetagTransactionsView {} }
-                }
-                details { class: "maintenance-section",
-                    summary { class: "maintenance-section-trigger", "Taggar" }
-                    div { class: "maintenance-section-content", TagsView {} }
-                }
-                details { class: "maintenance-section",
-                    summary { class: "maintenance-section-trigger", "Taggningsregler" }
-                    div { class: "maintenance-section-content", RulesView {} }
-                }
-            }
-        }
-    }
-}
-
-#[component]
-fn RunningDeficitView() -> Element {
-    let budget = use_context::<BudgetState>().0();
-    let summaries = &budget.period_summaries;
-    if summaries.is_empty() {
-        return rsx! { p { "Ingen perioddata ännu." } };
-    }
-    let final_running = summaries.last().map(|s| s.running_net).unwrap_or_default();
-    let banner_color = if final_running.amount_in_cents() < 0 { "#f44336" } else { "#4caf50" };
-    rsx! {
-        div {
-            div {
-                style: "padding: 8px 12px; border-radius: 4px; margin-bottom: 12px; background: {banner_color}; color: white; font-weight: bold;",
-                if final_running.amount_in_cents() < 0 {
-                    "Totalt underskott: {final_running}"
-                } else {
-                    "Totalt överskott: {final_running}"
-                }
-            }
-            table { style: "width: 100%; border-collapse: collapse; font-size: 0.9em;",
-                thead {
-                    tr {
-                        th { style: "text-align: left; padding: 4px 8px;", "Period" }
-                        th { style: "text-align: right; padding: 4px 8px;", "Inkomst" }
-                        th { style: "text-align: right; padding: 4px 8px;", "Utgifter" }
-                        th { style: "text-align: right; padding: 4px 8px;", "Netto" }
-                        th { style: "text-align: right; padding: 4px 8px;", "Löpande" }
-                    }
-                }
-                tbody {
-                    for summary in summaries.iter().rev().take(24) {
-                        {
-                            let net_color = if summary.net.amount_in_cents() < 0 { "#f44336" } else { "#4caf50" };
-                            let running_color = if summary.running_net.amount_in_cents() < 0 { "#f44336" } else { "#4caf50" };
-                            rsx! {
-                                tr { style: "border-top: 1px solid #eee;",
-                                    td { style: "padding: 4px 8px;", "{summary.period_id}" }
-                                    td { style: "text-align: right; padding: 4px 8px;", "{summary.income_actual}" }
-                                    td { style: "text-align: right; padding: 4px 8px;", "{summary.expense_actual}" }
-                                    td { style: "text-align: right; padding: 4px 8px; color: {net_color};", "{summary.net}" }
-                                    td { style: "text-align: right; padding: 4px 8px; color: {running_color};", "{summary.running_net}" }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        BudgetWorkspace { budget_id, period_id, tab }
     }
 }

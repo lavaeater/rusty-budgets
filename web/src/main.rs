@@ -2,15 +2,19 @@
 use dioxus::fullstack;
 use dioxus::logger::tracing::Level;
 use dioxus::prelude::*;
-use views::Home;
+use views::Budget;
 mod views;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
 enum Route {
     #[layout(WebNavbar)]
-    #[route("/")]
-    Home {},
+    #[redirect("/", || {
+        let now = ui::budget::BudgetLocation::current();
+        Route::Budget { period: now.period_slug(), tab: now.tab_slug().to_string() }
+    })]
+    #[route("/budget/:period/:tab")]
+    Budget { period: String, tab: String },
 }
 
 const FAVICON: Asset = asset!("/assets/favicon.ico");

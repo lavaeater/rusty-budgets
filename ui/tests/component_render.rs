@@ -11,7 +11,9 @@ use api::view_models::{
     BudgetItemStatus, BudgetItemViewModel, BudgetViewModel, BudgetingTypeOverview,
 };
 use dioxus::prelude::*;
-use ui::budget::{BudgetItemStatusView, BudgetState, BudgetingTypeOverviewView};
+use ui::budget::{
+    BudgetItemStatusView, BudgetState, BudgetTab, BudgetWorkspace, BudgetingTypeOverviewView,
+};
 
 fn overview(
     budgeted: i64,
@@ -160,4 +162,133 @@ fn status_view_over_budget_shows_adjust_button() {
     assert!(html.contains("auto-adjust-button"));
     // shortage = actual (1200) - budgeted (1000) = 200 kr; label reflects it.
     assert!(html.contains("Auto-justera"));
+}
+
+// ---------------------------------------------------------------------------
+// Workspace tabs (Phase 7). The tab bar is the app's primary navigation, so
+// these lock down that every task view is reachable and that the Att göra
+// badge reflects the outstanding-work counts.
+// ---------------------------------------------------------------------------
+
+#[component]
+fn WorkspaceHarness(budget: BudgetViewModel) -> Element {
+    use_context_provider(|| BudgetState(Signal::new(budget.clone())));
+    rsx! {
+        BudgetWorkspace {
+            budget_id: Signal::new(budget.id),
+            period_id: Signal::new(budget.period_id),
+            tab: Signal::new(BudgetTab::default()),
+        }
+    }
+}
+
+fn workspace_html(budget: BudgetViewModel) -> String {
+    render(rsx! {
+        WorkspaceHarness { budget }
+    })
+}
+
+#[test]
+fn workspace_renders_every_tab() {
+    let html = workspace_html(BudgetViewModel {
+        name: "Hushåll".to_string(),
+        ..Default::default()
+    });
+
+    for tab in [
+        "Översikt",
+        "Budget",
+        "Transaktioner",
+        "Att göra",
+        "Rapporter",
+        "Inställningar",
+    ] {
+        assert!(html.contains(tab), "tab bar is missing `{tab}`:\n{html}");
+    }
+    assert!(html.contains("Hushåll"), "budget name should be the heading");
+}
+
+#[test]
+fn workspace_defaults_to_the_overview_tab() {
+    let html = workspace_html(BudgetViewModel::default());
+    // Only the selected panel renders its children, so the Översikt-only
+    // "all clear" message proves Översikt is the active tab.
+    assert!(
+        html.contains("Allt är hanterat"),
+        "overview panel should be the one rendered:\n{html}"
+    );
+}
+
+#[test]
+fn todo_badge_sums_outstanding_work() {
+    let html = workspace_html(BudgetViewModel {
+        untagged_transaction_count: 7,
+        potential_transfer_count: 3,
+        ..Default::default()
+    });
+    assert!(
+        html.contains(r#"class="workspace-tab-badge">10<"#),
+        "Att göra badge should total 7 + 3:\n{html}"
+    );
+}
+
+#[test]
+fn no_todo_badge_when_nothing_outstanding() {
+    let html = workspace_html(BudgetViewModel::default());
+    assert!(
+        !html.contains("workspace-tab-badge"),
+        "a clean budget should carry no badge:\n{html}"
+    );
+}
+
+#[test]
+fn overview_lists_work_needing_attention() {
+    let html = workspace_html(BudgetViewModel {
+        untagged_transaction_count: 4,
+        ..Default::default()
+    });
+    assert!(html.contains("transaktioner att tagga"));
+    assert!(
+        !html.contains("Allt är hanterat"),
+        "the all-clear message and the attention list are mutually exclusive"
+    );
+}
+
+#[component]
+fn TabHarness(budget: BudgetViewModel, tab: BudgetTab) -> Element {
+    use_context_provider(|| BudgetState(Signal::new(budget.clone())));
+    rsx! {
+        BudgetWorkspace {
+            budget_id: Signal::new(budget.id),
+            period_id: Signal::new(budget.period_id),
+            tab: Signal::new(tab),
+        }
+    }
+}
+
+/// A budget with no projected overviews must not panic when the Budget tab is
+/// opened — `BudgetingTypeTabs` used to `.unwrap()` the first overview.
+#[test]
+fn budget_tab_survives_an_empty_view_model() {
+    let html = render(rsx! {
+        TabHarness { budget: BudgetViewModel::default(), tab: BudgetTab::Plan }
+    });
+    assert!(html.contains("Ingen budgetdata"), "expected the empty state:\n{html}");
+}
+
+#[test]
+fn every_tab_renders_without_panicking() {
+    for tab in [
+        BudgetTab::Overview,
+        BudgetTab::Plan,
+        BudgetTab::Transactions,
+        BudgetTab::Todo,
+        BudgetTab::Reports,
+        BudgetTab::Settings,
+    ] {
+        let html = render(rsx! {
+            TabHarness { budget: BudgetViewModel::default(), tab }
+        });
+        assert!(!html.is_empty(), "tab {tab:?} rendered nothing");
+    }
 }

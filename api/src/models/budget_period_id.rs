@@ -30,6 +30,32 @@ impl Display for PeriodId {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, thiserror::Error)]
+pub enum PeriodIdParseError {
+    #[error("expected YYYY-MM, got `{0}`")]
+    Malformed(String),
+    #[error("month must be 1..=12, got {0}")]
+    MonthOutOfRange(u32),
+}
+
+/// Parses the `YYYY-MM` form produced by [`Display`], so a `PeriodId` can be a
+/// URL segment. Accepts a zero-padded month (`2026-08`) as well as the bare
+/// form `Display` emits (`2026-8`).
+impl std::str::FromStr for PeriodId {
+    type Err = PeriodIdParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let malformed = || PeriodIdParseError::Malformed(s.to_string());
+        let (year, month) = s.split_once('-').ok_or_else(malformed)?;
+        let year: i32 = year.parse().map_err(|_| malformed())?;
+        let month: u32 = month.parse().map_err(|_| malformed())?;
+        if !(1..=12).contains(&month) {
+            return Err(PeriodIdParseError::MonthOutOfRange(month));
+        }
+        Ok(Self { year, month })
+    }
+}
+
 impl PeriodId {
     /// # Panics
     /// Panics if `month_begins_on` is `MonthBeginsOn::PreviousMonth(1)` — use
@@ -192,7 +218,7 @@ impl PeriodId {
 #[cfg(test)]
 mod tests {
     use crate::models::MonthBeginsOn;
-    use crate::models::budget_period_id::{PeriodId, last_day_of_month};
+    use crate::models::budget_period_id::{PeriodId, PeriodIdParseError, last_day_of_month};
     use chrono::{Datelike, TimeZone, Utc};
 
     #[test]
@@ -648,5 +674,46 @@ mod tests {
         let result2 = last_day_of_month(date);
 
         assert_eq!(result1, result2);
+    }
+
+    #[test]
+    fn from_str_round_trips_display() {
+        for (year, month) in [(2026, 1), (2026, 8), (2026, 12), (1999, 10)] {
+            let id = PeriodId { year, month };
+            assert_eq!(id.to_string().parse::<PeriodId>(), Ok(id));
+        }
+    }
+
+    #[test]
+    fn from_str_accepts_zero_padded_month() {
+        assert_eq!(
+            "2026-08".parse::<PeriodId>(),
+            Ok(PeriodId { year: 2026, month: 8 })
+        );
+    }
+
+    #[test]
+    fn from_str_rejects_malformed() {
+        for bad in ["", "2026", "2026-", "-8", "abc-8", "2026-xx", "2026/8"] {
+            assert!(
+                matches!(
+                    bad.parse::<PeriodId>(),
+                    Err(PeriodIdParseError::Malformed(_))
+                ),
+                "expected {bad} to be rejected as malformed"
+            );
+        }
+    }
+
+    #[test]
+    fn from_str_rejects_out_of_range_month() {
+        assert_eq!(
+            "2026-0".parse::<PeriodId>(),
+            Err(PeriodIdParseError::MonthOutOfRange(0))
+        );
+        assert_eq!(
+            "2026-13".parse::<PeriodId>(),
+            Err(PeriodIdParseError::MonthOutOfRange(13))
+        );
     }
 }
