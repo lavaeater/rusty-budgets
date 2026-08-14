@@ -952,17 +952,24 @@ pub struct PgRuntime {
 #[cfg(feature = "server")]
 pub async fn create_runtime() -> PgRuntime {
     dotenvy::dotenv().ok();
-    // Try workspace root (two levels up from packages/web)
+    // Fall back to the workspace root, which is one level up from this crate
+    // (`<workspace>/api`), so the server works regardless of the directory it
+    // was launched from.
     let workspace_env = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()
-        .and_then(|p| p.parent())
         .map(|p| p.join(".env"));
     if let Some(env_path) = workspace_env {
         debug!("Trying to load .env from: {:?}", env_path);
         dotenvy::from_path(&env_path).ok();
     }
-    let url = env::var("DATABASE_URL").unwrap();
-    let client = welds::connections::connect(url).await.unwrap();
+    let url = env::var("DATABASE_URL").expect(
+        "DATABASE_URL is not set. Copy .env.example to .env in the workspace root \
+         (e.g. DATABASE_URL=sqlite://data.sqlite?mode=rwc), then run the migrations \
+         with `cargo run -p api --bin api --features server`.",
+    );
+    let client = welds::connections::connect(&url)
+        .await
+        .unwrap_or_else(|e| panic!("Could not connect to DATABASE_URL `{url}`: {e}"));
     PgRuntime::new(client)
 }
 

@@ -13,7 +13,10 @@ async fn main() -> Result<(), RustyError> {
     }
     pretty_env_logger::init();
 
-    let connection_string = env::var("DATABASE_URL").unwrap();
+    let connection_string = env::var("DATABASE_URL").expect(
+        "DATABASE_URL is not set. Copy .env.example to .env in the workspace root, \
+         e.g. DATABASE_URL=sqlite://data.sqlite?mode=rwc",
+    );
     let client = welds::connections::connect(&connection_string)
         .await
         .expect("Unable to connect to Database");
