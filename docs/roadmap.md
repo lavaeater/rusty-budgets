@@ -8,6 +8,67 @@
 
 ---
 
+## 🔖 Handoff — picking this up on another machine (2026-08-15)
+
+**State: everything is committed, working tree clean.** Last three commits:
+
+| Commit | What |
+| --- | --- |
+| `0b0b2f3` | `.env` setup fix — `.env.example`, path bug, actionable panics |
+| `f8508bb` | **Phase 7.1 + 7.2** — the tab restructure + routing (20 files, +1927/−300) |
+| `95aa461` | Clippy pedantic cleanup (UI half) |
+
+### First thing on the new machine
+
+The app **panics on startup without `DATABASE_URL`** — this is not a bug in the
+feature work, it is missing local config (`.env` is gitignored, so a fresh clone
+has none):
+
+```sh
+cp .env.example .env                            # pick SQLite or Postgres inside
+cargo run -p api --bin api --features server    # creates + migrates the DB
+dx serve --package web
+```
+
+> ⚠️ **Read before running the migration on the machine with the real data.**
+> `api/src/main.rs` has `let migrate = true;` hardcoded, so the binary *always*
+> copies a JoyDB file into SQL, defaulting to `data.json` in the working
+> directory. The committed `data.json` is **the real event log — 8179 events,
+> last written 2026-04-27**. So a bare run imports that April snapshot into
+> whatever `DATABASE_URL` points at.
+>
+> - Migrating the April log into a **fresh** DB: fine, that is the intent.
+> - Running it against a DB that **already holds newer events**: check first.
+>   Set `DATA_FILE` to the file you actually mean, or point it at a file
+>   containing `{}` to skip the copy entirely.
+>
+> If the other machine has a more recent `data.json` than the committed one,
+> that local copy — not git — is the source of truth. Compare before importing.
+
+### Verified green as of the handoff
+
+- **142 native tests** (`cargo test --workspace`)
+- **6 E2E specs** (`cd e2e && npm test`) — needs `npm install` +
+  `npx playwright install chromium` on a fresh machine
+- **Clippy pedantic clean** on all three bacon jobs (server / client / mobile)
+- `dx serve` boots clean, `GET /` → 200, no panics
+
+### ⚠️ Not verified — do this first
+
+**Nobody has looked at the new UI in a browser.** The tab *logic* is covered by
+SSR render tests and E2E, but the CSS written for the tab bar, filter chips,
+attention list, and report table (`ui/assets/styling/workspace.css`, 397 new
+lines) has **never been rendered visually**. Expect to spend a pass on polish.
+
+### Suggested next step
+
+Phase 5 (envelope carryover) is the highest-value work and unblocks the billing
+buffer. **But 5.4 (cash-based global Ready-to-Assign) is a genuine philosophical
+pivot** from forecast budgeting to envelope budgeting — decide that deliberately
+before building toward it, rather than discovering it half-way through.
+
+---
+
 ## Part I — Completed work (audited 2026-08-14)
 
 ### UX Overhaul (May 2026)
@@ -49,6 +110,26 @@ Goal: make the app match the YNAB mental model — every dollar has a job, the b
 - [x] **Clippy pedantic** — enabled workspace-wide (`[workspace.lints.clippy]`
   plus `[lints] workspace = true` on all six crates) and clean across the
   `clippy-server` / `clippy-client` / `clippy-mobile` bacon jobs.
+  > The lints were declared in the workspace `Cargo.toml` but **no crate had
+  > opted in**, so pedantic had never actually run. Enabling it surfaced ~214
+  > warnings; all fixed.
+- [x] **Local-dev setup made discoverable** ✓ 2026-08-14 (`0b0b2f3`) — the app
+  panicked on startup with a bare `NotPresent` when `DATABASE_URL` was unset,
+  and nothing in the repo said it was required (`.env` is gitignored). Three
+  fixes:
+  - `.env.example` added and **tracked**, covering SQLite + Postgres and the
+    optional `DATA_FILE`.
+  - **Real path bug:** the `.env` fallback did `.parent().and_then(|p| p.parent())`
+    from `CARGO_MANIFEST_DIR` — but that is `<workspace>/api`, so two parents
+    overshoot the workspace root and land *outside the project*. The stale
+    comment ("two levels up from packages/web") described an older layout. It
+    only ever worked because `dotenvy::dotenv()` searches upward from the cwd,
+    making it depend on where you launched from. Now one parent.
+  - Actionable panic messages in `create_runtime()` and the migration binary,
+    naming the fix; connection failures now report the URL that was tried.
+  > This had been latent since the JoyDB→SQL move. The E2E suite never caught it
+  > because `playwright.config.js` injects `DATABASE_URL` itself — the same
+  > class of blind spot as the JoyDB-vs-`PgRuntime` gap in `docs/testing.md`.
 
 ---
 
@@ -65,6 +146,35 @@ Goal: make the app match the YNAB mental model — every dollar has a job, the b
 - [ ] **Dioxus version** — says 0.7.3, workspace is on 0.8.0-alpha.1.
 - [ ] **`ui/src/lib.rs` comment** — refers to `budget_a` / `budget_b` module
   variants that no longer exist.
+
+---
+
+### 🐛 Known issues — found, not yet fixed
+
+Small things surfaced while working; none block Phase 5.
+
+- [ ] **Migration binary always migrates** — `let migrate = true;` is hardcoded
+  in `api/src/main.rs`, so every run copies `DATA_FILE` (default `data.json`, and
+  the repo ships one) into SQL. Should be a flag or an env var. **This is the
+  handoff hazard called out at the top of this file.**
+- [ ] **`BudgetHero` SSR renders only "Laddar…"** — the state machine starts in
+  `Loading` and resolves in a `use_effect`, which does not run during SSR. Every
+  first paint is a spinner, hydrating to real content. Fine functionally, but it
+  wastes the SSR pass entirely and hurts perceived load. Worth moving the
+  resolution into the `use_server_future` branch instead.
+- [ ] **`data.json` at the repo root is the real event log, and it is committed**
+  — 8179 `StoredBudgetEvent`s, 1 budget, 1 user (plus a 7.5 MB `data.bak`).
+  Both are tracked, last written 2026-04-27. Consequences worth a decision:
+  - It is the **default `DATA_FILE`**, so any bare run of the migration binary
+    imports these 8179 events into whatever `DATABASE_URL` points at.
+  - Personal financial data is in git history, and two ~7.5 MB blobs are carried
+    by every clone.
+  - It is the JoyDB-era source of truth; post-migration the SQL DB is. Decide
+    whether `data.json` is now an **archive** (untrack, keep a local copy) or a
+    **fixture** (shrink to an anonymised sample) — right now it is quietly both.
+- [ ] **Layer 2 tests run against the wrong runtime** — 34 CQRS tests use
+  `JoyDbBudgetRuntime`, production uses `PgRuntime`. Full detail and the
+  recommended fix are in `docs/testing.md` (rollout item 6).
 
 ---
 
