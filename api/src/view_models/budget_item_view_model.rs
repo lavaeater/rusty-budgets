@@ -61,17 +61,15 @@ impl BudgetItemViewModel {
         let effective_budgeting_type = actual_item
             .map_or(budget_item.budgeting_type, |ai| ai.budgeting_type);
 
-        // Compute required monthly buffer contribution from tag periodicities
+        // Spread the buffer target over the longest billing cycle among the
+        // item's tags. `Variable` tags contribute no cycle — they are budgeted
+        // as they are spent, never buffered.
         let required_monthly_contribution = budget_item.buffer_target.map(|target| {
             let max_months = budget_item
                 .tag_ids
                 .iter()
                 .filter_map(|tid| budget_tags.iter().find(|t| t.id == *tid))
-                .map(|t| match t.periodicity {
-                    Periodicity::Monthly | Periodicity::OneOff => 1i64,
-                    Periodicity::Quarterly => 3,
-                    Periodicity::Annual => 12,
-                })
+                .filter_map(|t| t.cost_kind.cycle_months())
                 .max()
                 .unwrap_or(12);
             target.divide(max_months)

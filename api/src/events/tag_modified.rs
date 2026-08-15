@@ -1,5 +1,5 @@
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
-use crate::models::{Budget, Periodicity};
+use crate::models::{Budget, Periodicity, Tag};
 use cqrs_macros::DomainEvent;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -20,8 +20,17 @@ impl TagModifiedHandler for Budget {
             if let Some(name) = &event.name {
                 tag.name.clone_from(name);
             }
-            if let Some(periodicity) = event.periodicity {
-                tag.periodicity = periodicity;
+            // Legacy shape: a periodicity change re-derives the classification,
+            // but only where the user has not already answered explicitly via
+            // `TagClassified` (which clears `needs_review`).
+            if let Some(periodicity) = event.periodicity
+                && tag.needs_review
+            {
+                let derived =
+                    Tag::from_legacy_periodicity(tag.id, tag.name.clone(), periodicity);
+                tag.cost_kind = derived.cost_kind;
+                tag.matching = derived.matching;
+                tag.needs_review = derived.needs_review;
             }
             if let Some(deleted) = event.deleted {
                 tag.deleted = deleted;

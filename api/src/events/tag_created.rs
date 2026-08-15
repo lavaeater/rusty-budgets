@@ -16,7 +16,10 @@ pub struct TagCreated {
 
 impl TagCreatedHandler for Budget {
     fn apply_create_tag(&mut self, event: &TagCreated) -> Uuid {
-        self.tags.push(Tag::new(
+        // The event carries only a `Periodicity`; classification is derived
+        // from it and may be flagged for review. A later `TagClassified`
+        // overrides the derivation. See `events/tag_classified.rs`.
+        self.tags.push(Tag::from_legacy_periodicity(
             event.tag_id,
             event.name.clone(),
             event.periodicity,
