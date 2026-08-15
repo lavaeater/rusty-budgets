@@ -21,10 +21,11 @@ impl TagModifiedHandler for Budget {
                 tag.name.clone_from(name);
             }
             // Legacy shape: a periodicity change re-derives the classification,
-            // but only where the user has not already answered explicitly via
-            // `TagClassified` (which clears `needs_review`).
+            // unless the user has answered explicitly via `TagClassified` — a
+            // deliberate choice must not be silently overwritten by an edit
+            // through the older periodicity-only path.
             if let Some(periodicity) = event.periodicity
-                && tag.needs_review
+                && !tag.explicitly_classified
             {
                 let derived =
                     Tag::from_legacy_periodicity(tag.id, tag.name.clone(), periodicity);

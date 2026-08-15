@@ -47,11 +47,14 @@ dx serve --package web
 
 ### Verified green as of the handoff
 
-- **142 native tests** (`cargo test --workspace`)
+- **173 native tests** (`cargo test --workspace`)
 - **6 E2E specs** (`cd e2e && npm test`) — needs `npm install` +
   `npx playwright install chromium` on a fresh machine
 - **Clippy pedantic clean** on all three bacon jobs (server / client / mobile)
 - `dx serve` boots clean, `GET /` → 200, no panics
+- The **real production snapshot** still deserialises:
+  `cargo run -p api --example verify_snapshot -- <budget.json>`
+  (57 tags, 28 periods, version 8179 — 23 automatic, 34 needing review)
 
 ### ⚠️ Not verified — do this first
 
@@ -186,6 +189,96 @@ Small things surfaced while working; none block Phase 5.
 - [ ] **Layer 2 tests run against the wrong runtime** — 34 CQRS tests use
   `JoyDbBudgetRuntime`, production uses `PgRuntime`. Full detail and the
   recommended fix are in `docs/testing.md` (rollout item 6).
+
+---
+
+### Phase 8 — Bills vs variable spending ◐ shipped except the buffer
+
+**The insight (2026-08-15):** recurring bills and card spending want opposite
+treatment. A bill's payee text is stable, so rules can auto-apply it; a card
+purchase needs confirming. And a bill billed yearly should be *periodised* — the
+12 000 kr dog insurance budgets as 1 000 kr/month — while variable spending is
+budgeted as it happens.
+
+**What the data forced:** the two behaviours do **not** collapse into one flag.
+`Livsmedel` is variable spending whose payees (ICA, Coop) match perfectly;
+`Bil - Underhåll` is a genuine recurring cost billed by a different garage every
+time. So `Tag` carries two independent fields with linked defaults:
+
+```rust
+cost_kind: CostKind,   // Recurring(Periodicity) | Variable  -> budgeting
+matching:  Matching,   // Automatic | Suggest                -> import
+```
+
+`CostKind::default_matching()` links them (Recurring⇒Automatic, Variable⇒Suggest),
+so the inline pickers set one thing and the review screen exposes both.
+
+- [x] **8.1 Classification on `Tag`** ✓ 2026-08-15 — `CostKind`/`Matching`, with
+  `cycle_months`, `needs_buffer`, `default_matching`.
+- [x] **8.2 New `TagClassified` event** ✓ — deliberately *additive*. Historical
+  `TagCreated` events carry only a `Periodicity` and are immutable; replay
+  derives a provisional classification via `Tag::from_legacy_periodicity`, and
+  `TagClassified` overrides it. `explicitly_classified` keeps a legacy
+  periodicity edit from clobbering a deliberate answer.
+- [x] **8.3 Snapshot back-compat** ✓ 🔴 — **this would have broken production.**
+  `PgRuntime::load` deserialises a stored `Budget` *snapshot* and replays only
+  the events after it; the live snapshot holds all 57 tags in the old shape
+  `{id, name, periodicity, deleted}`. Adding required fields would have made
+  every budget fail to load. A `TagRepr` shim accepts both shapes. Guarded by
+  5 unit tests **and** `cargo run -p api --example verify_snapshot -- <file>`,
+  which loads a real snapshot end-to-end — run it after any aggregate schema
+  change.
+- [x] **8.4 Gated auto-categorisation** ✓ — `evaluate_tag_rules` now returns
+  only `Automatic` matches; `suggest_tag_rules` returns the `Suggest` ones. Same
+  engine, always disjoint. Deleted tags match neither. 6 CQRS tests.
+  > `apply_all_rules` (the "Godkänn alla regelträffar" button) deliberately
+  > applies **both** sets — implicit evaluation after an import is gated, but an
+  > explicit bulk approval is the user asking for the suggestions too. Without
+  > this the button would only re-apply bills that had already auto-applied.
+- [x] **8.5 Guided review of the 34 ambiguous tags** ✓ — `Periodicity::default()`
+  was `OneOff`, so 34 of 57 production tags sit in the "never answered" bucket,
+  mixing real bills (`Bredband`, `Fackförbund`, `Skatt`, `Lön Tommie`) with
+  genuine ad-hoc spending (`Café`, `Shopping`, `Äta ute`). A mechanical
+  `OneOff → Variable` migration would have silently switched off
+  auto-categorisation for the bills, so each is asked about instead, with its
+  real spend shown. `TagReviewView` in Inställningar, surfaced from the Översikt
+  attention list via `tags_needing_review_count`.
+  > Evidence of default-drift: `Lön Lisa` is Monthly while `Lön Tommie` is
+  > OneOff — the same thing classified two ways.
+- [x] **8.6 Periodised monthly contribution** ✓ —
+  `TagSummary::monthly_budget_contribution` spreads a bill across its cycle. Uses
+  the **trailing cycle's** actual spend ÷ cycle length, not the whole-history
+  average, because the naive average is badly skewed by a partial window: 13
+  months containing two annual payments averages to 1 846 kr/month, not 1 000.
+  Monthly and `Variable` costs keep the window average, which beats any single
+  recent month for them.
+- [x] **8.7 Suggestion inbox** ✓ 2026-08-15 — `TagSuggestionsView`, first section
+  of the **Att göra** tab. **Grouped by proposed tag**, largest group first: one
+  import can produce dozens of matches for the same payee, and "18 transaktioner
+  ser ut som Livsmedel — godkänn alla" is one decision instead of eighteen.
+  Per-group and global confirm, expand to review individually.
+  - Bulk confirm goes through `db::confirm_tag_suggestions`, **not** a loop over
+    `db::tag_transaction` — that wrapper reloads the aggregate, checks for a
+    missing rule and re-runs a full rule evaluation *per call*, which would be
+    quadratic over a batch. A suggestion already implies its rule exists.
+  - The matches are re-derived **server-side** from `tag_id`, never sent from
+    the client, so a stale inbox cannot tag the wrong transaction.
+  - "Hoppa över" is **local-only and deliberately not persisted** — the
+    transaction stays untagged, so the suggestion returns on reload. The button
+    is worded as *skip*, not *reject*, to match. A CQRS test
+    (`skipping_is_not_persisted`) guards against it quietly becoming persistent.
+  > **Not visible on the current production data:** the live snapshot has
+  > **0 untagged transactions**, so there are no suggestions to show and the Att
+  > göra tab reads "Inget att göra". The inbox only appears after importing new
+  > transactions. Verified with
+  > `cargo run -p api --example verify_snapshot` (now also reports
+  > untagged / auto-applies / suggestions, grouped by tag).
+- [ ] **8.8 Buffers actually accumulate** 🔴 **blocked on Phase 5.** Budgeting
+  1 000 kr/month for a 12 000 kr annual bill only works if the unspent months
+  carry forward. Without carryover, month 12 shows an 11 000 kr overspend every
+  year. `TagSummary::buffer_target()` computes the figure; it cannot yet
+  accumulate. **This is the same mechanic as the billing buffer — Phase 8 and
+  the Phase 6 buffer work converge here.**
 
 ---
 

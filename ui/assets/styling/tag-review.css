@@ -1,0 +1,115 @@
+/* Guided classification pass over tags whose kind was inferred, not chosen. */
+
+.tag-review {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.tag-review-loading {
+    color: #718096;
+}
+
+.tag-review-intro h4 {
+    margin: 0 0 4px 0;
+    font-size: 1.05rem;
+    color: #2d3748;
+}
+
+.tag-review-intro p {
+    margin: 0 0 8px 0;
+    color: #718096;
+    font-size: 0.9rem;
+}
+
+.tag-review-row {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: white;
+}
+
+.tag-review-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.tag-review-name {
+    font-weight: 700;
+    color: #2d3748;
+    font-size: 1rem;
+}
+
+.tag-review-stats {
+    color: #718096;
+    font-size: 0.85rem;
+}
+
+.tag-review-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+.tag-review-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.tag-review-field-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #4a5568;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.tag-review-select {
+    padding: 8px 10px;
+    border: 1px solid #cbd5e0;
+    border-radius: 8px;
+    background: white;
+    font-size: 0.95rem;
+    color: #2d3748;
+}
+
+.tag-review-hint {
+    font-size: 0.8rem;
+    color: #718096;
+    line-height: 1.35;
+}
+
+.tag-review-periodised {
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: #ebf4ff;
+    color: #2c5282;
+    font-size: 0.9rem;
+}
+
+.tag-review-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.tag-review-save {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 8px;
+    background: #667eea;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.tag-review-save:disabled {
+    opacity: 0.6;
+    cursor: default;
+}

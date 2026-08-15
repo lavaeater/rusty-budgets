@@ -27,6 +27,7 @@ impl TagClassifiedHandler for Budget {
             tag.cost_kind = event.cost_kind;
             tag.matching = event.matching;
             tag.needs_review = false;
+            tag.explicitly_classified = true;
         }
         event.tag_id
     }

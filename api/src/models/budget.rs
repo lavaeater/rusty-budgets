@@ -8,7 +8,7 @@ use crate::models::budgeting_type::BudgetingType;
 use crate::models::money::{Currency, Money};
 use crate::models::rule_packages::RulePackages;
 use crate::models::{
-    ActualItem, BankAccount, BankTransaction, BudgetPeriod, MatchRule, MonthBeginsOn, Tag,
+    ActualItem, BankAccount, BankTransaction, BudgetPeriod, MatchRule, Matching, MonthBeginsOn, Tag,
     TransactionAllocation,
 };
 use crate::pub_events_enum;
@@ -329,16 +329,67 @@ impl Budget {
                     .unwrap_or((Money::zero(self.currency), 0));
                 let average_monthly = total.divide(months_covered);
                 let average_yearly = average_monthly.multiply(12);
+                let monthly_budget_contribution = Self::periodised_monthly(
+                    tag,
+                    &all_txs,
+                    max_date,
+                    average_monthly,
+                );
                 TagSummary {
                     tag_id: tag.id,
                     name: tag.name.clone(),
-                    periodicity: tag.periodicity,
+                    cost_kind: tag.cost_kind,
+                    matching: tag.matching,
+                    needs_review: tag.needs_review,
                     average_monthly,
                     average_yearly,
+                    monthly_budget_contribution,
                     transaction_count: count,
                 }
             })
             .collect()
+    }
+
+    /// What to budget per month for `tag`.
+    ///
+    /// A cost billed less often than monthly is spread across its cycle: the
+    /// trailing cycle's actual spend divided by the cycle length, so a single
+    /// 12 000 kr annual insurance becomes 1 000 kr/month. Using the *trailing
+    /// cycle* rather than the whole-history average matters because the naive
+    /// average is badly skewed by a partial window — 13 months containing two
+    /// annual payments averages to 1 846 kr/month, not 1 000.
+    ///
+    /// Monthly and `Variable` costs keep the whole-history average, which is a
+    /// better estimator for them than any single recent month (electricity
+    /// swings seasonally; groceries swing weekly).
+    fn periodised_monthly(
+        tag: &Tag,
+        all_txs: &[&BankTransaction],
+        max_date: DateTime<Utc>,
+        average_monthly: Money,
+    ) -> Money {
+        let Some(cycle_months) = tag.cost_kind.cycle_months() else {
+            return average_monthly;
+        };
+        if cycle_months <= 1 {
+            return average_monthly;
+        }
+        let cycle_start = max_date
+            .checked_sub_months(chrono::Months::new(
+                u32::try_from(cycle_months).unwrap_or(12),
+            ))
+            .unwrap_or(max_date);
+        let trailing: Money = all_txs
+            .iter()
+            .filter(|tx| tx.tag_id == Some(tag.id) && tx.date > cycle_start)
+            .map(|tx| tx.amount)
+            .sum();
+        if trailing.amount_in_cents() == 0 {
+            // No billing observed in the trailing cycle — fall back rather than
+            // claiming this cost is free.
+            return average_monthly;
+        }
+        trailing.divide(cycle_months)
     }
 
     pub fn get_next_untagged_transaction(&self) -> Option<&BankTransaction> {
@@ -348,7 +399,27 @@ impl Budget {
             .find(|tx| tx.tag_id.is_none() && !tx.ignored)
     }
 
+    /// Rule matches that may be applied **without asking**, i.e. those whose
+    /// tag is [`Matching::Automatic`] — in practice bills, whose payee text is
+    /// stable enough to trust.
+    ///
+    /// Matches against [`Matching::Suggest`] tags are deliberately excluded;
+    /// see [`Self::suggest_tag_rules`].
     pub fn evaluate_tag_rules(&self) -> Vec<(Uuid, Uuid)> {
+        self.rule_matches(Matching::Automatic)
+    }
+
+    /// Rule matches that need the user to confirm them — card spending, where a
+    /// payee maps to a category only most of the time.
+    ///
+    /// Same matching engine as [`Self::evaluate_tag_rules`]; only the tag's
+    /// [`Matching`] mode decides which side a match lands on, so the two are
+    /// always disjoint and together cover every match.
+    pub fn suggest_tag_rules(&self) -> Vec<(Uuid, Uuid)> {
+        self.rule_matches(Matching::Suggest)
+    }
+
+    fn rule_matches(&self, mode: Matching) -> Vec<(Uuid, Uuid)> {
         let mut matches = Vec::new();
         for period in &self.periods {
             for tx in &period.transactions {
@@ -359,7 +430,12 @@ impl Budget {
                     if let Some(tag_id) = rule.tag_id
                         && rule.matches_transaction(tx)
                     {
-                        matches.push((tx.id, tag_id));
+                        // A rule pointing at a deleted or unknown tag is inert.
+                        if let Some(tag) = self.tags.iter().find(|t| t.id == tag_id && !t.deleted)
+                            && tag.matching == mode
+                        {
+                            matches.push((tx.id, tag_id));
+                        }
                         break;
                     }
                 }

@@ -1,5 +1,5 @@
 use crate::budget::budget_hero::BudgetState;
-use crate::budget::{RulesView, TagsView};
+use crate::budget::{RulesView, TagReviewView, TagsView};
 use crate::file_chooser::{FileData, FileDialog};
 use crate::Button;
 use api::models::{MonthBeginsOn, PeriodId};
@@ -61,6 +61,13 @@ pub fn SettingsTab() -> Element {
                         },
                         "Auto budget alla perioder"
                     }
+                }
+            }
+
+            if budget.tags_needing_review_count > 0 {
+                section { class: "settings-section",
+                    h3 { class: "settings-section-title", "Klassificera taggar" }
+                    TagReviewView {}
                 }
             }
 

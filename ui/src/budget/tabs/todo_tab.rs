@@ -1,5 +1,7 @@
 use crate::budget::budget_hero::BudgetState;
-use crate::budget::{TagTransactionsView, TransactionsView, TransferPairsView};
+use crate::budget::{
+    TagSuggestionsView, TagTransactionsView, TransactionsView, TransferPairsView,
+};
 use dioxus::prelude::*;
 
 /// The work queue: everything waiting on a decision from you.
@@ -27,6 +29,17 @@ pub fn TodoTab() -> Element {
 
     rsx! {
         div { class: "tab-panel",
+            // Suggestions come first: they are a fast path *through* the
+            // untagged pile, so clearing them shrinks the manual work below.
+            // Both sections draw on the same untagged transactions, which is
+            // why the count is not added to the tab badge — that would
+            // double-count the same work.
+            if budget.untagged_transaction_count > 0 {
+                section { class: "todo-section",
+                    h3 { class: "todo-section-title", "Förslag att granska" }
+                    TagSuggestionsView {}
+                }
+            }
             if budget.untagged_transaction_count > 0 {
                 section { class: "todo-section",
                     h3 { class: "todo-section-title",

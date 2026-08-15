@@ -1037,14 +1037,14 @@ pub fn create_and_modify_tag() -> Result<(), RustyError> {
     let budget = rt.load(budget_id)?;
     let tag = budget.tags.iter().find(|t| t.id == tag_id).unwrap();
     assert_eq!(tag.name, "Electricity");
-    assert_eq!(tag.periodicity, Periodicity::Monthly);
+    assert_eq!(tag.periodicity(), Some(Periodicity::Monthly));
     assert!(!tag.deleted);
 
     rt.modify_tag(user_id, budget_id, tag_id, Some("El".to_string()), Some(Periodicity::Annual), None)?;
     let budget = rt.load(budget_id)?;
     let tag = budget.tags.iter().find(|t| t.id == tag_id).unwrap();
     assert_eq!(tag.name, "El");
-    assert_eq!(tag.periodicity, Periodicity::Annual);
+    assert_eq!(tag.periodicity(), Some(Periodicity::Annual));
 
     rt.modify_tag(user_id, budget_id, tag_id, None, None, Some(true))?;
     let budget = rt.load(budget_id)?;
@@ -1474,5 +1474,422 @@ pub fn aggregate_survives_serde_round_trip_after_workflow() -> Result<(), RustyE
     assert_eq!(restored.get_transaction(tx_id).unwrap().tag_id, Some(tag_id));
     // Re-serialising the restored aggregate must be byte-identical (stable form).
     assert_eq!(serde_json::to_string(&restored)?, json);
+    Ok(())
+}
+
+// ============================================================================
+// tag_classified event + the auto-vs-suggest split.
+//
+// Bills (Matching::Automatic) are applied on import; card spending
+// (Matching::Suggest) is only proposed. Both come from the same rule engine, so
+// these assert the two sets are disjoint and that classification is what moves
+// a match from one to the other.
+// ============================================================================
+
+/// Builds a budget with one tag, one rule (created by tagging a transaction),
+/// and a second untagged transaction the rule matches.
+fn budget_with_matching_rule(
+    rt: &JoyDbBudgetRuntime,
+    user_id: Uuid,
+    periodicity: Periodicity,
+) -> Result<(Uuid, Uuid, Uuid), RustyError> {
+    let now = Utc::now();
+    let budget_id = rt.create_budget(
+        user_id,
+        "Rules Budget",
+        true,
+        MonthBeginsOn::default(),
+        Currency::SEK,
+    )?;
+    let tag_id = rt.create_tag(user_id, budget_id, "Livsmedel".to_string(), periodicity)?;
+    let tagged = rt.add_transaction(
+        user_id,
+        budget_id,
+        "acc123",
+        Money::new_dollars(-50, Currency::SEK),
+        Money::new_dollars(1000, Currency::SEK),
+        "WILLYS STORMARKNAD",
+        now,
+    )?;
+    rt.tag_transaction(user_id, budget_id, tagged, tag_id)?;
+    rt.add_rule(
+        user_id,
+        budget_id,
+        vec!["willys".to_string(), "stormarknad".to_string()],
+        Vec::new(),
+        true,
+        Some(tag_id),
+    )?;
+    let untagged = rt.add_transaction(
+        user_id,
+        budget_id,
+        "acc123",
+        Money::new_dollars(-70, Currency::SEK),
+        Money::new_dollars(930, Currency::SEK),
+        "WILLYS STORMARKNAD",
+        now,
+    )?;
+    Ok((budget_id, tag_id, untagged))
+}
+
+#[test]
+pub fn bills_auto_apply_and_are_not_suggested() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    // A real cadence => Recurring => Matching::Automatic.
+    let (budget_id, tag_id, untagged) =
+        budget_with_matching_rule(&rt, user_id, Periodicity::Monthly)?;
+
+    let budget = rt.load(budget_id)?;
+    assert_eq!(
+        budget.evaluate_tag_rules(),
+        vec![(untagged, tag_id)],
+        "a bill's rule should auto-apply"
+    );
+    assert!(
+        budget.suggest_tag_rules().is_empty(),
+        "an automatic match must not also be suggested"
+    );
+    Ok(())
+}
+
+#[test]
+pub fn variable_spending_is_suggested_not_auto_applied() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    // OneOff => Variable => Matching::Suggest.
+    let (budget_id, tag_id, untagged) =
+        budget_with_matching_rule(&rt, user_id, Periodicity::OneOff)?;
+
+    let budget = rt.load(budget_id)?;
+    assert!(
+        budget.evaluate_tag_rules().is_empty(),
+        "card spending must not be tagged without confirmation"
+    );
+    assert_eq!(
+        budget.suggest_tag_rules(),
+        vec![(untagged, tag_id)],
+        "it should still be offered as a suggestion"
+    );
+    Ok(())
+}
+
+#[test]
+pub fn classifying_a_tag_moves_its_matches_between_the_two_sets() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let (budget_id, tag_id, untagged) =
+        budget_with_matching_rule(&rt, user_id, Periodicity::OneOff)?;
+
+    // Starts as a suggestion...
+    let budget = rt.load(budget_id)?;
+    assert!(budget.evaluate_tag_rules().is_empty());
+    assert_eq!(budget.suggest_tag_rules(), vec![(untagged, tag_id)]);
+
+    // ...and the user says it is really a monthly bill that matches reliably.
+    rt.classify_tag(
+        user_id,
+        budget_id,
+        tag_id,
+        CostKind::Recurring(Periodicity::Monthly),
+        Matching::Automatic,
+    )?;
+
+    let budget = rt.load(budget_id)?;
+    assert_eq!(budget.evaluate_tag_rules(), vec![(untagged, tag_id)]);
+    assert!(budget.suggest_tag_rules().is_empty());
+
+    let tag = budget.tags.iter().find(|t| t.id == tag_id).unwrap();
+    assert_eq!(tag.cost_kind, CostKind::Recurring(Periodicity::Monthly));
+    assert!(!tag.needs_review, "classifying answers the review prompt");
+    assert!(tag.explicitly_classified);
+    Ok(())
+}
+
+#[test]
+pub fn a_bill_can_be_set_to_suggest_only() -> Result<(), RustyError> {
+    // `Bil - Underhåll`: a real recurring cost, but a different garage every
+    // time, so the two axes must be settable independently.
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let (budget_id, tag_id, untagged) =
+        budget_with_matching_rule(&rt, user_id, Periodicity::Monthly)?;
+
+    rt.classify_tag(
+        user_id,
+        budget_id,
+        tag_id,
+        CostKind::Recurring(Periodicity::Annual),
+        Matching::Suggest,
+    )?;
+
+    let budget = rt.load(budget_id)?;
+    let tag = budget.tags.iter().find(|t| t.id == tag_id).unwrap();
+    assert_eq!(tag.cost_kind, CostKind::Recurring(Periodicity::Annual));
+    assert_eq!(tag.matching, Matching::Suggest);
+    assert!(budget.evaluate_tag_rules().is_empty());
+    assert_eq!(budget.suggest_tag_rules(), vec![(untagged, tag_id)]);
+    Ok(())
+}
+
+#[test]
+pub fn explicit_classification_survives_a_legacy_periodicity_edit() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let budget_id = rt.create_budget(user_id, "B", true, MonthBeginsOn::default(), Currency::SEK)?;
+    let tag_id = rt.create_tag(user_id, budget_id, "Bil".to_string(), Periodicity::OneOff)?;
+
+    rt.classify_tag(
+        user_id,
+        budget_id,
+        tag_id,
+        CostKind::Recurring(Periodicity::Annual),
+        Matching::Suggest,
+    )?;
+    // The older periodicity-only path must not clobber a deliberate answer.
+    rt.modify_tag(user_id, budget_id, tag_id, None, Some(Periodicity::Monthly), None)?;
+
+    let budget = rt.load(budget_id)?;
+    let tag = budget.tags.iter().find(|t| t.id == tag_id).unwrap();
+    assert_eq!(tag.cost_kind, CostKind::Recurring(Periodicity::Annual));
+    assert_eq!(tag.matching, Matching::Suggest);
+    Ok(())
+}
+
+#[test]
+pub fn deleted_tags_neither_auto_apply_nor_suggest() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let (budget_id, tag_id, _untagged) =
+        budget_with_matching_rule(&rt, user_id, Periodicity::Monthly)?;
+
+    rt.modify_tag(user_id, budget_id, tag_id, None, None, Some(true))?;
+
+    let budget = rt.load(budget_id)?;
+    assert!(budget.evaluate_tag_rules().is_empty());
+    assert!(budget.suggest_tag_rules().is_empty());
+    Ok(())
+}
+
+// ============================================================================
+// Periodisation: a bill charged once a year must budget as 1/12 per month.
+// ============================================================================
+
+#[test]
+pub fn an_annual_bill_periodises_to_a_twelfth_per_month() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let budget_id = rt.create_budget(user_id, "B", true, MonthBeginsOn::default(), Currency::SEK)?;
+    let tag_id = rt.create_tag(user_id, budget_id, "Hund".to_string(), Periodicity::Annual)?;
+
+    let now = Utc::now();
+    // One 12 000 kr insurance payment, plus a recent unrelated transaction so
+    // the history window is wider than a single day.
+    let bill = rt.add_transaction(
+        user_id, budget_id, "acc", Money::new_dollars(-12000, Currency::SEK),
+        Money::new_dollars(0, Currency::SEK), "HUNDFORSAKRING", now,
+    )?;
+    rt.tag_transaction(user_id, budget_id, bill, tag_id)?;
+
+    let budget = rt.load(budget_id)?;
+    let summary = budget
+        .get_tag_summaries()
+        .into_iter()
+        .find(|s| s.tag_id == tag_id)
+        .unwrap();
+
+    assert_eq!(
+        summary.monthly_budget_contribution,
+        Money::new_dollars(-1000, Currency::SEK),
+        "12 000 kr billed yearly should budget as 1 000 kr/month"
+    );
+    assert_eq!(
+        summary.buffer_target(),
+        Some(Money::new_dollars(-12000, Currency::SEK)),
+        "the buffer must reach the full bill by the time it lands"
+    );
+    Ok(())
+}
+
+#[test]
+pub fn variable_spending_is_not_periodised() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let budget_id = rt.create_budget(user_id, "B", true, MonthBeginsOn::default(), Currency::SEK)?;
+    let tag_id = rt.create_tag(user_id, budget_id, "Shopping".to_string(), Periodicity::OneOff)?;
+
+    let now = Utc::now();
+    let tx = rt.add_transaction(
+        user_id, budget_id, "acc", Money::new_dollars(-600, Currency::SEK),
+        Money::new_dollars(0, Currency::SEK), "SHOPPING", now,
+    )?;
+    rt.tag_transaction(user_id, budget_id, tx, tag_id)?;
+
+    let budget = rt.load(budget_id)?;
+    let summary = budget
+        .get_tag_summaries()
+        .into_iter()
+        .find(|s| s.tag_id == tag_id)
+        .unwrap();
+
+    // Variable costs keep the observed window average and need no buffer.
+    assert_eq!(summary.monthly_budget_contribution, summary.average_monthly);
+    assert_eq!(summary.buffer_target(), None);
+    Ok(())
+}
+
+#[test]
+pub fn a_monthly_bill_needs_no_buffer() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let budget_id = rt.create_budget(user_id, "B", true, MonthBeginsOn::default(), Currency::SEK)?;
+    let tag_id = rt.create_tag(user_id, budget_id, "Bredband".to_string(), Periodicity::Monthly)?;
+
+    let now = Utc::now();
+    let tx = rt.add_transaction(
+        user_id, budget_id, "acc", Money::new_dollars(-449, Currency::SEK),
+        Money::new_dollars(0, Currency::SEK), "BREDBAND", now,
+    )?;
+    rt.tag_transaction(user_id, budget_id, tx, tag_id)?;
+
+    let budget = rt.load(budget_id)?;
+    let summary = budget
+        .get_tag_summaries()
+        .into_iter()
+        .find(|s| s.tag_id == tag_id)
+        .unwrap();
+
+    assert_eq!(summary.monthly_budget_contribution, summary.average_monthly);
+    assert_eq!(summary.buffer_target(), None, "billed every month, nothing to accumulate");
+    Ok(())
+}
+
+// ============================================================================
+// Confirming suggestions. The inbox confirms via the domain, so these assert
+// the state transition rather than the UI: a confirmed suggestion becomes a
+// tagged transaction and leaves the suggestion set.
+// ============================================================================
+
+/// Two `Suggest` tags with rules, and two untagged transactions each.
+fn budget_with_two_suggestion_groups(
+    rt: &JoyDbBudgetRuntime,
+    user_id: Uuid,
+) -> Result<(Uuid, Uuid, Uuid), RustyError> {
+    let now = Utc::now();
+    let budget_id = rt.create_budget(user_id, "S", true, MonthBeginsOn::default(), Currency::SEK)?;
+
+    let food = rt.create_tag(user_id, budget_id, "Livsmedel".to_string(), Periodicity::OneOff)?;
+    let cafe = rt.create_tag(user_id, budget_id, "Café".to_string(), Periodicity::OneOff)?;
+    rt.add_rule(user_id, budget_id, vec!["willys".to_string()], Vec::new(), true, Some(food))?;
+    rt.add_rule(user_id, budget_id, vec!["espresso".to_string()], Vec::new(), true, Some(cafe))?;
+
+    // Distinct amounts: transactions are deduped by (amount, description, date),
+    // so identical rows would be rejected as a duplicate import.
+    for (i, desc) in ["WILLYS", "WILLYS", "ESPRESSO HOUSE"].iter().enumerate() {
+        rt.add_transaction(
+            user_id,
+            budget_id,
+            "acc",
+            Money::new_dollars(-100 - i64::try_from(i).unwrap(), Currency::SEK),
+            Money::new_dollars(0, Currency::SEK),
+            desc,
+            now,
+        )?;
+    }
+    Ok((budget_id, food, cafe))
+}
+
+#[test]
+pub fn confirming_one_group_leaves_the_other_pending() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let (budget_id, food, cafe) = budget_with_two_suggestion_groups(&rt, user_id)?;
+
+    let budget = rt.load(budget_id)?;
+    assert_eq!(budget.suggest_tag_rules().len(), 3, "2 food + 1 cafe");
+
+    // Confirm only the food group, the way the inbox's per-group button does.
+    for (tx_id, tag_id) in budget.suggest_tag_rules() {
+        if tag_id == food {
+            rt.tag_transaction(user_id, budget_id, tx_id, tag_id)?;
+        }
+    }
+
+    let budget = rt.load(budget_id)?;
+    let pending = budget.suggest_tag_rules();
+    assert_eq!(pending.len(), 1, "only the cafe suggestion should remain");
+    assert_eq!(pending[0].1, cafe);
+    assert_eq!(
+        budget
+            .periods
+            .iter()
+            .flat_map(|p| p.transactions.iter())
+            .filter(|t| t.tag_id == Some(food))
+            .count(),
+        2,
+        "both food transactions are now tagged"
+    );
+    Ok(())
+}
+
+#[test]
+pub fn confirming_every_suggestion_empties_the_inbox() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let (budget_id, _, _) = budget_with_two_suggestion_groups(&rt, user_id)?;
+
+    let budget = rt.load(budget_id)?;
+    for (tx_id, tag_id) in budget.suggest_tag_rules() {
+        rt.tag_transaction(user_id, budget_id, tx_id, tag_id)?;
+    }
+
+    let budget = rt.load(budget_id)?;
+    assert!(budget.suggest_tag_rules().is_empty());
+    assert!(
+        budget
+            .periods
+            .iter()
+            .flat_map(|p| p.transactions.iter())
+            .all(|t| t.tag_id.is_some()),
+        "every matched transaction ends up tagged"
+    );
+    Ok(())
+}
+
+#[test]
+pub fn a_confirmed_suggestion_does_not_come_back() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let (budget_id, food, _) = budget_with_two_suggestion_groups(&rt, user_id)?;
+
+    let budget = rt.load(budget_id)?;
+    let (tx_id, tag_id) = budget
+        .suggest_tag_rules()
+        .into_iter()
+        .find(|(_, t)| *t == food)
+        .unwrap();
+    rt.tag_transaction(user_id, budget_id, tx_id, tag_id)?;
+
+    let budget = rt.load(budget_id)?;
+    assert!(
+        !budget.suggest_tag_rules().iter().any(|(t, _)| *t == tx_id),
+        "a tagged transaction is no longer suggested"
+    );
+    Ok(())
+}
+
+#[test]
+pub fn skipping_is_not_persisted() -> Result<(), RustyError> {
+    // The inbox's skip is local-only by design: the transaction stays untagged,
+    // so the suggestion must still be there on reload. If this ever starts
+    // failing, skip has quietly become a persistent reject.
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let (budget_id, _, _) = budget_with_two_suggestion_groups(&rt, user_id)?;
+
+    let before = rt.load(budget_id)?.suggest_tag_rules().len();
+    let after = rt.load(budget_id)?.suggest_tag_rules().len();
+    assert_eq!(before, after, "nothing about skipping touches the aggregate");
+    assert_eq!(before, 3);
     Ok(())
 }

@@ -1,7 +1,11 @@
 use crate::Input;
 use crate::budget::budget_hero::BudgetState;
+use crate::budget::classification::{
+    COST_KINDS, cost_kind_class, cost_kind_from_slug, cost_kind_label, cost_kind_slug,
+    cost_kind_sort_key,
+};
 use api::models::{Money, Periodicity};
-use api::modify_tag;
+use api::{classify_tag, modify_tag};
 use dioxus::prelude::*;
 use uuid::Uuid;
 
@@ -89,7 +93,7 @@ pub fn TagsView() -> Element {
                             let tag_name_escape = tag_name.clone();
                             let tag_name_blur = tag_name.clone();
                             let tag_name_click = tag_name.clone();
-                            let periodicity = tag.periodicity;
+                            let cost_kind = tag.cost_kind;
                             let item_name = tag_to_item.get(&tag_id).cloned();
                             let is_editing = editing_tag_id() == Some(tag_id);
                             let is_expanded = expanded_tag_id() == Some(tag_id);
@@ -147,23 +151,20 @@ pub fn TagsView() -> Element {
                                             }
                                         }
 
-                                        // Periodicity editor
+                                        // Classification editor. Setting the
+                                        // cost kind also applies its default
+                                        // matching mode; the review screen in
+                                        // Inställningar exposes both fields.
                                         select {
                                             class: "tags-periodicity-select",
                                             onchange: move |e| {
-                                                let new_p = match e.value().as_str() {
-                                                    "Quarterly" => Periodicity::Quarterly,
-                                                    "Annual" => Periodicity::Annual,
-                                                    "OneOff" => Periodicity::OneOff,
-                                                    _ => Periodicity::Monthly,
-                                                };
+                                                let new_kind = cost_kind_from_slug(&e.value());
                                                 spawn(async move {
-                                                    if let Ok(updated) = modify_tag(
+                                                    if let Ok(updated) = classify_tag(
                                                             budget_id,
                                                             tag_id,
-                                                            None,
-                                                            Some(new_p),
-                                                            None,
+                                                            new_kind,
+                                                            new_kind.default_matching(),
                                                             period_id,
                                                         )
                                                         .await
@@ -172,21 +173,12 @@ pub fn TagsView() -> Element {
                                                     }
                                                 });
                                             },
-                                            option {
-                                                value: "Monthly",
-                                                selected: periodicity == Periodicity::Monthly,
-                                                "{periodicity_label(Periodicity::Monthly)}"
-                                            }
-                                            option {
-                                                value: "Quarterly",
-                                                selected: periodicity == Periodicity::Quarterly,
-                                                "{periodicity_label(Periodicity::Quarterly)}"
-                                            }
-                                            option { value: "Annual", selected: periodicity == Periodicity::Annual,
-                                                "{periodicity_label(Periodicity::Annual)}"
-                                            }
-                                            option { value: "OneOff", selected: periodicity == Periodicity::OneOff,
-                                                "{periodicity_label(Periodicity::OneOff)}"
+                                            for kind in COST_KINDS {
+                                                option {
+                                                    value: cost_kind_slug(kind),
+                                                    selected: cost_kind == kind,
+                                                    {cost_kind_label(kind)}
+                                                }
                                             }
                                         }
 

@@ -4,7 +4,7 @@ use crate::api_error::RustyError;
 use crate::cqrs::framework::AsyncRuntime;
 use crate::cqrs::runtime::{AsyncBudgetCommandsTrait, PgRuntime, create_runtime};
 use crate::import::{import_from_path, import_from_skandia_excel_bytes};
-use crate::models::{User, Budget, MonthBeginsOn, Currency, BudgetingType, Money, PeriodId, Periodicity, MatchRule, Tag, BankTransaction};
+use crate::models::{User, Budget, MonthBeginsOn, Currency, BudgetingType, CostKind, Matching, Money, PeriodId, Periodicity, MatchRule, Tag, BankTransaction};
 use chrono::NaiveDate;
 use dioxus::logger::tracing;
 use dioxus::logger::tracing::error;
@@ -422,6 +422,19 @@ pub async fn modify_tag(
     runtime().await.modify_tag(user_id, budget_id, tag_id, name, periodicity, deleted).await
 }
 
+pub async fn classify_tag(
+    user_id: Uuid,
+    budget_id: Uuid,
+    tag_id: Uuid,
+    cost_kind: CostKind,
+    matching: Matching,
+) -> Result<Uuid, RustyError> {
+    runtime()
+        .await
+        .classify_tag(user_id, budget_id, tag_id, cost_kind, matching)
+        .await
+}
+
 pub async fn get_next_untagged_transaction(budget_id: Uuid) -> Result<Option<BankTransaction>, RustyError> {
     Ok(get_budget(budget_id).await?.get_next_untagged_transaction().cloned())
 }
@@ -548,6 +561,63 @@ pub async fn evaluate_tag_rules(user_id: Uuid, budget_id: Uuid) -> Result<Uuid, 
         }
     }
     info!("[perf] evaluate_tag_rules/total (applied {} tags): {:?}", match_count, t.elapsed());
+    Ok(budget_id)
+}
+
+/// Confirms pending `Matching::Suggest` matches, optionally limited to one tag.
+///
+/// Goes straight to the runtime command rather than through [`tag_transaction`]:
+/// that wrapper reloads the aggregate, checks for a missing rule and re-runs a
+/// full rule evaluation on every call, which would be quadratic when confirming
+/// a batch. Neither step is needed here — a suggestion *is* a rule match, so the
+/// rule already exists, and the matches are computed once up front.
+///
+/// Returns the number of transactions tagged.
+pub async fn confirm_tag_suggestions(
+    user_id: Uuid,
+    budget_id: Uuid,
+    tag_id: Option<Uuid>,
+) -> Result<usize, RustyError> {
+    let rt = runtime().await;
+    let budget = rt.load(budget_id).await?;
+    let matches: Vec<(Uuid, Uuid)> = budget
+        .suggest_tag_rules()
+        .into_iter()
+        .filter(|(_, tid)| tag_id.is_none_or(|wanted| *tid == wanted))
+        .collect();
+
+    let mut applied = 0;
+    for (tx_id, tid) in matches {
+        match rt.tag_transaction(user_id, budget_id, tx_id, tid).await {
+            Ok(_) => applied += 1,
+            Err(e) => error!(error = %e, "Could not confirm suggestion for tx {}", tx_id),
+        }
+    }
+    info!("confirm_tag_suggestions: applied {applied} suggestions");
+    Ok(applied)
+}
+
+/// Applies **every** rule match, including those against `Matching::Suggest`
+/// tags.
+///
+/// Distinct from [`evaluate_tag_rules`], which runs implicitly after an import
+/// or a tagging action and therefore only applies bills. This is the explicit
+/// "approve all matches" action, where the user has asked for the suggestions
+/// to be applied too.
+pub async fn apply_all_tag_rules(user_id: Uuid, budget_id: Uuid) -> Result<Uuid, RustyError> {
+    let rt = runtime().await;
+    let budget = rt.load(budget_id).await?;
+    let matches: Vec<_> = budget
+        .evaluate_tag_rules()
+        .into_iter()
+        .chain(budget.suggest_tag_rules())
+        .collect();
+    info!("apply_all_tag_rules: applying {} matches", matches.len());
+    for (tx_id, tag_id) in matches {
+        if let Err(e) = rt.tag_transaction(user_id, budget_id, tx_id, tag_id).await {
+            error!(error = %e, "Could not tag transaction {} with tag {}", tx_id, tag_id);
+        }
+    }
     Ok(budget_id)
 }
 

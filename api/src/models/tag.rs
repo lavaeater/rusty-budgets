@@ -68,6 +68,7 @@ impl CostKind {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(from = "TagRepr")]
 pub struct Tag {
     pub id: Uuid,
     pub name: String,
@@ -79,6 +80,59 @@ pub struct Tag {
     /// decision. `OneOff` was the serde default, so it means "never answered"
     /// as often as it means "one-off".
     pub needs_review: bool,
+    /// Set only by [`crate::events::TagClassified`]. Distinguishes "the user
+    /// answered" from "we inferred an answer", so a legacy periodicity edit
+    /// cannot silently overwrite a deliberate choice.
+    pub explicitly_classified: bool,
+}
+
+/// Deserialization shim accepting **both** tag shapes.
+///
+/// The aggregate is persisted as a snapshot plus a tail of events
+/// (`PgRuntime::load`), so stored snapshots still carry the pre-classification
+/// shape `{ id, name, periodicity, deleted }`. Without this, adding
+/// `cost_kind`/`matching` as required fields would make every existing budget
+/// fail to load. New fields win when present; otherwise the classification is
+/// derived from the legacy `periodicity`.
+#[derive(Deserialize)]
+struct TagRepr {
+    id: Uuid,
+    name: String,
+    #[serde(default)]
+    cost_kind: Option<CostKind>,
+    #[serde(default)]
+    matching: Option<Matching>,
+    /// Legacy field, still present in older snapshots.
+    #[serde(default)]
+    periodicity: Option<Periodicity>,
+    #[serde(default)]
+    deleted: bool,
+    #[serde(default)]
+    needs_review: bool,
+    #[serde(default)]
+    explicitly_classified: bool,
+}
+
+impl From<TagRepr> for Tag {
+    fn from(r: TagRepr) -> Self {
+        let Some(cost_kind) = r.cost_kind else {
+            let legacy =
+                Tag::from_legacy_periodicity(r.id, r.name, r.periodicity.unwrap_or_default());
+            return Self {
+                deleted: r.deleted,
+                ..legacy
+            };
+        };
+        Self {
+            id: r.id,
+            name: r.name,
+            cost_kind,
+            matching: r.matching.unwrap_or_else(|| cost_kind.default_matching()),
+            deleted: r.deleted,
+            needs_review: r.needs_review,
+            explicitly_classified: r.explicitly_classified,
+        }
+    }
 }
 
 impl Tag {
@@ -90,6 +144,7 @@ impl Tag {
             matching,
             deleted: false,
             needs_review: false,
+            explicitly_classified: true,
         }
     }
 
@@ -109,6 +164,7 @@ impl Tag {
             matching: cost_kind.default_matching(),
             deleted: false,
             needs_review,
+            explicitly_classified: false,
         }
     }
 
@@ -203,4 +259,63 @@ mod tests {
         );
         assert_eq!(CostKind::Variable.default_matching(), Matching::Suggest);
     }
+
+    // ---------------------------------------------------------------------
+    // Snapshot back-compat. `PgRuntime::load` deserialises a stored `Budget`
+    // snapshot and replays only the events after it, so real snapshots still
+    // hold the pre-classification tag shape. If these break, every existing
+    // budget fails to load.
+    // ---------------------------------------------------------------------
+
+    /// The exact shape found in the production snapshot (57 tags, all like this).
+    const LEGACY_TAG_JSON: &str = r#"{"deleted":false,"id":"6b9f3684-c0fd-41b9-a3ea-8809ee1bbb0b","name":"Japanresa","periodicity":"Monthly"}"#;
+
+    #[test]
+    fn legacy_snapshot_tag_still_deserialises() {
+        let tag: Tag = serde_json::from_str(LEGACY_TAG_JSON).unwrap();
+        assert_eq!(tag.name, "Japanresa");
+        assert_eq!(tag.cost_kind, CostKind::Recurring(Periodicity::Monthly));
+        assert_eq!(tag.matching, Matching::Automatic);
+        assert!(!tag.deleted);
+        assert!(!tag.explicitly_classified, "inferred, not chosen");
+    }
+
+    #[test]
+    fn legacy_one_off_snapshot_tag_is_flagged() {
+        let json = r#"{"deleted":false,"id":"6b9f3684-c0fd-41b9-a3ea-8809ee1bbb0b","name":"Shopping","periodicity":"OneOff"}"#;
+        let tag: Tag = serde_json::from_str(json).unwrap();
+        assert_eq!(tag.cost_kind, CostKind::Variable);
+        assert_eq!(tag.matching, Matching::Suggest);
+        assert!(tag.needs_review);
+    }
+
+    #[test]
+    fn legacy_deleted_flag_survives() {
+        let json = r#"{"deleted":true,"id":"6b9f3684-c0fd-41b9-a3ea-8809ee1bbb0b","name":"Gammal","periodicity":"OneOff"}"#;
+        let tag: Tag = serde_json::from_str(json).unwrap();
+        assert!(tag.deleted, "soft-delete must survive the shim");
+    }
+
+    #[test]
+    fn new_shape_wins_over_legacy_when_both_present() {
+        // A snapshot written after the upgrade carries cost_kind; any stale
+        // `periodicity` alongside it must not override the real answer.
+        let json = r#"{"id":"6b9f3684-c0fd-41b9-a3ea-8809ee1bbb0b","name":"Hund",
+            "cost_kind":{"Recurring":"Annual"},"matching":"Suggest",
+            "periodicity":"Monthly","deleted":false,
+            "needs_review":false,"explicitly_classified":true}"#;
+        let tag: Tag = serde_json::from_str(json).unwrap();
+        assert_eq!(tag.cost_kind, CostKind::Recurring(Periodicity::Annual));
+        assert_eq!(tag.matching, Matching::Suggest, "explicit override kept");
+        assert!(tag.explicitly_classified);
+    }
+
+    #[test]
+    fn matching_defaults_from_cost_kind_when_absent() {
+        let json = r#"{"id":"6b9f3684-c0fd-41b9-a3ea-8809ee1bbb0b","name":"El",
+            "cost_kind":{"Recurring":"Monthly"},"deleted":false}"#;
+        let tag: Tag = serde_json::from_str(json).unwrap();
+        assert_eq!(tag.matching, Matching::Automatic);
+    }
 }
+

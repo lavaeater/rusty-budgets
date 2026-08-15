@@ -32,6 +32,9 @@ pub struct BudgetViewModel {
     pub untagged_transaction_count: usize,
     /// Per-period net and running deficit/surplus, sorted oldest-first.
     pub period_summaries: Vec<PeriodSummary>,
+    /// Live tags whose bill-vs-spending classification was inferred from a
+    /// legacy default rather than chosen. Drives the guided review prompt.
+    pub tags_needing_review_count: usize,
 }
 
 impl BudgetViewModel {
@@ -232,6 +235,11 @@ impl BudgetViewModel {
             match_rules,
             untagged_transaction_count,
             period_summaries,
+            tags_needing_review_count: budget
+                .tags
+                .iter()
+                .filter(|t| !t.deleted && t.needs_review)
+                .count(),
         }
     }
 }

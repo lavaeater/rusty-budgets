@@ -27,6 +27,7 @@ pub use crate::models::*;
 use dioxus::prelude::*;
 use uuid::Uuid;
 use view_models::BudgetViewModel;
+use view_models::TagSuggestion;
 use view_models::TagSummary;
 
 #[server(endpoint = "create_budget")]
@@ -146,6 +147,74 @@ pub async fn modify_tag(
     let user = db::get_default_user().await?;
     db::modify_tag(user.id, budget_id, tag_id, name, periodicity, deleted).await?;
     Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
+}
+
+/// Records a deliberate answer to "is this a bill, and can rules auto-apply it?".
+///
+/// Clears the tag's `needs_review` flag, which the guided review screen uses to
+/// find tags whose classification was only inferred from a legacy
+/// `Periodicity::OneOff` default.
+#[server(endpoint = "classify_tag")]
+pub async fn classify_tag(
+    budget_id: Uuid,
+    tag_id: Uuid,
+    cost_kind: CostKind,
+    matching: Matching,
+    period_id: PeriodId,
+) -> ServerFnResult<BudgetViewModel> {
+    let user = db::get_default_user().await?;
+    db::classify_tag(user.id, budget_id, tag_id, cost_kind, matching).await?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
+}
+
+/// Every tag whose classification was inferred rather than chosen, with its
+/// spending summary so the user can decide with the numbers in front of them.
+#[server(endpoint = "get_tags_needing_review")]
+pub async fn get_tags_needing_review(budget_id: Uuid) -> ServerFnResult<Vec<TagSummary>> {
+    let budget = db::get_budget(budget_id).await?;
+    Ok(budget
+        .get_tag_summaries()
+        .into_iter()
+        .filter(|ts| ts.needs_review)
+        .collect())
+}
+
+/// Confirms pending suggestions — all of them, or just those proposing `tag_id`.
+///
+/// The matches are re-derived server-side rather than sent from the client, so
+/// a stale inbox can never tag the wrong transaction.
+#[server(endpoint = "confirm_tag_suggestions")]
+pub async fn confirm_tag_suggestions(
+    budget_id: Uuid,
+    tag_id: Option<Uuid>,
+    period_id: PeriodId,
+) -> ServerFnResult<BudgetViewModel> {
+    let user = db::get_default_user().await?;
+    db::confirm_tag_suggestions(user.id, budget_id, tag_id).await?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
+}
+
+/// Rule matches awaiting confirmation — matches against `Matching::Suggest`
+/// tags, which are proposed rather than applied on import.
+#[server(endpoint = "get_tag_suggestions")]
+pub async fn get_tag_suggestions(budget_id: Uuid) -> ServerFnResult<Vec<TagSuggestion>> {
+    let budget = db::get_budget(budget_id).await?;
+    Ok(budget
+        .suggest_tag_rules()
+        .into_iter()
+        .filter_map(|(tx_id, tag_id)| {
+            let tx = budget.get_transaction(tx_id)?;
+            let tag = budget.tags.iter().find(|t| t.id == tag_id)?;
+            Some(TagSuggestion {
+                tx_id,
+                tag_id,
+                tag_name: tag.name.clone(),
+                description: tx.description.clone(),
+                amount: tx.amount,
+                date: tx.date,
+            })
+        })
+        .collect())
 }
 
 #[server(endpoint = "modify_actual")]
@@ -414,12 +483,16 @@ pub async fn update_rule(
     Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }
 
+/// Explicit "approve all rule matches" — applies suggestions as well as bills.
+///
+/// Implicit rule evaluation (after import or tagging) applies only
+/// `Matching::Automatic` tags; this is the user asking for the rest too.
 #[server(endpoint = "apply_all_rules")]
 pub async fn apply_all_rules(
     budget_id: Uuid,
     period_id: PeriodId,
 ) -> ServerFnResult<BudgetViewModel> {
     let user = db::get_default_user().await?;
-    db::evaluate_tag_rules(user.id, budget_id).await?;
+    db::apply_all_tag_rules(user.id, budget_id).await?;
     Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }

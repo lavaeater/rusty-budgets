@@ -3,7 +3,7 @@
 use crate::api_error::RustyError;
 use crate::cqrs::framework::{AsyncRuntime, CommandError, Runtime, StoredEvent};
 const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
-use crate::models::{User, Budget, MonthBeginsOn, Currency, BudgetingType, Money, PeriodId, Periodicity, BudgetEvent};
+use crate::models::{User, Budget, MonthBeginsOn, Currency, BudgetingType, CostKind, Matching, Money, PeriodId, Periodicity, BudgetEvent};
 #[cfg(feature = "server")]
 use crate::pg_models::{PgBudget, PgStoredBudgetEvent, PgUser, PgUserBudgets};
 use crate::{cqrs, models};
@@ -153,6 +153,18 @@ impl BudgetCommandsTrait for JoyDbBudgetRuntime {
     ) -> Result<Uuid, RustyError> {
         self.cmd(user_id, budget_id, |budget| {
             budget.modify_tag(tag_id, name, periodicity, deleted)
+        })
+    }
+    fn classify_tag(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        tag_id: Uuid,
+        cost_kind: CostKind,
+        matching: Matching,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.classify_tag(tag_id, cost_kind, matching)
         })
     }
     #[allow(clippy::too_many_arguments)]
@@ -547,6 +559,14 @@ pub trait BudgetCommandsTrait {
         periodicity: Option<Periodicity>,
         deleted: Option<bool>,
     ) -> Result<Uuid, RustyError>;
+    fn classify_tag(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        tag_id: Uuid,
+        cost_kind: CostKind,
+        matching: Matching,
+    ) -> Result<Uuid, RustyError>;
     #[allow(clippy::too_many_arguments)]
     fn modify_actual(
         &self,
@@ -754,6 +774,14 @@ pub trait AsyncBudgetCommandsTrait {
         name: Option<String>,
         periodicity: Option<Periodicity>,
         deleted: Option<bool>,
+    ) -> Result<Uuid, RustyError>;
+    async fn classify_tag(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        tag_id: Uuid,
+        cost_kind: CostKind,
+        matching: Matching,
     ) -> Result<Uuid, RustyError>;
     #[allow(clippy::too_many_arguments)]
     async fn modify_actual(
@@ -1302,6 +1330,19 @@ impl AsyncBudgetCommandsTrait for PgRuntime {
     ) -> Result<Uuid, RustyError> {
         self.cmd(user_id, budget_id, |budget| {
             budget.modify_tag(tag_id, name, periodicity, deleted)
+        })
+        .await
+    }
+    async fn classify_tag(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        tag_id: Uuid,
+        cost_kind: CostKind,
+        matching: Matching,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.classify_tag(tag_id, cost_kind, matching)
         })
         .await
     }

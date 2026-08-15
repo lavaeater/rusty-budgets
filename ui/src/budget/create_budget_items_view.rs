@@ -1,8 +1,12 @@
 use crate::budget::budget_hero::BudgetState;
+use crate::budget::classification::{
+    COST_KINDS, cost_kind_class, cost_kind_from_slug, cost_kind_label, cost_kind_slug,
+    cost_kind_sort_key,
+};
 use crate::{Button, ButtonVariant, Input};
 use api::models::{BudgetingType, Periodicity};
 use api::view_models::TagSummary;
-use api::{create_budget_item, get_unbudgeted_tag_summaries, modify_tag};
+use api::{classify_tag, create_budget_item, get_unbudgeted_tag_summaries, modify_tag};
 use dioxus::prelude::*;
 use uuid::Uuid;
 
@@ -17,23 +21,6 @@ fn periodicity_label(p: Periodicity) -> &'static str {
     }
 }
 
-fn periodicity_sort_key(p: Periodicity) -> u8 {
-    match p {
-        Periodicity::Monthly => 0,
-        Periodicity::Quarterly => 1,
-        Periodicity::Annual => 2,
-        Periodicity::OneOff => 3,
-    }
-}
-
-fn periodicity_class(p: Periodicity) -> &'static str {
-    match p {
-        Periodicity::Monthly => "cbi-periodicity-badge",
-        Periodicity::Quarterly => "cbi-periodicity-badge quarterly",
-        Periodicity::Annual => "cbi-periodicity-badge annual",
-        Periodicity::OneOff => "cbi-periodicity-badge oneoff",
-    }
-}
 
 fn money_class(cents: i64) -> &'static str {
     match cents.cmp(&0) {
@@ -102,7 +89,7 @@ pub fn CreateBudgetItemsView() -> Element {
     summaries.sort_by(|a, b| {
         let ord = match col {
             "periodicity" => {
-                periodicity_sort_key(a.periodicity).cmp(&periodicity_sort_key(b.periodicity))
+                cost_kind_sort_key(a.cost_kind).cmp(&cost_kind_sort_key(b.cost_kind))
             }
             "monthly" => a
                 .average_monthly
@@ -206,7 +193,7 @@ pub fn CreateBudgetItemsView() -> Element {
                         let is_selected = selected.contains(&tag_id);
                         let monthly = summary.average_monthly.amount_in_cents();
                         let yearly = summary.average_yearly.amount_in_cents();
-                        let periodicity = summary.periodicity;
+                        let cost_kind = summary.cost_kind;
                         rsx! {
                             div {
                                 key: "{tag_id}",
@@ -292,31 +279,27 @@ pub fn CreateBudgetItemsView() -> Element {
                                         {tag_name}
                                     }
                                 }
-                                // Inline periodicity editor
+                                // Inline classification editor. Setting the cost
+                                // kind also sets the matching mode to its
+                                // default; the review screen exposes both.
                                 select {
-                                    class: "{periodicity_class(periodicity)} cbi-periodicity-select",
+                                    class: "{cost_kind_class(cost_kind)} cbi-periodicity-select",
                                     onclick: move |e| e.stop_propagation(),
                                     onchange: move |e| {
-                                        let new_p = match e.value().as_str() {
-                                            "Quarterly" => Periodicity::Quarterly,
-                                            "Annual" => Periodicity::Annual,
-                                            "OneOff" => Periodicity::OneOff,
-                                            _ => Periodicity::Monthly,
-                                        };
-                                        // Update local signal immediately
+                                        let new_kind = cost_kind_from_slug(&e.value());
                                         let mut sums = tag_summaries();
                                         if let Some(s) = sums.iter_mut().find(|s| s.tag_id == tag_id) {
-                                            s.periodicity = new_p;
+                                            s.cost_kind = new_kind;
+                                            s.matching = new_kind.default_matching();
+                                            s.needs_review = false;
                                         }
                                         tag_summaries.set(sums);
-                                        // Persist to server
                                         spawn(async move {
-                                            if let Ok(updated) = modify_tag(
+                                            if let Ok(updated) = classify_tag(
                                                     budget_id,
                                                     tag_id,
-                                                    None,
-                                                    Some(new_p),
-                                                    None,
+                                                    new_kind,
+                                                    new_kind.default_matching(),
                                                     period_id,
                                                 )
                                                 .await
@@ -325,14 +308,13 @@ pub fn CreateBudgetItemsView() -> Element {
                                             }
                                         });
                                     },
-                                    option { value: "Monthly", selected: periodicity == Periodicity::Monthly, "Månadsvis" }
-                                    option {
-                                        value: "Quarterly",
-                                        selected: periodicity == Periodicity::Quarterly,
-                                        "Kvartalsvis"
+                                    for kind in COST_KINDS {
+                                        option {
+                                            value: cost_kind_slug(kind),
+                                            selected: cost_kind == kind,
+                                            {cost_kind_label(kind)}
+                                        }
                                     }
-                                    option { value: "Annual", selected: periodicity == Periodicity::Annual, "Årsvis" }
-                                    option { value: "OneOff", selected: periodicity == Periodicity::OneOff, "Engångskostnad" }
                                 }
                                 span { class: "{money_class(monthly)}", "{fmt_sek(monthly)}" }
                                 span { class: "{money_class(yearly)}", "{fmt_sek(yearly)}" }

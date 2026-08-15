@@ -112,6 +112,13 @@ fn attention_items(budget: &BudgetViewModel) -> Vec<AttentionItem> {
             target: BudgetTab::Todo,
         });
     }
+    if budget.tags_needing_review_count > 0 {
+        items.push(AttentionItem {
+            count: Some(budget.tags_needing_review_count),
+            label: "taggar att klassificera som räkning eller rörlig utgift".to_string(),
+            target: BudgetTab::Settings,
+        });
+    }
     if let Some(rta) = ready_to_assign
         && rta.amount_in_cents() != 0
         && budget
