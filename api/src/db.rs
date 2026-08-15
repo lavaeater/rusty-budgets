@@ -31,7 +31,13 @@ async fn runtime() -> &'static PgRuntime {
             Ok(_) => info!("Default user exists"),
             Err(e) => {
                 error!(error = %e, "Could not get default user");
-                panic!("Could not get default user");
+                panic!(
+                    "Could not get default user ({DEFAULT_USER_EMAIL}): {e}\n\
+                     The schema is applied automatically at startup, so this usually means \
+                     the database is reachable but empty. Seed it by importing the JoyDB log:\n  \
+                     cargo run -p api --bin api --features server\n\
+                     (set DATA_FILE first if you do not want the default data.json)"
+                );
             }
         }
         rt

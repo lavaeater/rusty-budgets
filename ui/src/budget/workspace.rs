@@ -1,4 +1,4 @@
-use crate::budget::budget_hero::BudgetState;
+use crate::budget::budget_hero::{BudgetState, HERO_CSS};
 use crate::budget::tabs::{
     BudgetPlanTab, OverviewTab, ReportsTab, SettingsTab, TodoTab, TransactionsTab,
 };
@@ -95,6 +95,10 @@ pub fn BudgetWorkspace(
     budget_id.set(budget.id);
 
     rsx! {
+        // Both sheets are required: `budget-hero.css` still owns the container,
+        // header, RTA badge, dashboard/overview cards and progress bars that the
+        // tab panels reuse; `workspace.css` adds only the tab-bar-era rules.
+        document::Link { rel: "stylesheet", href: HERO_CSS }
         document::Link { rel: "stylesheet", href: WORKSPACE_CSS }
         div { class: "budget-hero-a-container",
             BudgetWorkspaceHeader { period_id }

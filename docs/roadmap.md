@@ -113,6 +113,17 @@ Goal: make the app match the YNAB mental model — every dollar has a job, the b
   > The lints were declared in the workspace `Cargo.toml` but **no crate had
   > opted in**, so pedantic had never actually run. Enabling it surfaced ~214
   > warnings; all fixed.
+- [x] **Schema now applied automatically at startup** ✓ 2026-08-15 — a second
+  first-run papercut: with `DATABASE_URL=sqlite://data.sqlite?mode=rwc`, the
+  server **silently created an empty database file** and then failed every query
+  with `no such table: users`, panicking with a useless
+  `"Could not get default user"`. `create_runtime()` now runs
+  `migrations::up` before handing the client out — idempotent, and it means a
+  fresh clone works with only a `.env`.
+  > Deliberate split: **schema is automatic, data import is not.** Importing a
+  > JoyDB log overwrites real data, so that stays an explicit
+  > `cargo run -p api --bin api --features server`. The panic message now names
+  > that command and includes the underlying error.
 - [x] **Local-dev setup made discoverable** ✓ 2026-08-14 (`0b0b2f3`) — the app
   panicked on startup with a bare `NotPresent` when `DATABASE_URL` was unset,
   and nothing in the repo said it was required (`.env` is gitignored). Three
@@ -343,6 +354,21 @@ exist.
   it being confused with the new workspace-level `BudgetTab`.
   Inactive tabs do not mount — the vendored `TabContent` only renders children
   when selected — so only the active tab's hooks and server calls run.
+- [x] **7.2a Restore the orphaned stylesheet** ✓ 2026-08-15 — **regression from
+  7.2, reported as "styling seems to be missing".** `budget-hero.css` (155 rules:
+  container, header, RTA badge, dashboard/overview cards, period nav, progress
+  bars) was linked from the top of the old `BudgetOverview` body. Replacing that
+  body with `BudgetWorkspace` took the `document::Link` with it, leaving the
+  sheet referenced **only** in the `NoDefaultBudget` branch — so the create-budget
+  screen was styled and the entire loaded-budget view was not. `HERO_CSS` is now
+  `pub(crate)` and linked from `BudgetWorkspace` alongside `workspace.css`.
+  > Lesson for the remaining tab work: the other sheets (`tags.css`, `rules.css`,
+  > `tag-transactions.css`, `retag-transactions.css`, `create-budget-items.css`)
+  > are each linked *inside* the component that needs them, so they survived the
+  > split. `budget-hero.css` was the one linked by the *container*. When moving a
+  > component between parents, check what its old parent was linking on its
+  > behalf. Note also that **no test caught this** — SSR render tests assert on
+  > markup, not on stylesheet links.
 - [ ] **7.3 Keyboard navigation** in the Att göra queue — the deferred Sprint 4.2,
   which makes far more sense now that tagging has a dedicated surface.
 - [ ] **7.4 Trim the view model per tab** — `BudgetViewModel` is one large

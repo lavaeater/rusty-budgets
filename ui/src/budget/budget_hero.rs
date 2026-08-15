@@ -56,7 +56,9 @@ impl BudgetLocation {
     }
 }
 
-const HERO_CSS: Asset = asset!("assets/styling/budget-hero.css");
+/// Shared with [`crate::budget::workspace`] — it carries the container, header,
+/// card and progress-bar rules the workspace still relies on.
+pub(crate) const HERO_CSS: Asset = asset!("assets/styling/budget-hero.css");
 
 /// Loads the budget and hands off to [`BudgetWorkspace`].
 ///

@@ -970,6 +970,15 @@ pub async fn create_runtime() -> PgRuntime {
     let client = welds::connections::connect(&url)
         .await
         .unwrap_or_else(|e| panic!("Could not connect to DATABASE_URL `{url}`: {e}"));
+    // Apply the schema before anything queries it. Idempotent (welds tracks
+    // applied migrations in `_welds_migrations`), and necessary because a
+    // SQLite URL with `mode=rwc` silently creates an *empty* database file, so
+    // without this the first query fails with a bare "no such table: users".
+    // Only the schema is automatic — importing a JoyDB file into SQL stays an
+    // explicit step in the `api` binary, since that overwrites real data.
+    crate::migrations::up(&client)
+        .await
+        .unwrap_or_else(|e| panic!("Could not apply migrations to `{url}`: {e}"));
     PgRuntime::new(client)
 }
 

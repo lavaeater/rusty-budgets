@@ -92,4 +92,29 @@ test.describe.serial("onboarding", () => {
     ).toHaveAttribute("data-state", "active");
     await expect(page.getByRole("heading", { name: "Verktyg" })).toBeVisible();
   });
+
+  // Regression guard: `budget-hero.css` carries the container/header/card rules
+  // and was linked by the old `BudgetOverview` body. The Phase 7.2 split dropped
+  // that link and the whole loaded-budget view rendered unstyled. Native SSR
+  // tests cannot catch this — `document::Link` goes to the document head, which
+  // `dioxus_ssr::render_element` does not capture — so it belongs here.
+  test("the workspace is actually styled", async ({ page }) => {
+    await page.goto("/");
+
+    const container = page.locator(".budget-hero-a-container");
+    await expect(container).toBeVisible();
+
+    // From budget-hero.css — proves the sheet loaded and applied.
+    await expect
+      .poll(() =>
+        container.evaluate((el) => getComputedStyle(el).maxWidth),
+      )
+      .toBe("1400px");
+
+    // From workspace.css — proves the new sheet loaded too.
+    const tab = page.getByRole("tab", { name: "Översikt" });
+    await expect
+      .poll(() => tab.evaluate((el) => getComputedStyle(el).fontWeight))
+      .toBe("600");
+  });
 });
