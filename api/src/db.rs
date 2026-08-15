@@ -435,6 +435,16 @@ pub async fn classify_tag(
         .await
 }
 
+/// Chooses the month from which category balances carry forward. `None`
+/// disables carryover and restores the per-period behaviour.
+pub async fn configure_carryover(
+    user_id: Uuid,
+    budget_id: Uuid,
+    from_period: Option<PeriodId>,
+) -> Result<Uuid, RustyError> {
+    runtime().await.configure_carryover(user_id, budget_id, from_period).await
+}
+
 pub async fn get_next_untagged_transaction(budget_id: Uuid) -> Result<Option<BankTransaction>, RustyError> {
     Ok(get_budget(budget_id).await?.get_next_untagged_transaction().cloned())
 }

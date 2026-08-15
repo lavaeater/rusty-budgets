@@ -1,5 +1,5 @@
 use crate::budget::budget_hero::BudgetState;
-use crate::budget::{RulesView, TagReviewView, TagsView};
+use crate::budget::{CarryoverSettings, RulesView, TagReviewView, TagsView};
 use crate::file_chooser::{FileData, FileDialog};
 use crate::Button;
 use api::models::{MonthBeginsOn, PeriodId};
@@ -69,6 +69,11 @@ pub fn SettingsTab() -> Element {
                     h3 { class: "settings-section-title", "Klassificera taggar" }
                     TagReviewView {}
                 }
+            }
+
+            section { class: "settings-section",
+                h3 { class: "settings-section-title", "Överföring mellan månader" }
+                CarryoverSettings {}
             }
 
             section { class: "settings-section",

@@ -35,6 +35,9 @@ pub struct BudgetViewModel {
     /// Live tags whose bill-vs-spending classification was inferred from a
     /// legacy default rather than chosen. Drives the guided review prompt.
     pub tags_needing_review_count: usize,
+    /// First period whose balances carry forward; `None` when carryover is off.
+    /// The UI uses this to decide whether `available` is meaningful.
+    pub carryover_from: Option<PeriodId>,
 }
 
 impl BudgetViewModel {
@@ -243,6 +246,7 @@ impl BudgetViewModel {
             match_rules,
             untagged_transaction_count,
             period_summaries,
+            carryover_from: budget.carryover_from,
             tags_needing_review_count: budget
                 .tags
                 .iter()

@@ -194,6 +194,21 @@ pub async fn confirm_tag_suggestions(
     Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }
 
+/// Switches envelope carryover on from `from_period`, or off with `None`.
+///
+/// Dated rather than global because the log holds history from before the
+/// budget was kept properly; see `events/carryover_configured.rs`.
+#[server(endpoint = "configure_carryover")]
+pub async fn configure_carryover(
+    budget_id: Uuid,
+    from_period: Option<PeriodId>,
+    period_id: PeriodId,
+) -> ServerFnResult<BudgetViewModel> {
+    let user = db::get_default_user().await?;
+    db::configure_carryover(user.id, budget_id, from_period).await?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
+}
+
 /// Rule matches awaiting confirmation — matches against `Matching::Suggest`
 /// tags, which are proposed rather than applied on import.
 #[server(endpoint = "get_tag_suggestions")]

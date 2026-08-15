@@ -47,7 +47,7 @@ dx serve --package web
 
 ### Verified green as of the handoff
 
-- **173 native tests** (`cargo test --workspace`)
+- **179 native tests** (`cargo test --workspace`)
 - **6 E2E specs** (`cd e2e && npm test`) — needs `npm install` +
   `npx playwright install chromium` on a fresh machine
 - **Clippy pedantic clean** on all three bacon jobs (server / client / mobile)
@@ -273,16 +273,90 @@ so the inline pickers set one thing and the review screen exposes both.
   > transactions. Verified with
   > `cargo run -p api --example verify_snapshot` (now also reports
   > untagged / auto-applies / suggestions, grouped by tag).
-- [ ] **8.8 Buffers actually accumulate** 🔴 **blocked on Phase 5.** Budgeting
-  1 000 kr/month for a 12 000 kr annual bill only works if the unspent months
-  carry forward. Without carryover, month 12 shows an 11 000 kr overspend every
-  year. `TagSummary::buffer_target()` computes the figure; it cannot yet
-  accumulate. **This is the same mechanic as the billing buffer — Phase 8 and
-  the Phase 6 buffer work converge here.**
+- [x] **8.8 Buffers actually accumulate** ✓ 2026-08-15 — **unblocked by Phase
+  5.1–5.3.** `an_annual_bill_is_covered_by_the_accumulated_buffer` proves the
+  full cycle: assign 1 000 kr/month, the bill lands in December, 11 000 carried
+  + 1 000 assigned − 12 000 spent = **0**, not an 11 000 kr overspend.
+  `TagSummary::buffer_target()` gives the target; carryover accumulates towards
+  it. Still to do: show buffer progress against that target in the UI (Phase
+  6.5), which is now purely presentational.
 
 ---
 
-### Phase 5 — Envelope carryover (the missing domain mechanic) 🔴 blocking
+### Phase 5 — Envelope carryover ◐ 5.1–5.3 done, 5.4 deliberately deferred
+
+**Decided 2026-08-15.** The pivot was two decisions, not one, and separating them
+is what unblocked it:
+
+| | What it changes | Status |
+| --- | --- | --- |
+| **A. Category carryover** | Money left in a category stays in that category | ✅ **Done** |
+| **B. Cash-based RTA** | "Att fördela" comes from bank balances, not forecast income | ⏸ **Deferred** |
+
+**A is what makes the billing buffer work. B is the philosophical pivot, and you
+do not need it to get the buffer.**
+
+- [x] **5.1 `carryover_from` + the envelope identity** ✓ —
+  `Budget::carryover_into(period)` accumulates `budgeted − actual` from the
+  chosen start month. `BudgetItemViewModel` gains `carried_over` and
+  `available`.
+  > **Derived, not stored.** Storing `carried_over` per `ActualItem` would need
+  > an event per item per period on an already-8179-event log, and would go
+  > stale the moment a past month was edited. Deriving it means editing March
+  > flows forward into April automatically. Cost is one pass over the periods
+  > per projection.
+  > `Budget::item_period_totals` is shared with the projection so carryover and
+  > the displayed numbers cannot drift apart.
+- [x] **5.2 Opt-in and dated** ✓ — `carryover_from: Option<PeriodId>`, set by a
+  `CarryoverConfigured` event, `None` by default. Existing budgets are
+  **completely unaffected** until switched on, and it can be switched back off.
+  Dated because the log holds two years from before the budget was kept
+  properly, where most `ActualItem`s have `budgeted_amount == 0` — accumulating
+  across all of it would compound spending-with-no-budget into nonsense.
+- [x] **5.3 Overspend policy: the category carries the debt** ✓ — an overspent
+  category starts the next month negative and must be topped up. Chosen over
+  YNAB's "deduct from next month's RTA" because the consequence stays attached
+  to the category that caused it.
+- [x] **5.x UI** ✓ — `CarryoverSettings` in Inställningar (on/off + start month),
+  and an "Tillgängligt" badge per budget row, red when negative, with the full
+  `carried + budgeted − spent` sum in its tooltip. The badge only appears when
+  carryover is on, so it never sits next to `remaining_budget` looking like a
+  duplicate.
+
+> ### ⚠️ It will do nothing on your current history — and that is expected
+>
+> `cargo run -p api --example preview_carryover -- <snap.json> 2026-1 2026-3`
+> shows **"Carried in" = 0 kr for every item**, because "Remaining" is also 0 kr
+> for every item in every historical month. Those budgets were produced by
+> **auto-budget, which sets budgeted = actual**, so nothing was ever left over
+> to carry.
+>
+> Carryover only produces numbers once you budget a *forward-looking* amount
+> that differs from what you spend — which is precisely the dog-insurance case
+> (assign 1 000 kr/month, spend nothing for eleven months). The mechanism is
+> proven by 6 CQRS tests including the full twelve-month cycle; it is aimed at
+> the workflow going forward, not at reinterpreting the past.
+
+- [ ] **5.4 Cash-based global Ready-to-Assign — deferred, and here is why**
+  measured against the real data:
+  - `BankAccount.balance` is **0.00 for all 14 accounts** — nothing ever
+    populates it. Real balances are only recoverable from the last transaction
+    per account (3 active accounts, ~28 708 kr).
+  - That data is **four months stale** (latest transaction 2026-04-07).
+  - The account registry holds **14 entries for 11 distinct accounts** —
+    `9159-482.485-3` and `91594824853` are the same account in two formats.
+    Latent today because only 3 accounts carry transactions, but anything
+    summing over `budget.accounts` would double-count.
+
+  Forecast budgeting degrades *gracefully* when imports lag; cash-based
+  budgeting degrades *silently and wrongly*. Prerequisites before revisiting:
+  populate `BankAccount.balance` on import (cheap, and unblocks 6.7), then 6.4
+  reconciliation and 6.7 accounts view. A cash RTA you cannot trust is worse
+  than a forecast RTA you understand.
+
+---
+
+### Phase 5 (original notes) — the analysis that led to the above
 
 **This is the highest-value change in the roadmap and everything in Phase 6 depends on it.**
 

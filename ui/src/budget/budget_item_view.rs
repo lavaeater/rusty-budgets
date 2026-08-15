@@ -597,6 +597,27 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
                             "🏦 {contrib}/mån"
                         }
                     }
+                    // The envelope balance, shown only when carryover is on —
+                    // otherwise it would just duplicate `budgeted - actual` and
+                    // put two near-identical numbers on the same row.
+                    if budget_signal().carryover_from.is_some() {
+                        {
+                            let available = item.available;
+                            let cls = if available.amount_in_cents() < 0 {
+                                "available-badge available-negative"
+                            } else {
+                                "available-badge"
+                            };
+                            let carried = item.carried_over;
+                            let tip = format!(
+                                "Överfört {carried} + budgeterat {} − använt {} = {available}",
+                                item.budgeted_amount, item.actual_amount,
+                            );
+                            rsx! {
+                                span { class: cls, title: tip, "Tillgängligt {available}" }
+                            }
+                        }
+                    }
                 }
             }
         }
