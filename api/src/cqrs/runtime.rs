@@ -167,6 +167,16 @@ impl BudgetCommandsTrait for JoyDbBudgetRuntime {
             budget.classify_tag(tag_id, cost_kind, matching)
         })
     }
+    fn configure_carryover(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        from_period: Option<PeriodId>,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.configure_carryover(from_period)
+        })
+    }
     #[allow(clippy::too_many_arguments)]
     fn modify_actual(
         &self,
@@ -567,6 +577,12 @@ pub trait BudgetCommandsTrait {
         cost_kind: CostKind,
         matching: Matching,
     ) -> Result<Uuid, RustyError>;
+    fn configure_carryover(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        from_period: Option<PeriodId>,
+    ) -> Result<Uuid, RustyError>;
     #[allow(clippy::too_many_arguments)]
     fn modify_actual(
         &self,
@@ -782,6 +798,12 @@ pub trait AsyncBudgetCommandsTrait {
         tag_id: Uuid,
         cost_kind: CostKind,
         matching: Matching,
+    ) -> Result<Uuid, RustyError>;
+    async fn configure_carryover(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        from_period: Option<PeriodId>,
     ) -> Result<Uuid, RustyError>;
     #[allow(clippy::too_many_arguments)]
     async fn modify_actual(
@@ -1343,6 +1365,17 @@ impl AsyncBudgetCommandsTrait for PgRuntime {
     ) -> Result<Uuid, RustyError> {
         self.cmd(user_id, budget_id, |budget| {
             budget.classify_tag(tag_id, cost_kind, matching)
+        })
+        .await
+    }
+    async fn configure_carryover(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        from_period: Option<PeriodId>,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.configure_carryover(from_period)
         })
         .await
     }

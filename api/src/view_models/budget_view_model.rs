@@ -57,6 +57,10 @@ impl BudgetViewModel {
             .map(|p| p.transactions.iter().filter(|t| !t.ignored).collect())
             .unwrap_or_default();
 
+        // Running category balances entering this period. Empty (all zero) when
+        // carryover has not been switched on, which preserves the original
+        // per-period behaviour.
+        let carryover = budget.carryover_into(period_id);
         let items = budget_items
             .iter()
             .map(|bi| {
@@ -68,6 +72,10 @@ impl BudgetViewModel {
                     &period_allocations,
                     &budget.tags,
                     &all_period_transactions,
+                    carryover
+                        .get(&bi.id)
+                        .copied()
+                        .unwrap_or_else(|| crate::models::Money::zero(budget.currency)),
                 )
             })
             .collect::<Vec<_>>();

@@ -3,7 +3,7 @@ use api::cqrs::framework::Runtime;
 use api::cqrs::runtime::{BudgetCommandsTrait, JoyDbBudgetRuntime};
 use api::import::import_from_skandia_excel_sync;
 use api::models::*;
-use chrono::{DateTime, NaiveDate, Utc};
+use chrono::{DateTime, NaiveDate, TimeZone, Utc};
 use std::collections::HashSet;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use uuid::Uuid;
@@ -1891,5 +1891,206 @@ pub fn skipping_is_not_persisted() -> Result<(), RustyError> {
     let after = rt.load(budget_id)?.suggest_tag_rules().len();
     assert_eq!(before, after, "nothing about skipping touches the aggregate");
     assert_eq!(before, 3);
+    Ok(())
+}
+
+// ============================================================================
+// Envelope carryover (Phase 5.1-5.3).
+//
+// available(n) = available(n-1) + budgeted(n) - actual(n), accumulated from
+// `carryover_from`. Overspending carries forward as a negative balance.
+// ============================================================================
+
+/// Budget with one Expense item + tag, and carryover starting at `from`.
+fn carryover_budget(
+    rt: &JoyDbBudgetRuntime,
+    user_id: Uuid,
+    from: Option<PeriodId>,
+) -> Result<(Uuid, Uuid, Uuid), RustyError> {
+    let budget_id = rt.create_budget(user_id, "C", true, MonthBeginsOn::default(), Currency::SEK)?;
+    let tag_id = rt.create_tag(user_id, budget_id, "Hund".to_string(), Periodicity::Annual)?;
+    let item_id = rt.add_item(user_id, budget_id, "Hund".to_string(), BudgetingType::Expense)?;
+    rt.modify_item(user_id, budget_id, item_id, None, None, Some(vec![tag_id]), None)?;
+    rt.configure_carryover(user_id, budget_id, from)?;
+    Ok((budget_id, item_id, tag_id))
+}
+
+fn period(year: i32, month: u32) -> PeriodId {
+    PeriodId::new(year, month)
+}
+
+/// Budget `amount` to the item for `p` without spending anything.
+///
+/// A period only exists once a transaction lands in it, so this first drops an
+/// **untagged** transaction into `p`. Untagged transactions belong to no item,
+/// so it materialises the period without touching any actual.
+fn budget_month(
+    rt: &JoyDbBudgetRuntime,
+    user_id: Uuid,
+    budget_id: Uuid,
+    item_id: Uuid,
+    p: PeriodId,
+    amount: i64,
+) -> Result<Uuid, RustyError> {
+    let day = Utc
+        .with_ymd_and_hms(p.year, p.month, 5, 12, 0, 0)
+        .unwrap();
+    // Unique amount per period: transactions dedupe on (amount, description, date).
+    let filler = -1 - i64::from(p.month) - i64::from(p.year);
+    let _ = rt.add_transaction(
+        user_id,
+        budget_id,
+        "filler-acc",
+        Money::new_dollars(filler, Currency::SEK),
+        Money::new_dollars(0, Currency::SEK),
+        "PERIOD FILLER",
+        day,
+    );
+    rt.add_actual(user_id, budget_id, item_id, Money::new_dollars(amount, Currency::SEK), p)
+}
+
+fn available_for(budget: &api::models::Budget, item_id: Uuid, p: PeriodId) -> Money {
+    let vm = api::view_models::BudgetViewModel::from_budget(budget, p);
+    vm.items.iter().find(|i| i.item_id == item_id).unwrap().available
+}
+
+#[test]
+pub fn unspent_budget_accumulates_across_months() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let start = period(2026, 1);
+    let (budget_id, item_id, _) = carryover_budget(&rt, user_id, Some(start))?;
+
+    // 1 000 kr/month towards a yearly bill, nothing spent.
+    for m in 1..=3 {
+        budget_month(&rt, user_id, budget_id, item_id, period(2026, m), 1000)?;
+    }
+
+    let budget = rt.load(budget_id)?;
+    assert_eq!(
+        available_for(&budget, item_id, period(2026, 1)),
+        Money::new_dollars(1000, Currency::SEK),
+        "first month: nothing carried in"
+    );
+    assert_eq!(
+        available_for(&budget, item_id, period(2026, 3)),
+        Money::new_dollars(3000, Currency::SEK),
+        "three months of 1 000 accumulate into the envelope"
+    );
+    Ok(())
+}
+
+#[test]
+pub fn an_annual_bill_is_covered_by_the_accumulated_buffer() -> Result<(), RustyError> {
+    // The dog-insurance case end to end: budget 1 000/month, pay 12 000 in
+    // month 12, finish at zero rather than 11 000 over budget.
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let (budget_id, item_id, tag_id) = carryover_budget(&rt, user_id, Some(period(2026, 1)))?;
+
+    for m in 1..=12 {
+        budget_month(&rt, user_id, budget_id, item_id, period(2026, m), 1000)?;
+    }
+    // The bill lands in December.
+    let bill = rt.add_transaction(
+        user_id, budget_id, "acc", Money::new_dollars(-12000, Currency::SEK),
+        Money::new_dollars(0, Currency::SEK), "HUNDFORSAKRING",
+        Utc.with_ymd_and_hms(2026, 12, 10, 12, 0, 0).unwrap(),
+    )?;
+    rt.tag_transaction(user_id, budget_id, bill, tag_id)?;
+
+    let budget = rt.load(budget_id)?;
+    assert_eq!(
+        available_for(&budget, item_id, period(2026, 12)),
+        Money::zero(Currency::SEK),
+        "11 000 carried + 1 000 assigned - 12 000 spent = 0"
+    );
+    Ok(())
+}
+
+#[test]
+pub fn overspending_carries_forward_as_a_negative_balance() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let (budget_id, item_id, tag_id) = carryover_budget(&rt, user_id, Some(period(2026, 1)))?;
+
+    budget_month(&rt, user_id, budget_id, item_id, period(2026, 1), 3000)?;
+    let tx = rt.add_transaction(
+        user_id, budget_id, "acc", Money::new_dollars(-3400, Currency::SEK),
+        Money::new_dollars(0, Currency::SEK), "OVERSPEND",
+        Utc.with_ymd_and_hms(2026, 1, 15, 12, 0, 0).unwrap(),
+    )?;
+    rt.tag_transaction(user_id, budget_id, tx, tag_id)?;
+    budget_month(&rt, user_id, budget_id, item_id, period(2026, 2), 3000)?;
+
+    let budget = rt.load(budget_id)?;
+    assert_eq!(
+        available_for(&budget, item_id, period(2026, 1)),
+        Money::new_dollars(-400, Currency::SEK),
+        "the category ends January 400 in the hole"
+    );
+    assert_eq!(
+        available_for(&budget, item_id, period(2026, 2)),
+        Money::new_dollars(2600, Currency::SEK),
+        "February inherits the -400: 3 000 assigned - 400 debt"
+    );
+    Ok(())
+}
+
+#[test]
+pub fn carryover_ignores_periods_before_the_start_month() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    // Carryover starts in March; January and February must not contribute.
+    let (budget_id, item_id, _) = carryover_budget(&rt, user_id, Some(period(2026, 3)))?;
+
+    budget_month(&rt, user_id, budget_id, item_id, period(2026, 1), 5000)?;
+    budget_month(&rt, user_id, budget_id, item_id, period(2026, 2), 5000)?;
+    budget_month(&rt, user_id, budget_id, item_id, period(2026, 3), 1000)?;
+    budget_month(&rt, user_id, budget_id, item_id, period(2026, 4), 1000)?;
+
+    let budget = rt.load(budget_id)?;
+    assert_eq!(
+        available_for(&budget, item_id, period(2026, 3)),
+        Money::new_dollars(1000, Currency::SEK),
+        "the start month begins clean, ignoring 10 000 of earlier history"
+    );
+    assert_eq!(
+        available_for(&budget, item_id, period(2026, 4)),
+        Money::new_dollars(2000, Currency::SEK),
+    );
+    Ok(())
+}
+
+#[test]
+pub fn carryover_off_preserves_the_original_per_period_behaviour() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    // `None` = not opted in, which is every existing budget.
+    let (budget_id, item_id, _) = carryover_budget(&rt, user_id, None)?;
+
+    budget_month(&rt, user_id, budget_id, item_id, period(2026, 1), 1000)?;
+    budget_month(&rt, user_id, budget_id, item_id, period(2026, 2), 1000)?;
+
+    let budget = rt.load(budget_id)?;
+    assert!(budget.carryover_into(period(2026, 2)).is_empty());
+    assert_eq!(
+        available_for(&budget, item_id, period(2026, 2)),
+        Money::new_dollars(1000, Currency::SEK),
+        "without carryover each month stands alone"
+    );
+    Ok(())
+}
+
+#[test]
+pub fn configuring_carryover_survives_replay() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let (budget_id, _, _) = carryover_budget(&rt, user_id, Some(period(2026, 5)))?;
+    assert_eq!(rt.load(budget_id)?.carryover_from, Some(period(2026, 5)));
+
+    // It can also be turned back off.
+    rt.configure_carryover(user_id, budget_id, None)?;
+    assert_eq!(rt.load(budget_id)?.carryover_from, None);
     Ok(())
 }

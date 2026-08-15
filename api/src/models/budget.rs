@@ -1,6 +1,6 @@
 use crate::cqrs::framework::Aggregate;
 use crate::cqrs::framework::DomainEvent;
-use crate::events::{BudgetCreated, ItemAdded, ActualAdded, TransactionAdded, TransactionConnected, TransactionIgnored, BudgetedFundsReallocated, ActualBudgetedFundsAdjusted, ItemModified, ActualModified, RuleAdded, AllocationCreated, AllocationDeleted, BankAccountCreated, TagCreated, TagModified, TagClassified, TransactionTagged, TransactionUntagged, RuleModified, RuleDeleted, ItemBufferSet, TransferPairRejected};
+use crate::events::{BudgetCreated, ItemAdded, ActualAdded, TransactionAdded, TransactionConnected, TransactionIgnored, BudgetedFundsReallocated, ActualBudgetedFundsAdjusted, ItemModified, ActualModified, RuleAdded, AllocationCreated, AllocationDeleted, BankAccountCreated, TagCreated, TagModified, TagClassified, CarryoverConfigured, TransactionTagged, TransactionUntagged, RuleModified, RuleDeleted, ItemBufferSet, TransferPairRejected};
 use crate::models::budget_item::{BudgetItem, Periodicity};
 use crate::models::budget_period::RuleMatch;
 use crate::models::budget_period_id::PeriodId;
@@ -43,6 +43,7 @@ pub_events_enum! {
         TagCreated,
         TagModified,
         TagClassified,
+        CarryoverConfigured,
         TransactionTagged,
         TransactionUntagged,
         RuleModified,
@@ -78,6 +79,11 @@ pub struct Budget {
     pub tags: Vec<Tag>,
     #[serde(default)]
     pub rejected_transfer_pairs: HashSet<(Uuid, Uuid)>,
+    /// First period whose category balances carry forward. `None` disables
+    /// carryover — the pre-existing behaviour, and the default for budgets
+    /// whose snapshots predate this field.
+    #[serde(default)]
+    pub carryover_from: Option<PeriodId>,
 }
 
 
@@ -274,6 +280,81 @@ impl Budget {
 
     pub fn get_active_tags(&self) -> Vec<&Tag> {
         self.tags.iter().filter(|t| !t.deleted).collect()
+    }
+
+    /// Budgeted and actual for one item in one period, using the *same*
+    /// definitions the projection uses — actual comes from tagged transactions
+    /// and is abs-normalised for Expense/Savings so it compares against a
+    /// positive budgeted amount.
+    ///
+    /// Factored out so carryover and `BudgetItemViewModel` cannot drift apart:
+    /// if they disagreed, a category's running balance would not match the
+    /// numbers shown next to it.
+    fn item_period_totals(&self, item: &BudgetItem, period: &BudgetPeriod) -> (Money, Money) {
+        let actual_item = period
+            .actual_items
+            .iter()
+            .find(|ai| ai.budget_item_id == item.id);
+        let budgeted = actual_item.map_or_else(|| Money::zero(self.currency), |ai| ai.budgeted_amount);
+        let effective_type = actual_item.map_or(item.budgeting_type, |ai| ai.budgeting_type);
+
+        let tagged: Money = period
+            .transactions
+            .iter()
+            .filter(|tx| !tx.ignored)
+            .filter(|tx| tx.tag_id.is_some_and(|tid| item.tag_ids.contains(&tid)))
+            .map(|tx| tx.amount)
+            .sum();
+        let actual = match effective_type {
+            BudgetingType::Expense | BudgetingType::Savings => tagged.abs(),
+            _ => tagged,
+        };
+        // Fall back to the stored actual when nothing is tagged, mirroring the
+        // projection's precedence.
+        let actual = if actual.is_zero() {
+            actual_item.map_or_else(|| Money::zero(self.currency), |ai| ai.actual_amount)
+        } else {
+            actual
+        };
+        (budgeted, actual)
+    }
+
+    /// Running category balances entering `period_id`, keyed by budget item.
+    ///
+    /// This is the envelope identity applied across periods:
+    /// `available(n) = available(n-1) + budgeted(n) - actual(n)`, accumulated
+    /// from `carryover_from` up to but excluding `period_id`. Overspending
+    /// carries forward as a **negative** balance, so a category stays visibly
+    /// in the hole until it is topped up.
+    ///
+    /// Empty when carryover is disabled (`carryover_from == None`), which keeps
+    /// the pre-existing per-period behaviour for budgets that have not opted in.
+    ///
+    /// Derived rather than stored: editing a past month must flow forward
+    /// automatically, and storing it would need an event per item per period.
+    pub fn carryover_into(&self, period_id: PeriodId) -> std::collections::HashMap<Uuid, Money> {
+        let mut balances = std::collections::HashMap::new();
+        let Some(from) = self.carryover_from else {
+            return balances;
+        };
+
+        let mut periods: Vec<&BudgetPeriod> = self
+            .periods
+            .iter()
+            .filter(|p| p.id >= from && p.id < period_id)
+            .collect();
+        periods.sort_by_key(|p| p.id);
+
+        for period in periods {
+            for item in &self.items {
+                let (budgeted, actual) = self.item_period_totals(item, period);
+                let entry = balances
+                    .entry(item.id)
+                    .or_insert_with(|| Money::zero(self.currency));
+                *entry += budgeted - actual;
+            }
+        }
+        balances
     }
 
     /// Compute average monthly and yearly spend per active tag, across all transaction history.
