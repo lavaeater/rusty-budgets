@@ -1,10 +1,10 @@
 pub const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 
 use crate::api_error::RustyError;
-use crate::cqrs::framework::AsyncRuntime;
+use crate::cqrs::framework::{AsyncRuntime, DomainEvent};
 use crate::cqrs::runtime::{AsyncBudgetCommandsTrait, PgRuntime, create_runtime};
 use crate::import::{import_from_path, import_from_skandia_excel_bytes};
-use crate::models::{User, Budget, MonthBeginsOn, Currency, BudgetingType, CostKind, Matching, Money, PeriodId, Periodicity, MatchRule, Tag, BankTransaction};
+use crate::models::{User, Budget, BudgetEvent, MonthBeginsOn, Currency, BudgetingType, CostKind, Matching, Money, PeriodId, Periodicity, MatchRule, Tag, BankTransaction};
 use chrono::NaiveDate;
 use dioxus::logger::tracing;
 use dioxus::logger::tracing::error;
@@ -527,6 +527,30 @@ pub async fn resolve_transfer_pair(
     Ok(budget_id)
 }
 
+/// Applies every rule match currently found by [`Budget::evaluate_tag_rules`]
+/// (i.e. `Matching::Automatic` tags) to `current` **in memory**, pushing the
+/// resulting events onto `events`. Returns how many were applied.
+///
+/// Kept as a helper shared by [`tag_transaction`] and [`evaluate_tag_rules`]
+/// so both can do their one `load`/`append_many`/`snapshot` around it instead
+/// of each other, which used to mean a whole extra full reload per call. See
+/// [`confirm_tag_suggestions`] for why the same shape isn't reused there.
+fn apply_automatic_rule_matches(current: &mut Budget, events: &mut Vec<BudgetEvent>) -> usize {
+    let matches = current.evaluate_tag_rules();
+    let mut applied = 0;
+    for (tx_id, tag_id) in matches {
+        match current.do_transaction_tagged(tx_id, tag_id) {
+            Ok(ev) => {
+                ev.apply(current);
+                events.push(ev.into());
+                applied += 1;
+            }
+            Err(e) => error!(error = %e, "Could not tag transaction {} with tag {}", tx_id, tag_id),
+        }
+    }
+    applied
+}
+
 pub async fn tag_transaction(
     user_id: Uuid,
     budget_id: Uuid,
@@ -535,52 +559,68 @@ pub async fn tag_transaction(
 ) -> Result<Uuid, RustyError> {
     let t = std::time::Instant::now();
     let rt = runtime().await;
-    rt.tag_transaction(user_id, budget_id, tx_id, tag_id).await?;
+    // One load, one snapshot for the whole operation: tag the transaction,
+    // maybe add the match rule it implies, then apply every rule match that
+    // falls out of that — all against the same in-memory `current`, instead
+    // of each step reloading and replaying the full event stream.
+    let mut current = rt.load(budget_id).await?;
+    let mut events: Vec<BudgetEvent> = Vec::new();
+
+    let tag_ev = current.do_transaction_tagged(tx_id, tag_id)?;
+    tag_ev.apply(&mut current);
+    events.push(tag_ev.into());
     tracing::info!("[perf] tag_transaction/tag_event: {:?}", t.elapsed());
-    let budget = rt.load(budget_id).await?;
-    tracing::info!("[perf] tag_transaction/load_for_rule_check: {:?}", t.elapsed());
-    let tx = budget.get_transaction(tx_id).ok_or(RustyError::ItemNotFound(
+
+    let tx = current.get_transaction(tx_id).ok_or(RustyError::ItemNotFound(
         tx_id.to_string(),
         "Transaction not found".to_string(),
     ))?;
     let transaction_key = MatchRule::create_transaction_key(tx);
-    let rule_exists = budget
+    let rule_exists = current
         .match_rules
         .iter()
         .any(|r| r.transaction_key == transaction_key && r.tag_id == Some(tag_id));
     if !rule_exists {
-        rt.add_rule(user_id, budget_id, transaction_key, Vec::new(), true, Some(tag_id)).await?;
+        let rule_ev = current.add_rule(transaction_key, Vec::new(), true, Some(tag_id))?;
+        rule_ev.apply(&mut current);
+        events.push(rule_ev.into());
         tracing::info!("[perf] tag_transaction/add_rule: {:?}", t.elapsed());
     }
-    evaluate_tag_rules(user_id, budget_id).await?;
-    tracing::info!("[perf] tag_transaction/total: {:?}", t.elapsed());
+
+    let applied = apply_automatic_rule_matches(&mut current, &mut events);
+
+    rt.append_many(user_id, events).await?;
+    rt.snapshot(&current).await?;
+    tracing::info!(
+        "[perf] tag_transaction/total (applied {} rule matches): {:?}",
+        applied,
+        t.elapsed()
+    );
     Ok(budget_id)
 }
 
 pub async fn evaluate_tag_rules(user_id: Uuid, budget_id: Uuid) -> Result<Uuid, RustyError> {
     let t = std::time::Instant::now();
     let rt = runtime().await;
-    let budget = rt.load(budget_id).await?;
-    let matches = budget.evaluate_tag_rules();
-    let match_count = matches.len();
-    info!("[perf] evaluate_tag_rules: {} matches found in {:?}", match_count, t.elapsed());
-    for (tx_id, tag_id) in matches {
-        match rt.tag_transaction(user_id, budget_id, tx_id, tag_id).await {
-            Ok(_) => info!("Tagged a transaction, bro!"),
-            Err(e) => error!(error = %e, "Could not tag transaction {} with tag {}", tx_id, tag_id),
-        }
+    let mut current = rt.load(budget_id).await?;
+    let mut events: Vec<BudgetEvent> = Vec::new();
+    let applied = apply_automatic_rule_matches(&mut current, &mut events);
+    info!("[perf] evaluate_tag_rules: {} matches found in {:?}", applied, t.elapsed());
+    if !events.is_empty() {
+        rt.append_many(user_id, events).await?;
+        rt.snapshot(&current).await?;
     }
-    info!("[perf] evaluate_tag_rules/total (applied {} tags): {:?}", match_count, t.elapsed());
+    info!("[perf] evaluate_tag_rules/total (applied {} tags): {:?}", applied, t.elapsed());
     Ok(budget_id)
 }
 
 /// Confirms pending `Matching::Suggest` matches, optionally limited to one tag.
 ///
-/// Goes straight to the runtime command rather than through [`tag_transaction`]:
-/// that wrapper reloads the aggregate, checks for a missing rule and re-runs a
-/// full rule evaluation on every call, which would be quadratic when confirming
-/// a batch. Neither step is needed here — a suggestion *is* a rule match, so the
-/// rule already exists, and the matches are computed once up front.
+/// Applies matches directly against a single in-memory load rather than going
+/// through [`tag_transaction`] per match: that wrapper also checks for a
+/// missing rule and re-runs rule evaluation, neither of which is needed here
+/// — a suggestion *is* a rule match, so the rule already exists, and the
+/// matches are computed once up front.
 ///
 /// Returns the number of transactions tagged.
 pub async fn confirm_tag_suggestions(
@@ -589,19 +629,28 @@ pub async fn confirm_tag_suggestions(
     tag_id: Option<Uuid>,
 ) -> Result<usize, RustyError> {
     let rt = runtime().await;
-    let budget = rt.load(budget_id).await?;
-    let matches: Vec<(Uuid, Uuid)> = budget
+    let mut current = rt.load(budget_id).await?;
+    let matches: Vec<(Uuid, Uuid)> = current
         .suggest_tag_rules()
         .into_iter()
         .filter(|(_, tid)| tag_id.is_none_or(|wanted| *tid == wanted))
         .collect();
 
+    let mut events: Vec<BudgetEvent> = Vec::new();
     let mut applied = 0;
     for (tx_id, tid) in matches {
-        match rt.tag_transaction(user_id, budget_id, tx_id, tid).await {
-            Ok(_) => applied += 1,
+        match current.do_transaction_tagged(tx_id, tid) {
+            Ok(ev) => {
+                ev.apply(&mut current);
+                events.push(ev.into());
+                applied += 1;
+            }
             Err(e) => error!(error = %e, "Could not confirm suggestion for tx {}", tx_id),
         }
+    }
+    if !events.is_empty() {
+        rt.append_many(user_id, events).await?;
+        rt.snapshot(&current).await?;
     }
     info!("confirm_tag_suggestions: applied {applied} suggestions");
     Ok(applied)
@@ -616,17 +665,26 @@ pub async fn confirm_tag_suggestions(
 /// to be applied too.
 pub async fn apply_all_tag_rules(user_id: Uuid, budget_id: Uuid) -> Result<Uuid, RustyError> {
     let rt = runtime().await;
-    let budget = rt.load(budget_id).await?;
-    let matches: Vec<_> = budget
+    let mut current = rt.load(budget_id).await?;
+    let matches: Vec<_> = current
         .evaluate_tag_rules()
         .into_iter()
-        .chain(budget.suggest_tag_rules())
+        .chain(current.suggest_tag_rules())
         .collect();
     info!("apply_all_tag_rules: applying {} matches", matches.len());
+    let mut events: Vec<BudgetEvent> = Vec::new();
     for (tx_id, tag_id) in matches {
-        if let Err(e) = rt.tag_transaction(user_id, budget_id, tx_id, tag_id).await {
-            error!(error = %e, "Could not tag transaction {} with tag {}", tx_id, tag_id);
+        match current.do_transaction_tagged(tx_id, tag_id) {
+            Ok(ev) => {
+                ev.apply(&mut current);
+                events.push(ev.into());
+            }
+            Err(e) => error!(error = %e, "Could not tag transaction {} with tag {}", tx_id, tag_id),
         }
+    }
+    if !events.is_empty() {
+        rt.append_many(user_id, events).await?;
+        rt.snapshot(&current).await?;
     }
     Ok(budget_id)
 }
