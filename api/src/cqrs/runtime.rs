@@ -1189,7 +1189,7 @@ impl AsyncRuntime<Budget, BudgetEvent> for PgRuntime {
             event_count,
             t.elapsed()
         );
-        if event_count > 0 {
+        if event_count > 20 {
             self.snapshot(&budget).await?;
         }
         Ok(budget)
