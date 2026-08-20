@@ -3,7 +3,10 @@ use crate::budget::{CarryoverSettings, RulesView, TagReviewView, TagsView};
 use crate::file_chooser::{FileData, FileDialog};
 use crate::Button;
 use api::models::{MonthBeginsOn, PeriodId};
-use api::{auto_budget_all, auto_budget_period, import_transactions_bytes};
+use api::{
+    auto_budget_all, auto_budget_period, export_tags_and_rules, import_tags_and_rules,
+    import_transactions_bytes,
+};
 use chrono::Utc;
 use dioxus::logger::tracing::info;
 use dioxus::prelude::*;
@@ -28,6 +31,38 @@ pub fn SettingsTab() -> Element {
                     import_transactions_bytes(budget_id, contents, period_id).await
             {
                 info!("Import went well and we update the context bro");
+                consume_context::<BudgetState>().0.set(updated_budget);
+            }
+        });
+    };
+
+    let export_rules = move |_| {
+        spawn(async move {
+            let Ok(json) = export_tags_and_rules(budget_id).await else {
+                info!("Failed to export tags and rules");
+                return;
+            };
+            let handle = rfd::AsyncFileDialog::new()
+                .set_title("Spara taggar och regler")
+                .set_file_name("budget-regler.json")
+                .save_file()
+                .await;
+            if let Some(handle) = handle
+                && let Err(e) = handle.write(json.as_bytes()).await
+            {
+                info!("Failed to save tags and rules export: {}", e);
+            }
+        });
+    };
+
+    let import_rules = move |file: FileData| {
+        let contents = file.contents;
+        spawn(async move {
+            if !contents.is_empty()
+                && let Ok(updated_budget) =
+                    import_tags_and_rules(budget_id, contents, period_id).await
+            {
+                info!("Rules import went well and we update the context bro");
                 consume_context::<BudgetState>().0.set(updated_budget);
             }
         });
@@ -84,6 +119,20 @@ pub fn SettingsTab() -> Element {
             section { class: "settings-section",
                 h3 { class: "settings-section-title", "Taggningsregler" }
                 RulesView {}
+            }
+
+            section { class: "settings-section",
+                h3 { class: "settings-section-title", "Exportera / importera taggar och regler" }
+                div { class: "settings-tools",
+                    Button { class: "primary", onclick: export_rules, "Exportera till fil" }
+                    FileDialog {
+                        on_chosen: import_rules,
+                        label: "Importera från fil",
+                        title: "Välj en JSON-fil med taggar och regler",
+                        filter_name: "JSON",
+                        filter_extensions: vec!["json".to_string()],
+                    }
+                }
             }
         }
     }

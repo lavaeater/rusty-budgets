@@ -702,15 +702,23 @@ pub async fn modify_rule(
     runtime().await.modify_rule(user_id, budget_id, rule_id, transaction_key).await
 }
 
+/// Deletes a rule and, if it was the only rule tagging some transactions
+/// with its tag, untags them — all against a single in-memory load instead
+/// of reloading the aggregate once per affected transaction (that used to
+/// mean `2 + 2N` full reload-and-replay cycles for N affected transactions;
+/// see the same fix applied to tagging in [`tag_transaction`]).
 pub async fn delete_rule(user_id: Uuid, budget_id: Uuid, rule_id: Uuid) -> Result<Uuid, RustyError> {
     let rt = runtime().await;
-    let budget = rt.load(budget_id).await?;
-    let deleted_tag_id = budget.match_rules.iter().find(|r| r.id == rule_id).and_then(|r| r.tag_id);
-    rt.delete_rule(user_id, budget_id, rule_id).await?;
+    let mut current = rt.load(budget_id).await?;
+    let mut events: Vec<BudgetEvent> = Vec::new();
+
+    let deleted_tag_id = current.match_rules.iter().find(|r| r.id == rule_id).and_then(|r| r.tag_id);
+    let delete_ev = current.delete_rule(rule_id)?;
+    delete_ev.apply(&mut current);
+    events.push(delete_ev.into());
 
     if let Some(tag_id) = deleted_tag_id {
-        let budget = rt.load(budget_id).await?;
-        let transactions_to_check: Vec<Uuid> = budget
+        let transactions_to_check: Vec<Uuid> = current
             .periods
             .iter()
             .flat_map(|p| p.transactions.iter())
@@ -719,23 +727,63 @@ pub async fn delete_rule(user_id: Uuid, budget_id: Uuid, rule_id: Uuid) -> Resul
             .collect();
 
         for tx_id in transactions_to_check {
-            let budget = rt.load(budget_id).await?;
-            if let Some(tx) = budget.get_transaction(tx_id) {
-                let still_matches = budget
+            let still_matches = current.get_transaction(tx_id).is_some_and(|tx| {
+                current
                     .match_rules
                     .iter()
-                    .any(|r| r.tag_id == Some(tag_id) && r.matches_transaction(tx));
-                if !still_matches {
-                    match rt.untag_transaction(user_id, budget_id, tx_id).await {
-                        Ok(_) => info!("Untagged transaction {} after rule deletion", tx_id),
-                        Err(e) => error!(error = %e, "Failed to untag transaction {} after rule deletion", tx_id),
+                    .any(|r| r.tag_id == Some(tag_id) && r.matches_transaction(tx))
+            });
+            if !still_matches {
+                match current.do_transaction_untagged(tx_id) {
+                    Ok(ev) => {
+                        ev.apply(&mut current);
+                        events.push(ev.into());
+                        info!("Untagged transaction {} after rule deletion", tx_id);
                     }
+                    Err(e) => error!(error = %e, "Failed to untag transaction {} after rule deletion", tx_id),
                 }
             }
         }
     }
 
+    rt.append_many(user_id, events).await?;
+    rt.snapshot(&current).await?;
     Ok(budget_id)
+}
+
+/// Serialises the budget's non-deleted tags and match rules to a JSON string,
+/// for the user to save to a file and later replay onto another budget with
+/// [`import_tags_and_rules`].
+pub async fn export_tags_and_rules(budget_id: Uuid) -> Result<String, RustyError> {
+    let rt = runtime().await;
+    let budget = rt.load(budget_id).await?;
+    let export = crate::rules_export::export_tags_and_rules(&budget);
+    Ok(serde_json::to_string_pretty(&export)?)
+}
+
+/// Applies a JSON document produced by [`export_tags_and_rules`] onto
+/// `budget_id`: creates any tag missing by name (reusing an existing one of
+/// the same name otherwise) and any rule not already present, in a single
+/// load/append/snapshot regardless of how many tags or rules are in the file.
+pub async fn import_tags_and_rules(
+    user_id: Uuid,
+    budget_id: Uuid,
+    json: &str,
+) -> Result<crate::rules_export::ImportSummary, RustyError> {
+    let export: crate::rules_export::RulesExport = serde_json::from_str(json)?;
+    let rt = runtime().await;
+    let mut current = rt.load(budget_id).await?;
+    let mut events: Vec<BudgetEvent> = Vec::new();
+    let summary = crate::rules_export::apply_rules_export(&mut current, &mut events, &export);
+    if !events.is_empty() {
+        rt.append_many(user_id, events).await?;
+        rt.snapshot(&current).await?;
+    }
+    info!(
+        "import_tags_and_rules: {} tags created, {} reused, {} rules created, {} skipped",
+        summary.tags_created, summary.tags_reused, summary.rules_created, summary.rules_skipped
+    );
+    Ok(summary)
 }
 
 pub async fn set_item_buffer(

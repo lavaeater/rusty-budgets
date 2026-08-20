@@ -13,6 +13,7 @@ pub mod errors;
 pub mod import;
 #[cfg(feature = "server")]
 pub mod migrations;
+pub mod rules_export;
 #[cfg(feature = "server")]
 pub mod pg_models;
 
@@ -509,5 +510,32 @@ pub async fn apply_all_rules(
 ) -> ServerFnResult<BudgetViewModel> {
     let user = db::get_default_user().await?;
     db::apply_all_tag_rules(user.id, budget_id).await?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
+}
+
+/// Dumps this budget's non-deleted tags and match rules as a JSON string, so
+/// the user can save them to a file and later replay them onto another
+/// budget with [`import_tags_and_rules`].
+#[server(endpoint = "export_tags_and_rules")]
+pub async fn export_tags_and_rules(budget_id: Uuid) -> ServerFnResult<String> {
+    Ok(db::export_tags_and_rules(budget_id).await?)
+}
+
+/// Applies a JSON document produced by [`export_tags_and_rules`]: creates any
+/// tag missing by name and any rule not already present, then re-evaluates
+/// automatic rules so any bill rule that was just imported immediately tags
+/// its matching untagged transactions.
+#[server(endpoint = "import_tags_and_rules")]
+pub async fn import_tags_and_rules(
+    budget_id: Uuid,
+    file_contents: Vec<u8>,
+    period_id: PeriodId,
+) -> ServerFnResult<BudgetViewModel> {
+    let user = db::get_default_user().await?;
+    let json = String::from_utf8(file_contents).map_err(|_| {
+        RustyError::GenericError("Rules file is not valid UTF-8".to_string())
+    })?;
+    db::import_tags_and_rules(user.id, budget_id, &json).await?;
+    db::evaluate_tag_rules(user.id, budget_id).await?;
     Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }
