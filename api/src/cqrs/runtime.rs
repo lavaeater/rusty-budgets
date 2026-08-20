@@ -1181,15 +1181,22 @@ impl AsyncRuntime<Budget, BudgetEvent> for PgRuntime {
         );
         let events = self.fetch_events(id, budget.last_event).await?;
         let event_count = events.len();
+        info!(
+            "[perf] load: replayed {} events in {:?}, budget version {}",
+            event_count,
+            t.elapsed(),
+            version
+        );
         for ev in events {
             ev.apply(&mut budget);
         }
-        info!(
-            "[perf] load: replayed {} events in {:?}",
+        if event_count > 100 {
+          info!(
+            "[perf] load: replayed {} events in {:?}, budget version {}, saving",
             event_count,
-            t.elapsed()
+            t.elapsed(),
+            version
         );
-        if event_count > 20 {
             self.snapshot(&budget).await?;
         }
         Ok(budget)
@@ -1213,6 +1220,28 @@ impl AsyncRuntime<Budget, BudgetEvent> for PgRuntime {
     async fn append(&self, user_id: Uuid, ev: BudgetEvent) -> Result<(), RustyError> {
         let mut stored_event: DbState<PgStoredBudgetEvent> = StoredEvent::new(ev, user_id).into();
         stored_event.save(self.client.as_ref()).await?;
+        Ok(())
+    }
+
+    async fn append_many(&self, user_id: Uuid, events: Vec<BudgetEvent>) -> Result<(), RustyError> {
+        if events.is_empty() {
+            return Ok(());
+        }
+        let rows: Vec<PgStoredBudgetEvent> = events
+            .into_iter()
+            .map(|ev| {
+                let stored = StoredEvent::new(ev, user_id);
+                let mut row = PgStoredBudgetEvent::new();
+                row.id = stored.id;
+                row.aggregate_id = stored.aggregate_id;
+                row.timestamp = stored.timestamp;
+                row.created_at = stored.created_at;
+                row.user_id = stored.user_id;
+                row.data = serde_json::to_value(stored.data).expect("BudgetEvent must be serializable");
+                row.into_inner()
+            })
+            .collect();
+        welds::query::insert::bulk_insert_with_ids(self.client.as_ref(), &rows).await?;
         Ok(())
     }
 
