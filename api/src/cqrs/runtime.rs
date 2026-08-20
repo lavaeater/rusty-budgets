@@ -1181,16 +1181,10 @@ impl AsyncRuntime<Budget, BudgetEvent> for PgRuntime {
         );
         let events = self.fetch_events(id, budget.last_event).await?;
         let event_count = events.len();
-        info!(
-            "[perf] load: replayed {} events in {:?}, budget version {}",
-            event_count,
-            t.elapsed(),
-            version
-        );
         for ev in events {
             ev.apply(&mut budget);
         }
-        if event_count > 100 {
+        if event_count > 10 {
           info!(
             "[perf] load: replayed {} events in {:?}, budget version {}, saving",
             event_count,
