@@ -1,0 +1,1054 @@
+{
+  "tags": [
+    {
+      "name": "Årlig buffert",
+      "cost_kind": {
+        "Recurring": "Annual"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Livsmedel",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    },
+    {
+      "name": "Övrigt",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    },
+    {
+      "name": "Parkering",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    },
+    {
+      "name": "Nöje",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    },
+    {
+      "name": "Äta ute",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    },
+    {
+      "name": "Fika",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    },
+    {
+      "name": "Shopping - Hus",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    },
+    {
+      "name": "Parkering - Jobb",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "IT och tjänster",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Media",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Shopping",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Kläder",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Läkemedel",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Bank - avgift",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Bil - laddning",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Försäkring - Hus",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Telefon",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Resor",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Vitvaror",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Lön",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Fritid",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Försäkring - Liv",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Lån - Hus",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Internet",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "El",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Fack - avgift",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Lån - Elisabeth",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Anja",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Livskvalitet",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Freja",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    },
+    {
+      "name": "Shopping - Hund",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    },
+    {
+      "name": "Alkohol",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    },
+    {
+      "name": "Bil",
+      "cost_kind": {
+        "Recurring": "Annual"
+      },
+      "matching": "Automatic"
+    }
+  ],
+  "rules": [
+    {
+      "tag_name": "Resor",
+      "transaction_key": [
+        "lanstrafiken",
+        "se,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping - Hus",
+      "transaction_key": [
+        "bauhaus,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Telefon",
+      "transaction_key": [
+        "telia",
+        "sverige",
+        "ab"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "swish",
+        "till",
+        "litero",
+        "gårdsbutik"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "willys"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Lån - Hus",
+      "transaction_key": [
+        "avibetalning",
+        "9152-2305078"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "nyx*nayaxdirektutbetalni,",
+        "torslanda"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "överföring"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Parkering",
+      "transaction_key": [
+        "flowy",
+        "information",
+        "ab,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "swish",
+        "till",
+        "prakatsatjatam"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Nöje",
+      "transaction_key": [
+        "mall",
+        "of",
+        "scandin,",
+        "solna"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "olhall,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Parkering",
+      "transaction_key": [
+        "easypark"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Läkemedel",
+      "transaction_key": [
+        "apotek"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "loomisp24sju",
+        "stalldal,",
+        "stalldalen"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "keemchi",
+        "ab,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "swish",
+        "till",
+        "kevin",
+        "kovacevic"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "lulu",
+        "poke",
+        "&",
+        "sushi",
+        "mos,",
+        "solna"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Internet",
+      "transaction_key": [
+        "bredband2"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Bank - avgift",
+      "transaction_key": [
+        "månadsavgift",
+        "bankkort"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "l$dan,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Läkemedel",
+      "transaction_key": [
+        "apoteket"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Media",
+      "transaction_key": [
+        "spotifyse,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fritid",
+      "transaction_key": [
+        "bg",
+        "5315-3680",
+        "ljusnarsbergs",
+        "jak"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "mcdorebrovasthaga,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "ge",
+        "f",
+        "r",
+        "livet,",
+        "rebro"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "coop"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Freja",
+      "transaction_key": [
+        "swish",
+        "till",
+        "freja",
+        "nygren",
+        "peura"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "k*",
+        "klarna"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "ramsbergs",
+        "handel,",
+        "ramsberg"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Nöje",
+      "transaction_key": [
+        "swish",
+        "till",
+        "heusinger",
+        "von",
+        "waldegg,",
+        "osborne"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "IT och tjänster",
+      "transaction_key": [
+        "google"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Nöje",
+      "transaction_key": [
+        "filmstaden"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Bil - laddning",
+      "transaction_key": [
+        "digital",
+        "charging",
+        "solution,",
+        "berlin"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "El",
+      "transaction_key": [
+        "ellevio",
+        "(publ)",
+        "ab"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Kläder",
+      "transaction_key": [
+        "rch-canles,",
+        "calgary"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Anja",
+      "transaction_key": [
+        "swish",
+        "till",
+        "anja",
+        "nygren",
+        "peura"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Resor",
+      "transaction_key": [
+        "sj",
+        "app,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Kläder",
+      "transaction_key": [
+        "blue",
+        "fox,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Försäkring - Liv",
+      "transaction_key": [
+        "gjensidige"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "humana",
+        "city",
+        "1,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "max",
+        "burgers"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "walley"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "pressbyr"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "zettle_*sjolanders",
+        "i",
+        "loa,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "IT och tjänster",
+      "transaction_key": [
+        "anthropic*",
+        "claude",
+        "sub,",
+        "anthropic.com"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "nyx*toalett,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "gulf",
+        "biskopskvarn,",
+        "strangnas"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "tempo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping - Hund",
+      "transaction_key": [
+        "sp",
+        "husdjurslandet,",
+        "spanga"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "vete-katten"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping - Hus",
+      "transaction_key": [
+        "ikea"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "lulu",
+        "poke",
+        "och",
+        "sushi",
+        "sodra,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Bil",
+      "transaction_key": [
+        "bilavsättning"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "viking",
+        "pizzeria,",
+        "orsa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "zettle_*sjolanders"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "IT och tjänster",
+      "transaction_key": [
+        "aws",
+        "emea,",
+        "aws.amazon.co"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "El",
+      "transaction_key": [
+        "e.on",
+        "kundsupport",
+        "sverige"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Internet",
+      "transaction_key": [
+        "bahnhof"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "mcdorebromarieberg,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "ica"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Årlig buffert",
+      "transaction_key": [
+        "buffert",
+        "årliga"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Lön",
+      "transaction_key": [
+        "lön"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "sostrene",
+        "grene"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "gro",
+        "stallbacken,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Kläder",
+      "transaction_key": [
+        "brandy",
+        "melville"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "jme",
+        "bodega",
+        "kopparberg"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Lån - Elisabeth",
+      "transaction_key": [
+        "lån",
+        "elisabeth"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Vitvaror",
+      "transaction_key": [
+        "k*power",
+        "sver"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Alkohol",
+      "transaction_key": [
+        "systembolaget,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "nagomi",
+        "sushi,",
+        "lindesberg"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livskvalitet",
+      "transaction_key": [
+        "swish",
+        "till",
+        "bokadirekt"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fack - avgift",
+      "transaction_key": [
+        "akavia"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Parkering - Jobb",
+      "transaction_key": [
+        "apcoa",
+        "flow",
+        "se,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "espresso",
+        "house"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Telefon",
+      "transaction_key": [
+        "hallon,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "finska",
+        "hembageriet,",
+        "eskilstuna"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "hemkop"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Försäkring - Hus",
+      "transaction_key": [
+        "folksam"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "lidl157lindesberg,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Media",
+      "transaction_key": [
+        "k*tv4",
+        "aktieb"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "ll",
+        "amice",
+        "orebro,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "IT och tjänster",
+      "transaction_key": [
+        "jetbrains,",
+        "prague"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Bank - avgift",
+      "transaction_key": [
+        "månadsavgift",
+        "bankkortextra"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Kläder",
+      "transaction_key": [
+        "skoservice,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "j?rntorget",
+        "delikatess,",
+        "eskilstuna"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "burger",
+        "king"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "nyx*matbolagetieskilstun,",
+        "eskilstuna"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "max",
+        "burgers,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    }
+  ]
+}
