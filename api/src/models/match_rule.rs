@@ -52,27 +52,16 @@ impl Display for MatchRule {
 
 // Default stopwords to filter out from tokenized descriptions
 static DEFAULT_STOPWORDS: std::sync::LazyLock<HashSet<&'static str>> = std::sync::LazyLock::new(|| {
-    /*
-               "orebro",
-           "vastha,",
-
-    */
     let mut set = HashSet::new();
     set.insert("kontaktlös");
     set.insert("zettle");
     set.insert("zettle_*");
-    // set.insert("överföring");
     set.insert("autogiro");
     set
 });
 
-// Default stopwords to filter out from tokenized descriptions
+// Default place names to filter out from tokenized descriptions
 static DEFAULT_PLACE_NAMES: std::sync::LazyLock<HashSet<&'static str>> = std::sync::LazyLock::new(|| {
-    /*
-               "orebro",
-           "vastha,",
-
-    */
     let mut set = HashSet::new();
     set.insert("orebro");
     set.insert("vastha");
@@ -111,6 +100,16 @@ fn is_date_pattern(s: &str) -> bool {
 
     false
 }
+
+/// Strips leading/trailing punctuation that bank exports glue onto tokens
+/// (most commonly a trailing comma from "CITY, CITY"-style address lists),
+/// so e.g. "noodles," and "noodles" tokenize identically instead of being
+/// treated as different match-rule terms. Deliberately narrow — it must not
+/// touch the internal `_`/`*` in tokens like "zettle_*elinas".
+fn strip_punctuation(token: &str) -> &str {
+    token.trim_matches(|c: char| matches!(c, ',' | '.' | ';' | ':'))
+}
+
 /// Tokenizes a bank transaction description and filters out noise
 ///
 /// # Arguments
@@ -134,14 +133,16 @@ pub fn tokenize_description(description: &str) -> Vec<String> {
     description
         .to_lowercase()
         .split_whitespace()
-        .map(std::string::ToString::to_string)
+        .map(strip_punctuation)
+        .filter(|token| !token.is_empty())
         .filter(|token| {
             // Filter out dates
             !is_date_pattern(token) &&
                 // Filter out stopwords
-                !DEFAULT_STOPWORDS.contains(token.as_str())
-            && !DEFAULT_PLACE_NAMES.contains(token.as_str())
+                !DEFAULT_STOPWORDS.contains(*token)
+            && !DEFAULT_PLACE_NAMES.contains(*token)
         })
+        .map(std::string::ToString::to_string)
         .collect()
 }
 
@@ -172,12 +173,14 @@ pub fn tokenize_description_with_stopwords(
     description
         .to_lowercase()
         .split_whitespace()
-        .map(std::string::ToString::to_string)
+        .map(strip_punctuation)
+        .filter(|token| !token.is_empty())
         .filter(|token| {
             !is_date_pattern(token)
-                && !DEFAULT_STOPWORDS.contains(token.as_str())
-                && !custom_stopwords.contains(token)
+                && !DEFAULT_STOPWORDS.contains(*token)
+                && !custom_stopwords.contains(*token)
         })
+        .map(std::string::ToString::to_string)
         .collect()
 }
 
@@ -192,8 +195,10 @@ mod tests {
 
         // Date "2025-11-26" should be filtered out
         // "OREBRO" should be filtered out (stopword)
-        // Remaining tokens should be lowercase
-        assert_eq!(tokens, vec!["new", "china", "trading,"]);
+        // Remaining tokens should be lowercase, with the trailing comma from
+        // "TRADING, OREBRO" stripped so "trading," and "trading" tokenize
+        // identically.
+        assert_eq!(tokens, vec!["new", "china", "trading"]);
     }
 
     /// Table-driven coverage of the tokenizer's documented behaviour. This is
@@ -205,19 +210,23 @@ mod tests {
         let cases: &[(&str, Vec<&str>)] = &[
             // Lowercasing.
             ("LÖN", vec!["lön"]),
-            // ISO date (YYYY-MM-DD) dropped, place-name "orebro" dropped, but
-            // "vastha," keeps its comma so it does NOT match the "vastha" place.
+            // ISO date (YYYY-MM-DD) dropped. "VASTHA," loses its trailing
+            // comma before stopword filtering, so it now matches the
+            // "vastha" place-name stopword the same as "OREBRO" does —
+            // both are dropped.
             (
                 "2025-09-30 WILLYS OREBRO VASTHA, OREBRO",
-                vec!["willys", "vastha,"],
+                vec!["willys"],
             ),
             // Stopword "autogiro" dropped.
             ("Autogiro Qliro", vec!["qliro"]),
             // "kontaktlös" is a stopword; "zettle_*" only matches verbatim, so
-            // "zettle_*elinas" survives.
+            // "zettle_*elinas" survives (its internal `_`/`*` are untouched —
+            // only leading/trailing punctuation is stripped). "MARKNAD,"
+            // loses its trailing comma.
             (
                 "2025-09-27 kontaktlös ZETTLE_*ELINAS MARKNAD, GRODINGE",
-                vec!["zettle_*elinas", "marknad,", "grodinge"],
+                vec!["zettle_*elinas", "marknad", "grodinge"],
             ),
             // Numbers that are NOT dates are kept (only date-shaped tokens drop):
             // "9151"/"1421586" are too short to be a compact YYYYMMDD date.
