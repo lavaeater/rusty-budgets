@@ -327,7 +327,10 @@ pub fn TransferPairsView() -> Element {
             }
             div { class: "transactions-list",
                 for pair in pairs {
-                    TransferPairCard { pair }
+                    TransferPairCard {
+                        key: "{pair.outgoing.tx_id}-{pair.incoming.tx_id}",
+                        pair,
+                    }
                 }
             }
         }
@@ -352,7 +355,6 @@ fn TransferPairCard(pair: TransferPair) -> Element {
     rsx! {
         div {
             class: "transaction-card transfer-pair-card",
-            key: "{out_id}-{in_id}",
             div { class: "transfer-pair-row",
                 div { class: "transfer-leg",
                     span { class: "transfer-leg-label", "Ut" }
