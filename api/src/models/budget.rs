@@ -513,9 +513,16 @@ impl Budget {
                 if tx.tag_id.is_some() || tx.ignored {
                     continue;
                 }
+                // Tokenize once per transaction, not once per (transaction,
+                // rule) pair — with hundreds of rules this turned an
+                // O(transactions) scan into O(transactions × rules).
+                let tokens: HashSet<String> =
+                    crate::models::match_rule::tokenize_description(&tx.description)
+                        .into_iter()
+                        .collect();
                 for rule in &self.match_rules {
                     if let Some(tag_id) = rule.tag_id
-                        && rule.matches_transaction(tx)
+                        && rule.matches_tokens(&tokens)
                     {
                         // A rule pointing at a deleted or unknown tag is inert.
                         if let Some(tag) = self.tags.iter().find(|t| t.id == tag_id && !t.deleted)

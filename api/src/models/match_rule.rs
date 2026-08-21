@@ -309,14 +309,21 @@ mod tests {
 }
 
 impl MatchRule {
-    pub fn matches_transaction(&self, transaction: &BankTransaction) -> bool {
+    /// Checks against an already-tokenized description. Use this (over
+    /// [`Self::matches_transaction`]) whenever the same transaction is being
+    /// checked against more than one rule — tokenizing is not free, and
+    /// re-running it per rule turns an O(transactions) scan into
+    /// O(transactions × rules). See `Budget::rule_matches`.
+    pub fn matches_tokens(&self, tokens: &HashSet<String>) -> bool {
         if self.transaction_key.is_empty() {
             return false;
         }
-        let tokenized_transaction_description = tokenize_description(&transaction.description);
-        self.transaction_key
-            .iter()
-            .all(|token| tokenized_transaction_description.contains(token))
+        self.transaction_key.iter().all(|token| tokens.contains(token))
+    }
+
+    pub fn matches_transaction(&self, transaction: &BankTransaction) -> bool {
+        let tokens: HashSet<String> = tokenize_description(&transaction.description).into_iter().collect();
+        self.matches_tokens(&tokens)
     }
 
     pub fn matches_actual(&self, actual: &ActualItem) -> bool {

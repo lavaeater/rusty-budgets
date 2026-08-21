@@ -834,10 +834,12 @@ pub async fn delete_rule(user_id: Uuid, budget_id: Uuid, rule_id: Uuid) -> Resul
 
         for tx_id in transactions_to_check {
             let still_matches = current.get_transaction(tx_id).is_some_and(|tx| {
+                let tokens: std::collections::HashSet<String> =
+                    MatchRule::create_transaction_key(tx).into_iter().collect();
                 current
                     .match_rules
                     .iter()
-                    .any(|r| r.tag_id == Some(tag_id) && r.matches_transaction(tx))
+                    .any(|r| r.tag_id == Some(tag_id) && r.matches_tokens(&tokens))
             });
             if !still_matches {
                 match current.do_transaction_untagged(tx_id) {
