@@ -511,6 +511,54 @@ pub async fn reject_transfer_pair(
         .await
 }
 
+/// Tags `tx_id` with `tag_id` on `current` **in memory**, adds the implied
+/// `MatchRule` if one doesn't already exist, and applies every automatic
+/// rule match that falls out of that — pushing every resulting event onto
+/// `events`. Returns how many rule matches were applied.
+///
+/// Shared by [`tag_transaction`] and [`resolve_transfer_pair`] so both can
+/// wrap it in their own single `load`/`append_many`/`snapshot` instead of
+/// this reloading the aggregate itself.
+fn tag_transaction_in_memory(
+    current: &mut Budget,
+    events: &mut Vec<BudgetEvent>,
+    tx_id: Uuid,
+    tag_id: Uuid,
+) -> Result<usize, RustyError> {
+    let tag_ev = current.do_transaction_tagged(tx_id, tag_id)?;
+    tag_ev.apply(current);
+    events.push(tag_ev.into());
+
+    let tx = current.get_transaction(tx_id).ok_or(RustyError::ItemNotFound(
+        tx_id.to_string(),
+        "Transaction not found".to_string(),
+    ))?;
+    let transaction_key = MatchRule::create_transaction_key(tx);
+    let rule_exists = current
+        .match_rules
+        .iter()
+        .any(|r| r.transaction_key == transaction_key && r.tag_id == Some(tag_id));
+    if !rule_exists {
+        let rule_ev = current.add_rule(transaction_key, Vec::new(), true, Some(tag_id))?;
+        rule_ev.apply(current);
+        events.push(rule_ev.into());
+    }
+
+    Ok(apply_automatic_rule_matches(current, events))
+}
+
+/// Resolves one potential-transfer pair: tags (savings) or ignores
+/// (internal transfer) the outgoing leg, ignores the incoming leg, and — new
+/// — learns a [`crate::models::TransferRule`] from the pair's accounts and
+/// descriptions, so a future matching pair can be suggested via
+/// [`Budget::suggested_transfer_resolutions`] instead of resolved by hand
+/// again. Skips learning if an identical rule already exists.
+///
+/// All of this happens against a single in-memory load, one
+/// `append_many`/`snapshot` — resolving 764 pairs by hand used to cost two
+/// full reloads each (one via `tag_transaction`/`ignore_transaction`, one
+/// via the other); now it's one, plus this no longer does its learning as a
+/// separate step either.
 pub async fn resolve_transfer_pair(
     user_id: Uuid,
     budget_id: Uuid,
@@ -518,13 +566,92 @@ pub async fn resolve_transfer_pair(
     incoming_tx_id: Uuid,
     tag_id: Option<Uuid>,
 ) -> Result<Uuid, RustyError> {
+    let rt = runtime().await;
+    let mut current = rt.load(budget_id).await?;
+    let mut events: Vec<BudgetEvent> = Vec::new();
+
     if let Some(tag_id) = tag_id {
-        tag_transaction(user_id, budget_id, outgoing_tx_id, tag_id).await?;
+        tag_transaction_in_memory(&mut current, &mut events, outgoing_tx_id, tag_id)?;
     } else {
-        ignore_transaction(budget_id, user_id, outgoing_tx_id).await?;
+        let ignore_ev = current.ignore_transaction(outgoing_tx_id)?;
+        ignore_ev.apply(&mut current);
+        events.push(ignore_ev.into());
     }
-    ignore_transaction(budget_id, user_id, incoming_tx_id).await?;
+
+    let ignore_in_ev = current.ignore_transaction(incoming_tx_id)?;
+    ignore_in_ev.apply(&mut current);
+    events.push(ignore_in_ev.into());
+
+    if let (Some(out_tx), Some(in_tx)) = (
+        current.get_transaction(outgoing_tx_id),
+        current.get_transaction(incoming_tx_id),
+    ) {
+        let outgoing_account = out_tx.account_number.clone();
+        let incoming_account = in_tx.account_number.clone();
+        let outgoing_key = MatchRule::create_transaction_key(out_tx);
+        let incoming_key = MatchRule::create_transaction_key(in_tx);
+        if let Ok(rule_ev) = current.add_transfer_rule(
+            outgoing_account,
+            incoming_account,
+            outgoing_key,
+            incoming_key,
+            tag_id,
+        ) {
+            rule_ev.apply(&mut current);
+            events.push(rule_ev.into());
+        }
+    }
+
+    rt.append_many(user_id, events).await?;
+    rt.snapshot(&current).await?;
     Ok(budget_id)
+}
+
+/// Resolves every potential-transfer pair that currently matches a learned
+/// [`crate::models::TransferRule`] (see
+/// [`Budget::suggested_transfer_resolutions`]) — the "confirm all
+/// suggestions" bulk action, mirroring [`confirm_tag_suggestions`] for tags.
+/// Doesn't learn any new rules; these matches already came from existing
+/// ones.
+pub async fn confirm_transfer_suggestions(user_id: Uuid, budget_id: Uuid) -> Result<usize, RustyError> {
+    let rt = runtime().await;
+    let mut current = rt.load(budget_id).await?;
+    let matches = current.suggested_transfer_resolutions();
+
+    let mut events: Vec<BudgetEvent> = Vec::new();
+    let mut applied = 0;
+    for (out_id, in_id, tag_id) in matches {
+        let result = if let Some(tag_id) = tag_id {
+            tag_transaction_in_memory(&mut current, &mut events, out_id, tag_id).map(|_| ())
+        } else {
+            current
+                .ignore_transaction(out_id)
+                .map(|ev| {
+                    ev.apply(&mut current);
+                    events.push(ev.into());
+                })
+                .map_err(RustyError::from)
+        };
+        if let Err(e) = result {
+            error!(error = %e, "Could not resolve suggested transfer pair {}/{}", out_id, in_id);
+            continue;
+        }
+        match current.ignore_transaction(in_id) {
+            Ok(ev) => {
+                ev.apply(&mut current);
+                events.push(ev.into());
+                applied += 1;
+            }
+            Err(e) => error!(error = %e, "Could not ignore incoming leg {} of suggested transfer pair", in_id),
+        }
+    }
+
+    if !events.is_empty() {
+        rt.append_many(user_id, events).await?;
+        rt.snapshot(&current).await?;
+    }
+    info!("confirm_transfer_suggestions: applied {applied} suggestions");
+    Ok(applied)
 }
 
 /// Applies every rule match currently found by [`Budget::evaluate_tag_rules`]
@@ -566,28 +693,7 @@ pub async fn tag_transaction(
     let mut current = rt.load(budget_id).await?;
     let mut events: Vec<BudgetEvent> = Vec::new();
 
-    let tag_ev = current.do_transaction_tagged(tx_id, tag_id)?;
-    tag_ev.apply(&mut current);
-    events.push(tag_ev.into());
-    tracing::info!("[perf] tag_transaction/tag_event: {:?}", t.elapsed());
-
-    let tx = current.get_transaction(tx_id).ok_or(RustyError::ItemNotFound(
-        tx_id.to_string(),
-        "Transaction not found".to_string(),
-    ))?;
-    let transaction_key = MatchRule::create_transaction_key(tx);
-    let rule_exists = current
-        .match_rules
-        .iter()
-        .any(|r| r.transaction_key == transaction_key && r.tag_id == Some(tag_id));
-    if !rule_exists {
-        let rule_ev = current.add_rule(transaction_key, Vec::new(), true, Some(tag_id))?;
-        rule_ev.apply(&mut current);
-        events.push(rule_ev.into());
-        tracing::info!("[perf] tag_transaction/add_rule: {:?}", t.elapsed());
-    }
-
-    let applied = apply_automatic_rule_matches(&mut current, &mut events);
+    let applied = tag_transaction_in_memory(&mut current, &mut events, tx_id, tag_id)?;
 
     rt.append_many(user_id, events).await?;
     rt.snapshot(&current).await?;

@@ -8,10 +8,33 @@ use dioxus::logger::tracing;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+/// The resolution a learned [`crate::models::TransferRule`] implies for a
+/// potential transfer pair, carrying the correctly-oriented transaction ids
+/// to replay it with — `potential_internal_transfers` doesn't guarantee
+/// which side of a pair it lists first, so this can't be assumed to match
+/// `TransferPair::outgoing`/`incoming`.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum TransferSuggestion {
+    InternalTransfer {
+        outgoing_tx_id: Uuid,
+        incoming_tx_id: Uuid,
+    },
+    Savings {
+        outgoing_tx_id: Uuid,
+        incoming_tx_id: Uuid,
+        tag_id: Uuid,
+        tag_name: String,
+    },
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct TransferPair {
     pub outgoing: TransactionViewModel,
     pub incoming: TransactionViewModel,
+    /// Set when a previously learned transfer pattern recognizes this pair,
+    /// so the UI can offer a one-click confirm instead of asking the user to
+    /// pick a resolution from scratch again.
+    pub suggested_resolution: Option<TransferSuggestion>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -26,6 +49,9 @@ pub struct BudgetViewModel {
     pub ignored_transactions: Vec<TransactionViewModel>,
     pub potential_transfers: Vec<TransferPair>,
     pub potential_transfer_count: usize,
+    /// How many of `potential_transfer_count` match a learned transfer
+    /// pattern and can be resolved with one click (or via "confirm all").
+    pub suggested_transfer_count: usize,
     pub currency: Currency,
     pub tags: Vec<Tag>,
     pub match_rules: Vec<MatchRule>,
@@ -98,15 +124,35 @@ impl BudgetViewModel {
             .map(|tx| TransactionViewModel::from_transaction(tx))
             .collect::<Vec<_>>();
         let t_transfers = std::time::Instant::now();
-        let all_transfer_pairs: Vec<TransferPair> = budget
+        let mut all_transfer_pairs: Vec<TransferPair> = budget
             .potential_internal_transfers()
             .into_iter()
             .filter_map(|(out_id, in_id)| {
                 let out_tx = budget.get_transaction(out_id)?;
                 let in_tx = budget.get_transaction(in_id)?;
+                let suggested_resolution = budget.transfer_rules.iter().find_map(|rule| {
+                    let (outgoing_tx_id, incoming_tx_id) = rule.matches_pair(out_tx, in_tx)?;
+                    Some(match rule.tag_id {
+                        Some(tag_id) => TransferSuggestion::Savings {
+                            outgoing_tx_id,
+                            incoming_tx_id,
+                            tag_id,
+                            tag_name: budget
+                                .tags
+                                .iter()
+                                .find(|t| t.id == tag_id)
+                                .map_or_else(String::new, |t| t.name.clone()),
+                        },
+                        None => TransferSuggestion::InternalTransfer {
+                            outgoing_tx_id,
+                            incoming_tx_id,
+                        },
+                    })
+                });
                 Some(TransferPair {
                     outgoing: TransactionViewModel::from_transaction(out_tx),
                     incoming: TransactionViewModel::from_transaction(in_tx),
+                    suggested_resolution,
                 })
             })
             .collect();
@@ -120,6 +166,13 @@ impl BudgetViewModel {
             t_transfers.elapsed()
         );
         let potential_transfer_count = all_transfer_pairs.len();
+        let suggested_transfer_count = all_transfer_pairs
+            .iter()
+            .filter(|p| p.suggested_resolution.is_some())
+            .count();
+        // Surface suggested pairs first so they aren't buried in the
+        // capped-to-10 page by pairs with no learned pattern yet.
+        all_transfer_pairs.sort_by_key(|p| p.suggested_resolution.is_none());
         let potential_transfers = all_transfer_pairs.into_iter().take(10).collect::<Vec<_>>();
 
         // Compute overviews from BudgetItemViewModels (which have tag-based actual amounts)
@@ -241,6 +294,7 @@ impl BudgetViewModel {
             ignored_transactions,
             potential_transfers,
             potential_transfer_count,
+            suggested_transfer_count,
             currency: budget.currency,
             tags: budget.tags.clone(),
             match_rules,

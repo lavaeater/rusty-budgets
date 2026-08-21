@@ -1,6 +1,6 @@
 use crate::cqrs::framework::Aggregate;
 use crate::cqrs::framework::DomainEvent;
-use crate::events::{BudgetCreated, ItemAdded, ActualAdded, TransactionAdded, TransactionConnected, TransactionIgnored, BudgetedFundsReallocated, ActualBudgetedFundsAdjusted, ItemModified, ActualModified, RuleAdded, AllocationCreated, AllocationDeleted, BankAccountCreated, TagCreated, TagModified, TagClassified, CarryoverConfigured, TransactionTagged, TransactionUntagged, RuleModified, RuleDeleted, ItemBufferSet, TransferPairRejected};
+use crate::events::{BudgetCreated, ItemAdded, ActualAdded, TransactionAdded, TransactionConnected, TransactionIgnored, BudgetedFundsReallocated, ActualBudgetedFundsAdjusted, ItemModified, ActualModified, RuleAdded, AllocationCreated, AllocationDeleted, BankAccountCreated, TagCreated, TagModified, TagClassified, CarryoverConfigured, TransactionTagged, TransactionUntagged, RuleModified, RuleDeleted, ItemBufferSet, TransferPairRejected, TransferRuleAdded};
 use crate::models::budget_item::{BudgetItem, Periodicity};
 use crate::models::budget_period::RuleMatch;
 use crate::models::budget_period_id::PeriodId;
@@ -9,7 +9,7 @@ use crate::models::money::{Currency, Money};
 use crate::models::rule_packages::RulePackages;
 use crate::models::{
     ActualItem, BankAccount, BankTransaction, BudgetPeriod, MatchRule, Matching, MonthBeginsOn, Tag,
-    TransactionAllocation,
+    TransactionAllocation, TransferRule,
 };
 use crate::pub_events_enum;
 use crate::view_models::{BudgetingTypeOverview, TagSummary};
@@ -50,6 +50,7 @@ pub_events_enum! {
         RuleDeleted,
         ItemBufferSet,
         TransferPairRejected,
+        TransferRuleAdded,
     }
 }
 
@@ -79,6 +80,11 @@ pub struct Budget {
     pub tags: Vec<Tag>,
     #[serde(default)]
     pub rejected_transfer_pairs: HashSet<(Uuid, Uuid)>,
+    /// Learned patterns for recurring internal-transfer pairs, created
+    /// whenever the user resolves a [`Self::potential_internal_transfers`]
+    /// pair by hand. See [`Self::suggested_transfer_resolutions`].
+    #[serde(default)]
+    pub transfer_rules: HashSet<TransferRule>,
     /// First period whose category balances carry forward. `None` disables
     /// carryover — the pre-existing behaviour, and the default for budgets
     /// whose snapshots predate this field.
@@ -736,6 +742,29 @@ impl Budget {
             }
         }
         pairs
+    }
+
+    /// Potential transfer pairs (see [`Self::potential_internal_transfers`])
+    /// that also match a previously learned [`TransferRule`], paired with
+    /// the resolution that rule implies — `(outgoing_id, incoming_id,
+    /// tag_id)`, in the same shape `resolve_transfer_pair` expects.
+    ///
+    /// Always a **suggestion**: the caller decides whether to show it for
+    /// confirmation or apply it via a bulk "confirm all" action — this never
+    /// resolves anything on its own, since it moves money between
+    /// accounts/tags.
+    pub fn suggested_transfer_resolutions(&self) -> Vec<(Uuid, Uuid, Option<Uuid>)> {
+        self.potential_internal_transfers()
+            .into_iter()
+            .filter_map(|(a_id, b_id)| {
+                let a = self.get_transaction(a_id)?;
+                let b = self.get_transaction(b_id)?;
+                self.transfer_rules.iter().find_map(|rule| {
+                    rule.matches_pair(a, b)
+                        .map(|(out_id, in_id)| (out_id, in_id, rule.tag_id))
+                })
+            })
+            .collect()
     }
 
     pub fn evaluate_rules(&self) -> Vec<RuleMatch> {

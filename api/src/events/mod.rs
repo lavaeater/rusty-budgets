@@ -22,6 +22,7 @@ mod transaction_ignored;
 mod transaction_tagged;
 mod transaction_untagged;
 mod transfer_pair_rejected;
+mod transfer_rule_added;
 
 pub use actual_added::ActualAdded;
 pub use actual_funds_adjusted::ActualBudgetedFundsAdjusted;
@@ -47,3 +48,4 @@ pub use transaction_ignored::TransactionIgnored;
 pub use transaction_tagged::TransactionTagged;
 pub use transaction_untagged::TransactionUntagged;
 pub use transfer_pair_rejected::TransferPairRejected;
+pub use transfer_rule_added::TransferRuleAdded;

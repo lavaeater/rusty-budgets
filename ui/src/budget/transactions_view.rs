@@ -3,9 +3,11 @@ use crate::budget::{ItemSelector, NewBudgetItem};
 use crate::{Button, ButtonVariant, Input, PopoverContent, PopoverRoot, PopoverTrigger};
 use api::models::{BudgetingType, Periodicity};
 use api::view_models::{
-    AllocationViewModel, BudgetItemViewModel, TransactionViewModel, TransferPair,
+    AllocationViewModel, BudgetItemViewModel, TransactionViewModel, TransferPair, TransferSuggestion,
 };
-use api::{connect_transaction, reject_transfer_pair, resolve_transfer_pair};
+use api::{
+    confirm_transfer_suggestions, connect_transaction, reject_transfer_pair, resolve_transfer_pair,
+};
 use dioxus::prelude::*;
 use uuid::Uuid;
 
@@ -290,6 +292,9 @@ pub fn TransferPairsView() -> Element {
     let budget = budget_signal();
     let pairs = budget.potential_transfers.clone();
     let total_count = budget.potential_transfer_count;
+    let suggested_count = budget.suggested_transfer_count;
+    let budget_id = budget.id;
+    let period_id = budget.period_id;
 
     if pairs.is_empty() {
         return rsx! {};
@@ -302,6 +307,22 @@ pub fn TransferPairsView() -> Element {
                 span { class: "transaction-count", "({total_count})" }
                 if total_count > pairs.len() {
                     span { class: "transaction-count", " — visar {pairs.len()} av {total_count}" }
+                }
+            }
+            if suggested_count > 0 {
+                div { class: "transfer-suggestions-bar",
+                    span { class: "transaction-count",
+                        "{suggested_count} matchar ett tidigare mönster"
+                    }
+                    Button {
+                        r#type: "button",
+                        onclick: move |_| async move {
+                            if let Ok(bv) = confirm_transfer_suggestions(budget_id, period_id).await {
+                                consume_context::<BudgetState>().0.set(bv);
+                            }
+                        },
+                        "Bekräfta alla föreslagna"
+                    }
                 }
             }
             div { class: "transactions-list",
@@ -351,6 +372,47 @@ fn TransferPairCard(pair: TransferPair) -> Element {
                     }
                     span { class: "transaction-amount positive", {pair.incoming.amount.to_string()} }
                     span { class: "transfer-account", {pair.incoming.account_number.clone()} }
+                }
+            }
+
+            if let Some(suggestion) = pair.suggested_resolution.clone() {
+                div { class: "transfer-suggestion",
+                    span { class: "transfer-suggestion-label",
+                        {
+                            match &suggestion {
+                                TransferSuggestion::InternalTransfer { .. } => {
+                                    "Förslag: intern överföring (float)".to_string()
+                                }
+                                TransferSuggestion::Savings { tag_name, .. } => {
+                                    format!("Förslag: sparande → {tag_name}")
+                                }
+                            }
+                        }
+                    }
+                    Button {
+                        r#type: "button",
+                        onclick: move |_| {
+                            let suggestion = suggestion.clone();
+                            async move {
+                                let budget_id = budget_signal().id;
+                                let period_id = budget_signal().period_id;
+                                let (out_id, in_id, tag_id) = match suggestion {
+                                    TransferSuggestion::InternalTransfer { outgoing_tx_id, incoming_tx_id } => {
+                                        (outgoing_tx_id, incoming_tx_id, None)
+                                    }
+                                    TransferSuggestion::Savings { outgoing_tx_id, incoming_tx_id, tag_id, .. } => {
+                                        (outgoing_tx_id, incoming_tx_id, Some(tag_id))
+                                    }
+                                };
+                                if let Ok(bv) =
+                                    resolve_transfer_pair(budget_id, out_id, in_id, tag_id, period_id).await
+                                {
+                                    consume_context::<BudgetState>().0.set(bv);
+                                }
+                            }
+                        },
+                        "Bekräfta förslag"
+                    }
                 }
             }
 

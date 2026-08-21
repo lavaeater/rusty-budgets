@@ -16,7 +16,7 @@ pub mod value_kind;
 pub use allocation_view_model::AllocationViewModel;
 pub use budget_item_status::BudgetItemStatus;
 pub use budget_item_view_model::BudgetItemViewModel;
-pub use budget_view_model::{BudgetViewModel, TransferPair};
+pub use budget_view_model::{BudgetViewModel, TransferPair, TransferSuggestion};
 pub use budgeting_type_overview::BudgetingTypeOverview;
 pub use period_summary::PeriodSummary;
 pub use rule::Rule;

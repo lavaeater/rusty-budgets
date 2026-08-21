@@ -437,6 +437,20 @@ pub async fn resolve_transfer_pair(
     Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }
 
+/// Resolves every potential-transfer pair currently matching a learned
+/// transfer pattern (see `TransferPair::suggested_resolution`) — the "confirm
+/// all suggestions" bulk action for transfer pairs, mirroring
+/// `confirm_tag_suggestions` for tags.
+#[server(endpoint = "confirm_transfer_suggestions")]
+pub async fn confirm_transfer_suggestions(
+    budget_id: Uuid,
+    period_id: PeriodId,
+) -> ServerFnResult<BudgetViewModel> {
+    let user = db::get_default_user().await?;
+    db::confirm_transfer_suggestions(user.id, budget_id).await?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
+}
+
 #[server(endpoint = "get_unbudgeted_tag_summaries")]
 pub async fn get_unbudgeted_tag_summaries(budget_id: Uuid) -> ServerFnResult<Vec<TagSummary>> {
     use std::collections::HashSet;

@@ -1441,6 +1441,50 @@ pub fn resolve_transfer_pair_savings_tags_outgoing_ignores_incoming() -> Result<
     Ok(())
 }
 
+#[test]
+pub fn transfer_rule_suggests_matching_future_pair() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let budget_id = rt.create_budget(user_id, "T", true, MonthBeginsOn::default(), Currency::SEK)?;
+    let savings_tag = rt.create_tag(user_id, budget_id, "Buffert".to_string(), Periodicity::Monthly)?;
+
+    // First occurrence: resolved by hand as a savings contribution, which
+    // should teach the budget a TransferRule for this account/description
+    // pattern.
+    let out1 = rt.add_transaction(user_id, budget_id, "accA", Money::new_dollars(-1000, Currency::SEK), Money::new_dollars(9000, Currency::SEK), "Överföring till sparkonto", at(2025, 6, 10))?;
+    let in1 = rt.add_transaction(user_id, budget_id, "accB", Money::new_dollars(1000, Currency::SEK), Money::new_dollars(11000, Currency::SEK), "Insättning sparkonto", at(2025, 6, 11))?;
+    rt.tag_transaction(user_id, budget_id, out1, savings_tag)?;
+    rt.ignore_transaction(budget_id, in1, user_id)?;
+
+    let budget = rt.load(budget_id)?;
+    let out_tx = budget.get_transaction(out1).unwrap();
+    let in_tx = budget.get_transaction(in1).unwrap();
+    rt.execute(user_id, budget_id, |b| {
+        b.add_transfer_rule(
+            out_tx.account_number.clone(),
+            in_tx.account_number.clone(),
+            MatchRule::create_transaction_key(out_tx),
+            MatchRule::create_transaction_key(in_tx),
+            Some(savings_tag),
+        )
+        .map(Into::into)
+    })?;
+
+    // Second occurrence next month: same accounts/description, different
+    // amount and date — should be recognized without being resolved yet.
+    let out2 = rt.add_transaction(user_id, budget_id, "accA", Money::new_dollars(-1200, Currency::SEK), Money::new_dollars(8000, Currency::SEK), "Överföring till sparkonto", at(2025, 7, 10))?;
+    let in2 = rt.add_transaction(user_id, budget_id, "accB", Money::new_dollars(1200, Currency::SEK), Money::new_dollars(12000, Currency::SEK), "Insättning sparkonto", at(2025, 7, 11))?;
+
+    let budget = rt.load(budget_id)?;
+    let suggestions = budget.suggested_transfer_resolutions();
+    assert_eq!(suggestions.len(), 1);
+    let (sug_out, sug_in, sug_tag) = suggestions[0];
+    assert_eq!(sug_out, out2);
+    assert_eq!(sug_in, in2);
+    assert_eq!(sug_tag, Some(savings_tag));
+    Ok(())
+}
+
 // ============================================================================
 // Event-store durability: replay + serde round-trip after many commands.
 // ============================================================================
