@@ -389,6 +389,12 @@
     gap: 12px;
 }
 
+.settings-hint {
+    margin: 0 0 12px 0;
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
 @media (max-width: 640px) {
     .workspace-tab-list .tabs-trigger {
         padding: 10px 12px;

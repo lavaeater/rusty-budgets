@@ -1165,6 +1165,11 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
     }
 }
 
+/// Rows per delete/insert batch in `PgRuntime::snapshot`'s transaction sync,
+/// comfortably under Postgres's 65535-bind-parameter-per-statement limit.
+#[cfg(feature = "server")]
+const TRANSACTION_SYNC_CHUNK_SIZE: usize = 1000;
+
 #[cfg(feature = "server")]
 impl AsyncRuntime<Budget, BudgetEvent> for PgRuntime {
     async fn load(
@@ -1274,11 +1279,18 @@ impl AsyncRuntime<Budget, BudgetEvent> for PgRuntime {
             }
         }
 
-        if !changed_ids.is_empty() {
-            PgBankTransaction::where_col(|t| t.id.in_list(&changed_ids))
+        // Chunked, and every delete is scoped to `agg.id` as well as the
+        // touched ids — never just the id. Transaction ids are otherwise
+        // globally unique in this table, but scoping by budget as well means
+        // a bug elsewhere (e.g. an id collision from importing a budget that
+        // forgot to remint transaction ids) can corrupt at most this budget's
+        // own rows, never another budget's.
+        for (id_chunk, row_chunk) in changed_ids.chunks(TRANSACTION_SYNC_CHUNK_SIZE).zip(changed_rows.chunks(TRANSACTION_SYNC_CHUNK_SIZE)) {
+            PgBankTransaction::where_col(|t| t.budget_id.equal(agg.id))
+                .where_col(|t| t.id.in_list(id_chunk))
                 .delete(self.client.as_ref())
                 .await?;
-            welds::query::insert::bulk_insert_with_ids(self.client.as_ref(), &changed_rows).await?;
+            welds::query::insert::bulk_insert_with_ids(self.client.as_ref(), row_chunk).await?;
         }
 
         Ok(())

@@ -968,6 +968,33 @@ pub async fn import_tags_and_rules(
     Ok(summary)
 }
 
+/// Dumps an entire budget — accounts, tags, match rules, transfer rules,
+/// items, periods, and every transaction — as a JSON string, for the user
+/// to save to a file and later restore with [`import_budget`] on this or
+/// any other instance of the app.
+pub async fn export_budget(budget_id: Uuid) -> Result<String, RustyError> {
+    let budget = get_budget(budget_id).await?;
+    Ok(serde_json::to_string_pretty(&budget)?)
+}
+
+/// Restores a JSON dump produced by [`export_budget`] as a brand new budget
+/// for `user_id` — never merged into an existing budget. Becomes the user's
+/// default budget only if they don't already have one (so importing into an
+/// instance that already has an active budget can't silently swap it out).
+pub async fn import_budget(user_id: Uuid, json: &str) -> Result<Uuid, RustyError> {
+    let parsed: Budget = serde_json::from_str(json)?;
+    let budget = crate::budget_export::prepare_imported_budget(parsed, user_id);
+    let rt = runtime().await;
+    let make_default = rt.get_default_budget(user_id).await.is_err();
+    rt.snapshot(&budget).await?;
+    rt.add_budget_to_user(user_id, budget.id, make_default).await?;
+    info!(
+        "import_budget: created budget {} for user {} (default: {})",
+        budget.id, user_id, make_default
+    );
+    Ok(budget.id)
+}
+
 pub async fn set_item_buffer(
     user_id: Uuid,
     budget_id: Uuid,

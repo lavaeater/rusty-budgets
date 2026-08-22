@@ -13,6 +13,7 @@ pub mod errors;
 pub mod import;
 #[cfg(feature = "server")]
 pub mod migrations;
+pub mod budget_export;
 pub mod rules_export;
 #[cfg(feature = "server")]
 pub mod pg_models;
@@ -552,4 +553,25 @@ pub async fn import_tags_and_rules(
     db::import_tags_and_rules(user.id, budget_id, &json).await?;
     db::evaluate_tag_rules(user.id, budget_id).await?;
     Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
+}
+
+/// Dumps an entire budget — accounts, tags, match rules, transfer rules,
+/// items, periods, and every transaction — as a JSON string, so the user
+/// can save it to a file and later restore it with [`import_budget`] on
+/// this or any other instance of the app.
+#[server(endpoint = "export_budget")]
+pub async fn export_budget(budget_id: Uuid) -> ServerFnResult<String> {
+    Ok(db::export_budget(budget_id).await?)
+}
+
+/// Restores a JSON dump produced by [`export_budget`] as a brand new budget
+/// for the current user — never merged into an existing budget. Returns the
+/// new budget's id.
+#[server(endpoint = "import_budget")]
+pub async fn import_budget(file_contents: Vec<u8>) -> ServerFnResult<Uuid> {
+    let user = db::get_default_user().await?;
+    let json = String::from_utf8(file_contents).map_err(|_| {
+        RustyError::GenericError("Budget file is not valid UTF-8".to_string())
+    })?;
+    Ok(db::import_budget(user.id, &json).await?)
 }

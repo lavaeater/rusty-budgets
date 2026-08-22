@@ -161,3 +161,54 @@ async fn snapshot_keeps_the_budgets_blob_small() -> Result<(), RustyError> {
     cleanup(rt.client(), budget_id).await;
     Ok(())
 }
+
+#[tokio::test]
+#[ignore = "one-off: verifies full budget export/import against the production budget"]
+async fn full_budget_export_import_round_trips_production_data() -> Result<(), RustyError> {
+    let rt = create_runtime().await;
+    let source_budget_id = Uuid::parse_str("73d06c2b-8be8-43f0-a884-ae71de735657").unwrap();
+    let fake_user_id = Uuid::new_v4();
+
+    let json = api::db::export_budget(source_budget_id).await?;
+    let new_budget_id = api::db::import_budget(fake_user_id, &json).await?;
+
+    let source = rt.load(source_budget_id).await?;
+    let imported = rt.load(new_budget_id).await?;
+
+    let source_tx_count: usize = source.periods.iter().map(|p| p.transactions.len()).sum();
+    let imported_tx_count: usize = imported.periods.iter().map(|p| p.transactions.len()).sum();
+    println!(
+        "source: {} periods, {} transactions, {} tags, {} rules, {} transfer rules",
+        source.periods.len(), source_tx_count, source.tags.len(), source.match_rules.len(), source.transfer_rules.len()
+    );
+    println!(
+        "imported: {} periods, {} transactions, {} tags, {} rules, {} transfer rules",
+        imported.periods.len(), imported_tx_count, imported.tags.len(), imported.match_rules.len(), imported.transfer_rules.len()
+    );
+    assert_eq!(imported_tx_count, source_tx_count);
+    assert_eq!(imported.periods.len(), source.periods.len());
+    assert_eq!(imported.tags.len(), source.tags.len());
+    assert_eq!(imported.match_rules.len(), source.match_rules.len());
+    assert_eq!(imported.transfer_rules.len(), source.transfer_rules.len());
+    assert_ne!(imported.id, source.id);
+    assert_eq!(imported.user_id, fake_user_id);
+    assert!(!imported.default_budget);
+
+    // Transaction ids must never collide with the source's — that's the
+    // actual bug this whole test exists to catch.
+    let source_ids: std::collections::HashSet<Uuid> =
+        source.periods.iter().flat_map(|p| p.transactions.iter().map(|t| t.id)).collect();
+    let imported_ids: std::collections::HashSet<Uuid> =
+        imported.periods.iter().flat_map(|p| p.transactions.iter().map(|t| t.id)).collect();
+    assert!(
+        source_ids.is_disjoint(&imported_ids),
+        "imported transaction ids must never collide with the source budget's"
+    );
+
+    cleanup(rt.client(), new_budget_id).await;
+    let _ = api::pg_models::PgUserBudgets::where_col(|b| b.id.equal(fake_user_id))
+        .delete(rt.client())
+        .await;
+    Ok(())
+}
+

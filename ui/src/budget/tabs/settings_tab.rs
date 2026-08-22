@@ -4,8 +4,8 @@ use crate::file_chooser::{FileData, FileDialog};
 use crate::Button;
 use api::models::{MonthBeginsOn, PeriodId};
 use api::{
-    auto_budget_all, auto_budget_period, export_tags_and_rules, import_tags_and_rules,
-    import_transactions_bytes,
+    auto_budget_all, auto_budget_period, export_budget, export_tags_and_rules, import_budget,
+    import_tags_and_rules, import_transactions_bytes,
 };
 use chrono::Utc;
 use dioxus::logger::tracing::info;
@@ -64,6 +64,45 @@ pub fn SettingsTab() -> Element {
             {
                 info!("Rules import went well and we update the context bro");
                 consume_context::<BudgetState>().0.set(updated_budget);
+            }
+        });
+    };
+
+    let mut budget_import_status: Signal<Option<String>> = use_signal(|| None);
+
+    let export_budget_click = move |_| {
+        spawn(async move {
+            let Ok(json) = export_budget(budget_id).await else {
+                info!("Failed to export budget");
+                return;
+            };
+            let handle = rfd::AsyncFileDialog::new()
+                .set_title("Spara hela budgeten")
+                .set_file_name("budget-export.json")
+                .save_file()
+                .await;
+            if let Some(handle) = handle
+                && let Err(e) = handle.write(json.as_bytes()).await
+            {
+                info!("Failed to save budget export: {}", e);
+            }
+        });
+    };
+
+    let import_budget_file = move |file: FileData| {
+        let contents = file.contents;
+        spawn(async move {
+            if contents.is_empty() {
+                return;
+            }
+            match import_budget(contents).await {
+                Ok(_) => budget_import_status.set(Some(
+                    "Budgeten importerades. Starta om appen för att se den, om den inte redan visas.".to_string(),
+                )),
+                Err(e) => {
+                    info!("Failed to import budget: {}", e);
+                    budget_import_status.set(Some("Kunde inte importera budgeten.".to_string()));
+                }
             }
         });
     };
@@ -132,6 +171,28 @@ pub fn SettingsTab() -> Element {
                         filter_name: "JSON",
                         filter_extensions: vec!["json".to_string()],
                     }
+                }
+            }
+
+            section { class: "settings-section",
+                h3 { class: "settings-section-title", "Exportera / importera hela budgeten" }
+                p { class: "settings-hint",
+                    "En fullständig kopia av budgeten — konton, taggar, regler, budgetposter, "
+                    "perioder och alla transaktioner — för att flytta den till en annan instans "
+                    "av appen. Import skapar alltid en ny budget, den ersätter aldrig en befintlig."
+                }
+                div { class: "settings-tools",
+                    Button { class: "primary", onclick: export_budget_click, "Exportera till fil" }
+                    FileDialog {
+                        on_chosen: import_budget_file,
+                        label: "Importera från fil",
+                        title: "Välj en JSON-fil med en hel budget",
+                        filter_name: "JSON",
+                        filter_extensions: vec!["json".to_string()],
+                    }
+                }
+                if let Some(status) = budget_import_status() {
+                    p { class: "settings-hint", "{status}" }
                 }
             }
         }
