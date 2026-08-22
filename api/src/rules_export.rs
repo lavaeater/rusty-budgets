@@ -15,6 +15,10 @@ use std::collections::HashMap;
 pub struct RulesExport {
     pub tags: Vec<TagExport>,
     pub rules: Vec<RuleExport>,
+    /// Absent from exports written before this field existed; imports of
+    /// those files simply carry no transfer rules.
+    #[serde(default)]
+    pub transfer_rules: Vec<TransferRuleExport>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -31,6 +35,20 @@ pub struct RuleExport {
     pub transaction_key: Vec<String>,
     pub item_key: Vec<String>,
     pub always_apply: bool,
+}
+
+/// A learned [`crate::models::TransferRule`] pattern, portable across budgets
+/// the same way as [`RuleExport`]: the tag is carried by name and re-resolved
+/// against the target budget's tags on import.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TransferRuleExport {
+    pub outgoing_account: String,
+    pub incoming_account: String,
+    pub outgoing_key: Vec<String>,
+    pub incoming_key: Vec<String>,
+    /// `None` replays as a plain internal transfer; `Some` as a savings
+    /// contribution tagged with the named tag.
+    pub tag_name: Option<String>,
 }
 
 /// Deleted tags aren't exported: they exist only to keep historical
@@ -66,7 +84,23 @@ pub fn export_tags_and_rules(budget: &Budget) -> RulesExport {
         })
         .collect();
 
-    RulesExport { tags, rules }
+    let transfer_rules = budget
+        .transfer_rules
+        .iter()
+        .map(|r| TransferRuleExport {
+            outgoing_account: r.outgoing_account.clone(),
+            incoming_account: r.incoming_account.clone(),
+            outgoing_key: r.outgoing_key.clone(),
+            incoming_key: r.incoming_key.clone(),
+            tag_name: r.tag_id.and_then(|id| live_tag_name_by_id.get(&id).cloned()),
+        })
+        .collect();
+
+    RulesExport {
+        tags,
+        rules,
+        transfer_rules,
+    }
 }
 
 /// Outcome of applying a [`RulesExport`] onto a budget.
@@ -76,6 +110,8 @@ pub struct ImportSummary {
     pub tags_reused: usize,
     pub rules_created: usize,
     pub rules_skipped: usize,
+    pub transfer_rules_created: usize,
+    pub transfer_rules_skipped: usize,
 }
 
 /// Applies `export` to `current` **in memory**: creates any tag that doesn't
@@ -140,6 +176,34 @@ pub fn apply_rules_export(
         }
     }
 
+    for rule in &export.transfer_rules {
+        let tag_id = match &rule.tag_name {
+            Some(name) => {
+                let Some(t) = current.get_tags().iter().find(|t| &t.name == name) else {
+                    summary.transfer_rules_skipped += 1;
+                    continue;
+                };
+                Some(t.id)
+            }
+            None => None,
+        };
+
+        match current.add_transfer_rule(
+            rule.outgoing_account.clone(),
+            rule.incoming_account.clone(),
+            rule.outgoing_key.clone(),
+            rule.incoming_key.clone(),
+            tag_id,
+        ) {
+            Ok(added) => {
+                added.apply(current);
+                events.push(added.into());
+                summary.transfer_rules_created += 1;
+            }
+            Err(_) => summary.transfer_rules_skipped += 1, // rule already exists
+        }
+    }
+
     summary
 }
 
@@ -182,6 +246,18 @@ mod tests {
             Some(tag_id),
         )
         .unwrap();
+        rt.execute(user_id, budget_id, |budget| {
+            budget
+                .add_transfer_rule(
+                    "1111".to_string(),
+                    "2222".to_string(),
+                    vec!["savings".to_string()],
+                    vec!["deposit".to_string()],
+                    Some(tag_id),
+                )
+                .map(Into::into)
+        })
+        .unwrap();
 
         let budget = rt.load(budget_id).unwrap();
         let export = export_tags_and_rules(&budget);
@@ -189,6 +265,11 @@ mod tests {
         assert_eq!(export.tags[0].name, "Electricity");
         assert_eq!(export.rules.len(), 1);
         assert_eq!(export.rules[0].tag_name.as_deref(), Some("Electricity"));
+        assert_eq!(export.transfer_rules.len(), 1);
+        assert_eq!(
+            export.transfer_rules[0].tag_name.as_deref(),
+            Some("Electricity")
+        );
 
         // Apply onto a fresh, unrelated budget.
         let target_budget_id = new_budget(&rt, user_id);
@@ -197,7 +278,8 @@ mod tests {
         let summary = apply_rules_export(&mut current, &mut events, &export);
         assert_eq!(summary.tags_created, 1);
         assert_eq!(summary.rules_created, 1);
-        assert_eq!(events.len(), 3); // TagCreated + TagClassified + RuleAdded
+        assert_eq!(summary.transfer_rules_created, 1);
+        assert_eq!(events.len(), 4); // TagCreated + TagClassified + RuleAdded + TransferRuleAdded
 
         let new_tag = current.get_tags().iter().find(|t| t.name == "Electricity").unwrap();
         assert_eq!(new_tag.cost_kind, CostKind::Recurring(Periodicity::Monthly));
@@ -206,6 +288,9 @@ mod tests {
         assert_eq!(current.match_rules.len(), 1);
         let new_rule = current.match_rules.iter().next().unwrap();
         assert_eq!(new_rule.tag_id, Some(new_tag.id));
+        assert_eq!(current.transfer_rules.len(), 1);
+        let new_transfer_rule = current.transfer_rules.iter().next().unwrap();
+        assert_eq!(new_transfer_rule.tag_id, Some(new_tag.id));
 
         // Re-applying the same export is a no-op, not a duplicate.
         let mut events2 = Vec::new();
@@ -214,6 +299,8 @@ mod tests {
         assert_eq!(summary2.tags_reused, 1);
         assert_eq!(summary2.rules_created, 0);
         assert_eq!(summary2.rules_skipped, 1);
+        assert_eq!(summary2.transfer_rules_created, 0);
+        assert_eq!(summary2.transfer_rules_skipped, 1);
         assert!(events2.is_empty());
     }
 }

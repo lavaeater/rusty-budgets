@@ -85,6 +85,7 @@ pub fn TagsView() -> Element {
                         span { "Periodicitet" }
                         span { "Budgetpost" }
                         span {}
+                        span {}
                     }
                     for tag in tags {
                         {
@@ -202,6 +203,27 @@ pub fn TagsView() -> Element {
                                                 }
                                             },
                                             "▾"
+                                        }
+
+                                        button {
+                                            class: "tags-delete-btn",
+                                            r#type: "button",
+                                            title: "Radera tagg",
+                                            onclick: move |_| async move {
+                                                if let Ok(updated) = modify_tag(
+                                                        budget_id,
+                                                        tag_id,
+                                                        None,
+                                                        None,
+                                                        Some(true),
+                                                        period_id,
+                                                    )
+                                                    .await
+                                                {
+                                                    consume_context::<BudgetState>().0.set(updated);
+                                                }
+                                            },
+                                            "×"
                                         }
                                     }
 

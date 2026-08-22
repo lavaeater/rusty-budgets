@@ -888,8 +888,14 @@ pub async fn import_tags_and_rules(
         rt.snapshot(&current).await?;
     }
     info!(
-        "import_tags_and_rules: {} tags created, {} reused, {} rules created, {} skipped",
-        summary.tags_created, summary.tags_reused, summary.rules_created, summary.rules_skipped
+        "import_tags_and_rules: {} tags created, {} reused, {} rules created, {} skipped, \
+         {} transfer rules created, {} skipped",
+        summary.tags_created,
+        summary.tags_reused,
+        summary.rules_created,
+        summary.rules_skipped,
+        summary.transfer_rules_created,
+        summary.transfer_rules_skipped
     );
     Ok(summary)
 }
