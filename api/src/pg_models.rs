@@ -72,7 +72,7 @@ pub struct PgBudget {
 /// A `BankTransaction`, stored relationally rather than embedded inline in
 /// `PgBudget.data` — see `PgRuntime::load`/`snapshot` for how this table is
 /// kept in sync with a budget's in-memory `periods[].transactions`.
-#[derive(Debug, Clone, WeldsModel, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, WeldsModel, Serialize, Deserialize)]
 #[welds(table = "transactions")]
 pub struct PgBankTransaction {
     #[welds(primary_key)]

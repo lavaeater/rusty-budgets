@@ -1244,17 +1244,41 @@ impl AsyncRuntime<Budget, BudgetEvent> for PgRuntime {
             };
         pg_budget.save(self.client.as_ref()).await?;
 
-        PgBankTransaction::where_col(|t| t.budget_id.equal(agg.id))
-            .delete(self.client.as_ref())
-            .await?;
-        let rows: Vec<PgBankTransaction> = agg
-            .periods
-            .iter()
-            .flat_map(|p| p.transactions.iter())
-            .map(|tx| PgBankTransaction::from_domain(agg.id, tx).into_inner())
-            .collect();
-        if !rows.is_empty() {
-            welds::query::insert::bulk_insert_with_ids(self.client.as_ref(), &rows).await?;
+        // Diff against what's already stored and only touch rows that
+        // actually changed. A blind delete-all-then-reinsert-all here (the
+        // first version of this) meant tagging a single transaction out of
+        // ~10k rewrote the entire table on every call — reintroducing, on
+        // the SQL side, the exact "every write pays for the whole history"
+        // problem this table was built to get off the JSON blob. Bank
+        // transactions are never hard-deleted anywhere in the domain, so a
+        // row present here but absent from `agg` can't happen — no delete
+        // path is needed for that case.
+        let existing_by_id: std::collections::HashMap<Uuid, PgBankTransaction> =
+            PgBankTransaction::where_col(|t| t.budget_id.equal(agg.id))
+                .run(self.client.as_ref())
+                .await?
+                .into_iter()
+                .map(|row| {
+                    let row = row.into_inner();
+                    (row.id, row)
+                })
+                .collect();
+
+        let mut changed_ids: Vec<Uuid> = Vec::new();
+        let mut changed_rows: Vec<PgBankTransaction> = Vec::new();
+        for tx in agg.periods.iter().flat_map(|p| p.transactions.iter()) {
+            let candidate = PgBankTransaction::from_domain(agg.id, tx).into_inner();
+            if existing_by_id.get(&tx.id) != Some(&candidate) {
+                changed_ids.push(tx.id);
+                changed_rows.push(candidate);
+            }
+        }
+
+        if !changed_ids.is_empty() {
+            PgBankTransaction::where_col(|t| t.id.in_list(&changed_ids))
+                .delete(self.client.as_ref())
+                .await?;
+            welds::query::insert::bulk_insert_with_ids(self.client.as_ref(), &changed_rows).await?;
         }
 
         Ok(())
