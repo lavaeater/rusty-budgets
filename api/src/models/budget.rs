@@ -198,6 +198,20 @@ impl Budget {
         !self.transaction_hashes.contains(tx_hash)
     }
 
+    /// Places transactions fetched from the relational `transactions` table
+    /// (see `PgRuntime::load`) back into their periods, exactly as
+    /// [`Self::insert_transaction`] does for a freshly-imported one — minus
+    /// the dedup check, since these are already-persisted rows, not new
+    /// inserts. Must run before trailing event replay so an event like
+    /// `TransactionTagged` still finds the transaction it targets.
+    pub fn load_transactions(&mut self, txs: Vec<BankTransaction>) {
+        for tx in txs {
+            self.transaction_hashes.insert(tx.get_hash());
+            let period_id = PeriodId::from_date(tx.date, self.month_begins_on);
+            self.with_period_mut(period_id).insert_transaction(tx);
+        }
+    }
+
     pub fn contains_transaction(&self, tx_id: Uuid) -> bool {
         self.periods
             .iter()

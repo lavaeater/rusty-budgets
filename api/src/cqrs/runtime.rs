@@ -5,7 +5,7 @@ use crate::cqrs::framework::{AsyncRuntime, CommandError, Runtime, StoredEvent};
 const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 use crate::models::{User, Budget, MonthBeginsOn, Currency, BudgetingType, CostKind, Matching, Money, PeriodId, Periodicity, BudgetEvent};
 #[cfg(feature = "server")]
-use crate::pg_models::{PgBudget, PgStoredBudgetEvent, PgUser, PgUserBudgets};
+use crate::pg_models::{PgBankTransaction, PgBudget, PgStoredBudgetEvent, PgUser, PgUserBudgets};
 use crate::{cqrs, models};
 use chrono::{DateTime, NaiveDate, Utc};
 use dioxus::logger::tracing;
@@ -1040,6 +1040,12 @@ impl PgRuntime {
         }
     }
 
+    /// The underlying `welds` client, for callers (e.g. integration tests)
+    /// that need to run queries `PgRuntime`'s own API doesn't expose.
+    pub fn client(&self) -> &dyn Client {
+        self.client.as_ref()
+    }
+
     async fn cmd<F, E>(&self, user_id: Uuid, id: Uuid, command: F) -> Result<Uuid, RustyError>
     where
         F: FnOnce(&Budget) -> Result<E, CommandError>,
@@ -1173,6 +1179,21 @@ impl AsyncRuntime<Budget, BudgetEvent> for PgRuntime {
             Some(pg_budget) => pg_budget.into(),
         };
 
+        // Transactions live in their own table (see `snapshot`), not inline
+        // in the JSON blob above — merge them in before replaying trailing
+        // events, so an event like `TransactionTagged` still finds its
+        // target. Harmless no-op for a legacy row whose transactions are
+        // still embedded in `data` (nothing to find in the table yet).
+        let tx_rows: Vec<PgBankTransaction> = PgBankTransaction::where_col(|t| t.budget_id.equal(id))
+            .run(self.client.as_ref())
+            .await?
+            .into_iter()
+            .map(welds::state::DbState::into_inner)
+            .collect();
+        if !tx_rows.is_empty() {
+            budget.load_transactions(tx_rows.into_iter().map(Into::into).collect());
+        }
+
         let version = budget.version;
         tracing::debug!(
             "Loaded budget has version {} and last event at {}",
@@ -1197,17 +1218,45 @@ impl AsyncRuntime<Budget, BudgetEvent> for PgRuntime {
     }
 
     async fn snapshot(&self, agg: &Budget) -> Result<(), RustyError> {
+        // Transactions are persisted separately (below) rather than embedded
+        // in this blob — strip them from a cloned copy before serializing so
+        // every snapshot write stays small regardless of transaction volume.
+        let mut slim = agg.clone();
+        for period in &mut slim.periods {
+            period.transactions.clear();
+        }
+        slim.transaction_hashes.clear();
+        let slim_data = serde_json::to_value(&slim).expect("Budget must be serializable");
+
         let mut pg_budget: DbState<PgBudget> =
             match PgBudget::find_by_id(self.client.as_ref(), agg.id).await? {
-                None => DbState::<PgBudget>::from(agg),
+                None => {
+                    let mut fresh = DbState::<PgBudget>::from(agg);
+                    fresh.data = slim_data;
+                    fresh
+                }
                 Some(mut existing) => {
                     existing.last_event = agg.last_event;
                     existing.version = agg.version;
-                    existing.data = serde_json::to_value(agg).expect("Budget must be serializable");
+                    existing.data = slim_data;
                     existing
                 }
             };
         pg_budget.save(self.client.as_ref()).await?;
+
+        PgBankTransaction::where_col(|t| t.budget_id.equal(agg.id))
+            .delete(self.client.as_ref())
+            .await?;
+        let rows: Vec<PgBankTransaction> = agg
+            .periods
+            .iter()
+            .flat_map(|p| p.transactions.iter())
+            .map(|tx| PgBankTransaction::from_domain(agg.id, tx).into_inner())
+            .collect();
+        if !rows.is_empty() {
+            welds::query::insert::bulk_insert_with_ids(self.client.as_ref(), &rows).await?;
+        }
+
         Ok(())
     }
 

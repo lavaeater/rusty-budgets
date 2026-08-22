@@ -4,6 +4,7 @@ use welds::migrations::prelude::*;
 pub async fn up(db: &dyn welds::TransactStart) -> Result<()> {
     let list: Vec<MigrationFn> = vec![
         m001_initial_schema,
+        m002_transactions_table,
     ];
     welds::migrations::up(db, list.as_slice()).await?;
     Ok(())
@@ -49,4 +50,29 @@ fn m001_initial_schema(_state: &TableState) -> Result<MigrationStep> {
                 .column(|c| c("budgets", Type::Json)),
         );
     Ok(MigrationStep::new("m001_initial_schema", steps))
+}
+
+/// `BankTransaction` rows, previously embedded inline in every
+/// `BudgetPeriod` inside the `budgets.data` blob — pulled out into their own
+/// table so an aggregate load/snapshot no longer has to move the whole
+/// transaction history on every request. See `PgRuntime::load`/`snapshot`
+/// for how this table is kept in sync.
+#[allow(clippy::unnecessary_wraps)]
+fn m002_transactions_table(_state: &TableState) -> Result<MigrationStep> {
+    let steps = Steps::new().add(
+        create_table("transactions")
+            .id(|c| c("id", Type::Uuid))
+            .column(|c| c("budget_id", Type::Uuid).create_index())
+            .column(|c| c("account_number", Type::Text))
+            .column(|c| c("amount_cents", Type::IntBig))
+            .column(|c| c("amount_currency", Type::Text))
+            .column(|c| c("balance_cents", Type::IntBig))
+            .column(|c| c("balance_currency", Type::Text))
+            .column(|c| c("description", Type::Text))
+            .column(|c| c("date", Type::DatetimeZone))
+            .column(|c| c("actual_id", Type::Uuid).is_null())
+            .column(|c| c("ignored", Type::Bool))
+            .column(|c| c("tag_id", Type::Uuid).is_null()),
+    );
+    Ok(MigrationStep::new("m002_transactions_table", steps))
 }
