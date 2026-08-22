@@ -345,6 +345,19 @@ impl MatchRule {
         self.item_key == tokenized_item_name
     }
 
+    /// Re-applies [`strip_punctuation`] to an already-stored key. Needed to
+    /// migrate rules saved before punctuation stripping was added to
+    /// [`tokenize_description`] — a rule token like `"ellos,"` no longer
+    /// matches the now-comma-free tokens of a real transaction, silently
+    /// breaking matching. See `db::normalize_stale_rule_tokens`.
+    pub fn normalize_key(key: &[String]) -> Vec<String> {
+        key.iter()
+            .map(|t| strip_punctuation(t))
+            .filter(|t| !t.is_empty())
+            .map(str::to_string)
+            .collect()
+    }
+
     pub fn create_rule_for_transaction_and_item(
         transaction: &BankTransaction,
         item: &ActualItem,

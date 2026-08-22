@@ -678,6 +678,71 @@ fn apply_automatic_rule_matches(current: &mut Budget, events: &mut Vec<BudgetEve
     applied
 }
 
+/// Migrates any rule whose `transaction_key` was stored before punctuation
+/// stripping was added to the tokenizer — e.g. `"ellos,"` from a
+/// "CITY, CITY"-style address suffix — so it once again matches the
+/// now-comma-free tokens real transactions produce. Idempotent: a no-op once
+/// every rule is normalized.
+///
+/// Two rules can end up wanting the same normalized key (a stale `"ellos,"`
+/// rule and a fresh `"ellos"` rule created after the tokenizer fix landed);
+/// the first one seen is kept (renormalized if needed), later duplicates are
+/// deleted outright rather than turned into a collision.
+/// `(transaction_key, item_key, always_apply, tag_id)` — the identity a
+/// [`MatchRule`] is deduplicated on, once its `transaction_key` is normalized.
+type RuleKey = (Vec<String>, Vec<String>, bool, Option<Uuid>);
+
+fn normalize_stale_rule_tokens(current: &mut Budget, events: &mut Vec<BudgetEvent>) -> usize {
+    let rules: Vec<MatchRule> = current.match_rules.iter().cloned().collect();
+
+    // Partition every rule by the key it *should* end up with, so a group of
+    // more than one member is exactly the set of rules that must collapse
+    // into one. Grouping up front (rather than resolving as we go) is what
+    // lets duplicates be deleted before the survivor is renamed into their
+    // spot — `Budget::modify_rule` removes-then-reinserts into the same
+    // `HashSet<MatchRule>`, and a `HashSet::insert` onto an already-occupied
+    // key is a silent no-op, so renaming into a live collision would drop
+    // the rule instead of merging it.
+    let mut groups: std::collections::HashMap<RuleKey, Vec<MatchRule>> = std::collections::HashMap::new();
+    for rule in rules {
+        let normalized_key = MatchRule::normalize_key(&rule.transaction_key);
+        let final_key = (normalized_key, rule.item_key.clone(), rule.always_apply, rule.tag_id);
+        groups.entry(final_key).or_default().push(rule);
+    }
+
+    let mut touched = 0;
+    for (final_key, mut members) in groups {
+        if members.len() == 1 && members[0].transaction_key == final_key.0 {
+            continue; // already correct
+        }
+
+        // Keep whichever member is already correctly keyed, if any, so it
+        // needs no rewrite; otherwise the choice is arbitrary.
+        let keeper_idx = members
+            .iter()
+            .position(|r| r.transaction_key == final_key.0)
+            .unwrap_or(0);
+        let keeper = members.remove(keeper_idx);
+
+        for dup in members {
+            if let Ok(ev) = current.delete_rule(dup.id) {
+                ev.apply(current);
+                events.push(ev.into());
+                touched += 1;
+            }
+        }
+
+        if keeper.transaction_key != final_key.0
+            && let Ok(ev) = current.modify_rule(keeper.id, final_key.0.clone())
+        {
+            ev.apply(current);
+            events.push(ev.into());
+            touched += 1;
+        }
+    }
+    touched
+}
+
 pub async fn tag_transaction(
     user_id: Uuid,
     budget_id: Uuid,
@@ -710,6 +775,7 @@ pub async fn evaluate_tag_rules(user_id: Uuid, budget_id: Uuid) -> Result<Uuid, 
     let rt = runtime().await;
     let mut current = rt.load(budget_id).await?;
     let mut events: Vec<BudgetEvent> = Vec::new();
+    normalize_stale_rule_tokens(&mut current, &mut events);
     let applied = apply_automatic_rule_matches(&mut current, &mut events);
     info!("[perf] evaluate_tag_rules: {} matches found in {:?}", applied, t.elapsed());
     if !events.is_empty() {
@@ -772,13 +838,15 @@ pub async fn confirm_tag_suggestions(
 pub async fn apply_all_tag_rules(user_id: Uuid, budget_id: Uuid) -> Result<Uuid, RustyError> {
     let rt = runtime().await;
     let mut current = rt.load(budget_id).await?;
+    let mut events: Vec<BudgetEvent> = Vec::new();
+    normalize_stale_rule_tokens(&mut current, &mut events);
+
     let matches: Vec<_> = current
         .evaluate_tag_rules()
         .into_iter()
         .chain(current.suggest_tag_rules())
         .collect();
     info!("apply_all_tag_rules: applying {} matches", matches.len());
-    let mut events: Vec<BudgetEvent> = Vec::new();
     for (tx_id, tag_id) in matches {
         match current.do_transaction_tagged(tx_id, tag_id) {
             Ok(ev) => {
@@ -907,4 +975,50 @@ pub async fn set_item_buffer(
     buffer_target: Option<Money>,
 ) -> Result<Uuid, RustyError> {
     runtime().await.set_item_buffer(user_id, budget_id, item_id, buffer_target).await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::cqrs::framework::Runtime;
+    use crate::cqrs::runtime::{BudgetCommandsTrait, JoyDbBudgetRuntime};
+
+    #[test]
+    fn normalize_stale_rule_tokens_fixes_stray_comma_and_merges_duplicate() {
+        let rt = JoyDbBudgetRuntime::new_in_memory();
+        let user_id = Uuid::new_v4();
+        let budget_id = rt
+            .create_budget(user_id, "Test Budget", true, MonthBeginsOn::default(), Currency::SEK)
+            .unwrap();
+        let tag_id = rt
+            .create_tag(user_id, budget_id, "Ellos".to_string(), Periodicity::Monthly)
+            .unwrap();
+
+        // A stale pre-fix rule, plus a fresh post-fix rule created for the
+        // same payee — exactly what happens once the tokenizer stops
+        // producing "ellos," but the old rule is still stored with it.
+        rt.add_rule(user_id, budget_id, vec!["ellos,".to_string()], Vec::new(), true, Some(tag_id))
+            .unwrap();
+        rt.add_rule(user_id, budget_id, vec!["ellos".to_string()], Vec::new(), true, Some(tag_id))
+            .unwrap();
+
+        let mut current = rt.load(budget_id).unwrap();
+        assert_eq!(current.match_rules.len(), 2);
+
+        let mut events: Vec<BudgetEvent> = Vec::new();
+        let touched = normalize_stale_rule_tokens(&mut current, &mut events);
+        assert!(touched >= 1);
+        assert!(!events.is_empty());
+
+        assert_eq!(current.match_rules.len(), 1, "duplicate must be merged away");
+        let survivor = current.match_rules.iter().next().unwrap();
+        assert_eq!(survivor.transaction_key, vec!["ellos".to_string()]);
+        assert_eq!(survivor.tag_id, Some(tag_id));
+
+        // Idempotent: running it again against the now-clean state is a no-op.
+        let mut events2 = Vec::new();
+        let touched2 = normalize_stale_rule_tokens(&mut current, &mut events2);
+        assert_eq!(touched2, 0);
+        assert!(events2.is_empty());
+    }
 }
