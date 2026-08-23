@@ -57,6 +57,10 @@ pub async fn get_default_budget(user_id: Uuid) -> Result<Budget, RustyError> {
     runtime().await.get_default_budget(user_id).await
 }
 
+pub async fn list_budgets(user_id: Uuid) -> Result<Vec<crate::view_models::BudgetSummary>, RustyError> {
+    runtime().await.list_budgets(user_id).await
+}
+
 pub async fn get_budget(budget_id: Uuid) -> Result<Budget, RustyError> {
     runtime().await.load(budget_id).await
 }
@@ -67,6 +71,14 @@ pub async fn add_budget_to_user(
     default: bool,
 ) -> Result<Uuid, RustyError> {
     runtime().await.add_budget_to_user(user_id, budget_id, default).await
+}
+
+/// Makes `budget_id` the user's default budget — the one every subsequent
+/// `get_budget(None, ...)` resolves to — then returns it, loaded.
+pub async fn switch_budget(user_id: Uuid, budget_id: Uuid) -> Result<Budget, RustyError> {
+    let rt = runtime().await;
+    rt.add_budget_to_user(user_id, budget_id, true).await?;
+    rt.load(budget_id).await
 }
 
 pub async fn create_budget(user_id: Uuid, name: &str, default_budget: bool) -> Result<Uuid, RustyError> {

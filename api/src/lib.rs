@@ -28,6 +28,7 @@ use crate::api_error::RustyError;
 pub use crate::models::*;
 use dioxus::prelude::*;
 use uuid::Uuid;
+use view_models::BudgetSummary;
 use view_models::BudgetViewModel;
 use view_models::TagSuggestion;
 use view_models::TagSummary;
@@ -41,6 +42,25 @@ pub async fn create_budget(
     let user = db::get_default_user().await?;
     let budget_id = db::create_budget(user.id, &name, default_budget.unwrap_or(true)).await?;
     Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
+}
+
+/// Lists the current user's budgets, so the UI can offer a way to switch
+/// between them (see [`switch_budget`]).
+#[server(endpoint = "list_budgets")]
+pub async fn list_budgets() -> ServerFnResult<Vec<BudgetSummary>> {
+    let user = db::get_default_user().await?;
+    Ok(db::list_budgets(user.id).await?)
+}
+
+/// Makes `budget_id` the user's default budget and returns it, loaded for
+/// `period_id`. Never called implicitly — the UI always calls this from an
+/// explicit "switch" action, never as a side effect of creating or
+/// importing a budget.
+#[server(endpoint = "switch_budget")]
+pub async fn switch_budget(budget_id: Uuid, period_id: PeriodId) -> ServerFnResult<BudgetViewModel> {
+    let user = db::get_default_user().await?;
+    let budget = db::switch_budget(user.id, budget_id).await?;
+    Ok(BudgetViewModel::from_budget(&budget, period_id))
 }
 
 #[server(endpoint = "add_actual")]

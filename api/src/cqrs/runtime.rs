@@ -4,6 +4,7 @@ use crate::api_error::RustyError;
 use crate::cqrs::framework::{AsyncRuntime, CommandError, Runtime, StoredEvent};
 const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 use crate::models::{User, Budget, MonthBeginsOn, Currency, BudgetingType, CostKind, Matching, Money, PeriodId, Periodicity, BudgetEvent};
+use crate::view_models::BudgetSummary;
 #[cfg(feature = "server")]
 use crate::pg_models::{PgBankTransaction, PgBudget, PgStoredBudgetEvent, PgUser, PgUserBudgets};
 use crate::{cqrs, models};
@@ -463,6 +464,25 @@ impl BudgetCommandsTrait for JoyDbBudgetRuntime {
         }
     }
 
+    fn list_budgets(&self, user_id: Uuid) -> Result<Vec<BudgetSummary>, RustyError> {
+        let user_budgets = self.db.get::<UserBudgets>(&user_id)?;
+        let Some(user_budgets) = user_budgets else {
+            return Ok(Vec::new());
+        };
+        user_budgets
+            .budgets
+            .iter()
+            .map(|(budget_id, default)| {
+                let budget = self.load(*budget_id)?;
+                Ok(BudgetSummary {
+                    id: budget.id,
+                    name: budget.name,
+                    default: *default,
+                })
+            })
+            .collect()
+    }
+
     fn add_budget_to_user(
         &self,
         user_id: Uuid,
@@ -470,36 +490,26 @@ impl BudgetCommandsTrait for JoyDbBudgetRuntime {
         default: bool,
     ) -> Result<Uuid, RustyError> {
         let user_budgets = self.db.get::<UserBudgets>(&user_id)?;
-        match user_budgets {
-            None => {
-                match self
-                    .db
-                    .insert(&UserBudgets {
-                        id: user_id,
-                        budgets: vec![(budget_id, default)],
-                    })
-                    .map(|()| user_id)
-                {
-                    Ok(_) => Ok(user_id),
-                    Err(e) => Err(RustyError::JoydbError(e)),
-                }
+        // Drop any existing entry for this budget first (its `default` flag
+        // may differ from the one being set now — a plain `contains` check
+        // would miss that and leave a stale duplicate entry behind), then
+        // clear every other default before adding this one back.
+        let mut budgets: Vec<(Uuid, bool)> = user_budgets
+            .map(|b| b.budgets)
+            .unwrap_or_default()
+            .into_iter()
+            .filter(|(id, _)| *id != budget_id)
+            .collect();
+        if default {
+            for entry in &mut budgets {
+                entry.1 = false;
             }
-            Some(list) => {
-                if list.budgets.contains(&(budget_id, default)) {
-                    Ok(user_id)
-                } else {
-                    let mut budgets = list.budgets.clone();
-                    budgets.push((budget_id, default));
-                    let list = UserBudgets {
-                        id: user_id,
-                        budgets,
-                    };
-                    match self.db.upsert(&list) {
-                        Ok(()) => Ok(user_id),
-                        Err(e) => Err(RustyError::JoydbError(e)),
-                    }
-                }
-            }
+        }
+        budgets.push((budget_id, default));
+        let list = UserBudgets { id: user_id, budgets };
+        match self.db.upsert(&list) {
+            Ok(()) => Ok(user_id),
+            Err(e) => Err(RustyError::JoydbError(e)),
         }
     }
 
@@ -722,6 +732,7 @@ pub trait BudgetCommandsTrait {
     fn user_exists(&self, email: &str) -> Result<bool, RustyError>;
     fn get_default_user(&self) -> Result<User, RustyError>;
     fn get_default_budget(&self, user_id: Uuid) -> Result<Budget, RustyError>;
+    fn list_budgets(&self, user_id: Uuid) -> Result<Vec<BudgetSummary>, RustyError>;
     fn add_budget_to_user(
         &self,
         user_id: Uuid,
@@ -944,6 +955,7 @@ pub trait AsyncBudgetCommandsTrait {
     async fn user_exists(&self, email: &str) -> Result<bool, RustyError>;
     async fn get_default_user(&self) -> Result<User, RustyError>;
     async fn get_default_budget(&self, user_id: Uuid) -> Result<Budget, RustyError>;
+    async fn list_budgets(&self, user_id: Uuid) -> Result<Vec<BudgetSummary>, RustyError>;
     async fn add_budget_to_user(
         &self,
         user_id: Uuid,
@@ -1803,6 +1815,23 @@ impl AsyncBudgetCommandsTrait for PgRuntime {
         }
     }
 
+    async fn list_budgets(&self, user_id: Uuid) -> Result<Vec<BudgetSummary>, RustyError> {
+        let Some(pg_ub) = PgUserBudgets::find_by_id(self.client.as_ref(), user_id).await? else {
+            return Ok(Vec::new());
+        };
+        let ub: UserBudgets = pg_ub.into();
+        let mut summaries = Vec::with_capacity(ub.budgets.len());
+        for (budget_id, default) in ub.budgets {
+            let budget = self.load(budget_id).await?;
+            summaries.push(BudgetSummary {
+                id: budget.id,
+                name: budget.name,
+                default,
+            });
+        }
+        Ok(summaries)
+    }
+
     async fn add_budget_to_user(
         &self,
         user_id: Uuid,
@@ -1827,16 +1856,21 @@ impl AsyncBudgetCommandsTrait for PgRuntime {
                     Some(pg_ub) => pg_ub,
                 };
                 let mut ub: UserBudgets = pg_ub.clone().into();
-                if !ub.budgets.contains(&(budget_id, default)) {
-                    if default && let Some(budget) = ub.budgets.iter_mut().find(|(_, default)| *default)
-                    {
-                        budget.1 = false;
+                // Drop any existing entry for this budget first — its
+                // `default` flag may differ from the one being set now, and
+                // a plain `contains` check would miss that and leave a
+                // stale duplicate entry behind — then clear every other
+                // default before adding this one back.
+                ub.budgets.retain(|(id, _)| *id != budget_id);
+                if default {
+                    for entry in &mut ub.budgets {
+                        entry.1 = false;
                     }
-                    ub.budgets.push((budget_id, default));
-                    pg_ub.budgets =
-                        serde_json::to_value(&ub.budgets).expect("Could not serialize user budgets");
-                    pg_ub.save(self.client.as_ref()).await?;
                 }
+                ub.budgets.push((budget_id, default));
+                pg_ub.budgets =
+                    serde_json::to_value(&ub.budgets).expect("Could not serialize user budgets");
+                pg_ub.save(self.client.as_ref()).await?;
                 Ok(user_id)
             }
             Err(e) => Err(RustyError::WeldsError(e)),

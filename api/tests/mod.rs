@@ -34,6 +34,57 @@ pub fn create_budget_test() -> Result<(), RustyError> {
 }
 
 #[test]
+pub fn switching_default_budget_clears_the_previous_default() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+
+    let budget_a = rt.create_budget(user_id, "A", true, MonthBeginsOn::default(), Currency::SEK)?;
+    let budget_b = rt.create_budget(user_id, "B", false, MonthBeginsOn::default(), Currency::SEK)?;
+    rt.add_budget_to_user(user_id, budget_a, true)?;
+    rt.add_budget_to_user(user_id, budget_b, false)?;
+
+    // Switch to B, then back to A — neither direction should leave a
+    // duplicate or stale default entry behind.
+    rt.add_budget_to_user(user_id, budget_b, true)?;
+    let summaries = rt.list_budgets(user_id)?;
+    assert_eq!(summaries.len(), 2);
+    assert!(!summaries.iter().find(|b| b.id == budget_a).unwrap().default);
+    assert!(summaries.iter().find(|b| b.id == budget_b).unwrap().default);
+
+    rt.add_budget_to_user(user_id, budget_a, true)?;
+    let summaries = rt.list_budgets(user_id)?;
+    assert_eq!(summaries.len(), 2);
+    assert!(summaries.iter().find(|b| b.id == budget_a).unwrap().default);
+    assert!(!summaries.iter().find(|b| b.id == budget_b).unwrap().default);
+
+    Ok(())
+}
+
+#[test]
+pub fn list_budgets_returns_names_and_default_flags() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+
+    assert!(rt.list_budgets(user_id)?.is_empty(), "a fresh user has no budgets");
+
+    let budget_a = rt.create_budget(user_id, "Household", true, MonthBeginsOn::default(), Currency::SEK)?;
+    let budget_b = rt.create_budget(user_id, "Side project", false, MonthBeginsOn::default(), Currency::SEK)?;
+    rt.add_budget_to_user(user_id, budget_a, true)?;
+    rt.add_budget_to_user(user_id, budget_b, false)?;
+
+    let summaries = rt.list_budgets(user_id)?;
+    assert_eq!(summaries.len(), 2);
+    let a = summaries.iter().find(|b| b.id == budget_a).unwrap();
+    assert_eq!(a.name, "Household");
+    assert!(a.default);
+    let b = summaries.iter().find(|b| b.id == budget_b).unwrap();
+    assert_eq!(b.name, "Side project");
+    assert!(!b.default);
+
+    Ok(())
+}
+
+#[test]
 pub fn add_budget_item() -> Result<(), RustyError> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
     let user_id = Uuid::new_v4();

@@ -1,11 +1,11 @@
 use crate::budget::budget_hero::BudgetState;
 use crate::budget::{CarryoverSettings, RulesView, TagReviewView, TagsView};
 use crate::file_chooser::{FileData, FileDialog};
-use crate::Button;
+use crate::{Button, Input};
 use api::models::{MonthBeginsOn, PeriodId};
 use api::{
-    auto_budget_all, auto_budget_period, export_budget, export_tags_and_rules, import_budget,
-    import_tags_and_rules, import_transactions_bytes,
+    auto_budget_all, auto_budget_period, create_budget, export_budget, export_tags_and_rules,
+    import_budget, import_tags_and_rules, import_transactions_bytes, list_budgets, switch_budget,
 };
 use chrono::Utc;
 use dioxus::logger::tracing::info;
@@ -107,6 +107,29 @@ pub fn SettingsTab() -> Element {
         });
     };
 
+    let mut budgets_resource = use_resource(move || async move { list_budgets().await });
+    let mut new_budget_name: Signal<String> = use_signal(String::new);
+    let mut budget_switch_status: Signal<Option<String>> = use_signal(|| None);
+
+    let create_new_budget = move |_| {
+        spawn(async move {
+            let name = new_budget_name().trim().to_string();
+            if name.is_empty() {
+                return;
+            }
+            match create_budget(name, period_id, Some(false)).await {
+                Ok(_) => {
+                    new_budget_name.set(String::new());
+                    budgets_resource.restart();
+                }
+                Err(e) => {
+                    info!("Failed to create budget: {}", e);
+                    budget_switch_status.set(Some("Kunde inte skapa budgeten.".to_string()));
+                }
+            }
+        });
+    };
+
     rsx! {
         div { class: "tab-panel",
             section { class: "settings-section",
@@ -192,6 +215,61 @@ pub fn SettingsTab() -> Element {
                     }
                 }
                 if let Some(status) = budget_import_status() {
+                    p { class: "settings-hint", "{status}" }
+                }
+            }
+
+            section { class: "settings-section",
+                h3 { class: "settings-section-title", "Budgetar" }
+                match &*budgets_resource.read() {
+                    None => rsx! {
+                        p { class: "settings-hint", "Laddar budgetar..." }
+                    },
+                    Some(Err(_)) => rsx! {
+                        p { class: "settings-hint", "Kunde inte hämta budgetlistan." }
+                    },
+                    Some(Ok(budgets)) => rsx! {
+                        div { class: "settings-budget-list",
+                            for b in budgets.clone() {
+                                div { key: "{b.id}", class: "settings-budget-row",
+                                    span { class: "settings-budget-name", "{b.name}" }
+                                    if b.default {
+                                        span { class: "settings-budget-active", "Aktiv" }
+                                    } else {
+                                        Button {
+                                            onclick: move |_| {
+                                                let budget_id = b.id;
+                                                spawn(async move {
+                                                    match switch_budget(budget_id, period_id).await {
+                                                        Ok(updated) => {
+                                                            consume_context::<BudgetState>().0.set(updated);
+                                                            budgets_resource.restart();
+                                                        }
+                                                        Err(e) => {
+                                                            info!("Failed to switch budget: {}", e);
+                                                            budget_switch_status
+                                                                .set(Some("Kunde inte växla budget.".to_string()));
+                                                        }
+                                                    }
+                                                });
+                                            },
+                                            "Växla"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                }
+                div { class: "settings-tools",
+                    Input {
+                        placeholder: "Namn på ny budget",
+                        value: new_budget_name(),
+                        oninput: move |e: FormEvent| new_budget_name.set(e.value()),
+                    }
+                    Button { class: "primary", onclick: create_new_budget, "Skapa budget" }
+                }
+                if let Some(status) = budget_switch_status() {
                     p { class: "settings-hint", "{status}" }
                 }
             }
