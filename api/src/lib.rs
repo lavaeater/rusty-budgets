@@ -171,6 +171,18 @@ pub async fn modify_tag(
     Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }
 
+#[server(endpoint = "modify_bank_account")]
+pub async fn modify_bank_account(
+    budget_id: Uuid,
+    account_id: Uuid,
+    account_type: BankAccountType,
+    period_id: PeriodId,
+) -> ServerFnResult<BudgetViewModel> {
+    let user = db::get_default_user().await?;
+    db::modify_bank_account(user.id, budget_id, account_id, account_type).await?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
+}
+
 /// Records a deliberate answer to "is this a bill, and can rules auto-apply it?".
 ///
 /// Clears the tag's `needs_review` flag, which the guided review screen uses to

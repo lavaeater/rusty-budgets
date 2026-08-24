@@ -3,7 +3,7 @@
 use crate::api_error::RustyError;
 use crate::cqrs::framework::{AsyncRuntime, CommandError, Runtime, StoredEvent};
 const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
-use crate::models::{User, Budget, MonthBeginsOn, Currency, BudgetingType, CostKind, Matching, Money, PeriodId, Periodicity, BudgetEvent};
+use crate::models::{User, Budget, BankAccountType, MonthBeginsOn, Currency, BudgetingType, CostKind, Matching, Money, PeriodId, Periodicity, BudgetEvent};
 use crate::view_models::BudgetSummary;
 #[cfg(feature = "server")]
 use crate::pg_models::{PgBankTransaction, PgBudget, PgStoredBudgetEvent, PgUser, PgUserBudgets};
@@ -154,6 +154,17 @@ impl BudgetCommandsTrait for JoyDbBudgetRuntime {
     ) -> Result<Uuid, RustyError> {
         self.cmd(user_id, budget_id, |budget| {
             budget.modify_tag(tag_id, name, periodicity, deleted)
+        })
+    }
+    fn modify_bank_account(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        account_id: Uuid,
+        account_type: BankAccountType,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.modify_bank_account(account_id, account_type)
         })
     }
     fn classify_tag(
@@ -579,6 +590,13 @@ pub trait BudgetCommandsTrait {
         periodicity: Option<Periodicity>,
         deleted: Option<bool>,
     ) -> Result<Uuid, RustyError>;
+    fn modify_bank_account(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        account_id: Uuid,
+        account_type: BankAccountType,
+    ) -> Result<Uuid, RustyError>;
     fn classify_tag(
         &self,
         user_id: Uuid,
@@ -801,6 +819,13 @@ pub trait AsyncBudgetCommandsTrait {
         name: Option<String>,
         periodicity: Option<Periodicity>,
         deleted: Option<bool>,
+    ) -> Result<Uuid, RustyError>;
+    async fn modify_bank_account(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        account_id: Uuid,
+        account_type: BankAccountType,
     ) -> Result<Uuid, RustyError>;
     async fn classify_tag(
         &self,
@@ -1472,6 +1497,18 @@ impl AsyncBudgetCommandsTrait for PgRuntime {
     ) -> Result<Uuid, RustyError> {
         self.cmd(user_id, budget_id, |budget| {
             budget.modify_tag(tag_id, name, periodicity, deleted)
+        })
+        .await
+    }
+    async fn modify_bank_account(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        account_id: Uuid,
+        account_type: BankAccountType,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.modify_bank_account(account_id, account_type)
         })
         .await
     }

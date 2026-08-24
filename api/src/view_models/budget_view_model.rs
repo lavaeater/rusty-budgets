@@ -1,4 +1,6 @@
-use crate::models::{Budget, BudgetingType, Currency, MatchRule, MonthBeginsOn, PeriodId, Tag};
+use crate::models::{
+    BankAccount, Budget, BudgetingType, Currency, MatchRule, MonthBeginsOn, PeriodId, Tag,
+};
 use crate::view_models::allocation_view_model::AllocationViewModel;
 use crate::view_models::budget_item_view_model::BudgetItemViewModel;
 use crate::view_models::budgeting_type_overview::BudgetingTypeOverview;
@@ -54,6 +56,7 @@ pub struct BudgetViewModel {
     pub suggested_transfer_count: usize,
     pub currency: Currency,
     pub tags: Vec<Tag>,
+    pub accounts: Vec<BankAccount>,
     pub match_rules: Vec<MatchRule>,
     pub untagged_transaction_count: usize,
     /// Per-period net and running deficit/surplus, sorted oldest-first.
@@ -297,6 +300,7 @@ impl BudgetViewModel {
             suggested_transfer_count,
             currency: budget.currency,
             tags: budget.tags.clone(),
+            accounts: budget.accounts.clone(),
             match_rules,
             untagged_transaction_count,
             period_summaries,

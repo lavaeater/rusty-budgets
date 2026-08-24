@@ -1,5 +1,5 @@
 use crate::cqrs::framework::{Aggregate, CommandError, DomainEvent};
-use crate::models::{BankAccount, Budget, Currency, Money};
+use crate::models::{BankAccount, BankAccountType, Budget, Currency, Money};
 use cqrs_macros::DomainEvent;
 use dioxus::logger::tracing;
 use serde::{Deserialize, Serialize};
@@ -23,6 +23,7 @@ impl BankAccountCreatedHandler for Budget {
             description: event.description.clone(),
             currency: String::new(),
             balance: Money::zero(Currency::SEK),
+            account_type: BankAccountType::default(),
         });
         event.account_id
     }

@@ -4,7 +4,7 @@ use crate::api_error::RustyError;
 use crate::cqrs::framework::{AsyncRuntime, DomainEvent};
 use crate::cqrs::runtime::{AsyncBudgetCommandsTrait, PgRuntime, create_runtime};
 use crate::import::{import_from_path, import_from_skandia_excel_bytes};
-use crate::models::{User, Budget, BudgetEvent, MonthBeginsOn, Currency, BudgetingType, CostKind, Matching, Money, PeriodId, Periodicity, MatchRule, Tag, BankTransaction};
+use crate::models::{User, Budget, BudgetEvent, MonthBeginsOn, Currency, BudgetingType, CostKind, Matching, Money, PeriodId, Periodicity, MatchRule, Tag, BankTransaction, BankAccountType};
 use chrono::NaiveDate;
 use dioxus::logger::tracing;
 use dioxus::logger::tracing::error;
@@ -432,6 +432,15 @@ pub async fn modify_tag(
     deleted: Option<bool>,
 ) -> Result<Uuid, RustyError> {
     runtime().await.modify_tag(user_id, budget_id, tag_id, name, periodicity, deleted).await
+}
+
+pub async fn modify_bank_account(
+    user_id: Uuid,
+    budget_id: Uuid,
+    account_id: Uuid,
+    account_type: BankAccountType,
+) -> Result<Uuid, RustyError> {
+    runtime().await.modify_bank_account(user_id, budget_id, account_id, account_type).await
 }
 
 pub async fn classify_tag(
