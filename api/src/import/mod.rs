@@ -4,7 +4,7 @@ use calamine::{Data, DataType, Range, Reader, Xlsx, XlsxError, open_workbook, op
 use chrono::{DateTime, NaiveDate, ParseError, Utc};
 use dioxus::prelude::{debug, info};
 use std::collections::HashSet;
-use std::io::{Cursor, Error};
+use std::io::{Cursor, Error, Read};
 use std::path::Path;
 use uuid::Uuid;
 
@@ -317,6 +317,35 @@ pub fn import_from_skandia_excel_sync(
     Ok(run_bulk_import_sync(runtime, user_id, budget_id, &sheet))
 }
 
+/// If `bytes` is a zip archive bundling several workbooks (each entry named
+/// `*.xlsx`/`*.xls`), returns their raw bytes. A plain `.xlsx` file is
+/// *itself* a zip container internally, but none of its own entries are
+/// named `*.xlsx` (they're things like `xl/workbook.xml`), so it correctly
+/// falls through as "not a bundle" without needing to sniff magic bytes.
+fn extract_bundled_workbooks(bytes: &[u8]) -> Option<Vec<Vec<u8>>> {
+    let mut archive = zip::ZipArchive::new(Cursor::new(bytes)).ok()?;
+    let mut workbooks = Vec::new();
+    for i in 0..archive.len() {
+        let mut entry = archive.by_index(i).ok()?;
+        if !entry.is_file() {
+            continue;
+        }
+        let extension = std::path::Path::new(entry.name())
+            .extension()
+            .and_then(|e| e.to_str())
+            .map(str::to_lowercase);
+        if !matches!(extension.as_deref(), Some("xlsx" | "xls")) {
+            continue;
+        }
+        let mut buf = Vec::new();
+        if entry.read_to_end(&mut buf).is_err() {
+            continue;
+        }
+        workbooks.push(buf);
+    }
+    if workbooks.is_empty() { None } else { Some(workbooks) }
+}
+
 /// # Panics
 /// Panics if an amount/balance cell cannot be parsed as a number.
 pub async fn import_from_skandia_excel_bytes(
@@ -325,14 +354,39 @@ pub async fn import_from_skandia_excel_bytes(
     budget_id: Uuid,
     bytes: Vec<u8>,
 ) -> Result<(u64, u64, u64), ImportError> {
-    info!("Opening new cursor!");
+    if let Some(workbooks) = extract_bundled_workbooks(&bytes) {
+        info!("Zip archive with {} workbook(s), importing each", workbooks.len());
+        let mut total = (0u64, 0u64, 0u64);
+        for workbook_bytes in workbooks {
+            match import_single_workbook_bytes(runtime, user_id, budget_id, workbook_bytes).await {
+                Ok((imported, not_imported, total_rows)) => {
+                    total.0 += imported;
+                    total.1 += not_imported;
+                    total.2 += total_rows;
+                }
+                Err(e) => info!("Skipping one workbook in zip archive: {e}"),
+            }
+        }
+        info!(
+            "Zip import done: {} transactions imported, {} skipped, {} total",
+            total.0, total.1, total.2
+        );
+        return Ok(total);
+    }
+    import_single_workbook_bytes(runtime, user_id, budget_id, bytes).await
+}
+
+async fn import_single_workbook_bytes(
+    runtime: &impl AsyncRuntime<Budget, BudgetEvent>,
+    user_id: Uuid,
+    budget_id: Uuid,
+    bytes: Vec<u8>,
+) -> Result<(u64, u64, u64), ImportError> {
     let cursor = Cursor::new(bytes);
-    info!("Opening workbook!");
     let mut excel: Xlsx<_> = open_workbook_from_rs(cursor)?;
     let Ok(range) = excel.worksheet_range("Kontoutdrag") else {
         return Ok((0, 0, 0));
     };
-    info!("Found worksheet!");
     let sheet = parse_skandia_sheet(&range)?;
     let (imported, not_imported, total_rows) =
         run_bulk_import(runtime, user_id, budget_id, &sheet).await;
@@ -341,4 +395,48 @@ pub async fn import_from_skandia_excel_bytes(
         imported, not_imported, total_rows
     );
     Ok((imported, not_imported, total_rows))
+}
+
+#[cfg(test)]
+mod bundle_tests {
+    use super::extract_bundled_workbooks;
+    use std::io::Write;
+    use zip::write::SimpleFileOptions;
+
+    fn zip_bytes(entries: &[(&str, &[u8])]) -> Vec<u8> {
+        let mut writer = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
+        let options = SimpleFileOptions::default();
+        for (name, contents) in entries {
+            writer.start_file(*name, options).unwrap();
+            writer.write_all(contents).unwrap();
+        }
+        writer.finish().unwrap().into_inner()
+    }
+
+    #[test]
+    fn extracts_only_workbook_entries_from_a_bundle() {
+        let bytes = zip_bytes(&[
+            ("januari.xlsx", b"fake workbook a"),
+            ("februari.xls", b"fake workbook b"),
+            ("readme.txt", b"not a workbook"),
+        ]);
+        let workbooks = extract_bundled_workbooks(&bytes).expect("should recognise a bundle");
+        assert_eq!(workbooks.len(), 2);
+        assert!(workbooks.contains(&b"fake workbook a".to_vec()));
+        assert!(workbooks.contains(&b"fake workbook b".to_vec()));
+    }
+
+    #[test]
+    fn a_real_xlsx_file_is_not_mistaken_for_a_bundle() {
+        // A .xlsx is itself a zip container, but its internal entries
+        // (xl/workbook.xml etc.) never end in .xlsx/.xls, so it must not be
+        // misidentified as "a zip full of workbooks".
+        let bytes = std::fs::read("./tests/unit-test-data.xlsx").unwrap();
+        assert!(extract_bundled_workbooks(&bytes).is_none());
+    }
+
+    #[test]
+    fn non_zip_bytes_are_not_a_bundle() {
+        assert!(extract_bundled_workbooks(b"just some random bytes").is_none());
+    }
 }

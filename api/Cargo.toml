@@ -20,6 +20,7 @@ welds = { version = "0.4.21", default-features = false, features = ["postgres", 
 once_cell = { version = "1.21.3", features = ["parking_lot"] }
 cqrs_macros = { workspace = true }
 calamine = "0.34.0"
+zip = { version = "7.2.0", default-features = false, features = ["deflate"] }
 strum_macros = "0.28.0"
 strum = { workspace = true, features = ["derive"] }
 sum = "0.1.7"

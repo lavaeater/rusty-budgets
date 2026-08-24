@@ -151,7 +151,16 @@ pub fn SettingsTab() -> Element {
         div { class: "tab-panel",
             section { class: "settings-section",
                 h3 { class: "settings-section-title", "Importera transaktioner" }
-                FileDialog { on_chosen: import_file }
+                p { class: "settings-hint",
+                    "Välj en Excel-fil, eller en zip-fil med flera Excel-filer — varje fil i "
+                    "zipen importeras för sig."
+                }
+                FileDialog {
+                    on_chosen: import_file,
+                    title: "Välj en Excel- eller zip-fil att importera",
+                    filter_name: "Excel/zip",
+                    filter_extensions: vec!["xlsx".to_string(), "xls".to_string(), "zip".to_string()],
+                }
             }
 
             section { class: "settings-section",
