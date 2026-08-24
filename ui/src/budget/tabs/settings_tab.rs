@@ -24,6 +24,10 @@ pub fn SettingsTab() -> Element {
     let period_id_now = PeriodId::from_date(Utc::now(), MonthBeginsOn::default());
     let auto_budget_enabled = budget.period_id != period_id_now;
 
+    let mut normalizing_accounts: Signal<bool> = use_signal(|| false);
+    let mut normalize_status: Signal<Option<String>> = use_signal(|| None);
+    let accounts_before = budget.accounts.len();
+
     let import_file = move |file: FileData| {
         let contents = file.contents;
         spawn(async move {
@@ -184,12 +188,34 @@ pub fn SettingsTab() -> Element {
                 Button {
                     variant: ButtonVariant::Secondary,
                     r#type: "button",
+                    disabled: normalizing_accounts(),
                     onclick: move |_| async move {
-                        if let Ok(bv) = normalize_account_numbers(budget_id, period_id).await {
-                            consume_context::<BudgetState>().0.set(bv);
+                        normalizing_accounts.set(true);
+                        match normalize_account_numbers(budget_id, period_id).await {
+                            Ok(bv) => {
+                                let merged = accounts_before.saturating_sub(bv.accounts.len());
+                                normalize_status.set(Some(if merged > 0 {
+                                    format!("{merged} dubblettkonton slogs ihop.")
+                                } else {
+                                    "Inga dubbletter hittades.".to_string()
+                                }));
+                                consume_context::<BudgetState>().0.set(bv);
+                            }
+                            Err(e) => {
+                                info!("Failed to normalize account numbers: {}", e);
+                                normalize_status.set(Some("Kunde inte normalisera kontonummer.".to_string()));
+                            }
                         }
+                        normalizing_accounts.set(false);
                     },
-                    "Normalisera kontonummer"
+                    if normalizing_accounts() {
+                        "Normaliserar..."
+                    } else {
+                        "Normalisera kontonummer"
+                    }
+                }
+                if let Some(status) = normalize_status() {
+                    p { class: "settings-hint", {status} }
                 }
                 div { class: "settings-budget-list",
                     for account in budget.accounts.clone() {
