@@ -1,6 +1,6 @@
 //! Previews what envelope carryover would produce on a real budget snapshot,
 //! without writing anything. Usage:
-//!   cargo run -p api --example preview_carryover -- <file.json> <YYYY-MM from> <YYYY-MM show>
+//!   cargo run -p api --example `preview_carryover` -- <file.json> <YYYY-MM from> <YYYY-MM show>
 use api::models::PeriodId;
 use api::view_models::BudgetViewModel;
 

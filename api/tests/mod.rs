@@ -1,3 +1,7 @@
+// Integration tests: `.unwrap()`/`.expect()` panicking on failure is the
+// point, not a defect that needs a `# Panics` doc section on every fn.
+#![allow(clippy::missing_panics_doc)]
+
 use api::api_error::RustyError;
 use api::cqrs::framework::Runtime;
 use api::cqrs::runtime::{BudgetCommandsTrait, JoyDbBudgetRuntime};
@@ -309,7 +313,7 @@ pub fn test_import_from_skandia_excel() -> Result<(), RustyError> {
         import_from_skandia_excel_sync(&rt, user_id, budget_id, "./tests/unit-test-data.xlsx")
             .unwrap();
     assert_eq!(imported, 296);
-    println!("Imported {} transactions", imported);
+    println!("Imported {imported} transactions");
     let (omp, not_imported, _) =
         import_from_skandia_excel_sync(&rt, user_id, budget_id, "./tests/unit-test-data.xlsx")
             .unwrap();
@@ -553,6 +557,7 @@ pub fn adjust_item_funds() -> Result<(), RustyError> {
 }
 
 #[test]
+#[allow(clippy::too_many_lines)]
 pub fn test_budeting_overview() -> Result<(), RustyError> {
     let rt = JoyDbBudgetRuntime::new_in_memory();
     let user_id = Uuid::new_v4();
@@ -2187,5 +2192,69 @@ pub fn configuring_carryover_survives_replay() -> Result<(), RustyError> {
     // It can also be turned back off.
     rt.configure_carryover(user_id, budget_id, None)?;
     assert_eq!(rt.load(budget_id)?.carryover_from, None);
+    Ok(())
+}
+
+#[test]
+pub fn normalize_account_numbers_merges_differently_punctuated_duplicates() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let budget_id = rt.create_budget(
+        user_id,
+        "Test Budget",
+        true,
+        MonthBeginsOn::default(),
+        Currency::SEK,
+    )?;
+    let now = Utc::now();
+
+    // Same physical account, imported under two different string
+    // representations (the exact bug: the header cell keeps the bank's
+    // punctuation, a counterpart account discovered via a transfer
+    // description is already digits-only).
+    let punctuated_id = rt.ensure_account(user_id, budget_id, "9159-482.485-3", "Skandiabanken")?;
+    let digits_id = rt.ensure_account(user_id, budget_id, "91594824853", "Skandiabanken")?;
+    assert_ne!(punctuated_id, digits_id, "sanity: these look like two accounts before the fix");
+
+    let tx_on_punctuated = rt.add_transaction(
+        user_id,
+        budget_id,
+        "9159-482.485-3",
+        Money::new_dollars(-100, Currency::SEK),
+        Money::new_dollars(900, Currency::SEK),
+        "Some purchase",
+        now,
+    )?;
+    let tx_on_digits = rt.add_transaction(
+        user_id,
+        budget_id,
+        "91594824853",
+        Money::new_dollars(-50, Currency::SEK),
+        Money::new_dollars(850, Currency::SEK),
+        "Another purchase",
+        now,
+    )?;
+
+    rt.normalize_account_numbers(user_id, budget_id)?;
+
+    let budget = rt.load(budget_id)?;
+    assert_eq!(
+        budget.accounts.iter().filter(|a| a.account_number == "91594824853").count(),
+        1,
+        "the two punctuation variants should have collapsed into one account"
+    );
+    assert_eq!(
+        budget.get_transaction(tx_on_punctuated).unwrap().account_number,
+        "91594824853"
+    );
+    assert_eq!(
+        budget.get_transaction(tx_on_digits).unwrap().account_number,
+        "91594824853"
+    );
+
+    // Replaying the same merge again must be a no-op, not a further collapse.
+    rt.normalize_account_numbers(user_id, budget_id)?;
+    let budget = rt.load(budget_id)?;
+    assert_eq!(budget.accounts.len(), 1);
     Ok(())
 }

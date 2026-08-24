@@ -1,12 +1,12 @@
 use crate::budget::budget_hero::BudgetState;
 use crate::budget::{CarryoverSettings, RulesView, TagReviewView, TagsView};
 use crate::file_chooser::{FileData, FileDialog};
-use crate::{Button, Input};
-use api::models::{BankAccountType, MonthBeginsOn, PeriodId};
+use crate::{Button, ButtonVariant, Input};
+use api::models::{BankAccountType, MonthBeginsOn, PeriodId, format_account_number};
 use api::{
     auto_budget_all, auto_budget_period, create_budget, export_budget, export_tags_and_rules,
     import_budget, import_tags_and_rules, import_transactions_bytes, list_budgets,
-    modify_bank_account, switch_budget,
+    modify_bank_account, normalize_account_numbers, switch_budget,
 };
 use chrono::Utc;
 use dioxus::logger::tracing::info;
@@ -181,14 +181,25 @@ pub fn SettingsTab() -> Element {
                     "till ett sparkonto räknas alltid som sparande, aldrig som en intern "
                     "float-överföring."
                 }
+                Button {
+                    variant: ButtonVariant::Secondary,
+                    r#type: "button",
+                    onclick: move |_| async move {
+                        if let Ok(bv) = normalize_account_numbers(budget_id, period_id).await {
+                            consume_context::<BudgetState>().0.set(bv);
+                        }
+                    },
+                    "Normalisera kontonummer"
+                }
                 div { class: "settings-budget-list",
                     for account in budget.accounts.clone() {
                         {
                             let account_id = account.id;
+                            let formatted_number = format_account_number(&account.account_number);
                             rsx! {
                                 div { key: "{account_id}", class: "settings-budget-row",
                                     span { class: "settings-budget-name",
-                                        "{account.description} ({account.account_number})"
+                                        "{account.description} ({formatted_number})"
                                     }
                                     select {
                                         onchange: move |e: FormEvent| {
@@ -287,7 +298,7 @@ pub fn SettingsTab() -> Element {
                     }
                 }
                 if let Some(status) = budget_import_status() {
-                    p { class: "settings-hint", "{status}" }
+                    p { class: "settings-hint", {status} }
                 }
             }
 
@@ -342,7 +353,7 @@ pub fn SettingsTab() -> Element {
                     Button { class: "primary", onclick: create_new_budget, "Skapa budget" }
                 }
                 if let Some(status) = budget_switch_status() {
-                    p { class: "settings-hint", "{status}" }
+                    p { class: "settings-hint", {status} }
                 }
             }
         }

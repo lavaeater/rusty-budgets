@@ -27,7 +27,7 @@ fn main() {
     {
         let server_url = env::var("SERVER_URL").unwrap_or("http://localhost".to_string());
         let port = env::var("PORT").unwrap_or("8080".to_string());
-        fullstack::set_server_url(Box::leak(format!("{}:{}", server_url, port).into_boxed_str()));
+        fullstack::set_server_url(Box::leak(format!("{server_url}:{port}").into_boxed_str()));
     }
 
     launch(App);

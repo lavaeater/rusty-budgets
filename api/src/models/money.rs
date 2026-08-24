@@ -208,7 +208,7 @@ mod tests {
         let money_negative = Money::new_dollars(-50, Currency::SEK);
         assert_eq!(money_negative.to_string(), "-50 kr");
 
-        let money_large = Money::new_dollars(1234567, Currency::SEK);
+        let money_large = Money::new_dollars(1_234_567, Currency::SEK);
         assert_eq!(money_large.to_string(), "1234567 kr");
     }
 
@@ -223,7 +223,7 @@ mod tests {
         let money_negative = Money::new_dollars(-50, Currency::USD);
         assert_eq!(money_negative.to_string(), " $-50");
 
-        let money_large = Money::new_dollars(1234567, Currency::USD);
+        let money_large = Money::new_dollars(1_234_567, Currency::USD);
         assert_eq!(money_large.to_string(), " $1234567");
     }
 
@@ -238,7 +238,7 @@ mod tests {
         let money_negative = Money::new_dollars(-50, Currency::EUR);
         assert_eq!(money_negative.to_string(), " €-50");
 
-        let money_large = Money::new_dollars(1234567, Currency::EUR);
+        let money_large = Money::new_dollars(1_234_567, Currency::EUR);
         assert_eq!(money_large.to_string(), " €1234567");
     }
 
@@ -387,7 +387,7 @@ mod tests {
     fn test_currency_traits() {
         // Test that Currency implements the expected traits
         let eur = Currency::EUR;
-        let eur_clone = eur.clone();
+        let eur_clone = eur;
 
         assert_eq!(eur, eur_clone);
         assert_eq!(eur, Currency::EUR);

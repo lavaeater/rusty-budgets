@@ -39,7 +39,7 @@ pub fn FileDialog(
     };
 
     rsx! {
-        Button { class: "primary", onclick: pick_file, "{label}" }
+        Button { class: "primary", onclick: pick_file, {label} }
     }
 }
 
@@ -73,6 +73,6 @@ pub fn SaveFileDialog(
     };
 
     rsx! {
-        Button { class: "primary", onclick: save_file, "{label}" }
+        Button { class: "primary", onclick: save_file, {label} }
     }
 }

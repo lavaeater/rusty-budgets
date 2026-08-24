@@ -443,6 +443,10 @@ pub async fn modify_bank_account(
     runtime().await.modify_bank_account(user_id, budget_id, account_id, account_type).await
 }
 
+pub async fn normalize_account_numbers(user_id: Uuid, budget_id: Uuid) -> Result<Uuid, RustyError> {
+    runtime().await.normalize_account_numbers(user_id, budget_id).await
+}
+
 pub async fn classify_tag(
     user_id: Uuid,
     budget_id: Uuid,

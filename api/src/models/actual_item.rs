@@ -60,6 +60,7 @@ impl ActualItem {
 }
 
 #[cfg(test)]
+#[allow(clippy::missing_panics_doc)]
 pub mod actual_item_tests {
     use crate::models::BudgetItem;
     use crate::models::Money;

@@ -1,4 +1,3 @@
-#![allow(clippy::unused_async_trait_impl)]
 
 use crate::api_error::RustyError;
 use crate::cqrs::framework::{AsyncRuntime, CommandError, Runtime, StoredEvent};
@@ -166,6 +165,9 @@ impl BudgetCommandsTrait for JoyDbBudgetRuntime {
         self.cmd(user_id, budget_id, |budget| {
             budget.modify_bank_account(account_id, account_type)
         })
+    }
+    fn normalize_account_numbers(&self, user_id: Uuid, budget_id: Uuid) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, Budget::normalize_account_numbers)
     }
     fn classify_tag(
         &self,
@@ -597,6 +599,7 @@ pub trait BudgetCommandsTrait {
         account_id: Uuid,
         account_type: BankAccountType,
     ) -> Result<Uuid, RustyError>;
+    fn normalize_account_numbers(&self, user_id: Uuid, budget_id: Uuid) -> Result<Uuid, RustyError>;
     fn classify_tag(
         &self,
         user_id: Uuid,
@@ -827,6 +830,7 @@ pub trait AsyncBudgetCommandsTrait {
         account_id: Uuid,
         account_type: BankAccountType,
     ) -> Result<Uuid, RustyError>;
+    async fn normalize_account_numbers(&self, user_id: Uuid, budget_id: Uuid) -> Result<Uuid, RustyError>;
     async fn classify_tag(
         &self,
         user_id: Uuid,
@@ -1512,6 +1516,10 @@ impl AsyncBudgetCommandsTrait for PgRuntime {
         })
         .await
     }
+    async fn normalize_account_numbers(&self, user_id: Uuid, budget_id: Uuid) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, Budget::normalize_account_numbers)
+            .await
+    }
     async fn classify_tag(
         &self,
         user_id: Uuid,
@@ -1930,7 +1938,14 @@ impl AsyncBudgetCommandsTrait for PgRuntime {
 }
 
 #[cfg(feature = "server")]
-#[derive(Debug, WeldsModel)]
-pub struct EventId {
-    pub event_id: Uuid,
+mod event_id_model {
+    #![allow(clippy::unused_async_trait_impl)]
+    use super::{Uuid, WeldsModel};
+
+    #[derive(Debug, WeldsModel)]
+    pub struct EventId {
+        pub event_id: Uuid,
+    }
 }
+#[cfg(feature = "server")]
+pub use event_id_model::EventId;

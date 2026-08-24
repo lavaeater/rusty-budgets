@@ -632,7 +632,7 @@ mod tests {
 
             assert_eq!(last_day.year(), 2025);
             assert_eq!(last_day.month(), month);
-            assert_eq!(last_day.day(), expected_day, "Failed for month {}", month);
+            assert_eq!(last_day.day(), expected_day, "Failed for month {month}");
         }
     }
 
@@ -650,8 +650,7 @@ mod tests {
             assert_eq!(
                 last_day.day(),
                 expected_day,
-                "Failed for month {} in leap year",
-                month
+                "Failed for month {month} in leap year"
             );
         }
     }

@@ -1,6 +1,6 @@
 //! Deserialises a real `Budget` snapshot to prove schema changes stay
 //! backward-compatible, and reports the classification/suggestion split.
-//! Usage: cargo run -p api --example verify_snapshot -- <file.json>
+//! Usage: cargo run -p api --example `verify_snapshot` -- <file.json>
 use std::collections::HashMap;
 
 fn main() {
@@ -30,7 +30,7 @@ fn main() {
         *by_tag.entry(names.get(&tag_id).copied().unwrap_or("?")).or_default() += 1;
     }
     let mut groups: Vec<_> = by_tag.into_iter().collect();
-    groups.sort_by(|a, b| b.1.cmp(&a.1));
+    groups.sort_by_key(|g| std::cmp::Reverse(g.1));
     for (name, n) in groups.iter().take(10) {
         println!("  suggestion group: {n:>4} x {name}");
     }

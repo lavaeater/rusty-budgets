@@ -61,8 +61,7 @@ mod tests {
             let deserialized: MonthBeginsOn = serde_json::from_str(&serialized).unwrap();
             assert_eq!(
                 deserialized, variant,
-                "Serde round trip failed for variant: {:?}",
-                variant
+                "Serde round trip failed for variant: {variant:?}"
             );
         }
     }

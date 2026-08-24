@@ -1,7 +1,7 @@
 use crate::budget::budget_hero::BudgetState;
 use crate::budget::{ItemSelector, NewBudgetItem};
 use crate::{Button, ButtonVariant, Input, PopoverContent, PopoverRoot, PopoverTrigger};
-use api::models::{BankAccountType, BudgetingType, Periodicity};
+use api::models::{BankAccountType, BudgetingType, Periodicity, format_account_number};
 use api::view_models::{
     AllocationViewModel, BudgetItemViewModel, TransactionViewModel, TransferPair, TransferSuggestion,
 };
@@ -373,7 +373,7 @@ fn TransferPairCard(pair: TransferPair) -> Element {
                         {pair.outgoing.date.format("%Y-%m-%d").to_string()}
                     }
                     span { class: "transaction-amount negative", {pair.outgoing.amount.to_string()} }
-                    span { class: "transfer-account", {pair.outgoing.account_number.clone()} }
+                    span { class: "transfer-account", {format_account_number(&pair.outgoing.account_number)} }
                 }
                 div { class: "transfer-arrow", "⇄" }
                 div { class: "transfer-leg",
@@ -383,7 +383,7 @@ fn TransferPairCard(pair: TransferPair) -> Element {
                         {pair.incoming.date.format("%Y-%m-%d").to_string()}
                     }
                     span { class: "transaction-amount positive", {pair.incoming.amount.to_string()} }
-                    span { class: "transfer-account", {pair.incoming.account_number.clone()} }
+                    span { class: "transfer-account", {format_account_number(&pair.incoming.account_number)} }
                 }
             }
 

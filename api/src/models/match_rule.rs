@@ -184,139 +184,6 @@ pub fn tokenize_description_with_stopwords(
         .collect()
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_tokenize_description_new_china_trading() {
-        let description = "2025-11-26 NEW CHINA TRADING, OREBRO";
-        let tokens = tokenize_description(description);
-
-        // Date "2025-11-26" should be filtered out
-        // "OREBRO" should be filtered out (stopword)
-        // Remaining tokens should be lowercase, with the trailing comma from
-        // "TRADING, OREBRO" stripped so "trading," and "trading" tokenize
-        // identically.
-        assert_eq!(tokens, vec!["new", "china", "trading"]);
-    }
-
-    /// Table-driven coverage of the tokenizer's documented behaviour. This is
-    /// the heart of auto-categorisation (a `MatchRule.transaction_key` is just a
-    /// tokenised description), so the contract is locked down exhaustively.
-    #[test]
-    fn test_tokenize_description_table() {
-        // (input, expected tokens)
-        let cases: &[(&str, Vec<&str>)] = &[
-            // Lowercasing.
-            ("LÖN", vec!["lön"]),
-            // ISO date (YYYY-MM-DD) dropped. "VASTHA," loses its trailing
-            // comma before stopword filtering, so it now matches the
-            // "vastha" place-name stopword the same as "OREBRO" does —
-            // both are dropped.
-            (
-                "2025-09-30 WILLYS OREBRO VASTHA, OREBRO",
-                vec!["willys"],
-            ),
-            // Stopword "autogiro" dropped.
-            ("Autogiro Qliro", vec!["qliro"]),
-            // "kontaktlös" is a stopword; "zettle_*" only matches verbatim, so
-            // "zettle_*elinas" survives (its internal `_`/`*` are untouched —
-            // only leading/trailing punctuation is stripped). "MARKNAD,"
-            // loses its trailing comma.
-            (
-                "2025-09-27 kontaktlös ZETTLE_*ELINAS MARKNAD, GRODINGE",
-                vec!["zettle_*elinas", "marknad", "grodinge"],
-            ),
-            // Numbers that are NOT dates are kept (only date-shaped tokens drop):
-            // "9151"/"1421586" are too short to be a compact YYYYMMDD date.
-            (
-                "Överföring 9151 1421586",
-                vec!["överföring", "9151", "1421586"],
-            ),
-            // Compact YYYYMMDD (8 digits) is recognised as a date and dropped.
-            ("20250930 TEST", vec!["test"]),
-            // Slash-separated date dropped.
-            ("2025/09/30 COOP", vec!["coop"]),
-            // Empty input yields no tokens.
-            ("", vec![]),
-            // Whitespace-only input yields no tokens.
-            ("   ", vec![]),
-        ];
-
-        for (input, expected) in cases {
-            let got = tokenize_description(input);
-            let expected: Vec<String> = expected.iter().map(|s| s.to_string()).collect();
-            assert_eq!(&got, &expected, "tokenize_description({input:?})");
-        }
-    }
-
-    #[test]
-    fn test_is_date_pattern() {
-        assert!(is_date_pattern("2025-09-30"));
-        assert!(is_date_pattern("2025/09/30"));
-        assert!(is_date_pattern("20250930"));
-        // Too short.
-        assert!(!is_date_pattern("2025-9-3"));
-        assert!(!is_date_pattern("9151"));
-        // Right length but not all numeric.
-        assert!(!is_date_pattern("2025-ab-30"));
-        assert!(!is_date_pattern("hello123"));
-    }
-
-    #[test]
-    fn test_tokenize_with_custom_stopwords() {
-        let mut custom = HashSet::new();
-        custom.insert("willys".to_string());
-        let tokens = tokenize_description_with_stopwords("WILLYS mat", &custom);
-        // "willys" filtered by the custom stopword, "mat" survives.
-        assert_eq!(tokens, vec!["mat"]);
-    }
-
-    #[test]
-    fn test_matches_transaction_requires_all_tokens() {
-        let now = chrono::Utc::now();
-        let tx = BankTransaction::new(
-            Uuid::new_v4(),
-            "acc1",
-            crate::models::Money::new_dollars(-100, crate::models::Currency::SEK),
-            crate::models::Money::new_dollars(900, crate::models::Currency::SEK),
-            "WILLYS OREBRO MAT",
-            now,
-        );
-
-        // All tokens present -> matches.
-        let rule = MatchRule {
-            id: Uuid::new_v4(),
-            transaction_key: vec!["willys".to_string(), "mat".to_string()],
-            item_key: Vec::new(),
-            always_apply: true,
-            tag_id: None,
-        };
-        assert!(rule.matches_transaction(&tx));
-
-        // A token that isn't in the (tokenised) description -> no match.
-        let rule = MatchRule {
-            id: Uuid::new_v4(),
-            transaction_key: vec!["willys".to_string(), "coop".to_string()],
-            item_key: Vec::new(),
-            always_apply: true,
-            tag_id: None,
-        };
-        assert!(!rule.matches_transaction(&tx));
-
-        // An empty key never matches.
-        let rule = MatchRule {
-            id: Uuid::new_v4(),
-            transaction_key: Vec::new(),
-            item_key: Vec::new(),
-            always_apply: true,
-            tag_id: None,
-        };
-        assert!(!rule.matches_transaction(&tx));
-    }
-}
-
 impl MatchRule {
     /// Checks against an already-tokenized description. Use this (over
     /// [`Self::matches_transaction`]) whenever the same transaction is being
@@ -391,5 +258,138 @@ impl MatchRule {
 
     pub fn create_transaction_key(transaction: &BankTransaction) -> Vec<String> {
         tokenize_description(&transaction.description)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_tokenize_description_new_china_trading() {
+        let description = "2025-11-26 NEW CHINA TRADING, OREBRO";
+        let tokens = tokenize_description(description);
+
+        // Date "2025-11-26" should be filtered out
+        // "OREBRO" should be filtered out (stopword)
+        // Remaining tokens should be lowercase, with the trailing comma from
+        // "TRADING, OREBRO" stripped so "trading," and "trading" tokenize
+        // identically.
+        assert_eq!(tokens, vec!["new", "china", "trading"]);
+    }
+
+    /// Table-driven coverage of the tokenizer's documented behaviour. This is
+    /// the heart of auto-categorisation (a `MatchRule.transaction_key` is just a
+    /// tokenised description), so the contract is locked down exhaustively.
+    #[test]
+    fn test_tokenize_description_table() {
+        // (input, expected tokens)
+        let cases: &[(&str, Vec<&str>)] = &[
+            // Lowercasing.
+            ("LÖN", vec!["lön"]),
+            // ISO date (YYYY-MM-DD) dropped. "VASTHA," loses its trailing
+            // comma before stopword filtering, so it now matches the
+            // "vastha" place-name stopword the same as "OREBRO" does —
+            // both are dropped.
+            (
+                "2025-09-30 WILLYS OREBRO VASTHA, OREBRO",
+                vec!["willys"],
+            ),
+            // Stopword "autogiro" dropped.
+            ("Autogiro Qliro", vec!["qliro"]),
+            // "kontaktlös" is a stopword; "zettle_*" only matches verbatim, so
+            // "zettle_*elinas" survives (its internal `_`/`*` are untouched —
+            // only leading/trailing punctuation is stripped). "MARKNAD,"
+            // loses its trailing comma.
+            (
+                "2025-09-27 kontaktlös ZETTLE_*ELINAS MARKNAD, GRODINGE",
+                vec!["zettle_*elinas", "marknad", "grodinge"],
+            ),
+            // Numbers that are NOT dates are kept (only date-shaped tokens drop):
+            // "9151"/"1421586" are too short to be a compact YYYYMMDD date.
+            (
+                "Överföring 9151 1421586",
+                vec!["överföring", "9151", "1421586"],
+            ),
+            // Compact YYYYMMDD (8 digits) is recognised as a date and dropped.
+            ("20250930 TEST", vec!["test"]),
+            // Slash-separated date dropped.
+            ("2025/09/30 COOP", vec!["coop"]),
+            // Empty input yields no tokens.
+            ("", vec![]),
+            // Whitespace-only input yields no tokens.
+            ("   ", vec![]),
+        ];
+
+        for (input, expected) in cases {
+            let got = tokenize_description(input);
+            let expected: Vec<String> = expected.iter().map(ToString::to_string).collect();
+            assert_eq!(&got, &expected, "tokenize_description({input:?})");
+        }
+    }
+
+    #[test]
+    fn test_is_date_pattern() {
+        assert!(is_date_pattern("2025-09-30"));
+        assert!(is_date_pattern("2025/09/30"));
+        assert!(is_date_pattern("20250930"));
+        // Too short.
+        assert!(!is_date_pattern("2025-9-3"));
+        assert!(!is_date_pattern("9151"));
+        // Right length but not all numeric.
+        assert!(!is_date_pattern("2025-ab-30"));
+        assert!(!is_date_pattern("hello123"));
+    }
+
+    #[test]
+    fn test_tokenize_with_custom_stopwords() {
+        let mut custom = HashSet::new();
+        custom.insert("willys".to_string());
+        let tokens = tokenize_description_with_stopwords("WILLYS mat", &custom);
+        // "willys" filtered by the custom stopword, "mat" survives.
+        assert_eq!(tokens, vec!["mat"]);
+    }
+
+    #[test]
+    fn test_matches_transaction_requires_all_tokens() {
+        let now = chrono::Utc::now();
+        let tx = BankTransaction::new(
+            Uuid::new_v4(),
+            "acc1",
+            crate::models::Money::new_dollars(-100, crate::models::Currency::SEK),
+            crate::models::Money::new_dollars(900, crate::models::Currency::SEK),
+            "WILLYS OREBRO MAT",
+            now,
+        );
+
+        // All tokens present -> matches.
+        let rule = MatchRule {
+            id: Uuid::new_v4(),
+            transaction_key: vec!["willys".to_string(), "mat".to_string()],
+            item_key: Vec::new(),
+            always_apply: true,
+            tag_id: None,
+        };
+        assert!(rule.matches_transaction(&tx));
+
+        // A token that isn't in the (tokenised) description -> no match.
+        let rule = MatchRule {
+            id: Uuid::new_v4(),
+            transaction_key: vec!["willys".to_string(), "coop".to_string()],
+            item_key: Vec::new(),
+            always_apply: true,
+            tag_id: None,
+        };
+        assert!(!rule.matches_transaction(&tx));
+
+        // An empty key never matches.
+        let rule = MatchRule {
+            id: Uuid::new_v4(),
+            transaction_key: Vec::new(),
+            item_key: Vec::new(),
+            always_apply: true,
+            tag_id: None,
+        };
+        assert!(!rule.matches_transaction(&tx));
     }
 }

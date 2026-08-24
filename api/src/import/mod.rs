@@ -1,5 +1,5 @@
 use crate::cqrs::framework::{AsyncRuntime, CommandError, Runtime};
-use crate::models::{Budget, BudgetEvent, Currency, Money};
+use crate::models::{Budget, BudgetEvent, Currency, Money, normalize_account_number};
 use calamine::{Data, DataType, Range, Reader, Xlsx, XlsxError, open_workbook, open_workbook_from_rs};
 use chrono::{DateTime, NaiveDate, ParseError, Utc};
 use dioxus::prelude::{debug, info};
@@ -11,7 +11,7 @@ use uuid::Uuid;
 fn extract_transfer_account_number(description: &str) -> Option<String> {
     let desc = description.trim();
     if let Some(rest) = desc.strip_prefix("Överföring ") {
-        let digits: String = rest.chars().filter(char::is_ascii_digit).collect();
+        let digits = normalize_account_number(rest);
         if digits.starts_with("915") {
             return Some(digits);
         }
@@ -84,7 +84,7 @@ fn parse_skandia_sheet(range: &Range<Data>) -> Result<ParsedSkandiaSheet, Import
     for (row_num, row) in range.rows().enumerate() {
         debug!("Row data: {:#?}", row);
         if row_num == 0 {
-            account_number = Some(row[1].to_string());
+            account_number = Some(normalize_account_number(&row[1].to_string()));
         } else if row_num > 3 && row.len() > 3 {
             let amount = Money::new_cents((row[2].as_f64().unwrap() * 100.0) as i64, Currency::SEK);
             let balance = Money::new_cents((row[3].as_f64().unwrap() * 100.0) as i64, Currency::SEK);

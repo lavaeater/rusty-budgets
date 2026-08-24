@@ -1,3 +1,4 @@
+mod account_numbers_normalized;
 pub mod actual_added;
 pub mod actual_funds_adjusted;
 pub mod actual_funds_reallocated;
@@ -25,6 +26,7 @@ mod transaction_untagged;
 mod transfer_pair_rejected;
 mod transfer_rule_added;
 
+pub use account_numbers_normalized::AccountNumbersNormalized;
 pub use actual_added::ActualAdded;
 pub use actual_funds_adjusted::ActualBudgetedFundsAdjusted;
 pub use actual_funds_reallocated::BudgetedFundsReallocated;

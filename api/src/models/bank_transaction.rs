@@ -7,6 +7,33 @@ use serde::{Deserialize, Serialize};
 use std::hash::{DefaultHasher, Hash, Hasher};
 use uuid::Uuid;
 
+/// Strips everything but ASCII digits — the canonical form account numbers
+/// are stored and compared in, regardless of how a bank punctuates them for
+/// display (e.g. Skandiabanken's `9159-482.485-3`). Storing the punctuated
+/// form let the same physical account be imported as two different
+/// [`BankAccount`]s depending on which sheet cell it came from.
+pub fn normalize_account_number(raw: &str) -> String {
+    raw.chars().filter(char::is_ascii_digit).collect()
+}
+
+/// Formats a normalized (digits-only) Skandiabanken-style account number for
+/// display: `XXXX-XXX.XXX-X` (4-digit clearing number + 3+3+1 digit account
+/// number). Anything that isn't exactly 11 digits — a different bank's
+/// format, or a number that hasn't been normalized — is returned unchanged.
+pub fn format_account_number(digits: &str) -> String {
+    if digits.len() == 11 && digits.bytes().all(|b| b.is_ascii_digit()) {
+        format!(
+            "{}-{}.{}-{}",
+            &digits[0..4],
+            &digits[4..7],
+            &digits[7..10],
+            &digits[10..11]
+        )
+    } else {
+        digits.to_string()
+    }
+}
+
 /// What an account is used for. Drives how transfers into/out of it are
 /// interpreted — most importantly, a transfer landing in a `Savings`
 /// account is always a savings contribution, never a neutral internal
@@ -130,5 +157,27 @@ impl BankTransaction {
 
     pub fn period_id(&self, month_begins_on: MonthBeginsOn) -> PeriodId {
         PeriodId::from_date(self.date, month_begins_on)
+    }
+}
+
+#[cfg(test)]
+mod normalization_tests {
+    use super::*;
+
+    #[test]
+    fn normalize_strips_hyphens_and_periods() {
+        assert_eq!(normalize_account_number("9159-482.485-3"), "91594824853");
+        assert_eq!(normalize_account_number("91594824853"), "91594824853");
+    }
+
+    #[test]
+    fn format_punctuates_an_eleven_digit_number() {
+        assert_eq!(format_account_number("91594824853"), "9159-482.485-3");
+    }
+
+    #[test]
+    fn format_leaves_non_eleven_digit_numbers_unchanged() {
+        assert_eq!(format_account_number("1234567890"), "1234567890");
+        assert_eq!(format_account_number(""), "");
     }
 }
