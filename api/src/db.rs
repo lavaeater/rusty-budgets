@@ -546,8 +546,8 @@ pub async fn reject_transfer_pair(
 /// `events`. Returns how many rule matches were applied.
 ///
 /// Shared by [`tag_transaction`] and [`resolve_transfer_pair`] so both can
-/// wrap it in their own single `load`/`append_many`/`snapshot` instead of
-/// this reloading the aggregate itself.
+/// wrap it in their own single `load`/`append_many` instead of this
+/// reloading the aggregate itself.
 fn tag_transaction_in_memory(
     current: &mut Budget,
     events: &mut Vec<BudgetEvent>,
@@ -584,7 +584,7 @@ fn tag_transaction_in_memory(
 /// again. Skips learning if an identical rule already exists.
 ///
 /// All of this happens against a single in-memory load, one
-/// `append_many`/`snapshot` — resolving 764 pairs by hand used to cost two
+/// `append_many` — resolving 764 pairs by hand used to cost two
 /// full reloads each (one via `tag_transaction`/`ignore_transaction`, one
 /// via the other); now it's one, plus this no longer does its learning as a
 /// separate step either.
@@ -631,8 +631,18 @@ pub async fn resolve_transfer_pair(
         }
     }
 
+    // Deliberately no `rt.snapshot(&current)` here: `current` was mutated by
+    // calling each event's raw `apply()` directly, which never advances
+    // `last_event`/`version` (only `StoredEvent::apply`, used during replay,
+    // does that). Snapshotting this `current` as-is would persist a Budget
+    // whose `tags`/etc. already include these events but whose `last_event`
+    // still points before them — the next `load()` would then re-fetch and
+    // re-replay these same events on top of a state that already has them,
+    // duplicating anything pushed unconditionally into a `Vec` (this is what
+    // caused duplicated tags after rules import). Leaving the snapshot to the
+    // next natural `load()` (which the caller always does right after) keeps
+    // it correct.
     rt.append_many(user_id, events).await?;
-    rt.snapshot(&current).await?;
     Ok(budget_id)
 }
 
@@ -676,8 +686,8 @@ pub async fn confirm_transfer_suggestions(user_id: Uuid, budget_id: Uuid) -> Res
     }
 
     if !events.is_empty() {
+        // No eager snapshot — see the comment in `resolve_transfer_pair` above.
         rt.append_many(user_id, events).await?;
-        rt.snapshot(&current).await?;
     }
     info!("confirm_transfer_suggestions: applied {applied} suggestions");
     Ok(applied)
@@ -688,8 +698,8 @@ pub async fn confirm_transfer_suggestions(user_id: Uuid, budget_id: Uuid) -> Res
 /// resulting events onto `events`. Returns how many were applied.
 ///
 /// Kept as a helper shared by [`tag_transaction`] and [`evaluate_tag_rules`]
-/// so both can do their one `load`/`append_many`/`snapshot` around it instead
-/// of each other, which used to mean a whole extra full reload per call. See
+/// so both can do their one `load`/`append_many` around it instead of each
+/// other, which used to mean a whole extra full reload per call. See
 /// [`confirm_tag_suggestions`] for why the same shape isn't reused there.
 fn apply_automatic_rule_matches(current: &mut Budget, events: &mut Vec<BudgetEvent>) -> usize {
     let matches = current.evaluate_tag_rules();
@@ -789,8 +799,8 @@ pub async fn tag_transaction(
 
     let applied = tag_transaction_in_memory(&mut current, &mut events, tx_id, tag_id)?;
 
+    // No eager snapshot — see the comment in `resolve_transfer_pair` above.
     rt.append_many(user_id, events).await?;
-    rt.snapshot(&current).await?;
     tracing::info!(
         "[perf] tag_transaction/total (applied {} rule matches): {:?}",
         applied,
@@ -808,8 +818,8 @@ pub async fn evaluate_tag_rules(user_id: Uuid, budget_id: Uuid) -> Result<Uuid, 
     let applied = apply_automatic_rule_matches(&mut current, &mut events);
     info!("[perf] evaluate_tag_rules: {} matches found in {:?}", applied, t.elapsed());
     if !events.is_empty() {
+        // No eager snapshot — see the comment in `resolve_transfer_pair` above.
         rt.append_many(user_id, events).await?;
-        rt.snapshot(&current).await?;
     }
     info!("[perf] evaluate_tag_rules/total (applied {} tags): {:?}", applied, t.elapsed());
     Ok(budget_id)
@@ -850,8 +860,8 @@ pub async fn confirm_tag_suggestions(
         }
     }
     if !events.is_empty() {
+        // No eager snapshot — see the comment in `resolve_transfer_pair` above.
         rt.append_many(user_id, events).await?;
-        rt.snapshot(&current).await?;
     }
     info!("confirm_tag_suggestions: applied {applied} suggestions");
     Ok(applied)
@@ -886,8 +896,8 @@ pub async fn apply_all_tag_rules(user_id: Uuid, budget_id: Uuid) -> Result<Uuid,
         }
     }
     if !events.is_empty() {
+        // No eager snapshot — see the comment in `resolve_transfer_pair` above.
         rt.append_many(user_id, events).await?;
-        rt.snapshot(&current).await?;
     }
     Ok(budget_id)
 }
@@ -951,8 +961,8 @@ pub async fn delete_rule(user_id: Uuid, budget_id: Uuid, rule_id: Uuid) -> Resul
         }
     }
 
+    // No eager snapshot — see the comment in `resolve_transfer_pair` above.
     rt.append_many(user_id, events).await?;
-    rt.snapshot(&current).await?;
     Ok(budget_id)
 }
 
@@ -973,7 +983,7 @@ pub async fn export_tags_and_rules(
 /// Applies a JSON document produced by [`export_tags_and_rules`] onto
 /// `budget_id`: creates any tag missing by name (reusing an existing one of
 /// the same name otherwise) and any rule not already present, in a single
-/// load/append/snapshot regardless of how many tags or rules are in the file.
+/// load/append regardless of how many tags or rules are in the file.
 pub async fn import_tags_and_rules(
     user_id: Uuid,
     budget_id: Uuid,
@@ -985,8 +995,8 @@ pub async fn import_tags_and_rules(
     let mut events: Vec<BudgetEvent> = Vec::new();
     let summary = crate::rules_export::apply_rules_export(&mut current, &mut events, &export);
     if !events.is_empty() {
+        // No eager snapshot — see the comment in `resolve_transfer_pair` above.
         rt.append_many(user_id, events).await?;
-        rt.snapshot(&current).await?;
     }
     info!(
         "import_tags_and_rules: {} tags created, {} reused, {} rules created, {} skipped, \

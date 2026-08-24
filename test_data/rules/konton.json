@@ -1,0 +1,77 @@
+{
+  "tags": [],
+  "rules": [],
+  "transfer_rules": [],
+  "bank_accounts": [
+    {
+      "account_number": "91505507725",
+      "description": "Mitt lönekonto",
+      "account_type": "Checking"
+    },
+    {
+      "account_number": "91598461097",
+      "description": "Skandiabanken",
+      "account_type": "Checking"
+    },
+    {
+      "account_number": "91594824853",
+      "description": "Gemensamt",
+      "account_type": "Checking"
+    },
+    {
+      "account_number": "91597530877",
+      "description": "Räkningar",
+      "account_type": "Billing"
+    },
+    {
+      "account_number": "91511421586",
+      "description": "Skandiabanken",
+      "account_type": "Checking"
+    },
+    {
+      "account_number": "91599449015",
+      "description": "Skandiabanken",
+      "account_type": "Checking"
+    },
+    {
+      "account_number": "91598823606",
+      "description": "Skandiabanken",
+      "account_type": "Checking"
+    },
+    {
+      "account_number": "91599094497",
+      "description": "Spar - skatt",
+      "account_type": "Savings"
+    },
+    {
+      "account_number": "91594824888",
+      "description": "Spar - gemensamt",
+      "account_type": "Savings"
+    },
+    {
+      "account_number": "91503942750",
+      "description": "Lisas lönekonto",
+      "account_type": "Checking"
+    },
+    {
+      "account_number": "91565187379",
+      "description": "Spar - ISK",
+      "account_type": "Savings"
+    },
+    {
+      "account_number": "91508264289",
+      "description": "Skandiabanken",
+      "account_type": "Checking"
+    },
+    {
+      "account_number": "91597977707",
+      "description": "Spar",
+      "account_type": "Savings"
+    },
+    {
+      "account_number": "91595328426",
+      "description": "Spar - mitt",
+      "account_type": "Savings"
+    }
+  ]
+}
