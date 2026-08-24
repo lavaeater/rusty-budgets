@@ -438,9 +438,13 @@ pub async fn modify_bank_account(
     user_id: Uuid,
     budget_id: Uuid,
     account_id: Uuid,
-    account_type: BankAccountType,
+    account_type: Option<BankAccountType>,
+    description: Option<String>,
 ) -> Result<Uuid, RustyError> {
-    runtime().await.modify_bank_account(user_id, budget_id, account_id, account_type).await
+    runtime()
+        .await
+        .modify_bank_account(user_id, budget_id, account_id, account_type, description)
+        .await
 }
 
 pub async fn normalize_account_numbers(user_id: Uuid, budget_id: Uuid) -> Result<Uuid, RustyError> {

@@ -2,7 +2,7 @@ use crate::budget::budget_hero::BudgetState;
 use crate::budget::{CarryoverSettings, RulesView, TagReviewView, TagsView};
 use crate::file_chooser::{FileData, FileDialog};
 use crate::{Button, ButtonVariant, Input};
-use api::models::{BankAccountType, MonthBeginsOn, PeriodId, format_account_number};
+use api::models::{BankAccount, BankAccountType, MonthBeginsOn, PeriodId, format_account_number};
 use api::{
     auto_budget_all, auto_budget_period, create_budget, export_budget, export_tags_and_rules,
     import_budget, import_tags_and_rules, import_transactions_bytes, list_budgets,
@@ -11,6 +11,7 @@ use api::{
 use chrono::Utc;
 use dioxus::logger::tracing::info;
 use dioxus::prelude::*;
+use uuid::Uuid;
 
 /// Maintenance: import, tags, rules and the auto-budget tools.
 ///
@@ -219,64 +220,11 @@ pub fn SettingsTab() -> Element {
                 }
                 div { class: "settings-budget-list",
                     for account in budget.accounts.clone() {
-                        {
-                            let account_id = account.id;
-                            let formatted_number = format_account_number(&account.account_number);
-                            rsx! {
-                                div { key: "{account_id}", class: "settings-budget-row",
-                                    span { class: "settings-budget-name",
-                                        "{account.description} ({formatted_number})"
-                                    }
-                                    select {
-                                        onchange: move |e: FormEvent| {
-                                            let account_type = match e.value().as_str() {
-                                                "Billing" => BankAccountType::Billing,
-                                                "Savings" => BankAccountType::Savings,
-                                                "Personal" => BankAccountType::Personal,
-                                                "CreditCard" => BankAccountType::CreditCard,
-                                                _ => BankAccountType::Checking,
-                                            };
-                                            spawn(async move {
-                                                if let Ok(bv) = modify_bank_account(
-                                                        budget_id,
-                                                        account_id,
-                                                        account_type,
-                                                        period_id,
-                                                    )
-                                                    .await
-                                                {
-                                                    consume_context::<BudgetState>().0.set(bv);
-                                                }
-                                            });
-                                        },
-                                        option {
-                                            value: "Checking",
-                                            selected: account.account_type == BankAccountType::Checking,
-                                            "Vanligt konto",
-                                        }
-                                        option {
-                                            value: "Billing",
-                                            selected: account.account_type == BankAccountType::Billing,
-                                            "Räkningskonto",
-                                        }
-                                        option {
-                                            value: "Savings",
-                                            selected: account.account_type == BankAccountType::Savings,
-                                            "Sparkonto",
-                                        }
-                                        option {
-                                            value: "Personal",
-                                            selected: account.account_type == BankAccountType::Personal,
-                                            "Personligt konto",
-                                        }
-                                        option {
-                                            value: "CreditCard",
-                                            selected: account.account_type == BankAccountType::CreditCard,
-                                            "Kreditkort",
-                                        }
-                                    }
-                                }
-                            }
+                        AccountRow {
+                            key: "{account.id}",
+                            account,
+                            budget_id,
+                            period_id,
                         }
                     }
                 }
@@ -380,6 +328,89 @@ pub fn SettingsTab() -> Element {
                 }
                 if let Some(status) = budget_switch_status() {
                     p { class: "settings-hint", {status} }
+                }
+            }
+        }
+    }
+}
+
+#[component]
+fn AccountRow(account: BankAccount, budget_id: Uuid, period_id: PeriodId) -> Element {
+    let account_id = account.id;
+    let formatted_number = format_account_number(&account.account_number);
+    let original_description = account.description.clone();
+    let mut description = use_signal(|| account.description.clone());
+
+    let commit_description = move |_| {
+        let name = description().trim().to_string();
+        if name.is_empty() || name == original_description {
+            description.set(original_description.clone());
+            return;
+        }
+        spawn(async move {
+            if let Ok(bv) =
+                modify_bank_account(budget_id, account_id, None, Some(name), period_id).await
+            {
+                consume_context::<BudgetState>().0.set(bv);
+            }
+        });
+    };
+
+    rsx! {
+        div { class: "settings-budget-row",
+            Input {
+                value: description(),
+                oninput: move |e: FormEvent| description.set(e.value()),
+                onchange: commit_description,
+            }
+            span { class: "settings-budget-name", "({formatted_number})" }
+            select {
+                onchange: move |e: FormEvent| {
+                    let account_type = match e.value().as_str() {
+                        "Billing" => BankAccountType::Billing,
+                        "Savings" => BankAccountType::Savings,
+                        "Personal" => BankAccountType::Personal,
+                        "CreditCard" => BankAccountType::CreditCard,
+                        _ => BankAccountType::Checking,
+                    };
+                    spawn(async move {
+                        if let Ok(bv) = modify_bank_account(
+                                budget_id,
+                                account_id,
+                                Some(account_type),
+                                None,
+                                period_id,
+                            )
+                            .await
+                        {
+                            consume_context::<BudgetState>().0.set(bv);
+                        }
+                    });
+                },
+                option {
+                    value: "Checking",
+                    selected: account.account_type == BankAccountType::Checking,
+                    "Vanligt konto",
+                }
+                option {
+                    value: "Billing",
+                    selected: account.account_type == BankAccountType::Billing,
+                    "Räkningskonto",
+                }
+                option {
+                    value: "Savings",
+                    selected: account.account_type == BankAccountType::Savings,
+                    "Sparkonto",
+                }
+                option {
+                    value: "Personal",
+                    selected: account.account_type == BankAccountType::Personal,
+                    "Personligt konto",
+                }
+                option {
+                    value: "CreditCard",
+                    selected: account.account_type == BankAccountType::CreditCard,
+                    "Kreditkort",
                 }
             }
         }

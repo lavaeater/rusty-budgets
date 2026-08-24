@@ -160,10 +160,11 @@ impl BudgetCommandsTrait for JoyDbBudgetRuntime {
         user_id: Uuid,
         budget_id: Uuid,
         account_id: Uuid,
-        account_type: BankAccountType,
+        account_type: Option<BankAccountType>,
+        description: Option<String>,
     ) -> Result<Uuid, RustyError> {
         self.cmd(user_id, budget_id, |budget| {
-            budget.modify_bank_account(account_id, account_type)
+            budget.modify_bank_account(account_id, account_type, description)
         })
     }
     fn normalize_account_numbers(&self, user_id: Uuid, budget_id: Uuid) -> Result<Uuid, RustyError> {
@@ -597,7 +598,8 @@ pub trait BudgetCommandsTrait {
         user_id: Uuid,
         budget_id: Uuid,
         account_id: Uuid,
-        account_type: BankAccountType,
+        account_type: Option<BankAccountType>,
+        description: Option<String>,
     ) -> Result<Uuid, RustyError>;
     fn normalize_account_numbers(&self, user_id: Uuid, budget_id: Uuid) -> Result<Uuid, RustyError>;
     fn classify_tag(
@@ -828,7 +830,8 @@ pub trait AsyncBudgetCommandsTrait {
         user_id: Uuid,
         budget_id: Uuid,
         account_id: Uuid,
-        account_type: BankAccountType,
+        account_type: Option<BankAccountType>,
+        description: Option<String>,
     ) -> Result<Uuid, RustyError>;
     async fn normalize_account_numbers(&self, user_id: Uuid, budget_id: Uuid) -> Result<Uuid, RustyError>;
     async fn classify_tag(
@@ -1509,10 +1512,11 @@ impl AsyncBudgetCommandsTrait for PgRuntime {
         user_id: Uuid,
         budget_id: Uuid,
         account_id: Uuid,
-        account_type: BankAccountType,
+        account_type: Option<BankAccountType>,
+        description: Option<String>,
     ) -> Result<Uuid, RustyError> {
         self.cmd(user_id, budget_id, |budget| {
-            budget.modify_bank_account(account_id, account_type)
+            budget.modify_bank_account(account_id, account_type, description)
         })
         .await
     }

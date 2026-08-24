@@ -2258,3 +2258,30 @@ pub fn normalize_account_numbers_merges_differently_punctuated_duplicates() -> R
     assert_eq!(budget.accounts.len(), 1);
     Ok(())
 }
+
+#[test]
+pub fn modify_bank_account_updates_type_and_description_independently() -> Result<(), RustyError> {
+    let rt = JoyDbBudgetRuntime::new_in_memory();
+    let user_id = Uuid::new_v4();
+    let budget_id = rt.create_budget(
+        user_id,
+        "Test Budget",
+        true,
+        MonthBeginsOn::default(),
+        Currency::SEK,
+    )?;
+    let account_id = rt.ensure_account(user_id, budget_id, "91594824853", "Skandiabanken")?;
+
+    // Renaming leaves the type alone.
+    rt.modify_bank_account(user_id, budget_id, account_id, None, Some("Sparkonto barn".to_string()))?;
+    let account = rt.load(budget_id)?.get_account("91594824853").unwrap().clone();
+    assert_eq!(account.description, "Sparkonto barn");
+    assert_eq!(account.account_type, BankAccountType::Checking);
+
+    // Retyping leaves the (now-renamed) description alone.
+    rt.modify_bank_account(user_id, budget_id, account_id, Some(BankAccountType::Savings), None)?;
+    let account = rt.load(budget_id)?.get_account("91594824853").unwrap().clone();
+    assert_eq!(account.description, "Sparkonto barn");
+    assert_eq!(account.account_type, BankAccountType::Savings);
+    Ok(())
+}

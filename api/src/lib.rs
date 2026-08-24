@@ -175,11 +175,12 @@ pub async fn modify_tag(
 pub async fn modify_bank_account(
     budget_id: Uuid,
     account_id: Uuid,
-    account_type: BankAccountType,
+    account_type: Option<BankAccountType>,
+    description: Option<String>,
     period_id: PeriodId,
 ) -> ServerFnResult<BudgetViewModel> {
     let user = db::get_default_user().await?;
-    db::modify_bank_account(user.id, budget_id, account_id, account_type).await?;
+    db::modify_bank_account(user.id, budget_id, account_id, account_type, description).await?;
     Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }
 

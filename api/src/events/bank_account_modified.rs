@@ -9,13 +9,19 @@ use uuid::Uuid;
 pub struct BankAccountModified {
     pub budget_id: Uuid,
     pub account_id: Uuid,
-    pub account_type: BankAccountType,
+    pub account_type: Option<BankAccountType>,
+    pub description: Option<String>,
 }
 
 impl BankAccountModifiedHandler for Budget {
     fn apply_modify_bank_account(&mut self, event: &BankAccountModified) -> Uuid {
         if let Some(account) = self.accounts.iter_mut().find(|a| a.id == event.account_id) {
-            account.account_type = event.account_type;
+            if let Some(account_type) = event.account_type {
+                account.account_type = account_type;
+            }
+            if let Some(description) = &event.description {
+                account.description.clone_from(description);
+            }
         }
         event.account_id
     }
@@ -23,7 +29,8 @@ impl BankAccountModifiedHandler for Budget {
     fn modify_bank_account_impl(
         &self,
         account_id: Uuid,
-        account_type: BankAccountType,
+        account_type: Option<BankAccountType>,
+        description: Option<String>,
     ) -> Result<BankAccountModified, CommandError> {
         if !self.accounts.iter().any(|a| a.id == account_id) {
             return Err(CommandError::NotFound("Account not found".to_string()));
@@ -32,6 +39,7 @@ impl BankAccountModifiedHandler for Budget {
             budget_id: self.id,
             account_id,
             account_type,
+            description,
         })
     }
 }
