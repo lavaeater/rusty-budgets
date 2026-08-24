@@ -7,9 +7,31 @@
 //! since ids from the source budget mean nothing in the target one.
 
 use crate::cqrs::framework::DomainEvent;
-use crate::models::{Budget, BudgetEvent, CostKind, Matching, Periodicity};
+use crate::models::{
+    BankAccountType, Budget, BudgetEvent, CostKind, Matching, Periodicity, normalize_account_number,
+};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+/// Which sections of a budget's rules/accounts to include in an export.
+/// Import needs no equivalent — [`apply_rules_export`] simply processes
+/// whatever sections a given export happens to carry.
+#[derive(Debug, Clone, Copy)]
+pub struct ExportSelection {
+    pub tags_and_rules: bool,
+    pub transfer_rules: bool,
+    pub bank_accounts: bool,
+}
+
+impl Default for ExportSelection {
+    fn default() -> Self {
+        Self {
+            tags_and_rules: true,
+            transfer_rules: true,
+            bank_accounts: true,
+        }
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RulesExport {
@@ -19,6 +41,10 @@ pub struct RulesExport {
     /// those files simply carry no transfer rules.
     #[serde(default)]
     pub transfer_rules: Vec<TransferRuleExport>,
+    /// Absent from exports written before this field existed; imports of
+    /// those files simply carry no bank accounts.
+    #[serde(default)]
+    pub bank_accounts: Vec<BankAccountExport>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -51,21 +77,23 @@ pub struct TransferRuleExport {
     pub tag_name: Option<String>,
 }
 
+/// An account's name and type, portable across budgets by (normalized)
+/// account number — never by id, since a fresh import of the same bank
+/// statement mints its own account ids.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BankAccountExport {
+    pub account_number: String,
+    pub description: String,
+    pub account_type: BankAccountType,
+}
+
 /// Deleted tags aren't exported: they exist only to keep historical
 /// transactions intact, not as something to reapply on a clean budget. Any
-/// rule pointing at one is exported with `tag_name: None`.
-pub fn export_tags_and_rules(budget: &Budget) -> RulesExport {
-    let tags = budget
-        .get_tags()
-        .iter()
-        .filter(|t| !t.deleted)
-        .map(|t| TagExport {
-            name: t.name.clone(),
-            cost_kind: t.cost_kind,
-            matching: t.matching,
-        })
-        .collect();
-
+/// rule pointing at one is exported with `tag_name: None`. `selection`
+/// controls which sections are populated — an unselected section exports as
+/// an empty `Vec`, which [`apply_rules_export`] treats as "nothing to do"
+/// on import, so a partial export round-trips safely.
+pub fn export_tags_and_rules(budget: &Budget, selection: ExportSelection) -> RulesExport {
     let live_tag_name_by_id: HashMap<_, _> = budget
         .get_tags()
         .iter()
@@ -73,33 +101,71 @@ pub fn export_tags_and_rules(budget: &Budget) -> RulesExport {
         .map(|t| (t.id, t.name.clone()))
         .collect();
 
-    let rules = budget
-        .match_rules
-        .iter()
-        .map(|r| RuleExport {
-            tag_name: r.tag_id.and_then(|id| live_tag_name_by_id.get(&id).cloned()),
-            transaction_key: r.transaction_key.clone(),
-            item_key: r.item_key.clone(),
-            always_apply: r.always_apply,
-        })
-        .collect();
+    let tags = if selection.tags_and_rules {
+        budget
+            .get_tags()
+            .iter()
+            .filter(|t| !t.deleted)
+            .map(|t| TagExport {
+                name: t.name.clone(),
+                cost_kind: t.cost_kind,
+                matching: t.matching,
+            })
+            .collect()
+    } else {
+        Vec::new()
+    };
 
-    let transfer_rules = budget
-        .transfer_rules
-        .iter()
-        .map(|r| TransferRuleExport {
-            outgoing_account: r.outgoing_account.clone(),
-            incoming_account: r.incoming_account.clone(),
-            outgoing_key: r.outgoing_key.clone(),
-            incoming_key: r.incoming_key.clone(),
-            tag_name: r.tag_id.and_then(|id| live_tag_name_by_id.get(&id).cloned()),
-        })
-        .collect();
+    let rules = if selection.tags_and_rules {
+        budget
+            .match_rules
+            .iter()
+            .map(|r| RuleExport {
+                tag_name: r.tag_id.and_then(|id| live_tag_name_by_id.get(&id).cloned()),
+                transaction_key: r.transaction_key.clone(),
+                item_key: r.item_key.clone(),
+                always_apply: r.always_apply,
+            })
+            .collect()
+    } else {
+        Vec::new()
+    };
+
+    let transfer_rules = if selection.transfer_rules {
+        budget
+            .transfer_rules
+            .iter()
+            .map(|r| TransferRuleExport {
+                outgoing_account: r.outgoing_account.clone(),
+                incoming_account: r.incoming_account.clone(),
+                outgoing_key: r.outgoing_key.clone(),
+                incoming_key: r.incoming_key.clone(),
+                tag_name: r.tag_id.and_then(|id| live_tag_name_by_id.get(&id).cloned()),
+            })
+            .collect()
+    } else {
+        Vec::new()
+    };
+
+    let bank_accounts = if selection.bank_accounts {
+        budget
+            .accounts
+            .iter()
+            .map(|a| BankAccountExport {
+                account_number: a.account_number.clone(),
+                description: a.description.clone(),
+                account_type: a.account_type,
+            })
+            .collect()
+    } else {
+        Vec::new()
+    };
 
     RulesExport {
         tags,
         rules,
         transfer_rules,
+        bank_accounts,
     }
 }
 
@@ -112,6 +178,9 @@ pub struct ImportSummary {
     pub rules_skipped: usize,
     pub transfer_rules_created: usize,
     pub transfer_rules_skipped: usize,
+    pub bank_accounts_created: usize,
+    pub bank_accounts_updated: usize,
+    pub bank_accounts_reused: usize,
 }
 
 /// Applies `export` to `current` **in memory**: creates any tag that doesn't
@@ -204,7 +273,55 @@ pub fn apply_rules_export(
         }
     }
 
+    for account in &export.bank_accounts {
+        apply_bank_account_export(current, events, account, &mut summary);
+    }
+
     summary
+}
+
+/// One [`BankAccountExport`] entry: updates the matching existing account
+/// (by normalized number) if its type or description drifted, or creates it
+/// if this budget has never seen that account before.
+fn apply_bank_account_export(
+    current: &mut Budget,
+    events: &mut Vec<BudgetEvent>,
+    account: &BankAccountExport,
+    summary: &mut ImportSummary,
+) {
+    let normalized_number = normalize_account_number(&account.account_number);
+    if let Some(existing) = current.accounts.iter().find(|a| a.account_number == normalized_number) {
+        let existing_id = existing.id;
+        let type_changed = existing.account_type != account.account_type;
+        let description_changed = existing.description != account.description;
+        if !type_changed && !description_changed {
+            summary.bank_accounts_reused += 1;
+            return;
+        }
+        if let Ok(modified) = current.modify_bank_account(
+            existing_id,
+            type_changed.then_some(account.account_type),
+            description_changed.then(|| account.description.clone()),
+        ) {
+            modified.apply(current);
+            events.push(modified.into());
+            summary.bank_accounts_updated += 1;
+        }
+        return;
+    }
+
+    let Ok(created) = current.create_bank_account(normalized_number, account.description.clone()) else {
+        return;
+    };
+    let account_id = created.apply(current);
+    events.push(created.into());
+    if account.account_type != BankAccountType::default()
+        && let Ok(modified) = current.modify_bank_account(account_id, Some(account.account_type), None)
+    {
+        modified.apply(current);
+        events.push(modified.into());
+    }
+    summary.bank_accounts_created += 1;
 }
 
 #[cfg(test)]
@@ -260,7 +377,7 @@ mod tests {
         .unwrap();
 
         let budget = rt.load(budget_id).unwrap();
-        let export = export_tags_and_rules(&budget);
+        let export = export_tags_and_rules(&budget, ExportSelection::default());
         assert_eq!(export.tags.len(), 1);
         assert_eq!(export.tags[0].name, "Electricity");
         assert_eq!(export.rules.len(), 1);
@@ -302,5 +419,79 @@ mod tests {
         assert_eq!(summary2.transfer_rules_created, 0);
         assert_eq!(summary2.transfer_rules_skipped, 1);
         assert!(events2.is_empty());
+    }
+
+    #[test]
+    fn export_selection_filters_sections() {
+        let rt = JoyDbBudgetRuntime::new_in_memory();
+        let user_id = Uuid::new_v4();
+        let budget_id = new_budget(&rt, user_id);
+        rt.create_tag(user_id, budget_id, "Electricity".to_string(), Periodicity::Monthly)
+            .unwrap();
+        rt.ensure_account(user_id, budget_id, "1234567890", "Skandiabanken")
+            .unwrap();
+
+        let budget = rt.load(budget_id).unwrap();
+        let export = export_tags_and_rules(
+            &budget,
+            ExportSelection {
+                tags_and_rules: false,
+                transfer_rules: false,
+                bank_accounts: true,
+            },
+        );
+        assert!(export.tags.is_empty());
+        assert!(export.rules.is_empty());
+        assert!(export.transfer_rules.is_empty());
+        assert_eq!(export.bank_accounts.len(), 1);
+        assert_eq!(export.bank_accounts[0].account_number, "1234567890");
+    }
+
+    #[test]
+    fn bank_accounts_round_trip_create_then_update() {
+        let rt = JoyDbBudgetRuntime::new_in_memory();
+        let user_id = Uuid::new_v4();
+        let budget_id = new_budget(&rt, user_id);
+        let account_id = rt
+            .ensure_account(user_id, budget_id, "91594824853", "Skandiabanken")
+            .unwrap();
+        rt.modify_bank_account(
+            user_id,
+            budget_id,
+            account_id,
+            Some(crate::models::BankAccountType::Savings),
+            Some("Barnens sparkonto".to_string()),
+        )
+        .unwrap();
+
+        let budget = rt.load(budget_id).unwrap();
+        let export = export_tags_and_rules(&budget, ExportSelection::default());
+        assert_eq!(export.bank_accounts.len(), 1);
+        assert_eq!(export.bank_accounts[0].account_number, "91594824853");
+        assert_eq!(export.bank_accounts[0].description, "Barnens sparkonto");
+        assert_eq!(
+            export.bank_accounts[0].account_type,
+            crate::models::BankAccountType::Savings
+        );
+
+        // Importing onto a fresh budget creates the account with its type.
+        let target_budget_id = new_budget(&rt, user_id);
+        let mut current = rt.load(target_budget_id).unwrap();
+        let mut events = Vec::new();
+        let summary = apply_rules_export(&mut current, &mut events, &export);
+        assert_eq!(summary.bank_accounts_created, 1);
+        let created = current.accounts.iter().find(|a| a.account_number == "91594824853").unwrap();
+        assert_eq!(created.description, "Barnens sparkonto");
+        assert_eq!(created.account_type, crate::models::BankAccountType::Savings);
+
+        // Re-importing after a further rename updates rather than duplicates.
+        let mut renamed_export = export.clone();
+        renamed_export.bank_accounts[0].description = "Sparkonto Alice".to_string();
+        let mut events2 = Vec::new();
+        let summary2 = apply_rules_export(&mut current, &mut events2, &renamed_export);
+        assert_eq!(summary2.bank_accounts_updated, 1);
+        assert_eq!(summary2.bank_accounts_created, 0);
+        assert_eq!(current.accounts.len(), 1, "must update in place, not duplicate");
+        assert_eq!(current.accounts[0].description, "Sparkonto Alice");
     }
 }

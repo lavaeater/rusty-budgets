@@ -29,6 +29,10 @@ pub fn SettingsTab() -> Element {
     let mut normalize_status: Signal<Option<String>> = use_signal(|| None);
     let accounts_before = budget.accounts.len();
 
+    let mut export_tags_and_rules_checked: Signal<bool> = use_signal(|| true);
+    let mut export_transfer_rules_checked: Signal<bool> = use_signal(|| true);
+    let mut export_bank_accounts_checked: Signal<bool> = use_signal(|| true);
+
     let import_file = move |file: FileData| {
         let contents = file.contents;
         spawn(async move {
@@ -44,19 +48,26 @@ pub fn SettingsTab() -> Element {
 
     let export_rules = move |_| {
         spawn(async move {
-            let Ok(json) = export_tags_and_rules(budget_id).await else {
-                info!("Failed to export tags and rules");
+            let Ok(json) = export_tags_and_rules(
+                    budget_id,
+                    export_tags_and_rules_checked(),
+                    export_transfer_rules_checked(),
+                    export_bank_accounts_checked(),
+                )
+                .await
+            else {
+                info!("Failed to export selected data");
                 return;
             };
             let handle = rfd::AsyncFileDialog::new()
-                .set_title("Spara taggar och regler")
+                .set_title("Spara valda delar")
                 .set_file_name("budget-regler.json")
                 .save_file()
                 .await;
             if let Some(handle) = handle
                 && let Err(e) = handle.write(json.as_bytes()).await
             {
-                info!("Failed to save tags and rules export: {}", e);
+                info!("Failed to save export: {}", e);
             }
         });
     };
@@ -241,13 +252,43 @@ pub fn SettingsTab() -> Element {
             }
 
             section { class: "settings-section",
-                h3 { class: "settings-section-title", "Exportera / importera taggar och regler" }
+                h3 { class: "settings-section-title", "Exportera / importera" }
+                p { class: "settings-hint",
+                    "Välj vilka delar som ska ingå i exporten. Import läser bara de delar "
+                    "filen faktiskt innehåller — övrigt lämnas orört."
+                }
+                div { class: "settings-export-options",
+                    label { class: "settings-checkbox-label",
+                        input {
+                            r#type: "checkbox",
+                            checked: export_tags_and_rules_checked(),
+                            onchange: move |e: FormEvent| export_tags_and_rules_checked.set(e.checked()),
+                        }
+                        "Taggningsregler"
+                    }
+                    label { class: "settings-checkbox-label",
+                        input {
+                            r#type: "checkbox",
+                            checked: export_transfer_rules_checked(),
+                            onchange: move |e: FormEvent| export_transfer_rules_checked.set(e.checked()),
+                        }
+                        "Överföringsregler"
+                    }
+                    label { class: "settings-checkbox-label",
+                        input {
+                            r#type: "checkbox",
+                            checked: export_bank_accounts_checked(),
+                            onchange: move |e: FormEvent| export_bank_accounts_checked.set(e.checked()),
+                        }
+                        "Bankkonton (namn och typer)"
+                    }
+                }
                 div { class: "settings-tools",
                     Button { class: "primary", onclick: export_rules, "Exportera till fil" }
                     FileDialog {
                         on_chosen: import_rules,
                         label: "Importera från fil",
-                        title: "Välj en JSON-fil med taggar och regler",
+                        title: "Välj en JSON-fil att importera",
                         filter_name: "JSON",
                         filter_extensions: vec!["json".to_string()],
                     }

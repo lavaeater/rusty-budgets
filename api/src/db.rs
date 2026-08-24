@@ -956,13 +956,17 @@ pub async fn delete_rule(user_id: Uuid, budget_id: Uuid, rule_id: Uuid) -> Resul
     Ok(budget_id)
 }
 
-/// Serialises the budget's non-deleted tags and match rules to a JSON string,
-/// for the user to save to a file and later replay onto another budget with
+/// Serialises the selected sections (tags/match rules, transfer rules, bank
+/// account names/types) of the budget to a JSON string, for the user to save
+/// to a file and later replay onto another budget with
 /// [`import_tags_and_rules`].
-pub async fn export_tags_and_rules(budget_id: Uuid) -> Result<String, RustyError> {
+pub async fn export_tags_and_rules(
+    budget_id: Uuid,
+    selection: crate::rules_export::ExportSelection,
+) -> Result<String, RustyError> {
     let rt = runtime().await;
     let budget = rt.load(budget_id).await?;
-    let export = crate::rules_export::export_tags_and_rules(&budget);
+    let export = crate::rules_export::export_tags_and_rules(&budget, selection);
     Ok(serde_json::to_string_pretty(&export)?)
 }
 
@@ -986,13 +990,16 @@ pub async fn import_tags_and_rules(
     }
     info!(
         "import_tags_and_rules: {} tags created, {} reused, {} rules created, {} skipped, \
-         {} transfer rules created, {} skipped",
+         {} transfer rules created, {} skipped, {} accounts created, {} updated, {} reused",
         summary.tags_created,
         summary.tags_reused,
         summary.rules_created,
         summary.rules_skipped,
         summary.transfer_rules_created,
-        summary.transfer_rules_skipped
+        summary.transfer_rules_skipped,
+        summary.bank_accounts_created,
+        summary.bank_accounts_updated,
+        summary.bank_accounts_reused
     );
     Ok(summary)
 }

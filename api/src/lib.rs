@@ -575,8 +575,18 @@ pub async fn apply_all_rules(
 /// the user can save them to a file and later replay them onto another
 /// budget with [`import_tags_and_rules`].
 #[server(endpoint = "export_tags_and_rules")]
-pub async fn export_tags_and_rules(budget_id: Uuid) -> ServerFnResult<String> {
-    Ok(db::export_tags_and_rules(budget_id).await?)
+pub async fn export_tags_and_rules(
+    budget_id: Uuid,
+    include_tags_and_rules: bool,
+    include_transfer_rules: bool,
+    include_bank_accounts: bool,
+) -> ServerFnResult<String> {
+    let selection = rules_export::ExportSelection {
+        tags_and_rules: include_tags_and_rules,
+        transfer_rules: include_transfer_rules,
+        bank_accounts: include_bank_accounts,
+    };
+    Ok(db::export_tags_and_rules(budget_id, selection).await?)
 }
 
 /// Applies a JSON document produced by [`export_tags_and_rules`]: creates any
