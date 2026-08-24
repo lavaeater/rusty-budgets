@@ -13,6 +13,8 @@ pub mod errors;
 pub mod import;
 #[cfg(feature = "server")]
 pub mod migrations;
+pub mod budget_export;
+pub mod rules_export;
 #[cfg(feature = "server")]
 pub mod pg_models;
 
@@ -26,6 +28,7 @@ use crate::api_error::RustyError;
 pub use crate::models::*;
 use dioxus::prelude::*;
 use uuid::Uuid;
+use view_models::BudgetSummary;
 use view_models::BudgetViewModel;
 use view_models::TagSuggestion;
 use view_models::TagSummary;
@@ -39,6 +42,25 @@ pub async fn create_budget(
     let user = db::get_default_user().await?;
     let budget_id = db::create_budget(user.id, &name, default_budget.unwrap_or(true)).await?;
     Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
+}
+
+/// Lists the current user's budgets, so the UI can offer a way to switch
+/// between them (see [`switch_budget`]).
+#[server(endpoint = "list_budgets")]
+pub async fn list_budgets() -> ServerFnResult<Vec<BudgetSummary>> {
+    let user = db::get_default_user().await?;
+    Ok(db::list_budgets(user.id).await?)
+}
+
+/// Makes `budget_id` the user's default budget and returns it, loaded for
+/// `period_id`. Never called implicitly — the UI always calls this from an
+/// explicit "switch" action, never as a side effect of creating or
+/// importing a budget.
+#[server(endpoint = "switch_budget")]
+pub async fn switch_budget(budget_id: Uuid, period_id: PeriodId) -> ServerFnResult<BudgetViewModel> {
+    let user = db::get_default_user().await?;
+    let budget = db::switch_budget(user.id, budget_id).await?;
+    Ok(BudgetViewModel::from_budget(&budget, period_id))
 }
 
 #[server(endpoint = "add_actual")]
@@ -149,6 +171,18 @@ pub async fn modify_tag(
     Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }
 
+#[server(endpoint = "modify_bank_account")]
+pub async fn modify_bank_account(
+    budget_id: Uuid,
+    account_id: Uuid,
+    account_type: BankAccountType,
+    period_id: PeriodId,
+) -> ServerFnResult<BudgetViewModel> {
+    let user = db::get_default_user().await?;
+    db::modify_bank_account(user.id, budget_id, account_id, account_type).await?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
+}
+
 /// Records a deliberate answer to "is this a bill, and can rules auto-apply it?".
 ///
 /// Clears the tag's `needs_review` flag, which the guided review screen uses to
@@ -191,6 +225,21 @@ pub async fn confirm_tag_suggestions(
 ) -> ServerFnResult<BudgetViewModel> {
     let user = db::get_default_user().await?;
     db::confirm_tag_suggestions(user.id, budget_id, tag_id).await?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
+}
+
+/// Switches envelope carryover on from `from_period`, or off with `None`.
+///
+/// Dated rather than global because the log holds history from before the
+/// budget was kept properly; see `events/carryover_configured.rs`.
+#[server(endpoint = "configure_carryover")]
+pub async fn configure_carryover(
+    budget_id: Uuid,
+    from_period: Option<PeriodId>,
+    period_id: PeriodId,
+) -> ServerFnResult<BudgetViewModel> {
+    let user = db::get_default_user().await?;
+    db::configure_carryover(user.id, budget_id, from_period).await?;
     Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }
 
@@ -421,6 +470,20 @@ pub async fn resolve_transfer_pair(
     Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
 }
 
+/// Resolves every potential-transfer pair currently matching a learned
+/// transfer pattern (see `TransferPair::suggested_resolution`) — the "confirm
+/// all suggestions" bulk action for transfer pairs, mirroring
+/// `confirm_tag_suggestions` for tags.
+#[server(endpoint = "confirm_transfer_suggestions")]
+pub async fn confirm_transfer_suggestions(
+    budget_id: Uuid,
+    period_id: PeriodId,
+) -> ServerFnResult<BudgetViewModel> {
+    let user = db::get_default_user().await?;
+    db::confirm_transfer_suggestions(user.id, budget_id).await?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
+}
+
 #[server(endpoint = "get_unbudgeted_tag_summaries")]
 pub async fn get_unbudgeted_tag_summaries(budget_id: Uuid) -> ServerFnResult<Vec<TagSummary>> {
     use std::collections::HashSet;
@@ -495,4 +558,52 @@ pub async fn apply_all_rules(
     let user = db::get_default_user().await?;
     db::apply_all_tag_rules(user.id, budget_id).await?;
     Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
+}
+
+/// Dumps this budget's non-deleted tags and match rules as a JSON string, so
+/// the user can save them to a file and later replay them onto another
+/// budget with [`import_tags_and_rules`].
+#[server(endpoint = "export_tags_and_rules")]
+pub async fn export_tags_and_rules(budget_id: Uuid) -> ServerFnResult<String> {
+    Ok(db::export_tags_and_rules(budget_id).await?)
+}
+
+/// Applies a JSON document produced by [`export_tags_and_rules`]: creates any
+/// tag missing by name and any rule not already present, then re-evaluates
+/// automatic rules so any bill rule that was just imported immediately tags
+/// its matching untagged transactions.
+#[server(endpoint = "import_tags_and_rules")]
+pub async fn import_tags_and_rules(
+    budget_id: Uuid,
+    file_contents: Vec<u8>,
+    period_id: PeriodId,
+) -> ServerFnResult<BudgetViewModel> {
+    let user = db::get_default_user().await?;
+    let json = String::from_utf8(file_contents).map_err(|_| {
+        RustyError::GenericError("Rules file is not valid UTF-8".to_string())
+    })?;
+    db::import_tags_and_rules(user.id, budget_id, &json).await?;
+    db::evaluate_tag_rules(user.id, budget_id).await?;
+    Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
+}
+
+/// Dumps an entire budget — accounts, tags, match rules, transfer rules,
+/// items, periods, and every transaction — as a JSON string, so the user
+/// can save it to a file and later restore it with [`import_budget`] on
+/// this or any other instance of the app.
+#[server(endpoint = "export_budget")]
+pub async fn export_budget(budget_id: Uuid) -> ServerFnResult<String> {
+    Ok(db::export_budget(budget_id).await?)
+}
+
+/// Restores a JSON dump produced by [`export_budget`] as a brand new budget
+/// for the current user — never merged into an existing budget. Returns the
+/// new budget's id.
+#[server(endpoint = "import_budget")]
+pub async fn import_budget(file_contents: Vec<u8>) -> ServerFnResult<Uuid> {
+    let user = db::get_default_user().await?;
+    let json = String::from_utf8(file_contents).map_err(|_| {
+        RustyError::GenericError("Budget file is not valid UTF-8".to_string())
+    })?;
+    Ok(db::import_budget(user.id, &json).await?)
 }

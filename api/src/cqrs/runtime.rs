@@ -3,9 +3,10 @@
 use crate::api_error::RustyError;
 use crate::cqrs::framework::{AsyncRuntime, CommandError, Runtime, StoredEvent};
 const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
-use crate::models::{User, Budget, MonthBeginsOn, Currency, BudgetingType, CostKind, Matching, Money, PeriodId, Periodicity, BudgetEvent};
+use crate::models::{User, Budget, BankAccountType, MonthBeginsOn, Currency, BudgetingType, CostKind, Matching, Money, PeriodId, Periodicity, BudgetEvent};
+use crate::view_models::BudgetSummary;
 #[cfg(feature = "server")]
-use crate::pg_models::{PgBudget, PgStoredBudgetEvent, PgUser, PgUserBudgets};
+use crate::pg_models::{PgBankTransaction, PgBudget, PgStoredBudgetEvent, PgUser, PgUserBudgets};
 use crate::{cqrs, models};
 use chrono::{DateTime, NaiveDate, Utc};
 use dioxus::logger::tracing;
@@ -155,6 +156,17 @@ impl BudgetCommandsTrait for JoyDbBudgetRuntime {
             budget.modify_tag(tag_id, name, periodicity, deleted)
         })
     }
+    fn modify_bank_account(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        account_id: Uuid,
+        account_type: BankAccountType,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.modify_bank_account(account_id, account_type)
+        })
+    }
     fn classify_tag(
         &self,
         user_id: Uuid,
@@ -165,6 +177,16 @@ impl BudgetCommandsTrait for JoyDbBudgetRuntime {
     ) -> Result<Uuid, RustyError> {
         self.cmd(user_id, budget_id, |budget| {
             budget.classify_tag(tag_id, cost_kind, matching)
+        })
+    }
+    fn configure_carryover(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        from_period: Option<PeriodId>,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.configure_carryover(from_period)
         })
     }
     #[allow(clippy::too_many_arguments)]
@@ -453,6 +475,25 @@ impl BudgetCommandsTrait for JoyDbBudgetRuntime {
         }
     }
 
+    fn list_budgets(&self, user_id: Uuid) -> Result<Vec<BudgetSummary>, RustyError> {
+        let user_budgets = self.db.get::<UserBudgets>(&user_id)?;
+        let Some(user_budgets) = user_budgets else {
+            return Ok(Vec::new());
+        };
+        user_budgets
+            .budgets
+            .iter()
+            .map(|(budget_id, default)| {
+                let budget = self.load(*budget_id)?;
+                Ok(BudgetSummary {
+                    id: budget.id,
+                    name: budget.name,
+                    default: *default,
+                })
+            })
+            .collect()
+    }
+
     fn add_budget_to_user(
         &self,
         user_id: Uuid,
@@ -460,36 +501,26 @@ impl BudgetCommandsTrait for JoyDbBudgetRuntime {
         default: bool,
     ) -> Result<Uuid, RustyError> {
         let user_budgets = self.db.get::<UserBudgets>(&user_id)?;
-        match user_budgets {
-            None => {
-                match self
-                    .db
-                    .insert(&UserBudgets {
-                        id: user_id,
-                        budgets: vec![(budget_id, default)],
-                    })
-                    .map(|()| user_id)
-                {
-                    Ok(_) => Ok(user_id),
-                    Err(e) => Err(RustyError::JoydbError(e)),
-                }
+        // Drop any existing entry for this budget first (its `default` flag
+        // may differ from the one being set now — a plain `contains` check
+        // would miss that and leave a stale duplicate entry behind), then
+        // clear every other default before adding this one back.
+        let mut budgets: Vec<(Uuid, bool)> = user_budgets
+            .map(|b| b.budgets)
+            .unwrap_or_default()
+            .into_iter()
+            .filter(|(id, _)| *id != budget_id)
+            .collect();
+        if default {
+            for entry in &mut budgets {
+                entry.1 = false;
             }
-            Some(list) => {
-                if list.budgets.contains(&(budget_id, default)) {
-                    Ok(user_id)
-                } else {
-                    let mut budgets = list.budgets.clone();
-                    budgets.push((budget_id, default));
-                    let list = UserBudgets {
-                        id: user_id,
-                        budgets,
-                    };
-                    match self.db.upsert(&list) {
-                        Ok(()) => Ok(user_id),
-                        Err(e) => Err(RustyError::JoydbError(e)),
-                    }
-                }
-            }
+        }
+        budgets.push((budget_id, default));
+        let list = UserBudgets { id: user_id, budgets };
+        match self.db.upsert(&list) {
+            Ok(()) => Ok(user_id),
+            Err(e) => Err(RustyError::JoydbError(e)),
         }
     }
 
@@ -559,6 +590,13 @@ pub trait BudgetCommandsTrait {
         periodicity: Option<Periodicity>,
         deleted: Option<bool>,
     ) -> Result<Uuid, RustyError>;
+    fn modify_bank_account(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        account_id: Uuid,
+        account_type: BankAccountType,
+    ) -> Result<Uuid, RustyError>;
     fn classify_tag(
         &self,
         user_id: Uuid,
@@ -566,6 +604,12 @@ pub trait BudgetCommandsTrait {
         tag_id: Uuid,
         cost_kind: CostKind,
         matching: Matching,
+    ) -> Result<Uuid, RustyError>;
+    fn configure_carryover(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        from_period: Option<PeriodId>,
     ) -> Result<Uuid, RustyError>;
     #[allow(clippy::too_many_arguments)]
     fn modify_actual(
@@ -706,6 +750,7 @@ pub trait BudgetCommandsTrait {
     fn user_exists(&self, email: &str) -> Result<bool, RustyError>;
     fn get_default_user(&self) -> Result<User, RustyError>;
     fn get_default_budget(&self, user_id: Uuid) -> Result<Budget, RustyError>;
+    fn list_budgets(&self, user_id: Uuid) -> Result<Vec<BudgetSummary>, RustyError>;
     fn add_budget_to_user(
         &self,
         user_id: Uuid,
@@ -775,6 +820,13 @@ pub trait AsyncBudgetCommandsTrait {
         periodicity: Option<Periodicity>,
         deleted: Option<bool>,
     ) -> Result<Uuid, RustyError>;
+    async fn modify_bank_account(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        account_id: Uuid,
+        account_type: BankAccountType,
+    ) -> Result<Uuid, RustyError>;
     async fn classify_tag(
         &self,
         user_id: Uuid,
@@ -782,6 +834,12 @@ pub trait AsyncBudgetCommandsTrait {
         tag_id: Uuid,
         cost_kind: CostKind,
         matching: Matching,
+    ) -> Result<Uuid, RustyError>;
+    async fn configure_carryover(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        from_period: Option<PeriodId>,
     ) -> Result<Uuid, RustyError>;
     #[allow(clippy::too_many_arguments)]
     async fn modify_actual(
@@ -922,6 +980,7 @@ pub trait AsyncBudgetCommandsTrait {
     async fn user_exists(&self, email: &str) -> Result<bool, RustyError>;
     async fn get_default_user(&self) -> Result<User, RustyError>;
     async fn get_default_budget(&self, user_id: Uuid) -> Result<Budget, RustyError>;
+    async fn list_budgets(&self, user_id: Uuid) -> Result<Vec<BudgetSummary>, RustyError>;
     async fn add_budget_to_user(
         &self,
         user_id: Uuid,
@@ -1016,6 +1075,12 @@ impl PgRuntime {
         Self {
             client: Box::new(client),
         }
+    }
+
+    /// The underlying `welds` client, for callers (e.g. integration tests)
+    /// that need to run queries `PgRuntime`'s own API doesn't expose.
+    pub fn client(&self) -> &dyn Client {
+        self.client.as_ref()
     }
 
     async fn cmd<F, E>(&self, user_id: Uuid, id: Uuid, command: F) -> Result<Uuid, RustyError>
@@ -1137,6 +1202,11 @@ impl Runtime<Budget, BudgetEvent> for JoyDbBudgetRuntime {
     }
 }
 
+/// Rows per delete/insert batch in `PgRuntime::snapshot`'s transaction sync,
+/// comfortably under Postgres's 65535-bind-parameter-per-statement limit.
+#[cfg(feature = "server")]
+const TRANSACTION_SYNC_CHUNK_SIZE: usize = 1000;
+
 #[cfg(feature = "server")]
 impl AsyncRuntime<Budget, BudgetEvent> for PgRuntime {
     async fn load(
@@ -1151,6 +1221,21 @@ impl AsyncRuntime<Budget, BudgetEvent> for PgRuntime {
             Some(pg_budget) => pg_budget.into(),
         };
 
+        // Transactions live in their own table (see `snapshot`), not inline
+        // in the JSON blob above — merge them in before replaying trailing
+        // events, so an event like `TransactionTagged` still finds its
+        // target. Harmless no-op for a legacy row whose transactions are
+        // still embedded in `data` (nothing to find in the table yet).
+        let tx_rows: Vec<PgBankTransaction> = PgBankTransaction::where_col(|t| t.budget_id.equal(id))
+            .run(self.client.as_ref())
+            .await?
+            .into_iter()
+            .map(welds::state::DbState::into_inner)
+            .collect();
+        if !tx_rows.is_empty() {
+            budget.load_transactions(tx_rows.into_iter().map(Into::into).collect());
+        }
+
         let version = budget.version;
         tracing::debug!(
             "Loaded budget has version {} and last event at {}",
@@ -1162,35 +1247,117 @@ impl AsyncRuntime<Budget, BudgetEvent> for PgRuntime {
         for ev in events {
             ev.apply(&mut budget);
         }
-        info!(
-            "[perf] load: replayed {} events in {:?}",
+        if event_count > 10 {
+          info!(
+            "[perf] load: replayed {} events in {:?}, budget version {}, saving",
             event_count,
-            t.elapsed()
+            t.elapsed(),
+            version
         );
-        if event_count > 0 {
             self.snapshot(&budget).await?;
         }
         Ok(budget)
     }
 
     async fn snapshot(&self, agg: &Budget) -> Result<(), RustyError> {
+        // Transactions are persisted separately (below) rather than embedded
+        // in this blob — strip them from a cloned copy before serializing so
+        // every snapshot write stays small regardless of transaction volume.
+        let mut slim = agg.clone();
+        for period in &mut slim.periods {
+            period.transactions.clear();
+        }
+        slim.transaction_hashes.clear();
+        let slim_data = serde_json::to_value(&slim).expect("Budget must be serializable");
+
         let mut pg_budget: DbState<PgBudget> =
             match PgBudget::find_by_id(self.client.as_ref(), agg.id).await? {
-                None => DbState::<PgBudget>::from(agg),
+                None => {
+                    let mut fresh = DbState::<PgBudget>::from(agg);
+                    fresh.data = slim_data;
+                    fresh
+                }
                 Some(mut existing) => {
                     existing.last_event = agg.last_event;
                     existing.version = agg.version;
-                    existing.data = serde_json::to_value(agg).expect("Budget must be serializable");
+                    existing.data = slim_data;
                     existing
                 }
             };
         pg_budget.save(self.client.as_ref()).await?;
+
+        // Diff against what's already stored and only touch rows that
+        // actually changed. A blind delete-all-then-reinsert-all here (the
+        // first version of this) meant tagging a single transaction out of
+        // ~10k rewrote the entire table on every call — reintroducing, on
+        // the SQL side, the exact "every write pays for the whole history"
+        // problem this table was built to get off the JSON blob. Bank
+        // transactions are never hard-deleted anywhere in the domain, so a
+        // row present here but absent from `agg` can't happen — no delete
+        // path is needed for that case.
+        let existing_by_id: std::collections::HashMap<Uuid, PgBankTransaction> =
+            PgBankTransaction::where_col(|t| t.budget_id.equal(agg.id))
+                .run(self.client.as_ref())
+                .await?
+                .into_iter()
+                .map(|row| {
+                    let row = row.into_inner();
+                    (row.id, row)
+                })
+                .collect();
+
+        let mut changed_ids: Vec<Uuid> = Vec::new();
+        let mut changed_rows: Vec<PgBankTransaction> = Vec::new();
+        for tx in agg.periods.iter().flat_map(|p| p.transactions.iter()) {
+            let candidate = PgBankTransaction::from_domain(agg.id, tx).into_inner();
+            if existing_by_id.get(&tx.id) != Some(&candidate) {
+                changed_ids.push(tx.id);
+                changed_rows.push(candidate);
+            }
+        }
+
+        // Chunked, and every delete is scoped to `agg.id` as well as the
+        // touched ids — never just the id. Transaction ids are otherwise
+        // globally unique in this table, but scoping by budget as well means
+        // a bug elsewhere (e.g. an id collision from importing a budget that
+        // forgot to remint transaction ids) can corrupt at most this budget's
+        // own rows, never another budget's.
+        for (id_chunk, row_chunk) in changed_ids.chunks(TRANSACTION_SYNC_CHUNK_SIZE).zip(changed_rows.chunks(TRANSACTION_SYNC_CHUNK_SIZE)) {
+            PgBankTransaction::where_col(|t| t.budget_id.equal(agg.id))
+                .where_col(|t| t.id.in_list(id_chunk))
+                .delete(self.client.as_ref())
+                .await?;
+            welds::query::insert::bulk_insert_with_ids(self.client.as_ref(), row_chunk).await?;
+        }
+
         Ok(())
     }
 
     async fn append(&self, user_id: Uuid, ev: BudgetEvent) -> Result<(), RustyError> {
         let mut stored_event: DbState<PgStoredBudgetEvent> = StoredEvent::new(ev, user_id).into();
         stored_event.save(self.client.as_ref()).await?;
+        Ok(())
+    }
+
+    async fn append_many(&self, user_id: Uuid, events: Vec<BudgetEvent>) -> Result<(), RustyError> {
+        if events.is_empty() {
+            return Ok(());
+        }
+        let rows: Vec<PgStoredBudgetEvent> = events
+            .into_iter()
+            .map(|ev| {
+                let stored = StoredEvent::new(ev, user_id);
+                let mut row = PgStoredBudgetEvent::new();
+                row.id = stored.id;
+                row.aggregate_id = stored.aggregate_id;
+                row.timestamp = stored.timestamp;
+                row.created_at = stored.created_at;
+                row.user_id = stored.user_id;
+                row.data = serde_json::to_value(stored.data).expect("BudgetEvent must be serializable");
+                row.into_inner()
+            })
+            .collect();
+        welds::query::insert::bulk_insert_with_ids(self.client.as_ref(), &rows).await?;
         Ok(())
     }
 
@@ -1333,6 +1500,18 @@ impl AsyncBudgetCommandsTrait for PgRuntime {
         })
         .await
     }
+    async fn modify_bank_account(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        account_id: Uuid,
+        account_type: BankAccountType,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.modify_bank_account(account_id, account_type)
+        })
+        .await
+    }
     async fn classify_tag(
         &self,
         user_id: Uuid,
@@ -1343,6 +1522,17 @@ impl AsyncBudgetCommandsTrait for PgRuntime {
     ) -> Result<Uuid, RustyError> {
         self.cmd(user_id, budget_id, |budget| {
             budget.classify_tag(tag_id, cost_kind, matching)
+        })
+        .await
+    }
+    async fn configure_carryover(
+        &self,
+        user_id: Uuid,
+        budget_id: Uuid,
+        from_period: Option<PeriodId>,
+    ) -> Result<Uuid, RustyError> {
+        self.cmd(user_id, budget_id, |budget| {
+            budget.configure_carryover(from_period)
         })
         .await
     }
@@ -1662,6 +1852,23 @@ impl AsyncBudgetCommandsTrait for PgRuntime {
         }
     }
 
+    async fn list_budgets(&self, user_id: Uuid) -> Result<Vec<BudgetSummary>, RustyError> {
+        let Some(pg_ub) = PgUserBudgets::find_by_id(self.client.as_ref(), user_id).await? else {
+            return Ok(Vec::new());
+        };
+        let ub: UserBudgets = pg_ub.into();
+        let mut summaries = Vec::with_capacity(ub.budgets.len());
+        for (budget_id, default) in ub.budgets {
+            let budget = self.load(budget_id).await?;
+            summaries.push(BudgetSummary {
+                id: budget.id,
+                name: budget.name,
+                default,
+            });
+        }
+        Ok(summaries)
+    }
+
     async fn add_budget_to_user(
         &self,
         user_id: Uuid,
@@ -1686,16 +1893,21 @@ impl AsyncBudgetCommandsTrait for PgRuntime {
                     Some(pg_ub) => pg_ub,
                 };
                 let mut ub: UserBudgets = pg_ub.clone().into();
-                if !ub.budgets.contains(&(budget_id, default)) {
-                    if default && let Some(budget) = ub.budgets.iter_mut().find(|(_, default)| *default)
-                    {
-                        budget.1 = false;
+                // Drop any existing entry for this budget first — its
+                // `default` flag may differ from the one being set now, and
+                // a plain `contains` check would miss that and leave a
+                // stale duplicate entry behind — then clear every other
+                // default before adding this one back.
+                ub.budgets.retain(|(id, _)| *id != budget_id);
+                if default {
+                    for entry in &mut ub.budgets {
+                        entry.1 = false;
                     }
-                    ub.budgets.push((budget_id, default));
-                    pg_ub.budgets =
-                        serde_json::to_value(&ub.budgets).expect("Could not serialize user budgets");
-                    pg_ub.save(self.client.as_ref()).await?;
                 }
+                ub.budgets.push((budget_id, default));
+                pg_ub.budgets =
+                    serde_json::to_value(&ub.budgets).expect("Could not serialize user budgets");
+                pg_ub.save(self.client.as_ref()).await?;
                 Ok(user_id)
             }
             Err(e) => Err(RustyError::WeldsError(e)),

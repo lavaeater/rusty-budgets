@@ -1,22 +1,26 @@
 # Rusty Budgets — Roadmap
 
-> **Status audit: 2026-08-14.** Sprints 1–4 below were verified against the code
-> and are genuinely done (one item deferred). Everything from "Phase 5" onward is
-> **new, not started**, and reflects two findings from the audit: the domain is
-> missing the one mechanic that makes envelope budgeting work (carryover), and the
-> UI has outgrown its single-page layout.
+> **Last updated 2026-08-15.** Started as an audit on 2026-08-14, when Sprints
+> 1–4 were verified done and two gaps were identified: the domain was missing the
+> mechanic that makes envelope budgeting work (carryover), and the UI had outgrown
+> its single-page layout. **Both have since been addressed** — Phase 7 (tabs),
+> Phase 8 (bills vs variable spending) and Phase 5.1–5.3 (carryover) have landed.
+> What remains open is listed under Part II; the largest single item is
+> **5.4, cash-based Ready-to-Assign, which is deliberately deferred** with reasons.
 
 ---
 
-## 🔖 Handoff — picking this up on another machine (2026-08-15)
+## 🔖 Handoff — picking this up on another machine
 
-**State: everything is committed, working tree clean.** Last three commits:
+**Branch `forecast`. Everything is committed, working tree clean.**
 
 | Commit | What |
 | --- | --- |
+| `3347e83` | **Phase 5.1–5.3 wiring** — carryover settings screen, "Tillgängligt" badge, `preview_carryover` example |
+| `7ec89bf` | Carryover domain — `carryover_into`, `CarryoverConfigured`, envelope identity + 6 CQRS tests |
+| `72b4ef2` | **Phase 8** — bills vs variable spending: `CostKind`/`Matching`, `TagClassified`, tag review, suggestion inbox |
 | `0b0b2f3` | `.env` setup fix — `.env.example`, path bug, actionable panics |
-| `f8508bb` | **Phase 7.1 + 7.2** — the tab restructure + routing (20 files, +1927/−300) |
-| `95aa461` | Clippy pedantic cleanup (UI half) |
+| `f8508bb` | **Phase 7.1 + 7.2** — the tab restructure + routing |
 
 ### First thing on the new machine
 
@@ -47,8 +51,8 @@ dx serve --package web
 
 ### Verified green as of the handoff
 
-- **173 native tests** (`cargo test --workspace`)
-- **6 E2E specs** (`cd e2e && npm test`) — needs `npm install` +
+- **179 native tests** (`cargo test --workspace`)
+- **7 E2E specs** (`cd e2e && npm test`) — needs `npm install` +
   `npx playwright install chromium` on a fresh machine
 - **Clippy pedantic clean** on all three bacon jobs (server / client / mobile)
 - `dx serve` boots clean, `GET /` → 200, no panics
@@ -58,17 +62,52 @@ dx serve --package web
 
 ### ⚠️ Not verified — do this first
 
-**Nobody has looked at the new UI in a browser.** The tab *logic* is covered by
-SSR render tests and E2E, but the CSS written for the tab bar, filter chips,
-attention list, and report table (`ui/assets/styling/workspace.css`, 397 new
-lines) has **never been rendered visually**. Expect to spend a pass on polish.
+**Five screens have never been looked at in a browser.** Their *logic* is covered
+by domain, SSR-render and E2E tests, but the CSS has only ever been reasoned
+about:
+
+| Screen | Stylesheet |
+| --- | --- |
+| Workspace tab bar, filter chips, attention list, report table | `workspace.css` (397 lines) |
+| Tag classification review | `tag-review.css` |
+| Suggestion inbox | `tag-suggestions.css` |
+| Carryover settings + "Tillgängligt" badge | `carryover.css` |
+
+The E2E suite runs against an **empty** database, so it proves nothing
+regressed — not that these screens look right. Two of them cannot render at all
+on the current data (see below). Expect a polish pass.
+
+### ⚠️ Two features are invisible on the current production data
+
+Both are working and tested; neither will show you anything until the data
+changes. Worth knowing before concluding something is broken:
+
+- **Suggestion inbox** — the live snapshot has **0 untagged transactions**, so
+  there is nothing to suggest and Att göra reads "Inget att göra". It appears
+  after the next import.
+- **Carryover** — `preview_carryover` reports **"Carried in" = 0 kr for every
+  item**, because the historical budgets came from auto-budget
+  (`budgeted == actual`) and left nothing over. It starts producing numbers once
+  you budget *forward* rather than auto-budgeting from actuals — which is the
+  whole point of the annual-bill case.
 
 ### Suggested next step
 
-Phase 5 (envelope carryover) is the highest-value work and unblocks the billing
-buffer. **But 5.4 (cash-based global Ready-to-Assign) is a genuine philosophical
-pivot** from forecast budgeting to envelope budgeting — decide that deliberately
-before building toward it, rather than discovering it half-way through.
+Pick one of:
+
+1. **Polish pass in the browser** — cheapest way to de-risk five unseen screens,
+   and the only outstanding work on already-shipped features.
+2. **6.11 buffer progress UI** — now purely presentational: `TagSummary::buffer_target()`
+   gives the target and carryover accumulates towards it. Makes the annual-bill
+   case visible rather than just correct.
+3. **E2E fixture that imports a Skandia file** — unlocks browser coverage for the
+   tagging loop, the suggestion inbox and carryover, all of which are currently
+   untestable end-to-end because the suite starts from an empty DB. Already the
+   named next step in `docs/testing.md`.
+
+**Not recommended yet: 5.4 (cash-based Ready-to-Assign).** See Phase 5 below —
+account balances are unpopulated, four months stale, and the account registry
+has duplicate entries. Prerequisites are listed there.
 
 ---
 
@@ -165,7 +204,7 @@ Goal: make the app match the YNAB mental model — every dollar has a job, the b
 
 ### 🐛 Known issues — found, not yet fixed
 
-Small things surfaced while working; none block Phase 5.
+Small things surfaced while working; none block the open phases.
 
 - [ ] **Migration binary always migrates** — `let migrate = true;` is hardcoded
   in `api/src/main.rs`, so every run copies `DATA_FILE` (default `data.json`, and
@@ -186,9 +225,19 @@ Small things surfaced while working; none block Phase 5.
   - It is the JoyDB-era source of truth; post-migration the SQL DB is. Decide
     whether `data.json` is now an **archive** (untrack, keep a local copy) or a
     **fixture** (shrink to an anonymised sample) — right now it is quietly both.
-- [ ] **Layer 2 tests run against the wrong runtime** — 34 CQRS tests use
-  `JoyDbBudgetRuntime`, production uses `PgRuntime`. Full detail and the
+- [ ] **Layer 2 tests run against the wrong runtime** — the CQRS tests (now 53)
+  use `JoyDbBudgetRuntime`; production uses `PgRuntime`. Full detail and the
   recommended fix are in `docs/testing.md` (rollout item 6).
+- [ ] **Duplicate accounts from inconsistent number formats** — the registry has
+  **14 entries for 11 distinct accounts**: `9159-482.485-3` and `91594824853`
+  are the same account written two ways. Latent today because only 3 accounts
+  carry transactions and each uses one format consistently, but anything summing
+  over `budget.accounts` would double-count. Normalise on import (strip
+  non-digits) before 5.4 or 6.7 rely on it.
+- [x] **`data.sqlite` was not gitignored** ✓ 2026-08-15 — `*.sqlite` added to
+  `.gitignore`. Verified no earlier commit captured it
+  (`git log --all -- '*.sqlite'` is empty); it is the live database, ~4.8 MB of
+  real financial data.
 
 ---
 
@@ -273,68 +322,125 @@ so the inline pickers set one thing and the review screen exposes both.
   > transactions. Verified with
   > `cargo run -p api --example verify_snapshot` (now also reports
   > untagged / auto-applies / suggestions, grouped by tag).
-- [ ] **8.8 Buffers actually accumulate** 🔴 **blocked on Phase 5.** Budgeting
-  1 000 kr/month for a 12 000 kr annual bill only works if the unspent months
-  carry forward. Without carryover, month 12 shows an 11 000 kr overspend every
-  year. `TagSummary::buffer_target()` computes the figure; it cannot yet
-  accumulate. **This is the same mechanic as the billing buffer — Phase 8 and
-  the Phase 6 buffer work converge here.**
+- [x] **8.8 Buffers actually accumulate** ✓ 2026-08-15 — **unblocked by Phase
+  5.1–5.3.** `an_annual_bill_is_covered_by_the_accumulated_buffer` proves the
+  full cycle: assign 1 000 kr/month, the bill lands in December, 11 000 carried
+  + 1 000 assigned − 12 000 spent = **0**, not an 11 000 kr overspend.
+  `TagSummary::buffer_target()` gives the target; carryover accumulates towards
+  it. Still to do: show buffer progress against that target in the UI
+  (**6.11**), which is now purely presentational.
 
 ---
 
-### Phase 5 — Envelope carryover (the missing domain mechanic) 🔴 blocking
+### Phase 5 — Envelope carryover ◐ 5.1–5.3 done, 5.4 deliberately deferred
 
-**This is the highest-value change in the roadmap and everything in Phase 6 depends on it.**
+**Decided 2026-08-15.** The pivot was two decisions, not one, and separating them
+is what unblocked it:
 
-The app currently computes, per period and independently:
+| | What it changes | Status |
+| --- | --- | --- |
+| **A. Category carryover** | Money left in a category stays in that category | ✅ **Done** |
+| **B. Cash-based RTA** | "Att fördela" comes from bank balances, not forecast income | ⏸ **Deferred** |
+
+**A is what makes the billing buffer work. B is the philosophical pivot, and you
+do not need it to get the buffer.**
+
+- [x] **5.1 `carryover_from` + the envelope identity** ✓ —
+  `Budget::carryover_into(period)` accumulates `budgeted − actual` from the
+  chosen start month. `BudgetItemViewModel` gains `carried_over` and
+  `available`.
+  > **Derived, not stored.** Storing `carried_over` per `ActualItem` would need
+  > an event per item per period on an already-8179-event log, and would go
+  > stale the moment a past month was edited. Deriving it means editing March
+  > flows forward into April automatically. Cost is one pass over the periods
+  > per projection.
+  > `Budget::item_period_totals` is shared with the projection so carryover and
+  > the displayed numbers cannot drift apart.
+- [x] **5.2 Opt-in and dated** ✓ — `carryover_from: Option<PeriodId>`, set by a
+  `CarryoverConfigured` event, `None` by default. Existing budgets are
+  **completely unaffected** until switched on, and it can be switched back off.
+  Dated because the log holds two years from before the budget was kept
+  properly, where most `ActualItem`s have `budgeted_amount == 0` — accumulating
+  across all of it would compound spending-with-no-budget into nonsense.
+- [x] **5.3 Overspend policy: the category carries the debt** ✓ — an overspent
+  category starts the next month negative and must be topped up. Chosen over
+  YNAB's "deduct from next month's RTA" because the consequence stays attached
+  to the category that caused it.
+- [x] **5.x UI** ✓ — `CarryoverSettings` in Inställningar (on/off + start month),
+  and an "Tillgängligt" badge per budget row, red when negative, with the full
+  `carried + budgeted − spent` sum in its tooltip. The badge only appears when
+  carryover is on, so it never sits next to `remaining_budget` looking like a
+  duplicate.
+
+> ### ⚠️ It will do nothing on your current history — and that is expected
+>
+> `cargo run -p api --example preview_carryover -- <snap.json> 2026-1 2026-3`
+> shows **"Carried in" = 0 kr for every item**, because "Remaining" is also 0 kr
+> for every item in every historical month. Those budgets were produced by
+> **auto-budget, which sets budgeted = actual**, so nothing was ever left over
+> to carry.
+>
+> Carryover only produces numbers once you budget a *forward-looking* amount
+> that differs from what you spend — which is precisely the dog-insurance case
+> (assign 1 000 kr/month, spend nothing for eleven months). The mechanism is
+> proven by 6 CQRS tests including the full twelve-month cycle; it is aimed at
+> the workflow going forward, not at reinterpreting the past.
+
+- [ ] **5.4 Cash-based global Ready-to-Assign — deferred, and here is why**
+  measured against the real data:
+  - `BankAccount.balance` is **0.00 for all 14 accounts** — nothing ever
+    populates it. Real balances are only recoverable from the last transaction
+    per account (3 active accounts, ~28 708 kr).
+  - That data is **four months stale** (latest transaction 2026-04-07).
+  - The account registry holds **14 entries for 11 distinct accounts** —
+    `9159-482.485-3` and `91594824853` are the same account in two formats.
+    Latent today because only 3 accounts carry transactions, but anything
+    summing over `budget.accounts` would double-count.
+
+  Forecast budgeting degrades *gracefully* when imports lag; cash-based
+  budgeting degrades *silently and wrongly*. Prerequisites before revisiting:
+  populate `BankAccount.balance` on import (cheap, and unblocks 6.7), then 6.4
+  reconciliation and 6.7 accounts view. A cash RTA you cannot trust is worse
+  than a forecast RTA you understand.
+
+---
+
+<details>
+<summary><strong>Phase 5 — the original analysis (2026-08-14), kept for the reasoning</strong></summary>
+
+> **Superseded by the section above.** Written before carryover was built, so it
+> describes the then-current state in the present tense. Kept because the
+> reasoning still explains *why* carryover matters; the task list it contained
+> has been removed to avoid contradicting the real status.
+
+The app computed, per period and independently:
 
 ```
 remaining_budget = budgeted_amount − actual_amount
 ```
 
-Every period starts from zero. There is no link between a category's balance in
-month N and month N+1. That single omission is why:
+Every period started from zero, with no link between a category's balance in
+month N and month N+1. That single omission was why:
 
-- **Sinking funds / the billing buffer cannot work.** `buffer_target` and
-  `required_monthly_contribution` are already modelled on `BudgetItem` /
-  `BudgetItemViewModel`, but there is nothing for the contributions to *accumulate
-  into*. Phase 6 of `CLAUDE.md` is not a UI task — it is blocked on this.
-- **Overspending silently disappears.** Blowing the food budget in March has no
+- **Sinking funds / the billing buffer could not work.** `buffer_target` and
+  `required_monthly_contribution` were already modelled, but there was nothing
+  for the contributions to *accumulate into*.
+- **Overspending silently disappeared.** Blowing the food budget in March had no
   consequence in April.
-- **Underspending is not rewarded.** Money saved in a category evaporates instead
-  of building a cushion.
+- **Underspending was not rewarded.** Money saved in a category evaporated
+  instead of building a cushion.
 
-The fix is the YNAB identity:
+The fix is the YNAB identity, now implemented in `Budget::carryover_into`:
 
 ```
 Available(cat, month) = Available(cat, month−1) + Assigned(cat, month) − Activity(cat, month)
 ```
 
-- [ ] **5.1 Add `carried_over: Money` to `ActualItem`**, plus an `available()`
-  accessor implementing the identity above. New event
-  `actual_carryover_set` (or derive it during replay — decide explicitly, and
-  document the choice; deriving keeps the event log smaller but makes replay
-  order-sensitive).
-- [ ] **5.2 Carry forward on period creation** — when a `BudgetPeriod` is
-  materialised, seed each `ActualItem.carried_over` from the previous period's
-  `available()`.
-- [ ] **5.3 Decide overspend policy** — YNAB subtracts cash overspending from
-  next month's Ready-to-Assign, and rolls credit overspending forward as a
-  negative category balance. Pick one, and make it a documented invariant with a
-  CQRS test.
-- [ ] **5.4 Global Ready-to-Assign** — today `income_remaining = income_budgeted −
-  expense_budgeted − savings_budgeted` (`budget_view_model.rs:137`), which is
-  **period-local and derived from *budgeted* income**. Two problems: leftover
-  money in a month vanishes rather than flowing to the next month, and the app
-  budgets *forecast* income rather than *money that actually exists*. Move to
-  `RTA = Σ(account balances) − Σ(assigned across all periods)`.
-  `BankAccount.balance` already exists and is populated by import but is unused
-  in this calculation.
-  > This is the single biggest philosophical gap with YNAB. Budgeting forecast
-  > income is what makes budgets fail when income is irregular — precisely the
-  > case (Swedish households with barnbidrag/CSN/variable income) the app is for.
-- [ ] **5.5 Buffer UI** — only after 5.1–5.4: show buffer balance vs
-  `buffer_target`, with progress and a "fill this month" action.
+The original notes also assumed `BankAccount.balance` "is populated by import".
+**That turned out to be false** — it is 0.00 for all 14 accounts, which is a
+large part of why 5.4 is deferred.
+
+</details>
 
 ### Phase 6 — Concept gaps vs mainstream household budgeting
 
@@ -364,17 +470,27 @@ Ranked by household value. See "Concept review" at the bottom for reasoning.
 - [ ] **6.5 Upcoming / scheduled transactions** — no forward-looking cashflow
   exists. Households need *"what is due before next payday, and do I have it?"*
   Swedish autogiro/e-faktura bills are highly regular and easy to model.
-- [ ] **6.6 Reports** — `PeriodSummary` / `running_net` are already computed and
-  the `RunningDeficitView` component already exists but is unmounted. Revive it
-  in a proper Reports tab (Phase 7) with spend-by-tag-over-time.
-- [ ] **6.7 Accounts & net worth view** — `BankAccount` exists with balances, but
-  there is no screen showing accounts, balances, or net worth. Needed for 5.4.
+- ◐ **6.6 Reports** — `RunningDeficitView` was **revived in Phase 7.2** and now
+  lives in the Rapporter tab. Still open: spend-by-tag over time, and anything
+  beyond the running net table.
+- [ ] **6.7 Accounts & net worth view** — `BankAccount` exists but its `balance`
+  is **0.00 for all 14 accounts; nothing ever populates it**. Real balances are
+  only recoverable from the last transaction per account. So this splits in two:
+  **(a)** populate `BankAccount.balance` on import — small, and the prerequisite
+  for everything else here; **(b)** a screen showing accounts and net worth.
+  Both are prerequisites for 5.4. The account registry also holds 14 entries for
+  11 distinct accounts (see Known issues).
 - [ ] **6.8 Debt tracking** — mortgage principal is currently just "Savings".
   Real debt modelling (balance, rate, payoff projection) is standard in
   mainstream tools and directly relevant to Swedish amortisation rules.
 - [ ] **6.9 Age of Money / buffer months** — YNAB Rule 4. The strongest single
   indicator of household financial stability ("am I living on last month's
   income?"). Cheap to compute once 5.4 lands.
+- [ ] **6.11 Buffer progress UI** — now purely presentational and **unblocked**:
+  `TagSummary::buffer_target()` gives the target and carryover accumulates
+  towards it, so a "1 000 / 12 000 kr saved towards Hund" bar is a rendering job.
+  Makes the annual-bill case visible rather than merely correct. Was 5.5 in the
+  original notes.
 - [ ] **6.10 Credit card handling** — deferred. YNAB's hardest mechanic (card
   spending moves budgeted money into a payment category). Lower priority in a
   Swedish context where debit dominates.
@@ -386,10 +502,10 @@ which is genuinely better than YNAB's payee matching for Swedish bank exports.
 
 ---
 
-### Phase 7 — UI restructure: from one page to a period workspace 🔴
+### Phase 7 — UI restructure: from one page to a period workspace ◐ 7.1/7.2 shipped
 
-**Problem.** `BudgetOverview` (`ui/src/budget/budget_hero.rs:142-332`) renders
-**twelve stacked sections** in a single scroll: header, past-period banner,
+**Problem (as it was — 7.1 and 7.2 have since fixed this).**
+`BudgetOverview` rendered **twelve stacked sections** in a single scroll: header, past-period banner,
 `BudgetTabs`, assign nudge, `TagTransactionsView`, `TransferPairsView`,
 `CreateBudgetItemsView`, `TransactionsView` (to-connect), `TransactionsView`
 (ignored), then `<details>` blocks for `RetagTransactionsView`, `TagsView` and
@@ -499,38 +615,44 @@ total: 139 native tests green, clippy pedantic clean on all three bacon jobs.**
 
 ## Deferred / Mothballed
 
-- **Running deficit / surplus table** (`RunningDeficitView`) — useful data, wrong
-  place in the UX. Component still exists, unmounted since Sprint 1. **Revival
-  path: the Rapporter tab (7.x + 6.6).**
-- **Billing buffer** (`buffer_target` on `BudgetItem`) — partially modelled
-  (`buffer_target`, `required_monthly_contribution`), no UI. **No longer merely
-  deferred: it is blocked on Phase 5 carryover** and cannot be built without it.
+- ~~**Running deficit / surplus table** (`RunningDeficitView`)~~ — **revived**
+  in Phase 7.2; it now lives in the Rapporter tab. No longer mothballed.
+- ~~**Billing buffer**~~ — **unblocked and working** as of Phase 5.1–5.3 +
+  8.8: contributions now accumulate across months and cover the bill when it
+  lands. Only the progress *display* remains (6.11).
 - **Credit card payment categories** (6.10) — genuinely deferred; low value in a
   debit-dominant market.
+- **5.4 cash-based Ready-to-Assign** — deferred with measured reasons; see
+  Phase 5.
 
 ---
 
 ## Concept review — how this compares to YNAB and mainstream budgeting
 
-*Audit performed 2026-08-14 against the domain model in `api/src/models/`.*
+*Audited 2026-08-14 against `api/src/models/`; scores updated 2026-08-15 as
+Phases 5, 7 and 8 landed.*
 
 **The four YNAB rules, scored:**
 
 | Rule | Status | Evidence |
 | --- | --- | --- |
 | 1. Give Every Dollar a Job | ✅ **Good** | "Att fördela" badge, over-assignment warning, assign nudge |
-| 2. Embrace Your True Expenses | ❌ **Cannot work today** | `buffer_target` modelled but no balance accumulates across periods → Phase 5 |
+| 2. Embrace Your True Expenses | ✅ **Works** *(was ❌)* | Carryover accumulates contributions; `CostKind::Recurring` periodises an annual bill to 1/12 per month. Progress display still to do (6.11) |
 | 3. Roll With the Punches | ✅ **Good** | "Ta från…" reallocation via `BudgetedFundsReallocated` |
-| 4. Age Your Money | ❌ **Not modelled** | → 6.9 |
+| 4. Age Your Money | ❌ **Not modelled** | → 6.9, and it needs 5.4 first |
 
-**The one structural difference that matters most.** YNAB is an *envelope*
-system: category balances persist and accumulate, and you budget money that
-physically exists in your accounts. Rusty Budgets is currently a *budget-vs-actual
-variance tracker*: each period is independent, and the budget is built from
-*forecast* income. Both are legitimate designs — but the app's stated goal
-("match the YNAB mental model", `CLAUDE.md` billing-buffer concept) requires the
-envelope model, and the buffer feature is impossible without it. Phase 5 is
-therefore the pivotal decision, not a refinement.
+**The one structural difference that remains.** YNAB is an *envelope* system on
+two axes: category balances persist **and** you budget money that physically
+exists. Rusty Budgets now does the first — carryover makes category balances
+persist — but still builds the budget from *forecast* income rather than account
+balances. That second axis is 5.4, deliberately deferred: the account data is
+not currently trustworthy enough to base a budget on (balances unpopulated, four
+months stale, duplicate registry entries).
+
+So the app is no longer a pure budget-vs-actual variance tracker, and the buffer
+concept from `CLAUDE.md` works. What is left is whether "Att fördela" should
+mean *money you have* rather than *money you expect* — a real decision, not a
+missing feature.
 
 **Where Rusty Budgets is genuinely better than mainstream tools:** the
 tag + auto-`MatchRule` engine with Swedish-localised tokenisation, and the

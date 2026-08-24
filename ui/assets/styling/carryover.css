@@ -1,0 +1,128 @@
+/* Envelope carryover settings + the per-item available balance. */
+
+.carryover {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.carryover-intro {
+    margin: 0;
+    color: #4a5568;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    max-width: 70ch;
+}
+
+.carryover-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+}
+
+.carryover-on {
+    background: #f0fff4;
+    border: 1px solid #9ae6b4;
+    color: #22543d;
+}
+
+.carryover-off {
+    background: #f7fafc;
+    border: 1px solid #e2e8f0;
+    color: #4a5568;
+}
+
+.carryover-status-icon {
+    font-weight: 700;
+}
+
+.carryover-controls {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.carryover-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.carryover-field-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #4a5568;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.carryover-select {
+    padding: 8px 10px;
+    border: 1px solid #cbd5e0;
+    border-radius: 8px;
+    background: white;
+    font-size: 0.95rem;
+    color: #2d3748;
+    min-width: 10rem;
+}
+
+.carryover-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.carryover-enable {
+    padding: 9px 18px;
+    border: none;
+    border-radius: 8px;
+    background: #667eea;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.carryover-disable {
+    padding: 9px 18px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: white;
+    color: #718096;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.carryover-enable:disabled,
+.carryover-disable:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.carryover-note {
+    margin: 0;
+    font-size: 0.82rem;
+    color: #718096;
+}
+
+/* Per-item envelope balance badge (budget table rows). */
+
+.available-badge {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 10px;
+    padding: 2px 10px;
+    border-radius: 12px;
+    background: #ebf4ff;
+    color: #2c5282;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.available-negative {
+    background: #fff5f5;
+    color: #c53030;
+}

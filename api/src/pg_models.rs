@@ -3,7 +3,7 @@
 use crate::User;
 use crate::cqrs::framework::StoredEvent;
 use crate::cqrs::runtime::{StoredBudgetEvent, UserBudgets};
-use crate::models::{Budget, BudgetEvent};
+use crate::models::{BankTransaction, Budget, BudgetEvent, Currency, Money};
 use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
@@ -67,6 +67,78 @@ pub struct PgBudget {
     pub version: i64,
     pub last_event: i64,
     pub data: JsonValue,
+}
+
+/// A `BankTransaction`, stored relationally rather than embedded inline in
+/// `PgBudget.data` — see `PgRuntime::load`/`snapshot` for how this table is
+/// kept in sync with a budget's in-memory `periods[].transactions`.
+#[derive(Debug, Clone, PartialEq, WeldsModel, Serialize, Deserialize)]
+#[welds(table = "transactions")]
+pub struct PgBankTransaction {
+    #[welds(primary_key)]
+    pub id: Uuid,
+    pub budget_id: Uuid,
+    pub account_number: String,
+    pub amount_cents: i64,
+    pub amount_currency: String,
+    pub balance_cents: i64,
+    pub balance_currency: String,
+    pub description: String,
+    pub date: DateTime<Utc>,
+    pub actual_id: Option<Uuid>,
+    pub ignored: bool,
+    pub tag_id: Option<Uuid>,
+}
+
+fn currency_to_text(currency: Currency) -> String {
+    match currency {
+        Currency::EUR => "EUR".to_string(),
+        Currency::USD => "USD".to_string(),
+        Currency::SEK => "SEK".to_string(),
+    }
+}
+
+fn currency_from_text(text: &str) -> Currency {
+    match text {
+        "EUR" => Currency::EUR,
+        "USD" => Currency::USD,
+        _ => Currency::SEK,
+    }
+}
+
+impl PgBankTransaction {
+    pub fn from_domain(budget_id: Uuid, tx: &BankTransaction) -> DbState<PgBankTransaction> {
+        let mut row = PgBankTransaction::new();
+        row.id = tx.id;
+        row.budget_id = budget_id;
+        row.account_number.clone_from(&tx.account_number);
+        row.amount_cents = tx.amount.amount_in_cents();
+        row.amount_currency = currency_to_text(tx.amount.currency());
+        row.balance_cents = tx.balance.amount_in_cents();
+        row.balance_currency = currency_to_text(tx.balance.currency());
+        row.description.clone_from(&tx.description);
+        row.date = tx.date;
+        row.actual_id = tx.actual_id;
+        row.ignored = tx.ignored;
+        row.tag_id = tx.tag_id;
+        row
+    }
+}
+
+impl From<PgBankTransaction> for BankTransaction {
+    fn from(row: PgBankTransaction) -> Self {
+        BankTransaction {
+            id: row.id,
+            account_number: row.account_number,
+            amount: Money::new_cents(row.amount_cents, currency_from_text(&row.amount_currency)),
+            description: row.description,
+            date: row.date,
+            actual_id: row.actual_id,
+            balance: Money::new_cents(row.balance_cents, currency_from_text(&row.balance_currency)),
+            ignored: row.ignored,
+            tag_id: row.tag_id,
+        }
+    }
 }
 
 impl From<User> for DbState<PgUser> {

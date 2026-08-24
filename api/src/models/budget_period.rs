@@ -306,8 +306,14 @@ impl BudgetPeriod {
                 && tx.actual_id.is_none()
                 && !self.allocations.iter().any(|a| a.transaction_id == tx.id)
         }) {
+            // Tokenize once per transaction, not once per (transaction, rule)
+            // pair — see the identical fix in `Budget::rule_matches`.
+            let tokens: HashSet<String> =
+                crate::models::match_rule::tokenize_description(&transaction.description)
+                    .into_iter()
+                    .collect();
             for rule in rules {
-                if rule.matches_transaction(transaction) {
+                if rule.matches_tokens(&tokens) {
                     if let Some(actual_id) = self.get_actual_id_for_rule(rule, &actuals) {
                         matched.push(RuleMatch {
                             tx_id: transaction.id,

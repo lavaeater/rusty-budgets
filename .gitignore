@@ -13,6 +13,6 @@ timing-logs.txt
 .env
 .idea/
 # Local SQL database created by DATABASE_URL=sqlite://... (real financial data)
-*.sqlite
-*.sqlite-shm
-*.sqlite-wal
+#*.sqlite
+#*.sqlite-shm
+#*.sqlite-wal

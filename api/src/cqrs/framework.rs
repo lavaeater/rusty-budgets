@@ -154,6 +154,52 @@ where
 
     /// Inspect raw events (for audit/testing).
     fn events(&self, id: A::Id) -> Result<Vec<StoredEvent<A, E>>, RustyError>;
+
+    /// Append many events in one go. Default just loops `append`; a runtime
+    /// backed by a real database can override this with a genuine bulk insert.
+    fn append_many(&self, user_id: Uuid, events: Vec<E>) -> Result<(), RustyError> {
+        for ev in events {
+            self.append(user_id, ev)?;
+        }
+        Ok(())
+    }
+
+    /// Run many commands against a *single* loaded copy of the aggregate,
+    /// applying each successful one in memory before moving to the next, then
+    /// append every resulting event and snapshot once at the end.
+    ///
+    /// This exists for bulk workloads (e.g. importing thousands of
+    /// transactions) where going through `execute` per command would reload
+    /// and replay the whole event stream on every single call — turning an
+    /// O(rows) amount of work into O(rows²). Failed commands (e.g. a
+    /// duplicate transaction) are reported per-index rather than aborting the
+    /// whole batch.
+    #[allow(clippy::type_complexity)]
+    fn bulk_execute(
+        &self,
+        user_id: Uuid,
+        id: A::Id,
+        commands: Vec<Box<dyn FnOnce(&A) -> Result<E, CommandError> + Send>>,
+    ) -> Result<Vec<Result<Uuid, CommandError>>, RustyError> {
+        let mut current = self.load(id)?;
+        let mut events = Vec::with_capacity(commands.len());
+        let mut results = Vec::with_capacity(commands.len());
+        for command in commands {
+            match command(&current) {
+                Ok(ev) => {
+                    let latest_id = ev.apply(&mut current);
+                    results.push(Ok(latest_id));
+                    events.push(ev);
+                }
+                Err(e) => results.push(Err(e)),
+            }
+        }
+        if !events.is_empty() {
+            self.append_many(user_id, events)?;
+            self.snapshot(&current)?;
+        }
+        Ok(results)
+    }
 }
 
 #[allow(async_fn_in_trait)]
@@ -205,4 +251,50 @@ where
 
     /// Inspect raw events (for audit/testing).
     async fn events(&self, id: A::Id) -> Result<Vec<StoredEvent<A, E>>, RustyError>;
+
+    /// Append many events in one go. Default just loops `append`; a runtime
+    /// backed by a real database can override this with a genuine bulk insert.
+    async fn append_many(&self, user_id: Uuid, events: Vec<E>) -> Result<(), RustyError> {
+        for ev in events {
+            self.append(user_id, ev).await?;
+        }
+        Ok(())
+    }
+
+    /// Run many commands against a *single* loaded copy of the aggregate,
+    /// applying each successful one in memory before moving to the next, then
+    /// append every resulting event and snapshot once at the end.
+    ///
+    /// This exists for bulk workloads (e.g. importing thousands of
+    /// transactions) where going through `execute` per command would reload
+    /// and replay the whole event stream on every single call — turning an
+    /// O(rows) amount of work into O(rows²). Failed commands (e.g. a
+    /// duplicate transaction) are reported per-index rather than aborting the
+    /// whole batch.
+    #[allow(clippy::type_complexity)]
+    async fn bulk_execute(
+        &self,
+        user_id: Uuid,
+        id: A::Id,
+        commands: Vec<Box<dyn FnOnce(&A) -> Result<E, CommandError> + Send>>,
+    ) -> Result<Vec<Result<Uuid, CommandError>>, RustyError> {
+        let mut current = self.load(id).await?;
+        let mut events = Vec::with_capacity(commands.len());
+        let mut results = Vec::with_capacity(commands.len());
+        for command in commands {
+            match command(&current) {
+                Ok(ev) => {
+                    let latest_id = ev.apply(&mut current);
+                    results.push(Ok(latest_id));
+                    events.push(ev);
+                }
+                Err(e) => results.push(Err(e)),
+            }
+        }
+        if !events.is_empty() {
+            self.append_many(user_id, events).await?;
+            self.snapshot(&current).await?;
+        }
+        Ok(results)
+    }
 }

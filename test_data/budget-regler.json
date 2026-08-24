@@ -1,0 +1,6056 @@
+{
+  "tags": [
+    {
+      "name": "Årlig buffert",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Livsmedel",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    },
+    {
+      "name": "Övrigt",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    },
+    {
+      "name": "Parkering",
+      "cost_kind": "Variable",
+      "matching": "Automatic"
+    },
+    {
+      "name": "Nöje",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    },
+    {
+      "name": "Äta ute",
+      "cost_kind": "Variable",
+      "matching": "Automatic"
+    },
+    {
+      "name": "Fika",
+      "cost_kind": "Variable",
+      "matching": "Automatic"
+    },
+    {
+      "name": "Shopping - Hus",
+      "cost_kind": "Variable",
+      "matching": "Automatic"
+    },
+    {
+      "name": "Parkering - Jobb",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "IT och tjänster",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    },
+    {
+      "name": "Media",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Shopping",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    },
+    {
+      "name": "Kläder",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    },
+    {
+      "name": "Läkemedel",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    },
+    {
+      "name": "Bank - avgift",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Bil - laddning",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Försäkring - Hus",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Telefon",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Resor",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    },
+    {
+      "name": "Vitvaror",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    },
+    {
+      "name": "Lön",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Fritid",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    },
+    {
+      "name": "Försäkring - Liv",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Lån - Hus",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Internet",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "El",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Fack - avgift",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Lån - Elisabeth",
+      "cost_kind": {
+        "Recurring": "Monthly"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Anja",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    },
+    {
+      "name": "Livskvalitet",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    },
+    {
+      "name": "Freja",
+      "cost_kind": "Variable",
+      "matching": "Automatic"
+    },
+    {
+      "name": "Shopping - Hund",
+      "cost_kind": "Variable",
+      "matching": "Automatic"
+    },
+    {
+      "name": "Alkohol",
+      "cost_kind": "Variable",
+      "matching": "Automatic"
+    },
+    {
+      "name": "Bil",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    },
+    {
+      "name": "Japanresan",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    },
+    {
+      "name": "B",
+      "cost_kind": {
+        "Recurring": "Annual"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Bilavsättning",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    },
+    {
+      "name": "CSN-buffert",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    },
+    {
+      "name": "Hälsa - Träning",
+      "cost_kind": "Variable",
+      "matching": "Automatic"
+    },
+    {
+      "name": "Semester - Äta ute",
+      "cost_kind": "Variable",
+      "matching": "Automatic"
+    },
+    {
+      "name": "Semester - boende",
+      "cost_kind": "Variable",
+      "matching": "Automatic"
+    },
+    {
+      "name": "Media årlig",
+      "cost_kind": {
+        "Recurring": "Annual"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Semester - shopping",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    },
+    {
+      "name": "Semester - Resor",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    },
+    {
+      "name": "Semester - Fika",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    },
+    {
+      "name": "Semester - läkemedel",
+      "cost_kind": "Variable",
+      "matching": "Automatic"
+    },
+    {
+      "name": "Vård",
+      "cost_kind": "Variable",
+      "matching": "Automatic"
+    },
+    {
+      "name": "Undersök",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    },
+    {
+      "name": "Semester - Övrigt",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    },
+    {
+      "name": "Shopping - Trädgård",
+      "cost_kind": "Variable",
+      "matching": "Automatic"
+    },
+    {
+      "name": "Semester - Upplevelse",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    },
+    {
+      "name": "Hantverkare",
+      "cost_kind": "Variable",
+      "matching": "Automatic"
+    },
+    {
+      "name": "Skatt",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    },
+    {
+      "name": "Sparande Avanza",
+      "cost_kind": "Variable",
+      "matching": "Automatic"
+    },
+    {
+      "name": "Hus - Drift - Årlig",
+      "cost_kind": {
+        "Recurring": "Annual"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Utdelningar",
+      "cost_kind": {
+        "Recurring": "Annual"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Hund - Försäkring",
+      "cost_kind": {
+        "Recurring": "Annual"
+      },
+      "matching": "Automatic"
+    },
+    {
+      "name": "Hälsa - Tillskott",
+      "cost_kind": "Variable",
+      "matching": "Automatic"
+    },
+    {
+      "name": "Hälsa - Utrustning",
+      "cost_kind": "Variable",
+      "matching": "Suggest"
+    }
+  ],
+  "rules": [
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "tokyo",
+        "ichibangai,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "dollarstore"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Bank - avgift",
+      "transaction_key": [
+        "månadsavgift",
+        "bankkortextra"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "swish",
+        "till",
+        "lukas",
+        "hammarström",
+        "frejd"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Bank - avgift",
+      "transaction_key": [
+        "månadsavgift",
+        "bankkort"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "rasta",
+        "arboga",
+        "butik,",
+        "arboga"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "qliro"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "kopparberg",
+        "konditori,",
+        "kopparberg"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping - Hus",
+      "transaction_key": [
+        "granit"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "cervera"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Hälsa - Tillskott",
+      "transaction_key": [
+        "life",
+        "örebro",
+        "drottningg,",
+        "örebro"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "swish",
+        "till",
+        "dennis",
+        "fältström"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "nyx*toalett,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "ll",
+        "amice",
+        "orebro,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "finska",
+        "hembageriet,",
+        "eskilstuna"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Äta ute",
+      "transaction_key": [
+        "morimorisushi",
+        "katamachi,",
+        "ishikawa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Årlig buffert",
+      "transaction_key": [
+        "överföring",
+        "9159",
+        "4824888"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "pressbyrån"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Parkering",
+      "transaction_key": [
+        "easypark"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Undersök",
+      "transaction_key": [
+        "2242",
+        "az",
+        "soderta,",
+        "sodertalje"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Äta ute",
+      "transaction_key": [
+        "vfi*simnar",
+        "oy,",
+        "vaasa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "martin",
+        "edmaier,",
+        "wien"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "swish",
+        "till",
+        "the",
+        "non",
+        "existent",
+        "center",
+        "ek",
+        "för"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Hälsa - Träning",
+      "transaction_key": [
+        "swish",
+        "till",
+        "ställdalens",
+        "aik"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fritid",
+      "transaction_key": [
+        "swish",
+        "till",
+        "uppfinnare-makerspace",
+        "örebro"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Bil - laddning",
+      "transaction_key": [
+        "recharge",
+        "sweden",
+        "ab,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - shopping",
+      "transaction_key": [
+        "ghibli",
+        "museum,mitaka,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "sobi",
+        "bromsplan",
+        "örebro"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "nagomi",
+        "sushi,",
+        "lindesberg"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Parkering",
+      "transaction_key": [
+        "flowbird",
+        "app,",
+        "kista"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Upplevelse",
+      "transaction_key": [
+        "teamlab",
+        "borderless,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "viking",
+        "pizzeria",
+        "kopparberg"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "loomisp24sju",
+        "stalldal,",
+        "stalldalen"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "coop"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Hus - Drift - Årlig",
+      "transaction_key": [
+        "bg",
+        "5925-2619",
+        "ljusnarsberg",
+        "vr"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Läkemedel",
+      "transaction_key": [
+        "dozapotek245,",
+        "malmö"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "kebabfabriken"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "www.amazon.se"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Kläder",
+      "transaction_key": [
+        "rch-canles,",
+        "calgary"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "swish",
+        "från",
+        "lisa",
+        "leffler",
+        "peura"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "swish",
+        "från",
+        "otiato,bryan"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "s",
+        "12",
+        "i",
+        "örebro",
+        "ab",
+        "mojo,",
+        "örebro"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Fika",
+      "transaction_key": [
+        "azabudai",
+        "hills",
+        "market,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Upplevelse",
+      "transaction_key": [
+        "swish",
+        "till",
+        "a",
+        "menarini",
+        "diagnostics",
+        "s.r.l"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fritid",
+      "transaction_key": [
+        "wehunt,",
+        "katrineholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Äta ute",
+      "transaction_key": [
+        "hbk-yamagishikoutuu,",
+        "kanazawa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "avgift"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "zettle_*therese",
+        "molander,",
+        "stora",
+        "mellosa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "okq8,",
+        "odeshog"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "kebabfabriken,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livskvalitet",
+      "transaction_key": [
+        "bokadirekt"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Kläder",
+      "transaction_key": [
+        "globale",
+        "re-vivo",
+        "amsterdam"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Undersök",
+      "transaction_key": [
+        "dfp186944466,",
+        "ipswich"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "pj",
+        "inredning",
+        "&",
+        "design,",
+        "dyltabruk"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "kotthandlarn"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "swish",
+        "till",
+        "ställdalens",
+        "skafferi",
+        "24-sju"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fritid",
+      "transaction_key": [
+        "bg",
+        "3472388",
+        "svenska",
+        "jägareförbundet"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Fika",
+      "transaction_key": [
+        "pronto,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "wattif",
+        "ev,",
+        "saltsjobaden"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "$hléns"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "digitalbutikerna,",
+        "kopparberg"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Anja",
+      "transaction_key": [
+        "swish",
+        "till",
+        "anja",
+        "nygren",
+        "peura"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "mcdkumlabrandasen,",
+        "kumla"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Fika",
+      "transaction_key": [
+        "rainbow",
+        "shimokitazawa,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "cantina",
+        "n3"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "chopchop"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping - Hus",
+      "transaction_key": [
+        "jula"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "zettle_*orebro",
+        "universite,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Hantverkare",
+      "transaction_key": [
+        "vvs",
+        "hus",
+        "underhåll"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "webhallen"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livskvalitet",
+      "transaction_key": [
+        "salong",
+        "family,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "þrebro",
+        "ost,",
+        "þrebro"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "swish",
+        "till",
+        "klarna",
+        "bank",
+        "ab"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "tillbaka",
+        "från",
+        "anja"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Freja",
+      "transaction_key": [
+        "swish",
+        "till",
+        "kenny",
+        "nilsson"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "zettle_*sjolanders",
+        "i",
+        "loa,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "IT och tjänster",
+      "transaction_key": [
+        "nabu",
+        "casa",
+        "-",
+        "ha",
+        "cloud,",
+        "nabucasa.com"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Äta ute",
+      "transaction_key": [
+        "mizuhikitei,",
+        "ishikawa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "swish",
+        "till",
+        "persson,",
+        "anton"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Fika",
+      "transaction_key": [
+        "noa",
+        "coffee",
+        "2,",
+        "sibuyaku"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "swish",
+        "till",
+        "mobil",
+        "tech"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Lån - Elisabeth",
+      "transaction_key": [
+        "retur",
+        "01",
+        "-",
+        "kontot",
+        "avslutat"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "restaurang",
+        "gastis",
+        "borensb,",
+        "borensberg"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "swish",
+        "till",
+        "rocker",
+        "ab",
+        "(publ)"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Äta ute",
+      "transaction_key": [
+        "yataisakaba",
+        "ebisu",
+        "akasa,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livskvalitet",
+      "transaction_key": [
+        "wg",
+        "hotelldrift",
+        "ab,",
+        "skinnskattebe"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Fika",
+      "transaction_key": [
+        "latteartmaniaginza,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Äta ute",
+      "transaction_key": [
+        "afuriharajuku,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - shopping",
+      "transaction_key": [
+        "itoya",
+        "honten,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Anja",
+      "transaction_key": [
+        "swish",
+        "från",
+        "anja",
+        "nygren",
+        "peura"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Fika",
+      "transaction_key": [
+        "a215",
+        "fi",
+        "hel",
+        "fafas",
+        "as,",
+        "vantaa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Upplevelse",
+      "transaction_key": [
+        "utlandsbetalning"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping - Hus",
+      "transaction_key": [
+        "xl-bygg"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - shopping",
+      "transaction_key": [
+        "gekås",
+        "ullared",
+        "shoppa,",
+        "ullared"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Resor",
+      "transaction_key": [
+        "hokkotaxi,",
+        "076-291-8222"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Media",
+      "transaction_key": [
+        "spotify,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Hälsa - Träning",
+      "transaction_key": [
+        "bg",
+        "5760-5982",
+        "ställdalen",
+        "aik",
+        "hu"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "swish",
+        "till",
+        "ellinor",
+        "härlin"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping - Trädgård",
+      "transaction_key": [
+        "plantmarknaden",
+        "tredgard,",
+        "lindesberg"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "mcdvasteraserikslund,",
+        "vasteras"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Fika",
+      "transaction_key": [
+        "paf,",
+        "aland"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Media",
+      "transaction_key": [
+        "paypal",
+        "*scribd.com",
+        "564",
+        "4029357733"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Resor",
+      "transaction_key": [
+        "miyazonojidoshiya",
+        "suginam,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Övrigt",
+      "transaction_key": [
+        "k-supermarket",
+        "muurame,",
+        "muurame"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Kläder",
+      "transaction_key": [
+        "sko",
+        "dig",
+        "i",
+        "örebro",
+        "ab,",
+        "örebro"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping - Hus",
+      "transaction_key": [
+        "jem",
+        "fix"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "swish",
+        "till",
+        "jeanette",
+        "hultin"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping - Trädgård",
+      "transaction_key": [
+        "kanans",
+        "blomsterhandel,",
+        "nora"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Äta ute",
+      "transaction_key": [
+        "mcdsthlmarlandaskycity,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Bank - avgift",
+      "transaction_key": [
+        "ränta",
+        "på",
+        "övertrassering"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Lån - Hus",
+      "transaction_key": [
+        "avibetalning",
+        "9152-2305078"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fack - avgift",
+      "transaction_key": [
+        "akavia"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "caffe",
+        "nero"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - boende",
+      "transaction_key": [
+        "chf*top",
+        "camping",
+        "vaasa,",
+        "vaasa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Lån - Hus",
+      "transaction_key": [
+        "bolån"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Äta ute",
+      "transaction_key": [
+        "villafontainetokyohacchob,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "new",
+        "china",
+        "trading,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Fika",
+      "transaction_key": [
+        "seven-eleven,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Årlig buffert",
+      "transaction_key": [
+        "buffert",
+        "årliga"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "swish",
+        "till",
+        "daniëlle",
+        "reichenbach"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Hälsa - Utrustning",
+      "transaction_key": [
+        "k*resmed",
+        "sle"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Resor",
+      "transaction_key": [
+        "sl,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Fika",
+      "transaction_key": [
+        "b680",
+        "fazer",
+        "cafe,",
+        "vantaa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Lön",
+      "transaction_key": [
+        "insättning",
+        "från",
+        "annan",
+        "bank",
+        "a-kassa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Kläder",
+      "transaction_key": [
+        "skoservice,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Resor",
+      "transaction_key": [
+        "skyliner",
+        "e-ticket,",
+        "yachiyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Undersök",
+      "transaction_key": [
+        "www.zoolox.com,",
+        "www.zoolox.co"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "ost,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping - Hus",
+      "transaction_key": [
+        "biltema"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "perssons",
+        "magasin,",
+        "kopparberg"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - shopping",
+      "transaction_key": [
+        "hands",
+        "kanazawa,",
+        "kanazawashi"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Fika",
+      "transaction_key": [
+        "koshin,",
+        "ishikawa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - boende",
+      "transaction_key": [
+        "hotel",
+        "at",
+        "booking.com,",
+        "amsterdam"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - boende",
+      "transaction_key": [
+        "apahotelpride",
+        "akasaka",
+        "kok,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Lån - Hus",
+      "transaction_key": [
+        "bolån",
+        "maj"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Kläder",
+      "transaction_key": [
+        "vinted,",
+        "uab,",
+        "vilnius"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Hälsa - Utrustning",
+      "transaction_key": [
+        "specsavers",
+        "optik,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - shopping",
+      "transaction_key": [
+        "shinjuku",
+        "marui",
+        "annex,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "kommun,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Fika",
+      "transaction_key": [
+        "ssp",
+        "finland",
+        "a210",
+        "fi",
+        "hel",
+        "w,",
+        "vantaa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - shopping",
+      "transaction_key": [
+        "mega",
+        "donquijote",
+        "shibuya",
+        "h,",
+        "03-5428-4086"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "the",
+        "white",
+        "horse,",
+        "upplands",
+        "vesb"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "lådan,",
+        "kopparberg"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Parkering",
+      "transaction_key": [
+        "apcoa",
+        "parking,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - shopping",
+      "transaction_key": [
+        "warajiya,",
+        "kanazawa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - shopping",
+      "transaction_key": [
+        "cecosa",
+        "supermercados",
+        "s.l.,",
+        "palma"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Parkering - Jobb",
+      "transaction_key": [
+        "apcoa",
+        "flow",
+        "se,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Nöje",
+      "transaction_key": [
+        "mall",
+        "of",
+        "scandin,",
+        "solna"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "circle",
+        "k"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "sushi",
+        "bar"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "bistro",
+        "g",
+        "orebro,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "zettle_*jme",
+        "bodega",
+        "kopparberg"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "max",
+        "burgers,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Läkemedel",
+      "transaction_key": [
+        "k*kronans",
+        "ap"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Internet",
+      "transaction_key": [
+        "bredband2"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fritid",
+      "transaction_key": [
+        "swish",
+        "till",
+        "transportstyelsens",
+        "kamratförening"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Bilavsättning",
+      "transaction_key": [
+        "överföring",
+        "9159",
+        "7977707"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Japanresan",
+      "transaction_key": [
+        "japanresa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Media årlig",
+      "transaction_key": [
+        "torrentleech.org"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Telefon",
+      "transaction_key": [
+        "hallon,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Kläder",
+      "transaction_key": [
+        "blue",
+        "fox",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping - Hund",
+      "transaction_key": [
+        "djurens",
+        "lanthandel",
+        "koppar,",
+        "kopparberg"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Anja",
+      "transaction_key": [
+        "zettle_*piercing",
+        "orebr"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "mcdorebromarieberg,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "skultuna",
+        "messingsbruk,",
+        "skultuna"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Äta ute",
+      "transaction_key": [
+        "orenosteak",
+        "kichijoji,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Bil",
+      "transaction_key": [
+        "bilavsättning"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Freja",
+      "transaction_key": [
+        "swish",
+        "till",
+        "freja",
+        "nygren",
+        "peura"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Media",
+      "transaction_key": [
+        "sm-breakit-ef527b705a1",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fritid",
+      "transaction_key": [
+        "naturvårdsverket"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - shopping",
+      "transaction_key": [
+        "maxvalu",
+        "uchinada,",
+        "chiba"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "swish",
+        "till",
+        "berger,nina"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Freja",
+      "transaction_key": [
+        "överf.",
+        "f.",
+        "nygren",
+        "peura"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "rice",
+        "och",
+        "noodles,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Resor",
+      "transaction_key": [
+        "uber,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Nöje",
+      "transaction_key": [
+        "swish",
+        "till",
+        "heusinger",
+        "von",
+        "waldegg,",
+        "osborne"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Upplevelse",
+      "transaction_key": [
+        "workrelax,",
+        "tammisari"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Resor",
+      "transaction_key": [
+        "yayoikotsuu/nfc,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "sp",
+        "fantagraphics,",
+        "fantagraphics"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "gaardsbutiken,",
+        "nordingra"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "swish",
+        "till",
+        "jonas",
+        "karman"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Äta ute",
+      "transaction_key": [
+        "mujirushiryohin,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Parkering",
+      "transaction_key": [
+        "electronic",
+        "parkin"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "IT och tjänster",
+      "transaction_key": [
+        "todoist,",
+        "todoist.com"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "aso",
+        "konditori",
+        "ab,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "chili",
+        "och",
+        "wok",
+        "sundsvall,",
+        "sundsvall"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "IT och tjänster",
+      "transaction_key": [
+        "windsurf.com"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - shopping",
+      "transaction_key": [
+        "daiso,",
+        "hiroshima"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - shopping",
+      "transaction_key": [
+        "jr",
+        "east",
+        "shopping",
+        "center,",
+        "sibuyaku"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "IT och tjänster",
+      "transaction_key": [
+        "aws",
+        "emea,",
+        "aws.amazon.co"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Nöje",
+      "transaction_key": [
+        "swish",
+        "till",
+        "free",
+        "play"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Läkemedel",
+      "transaction_key": [
+        "apoteket"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Äta ute",
+      "transaction_key": [
+        "leroyfullmoonwine,",
+        "kanazawa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "sostrene",
+        "grene"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "hemelektronik"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Bank - avgift",
+      "transaction_key": [
+        "ränta",
+        "på",
+        "tillgodohavandet"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "myrorna,",
+        "örebro"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping - Hund",
+      "transaction_key": [
+        "sp",
+        "husdjurslandet,",
+        "spanga"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "El",
+      "transaction_key": [
+        "ellevio",
+        "(publ)",
+        "ab"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "mcdenkoping,",
+        "enkoping"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "IT och tjänster",
+      "transaction_key": [
+        "bg",
+        "5020-7042",
+        "fortnox",
+        "finans",
+        "ab"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "swish",
+        "till",
+        "prakatsatjatam"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Lön",
+      "transaction_key": [
+        "överf.",
+        "l.",
+        "leffler",
+        "peura"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "lulu",
+        "poke",
+        "och",
+        "sushi",
+        "sodra,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Bil",
+      "transaction_key": [
+        "hertz"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Fika",
+      "transaction_key": [
+        "okashidonki",
+        "osakedonki,",
+        "03-3548-8511"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Resor",
+      "transaction_key": [
+        "benstocken",
+        "s",
+        "parkering,",
+        "rosersberg"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "circle",
+        "k",
+        "knivsta,",
+        "knivsta"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "pen",
+        "store,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Övrigt",
+      "transaction_key": [
+        "forex",
+        "247,",
+        "vantaa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "gulf",
+        "biskopskvarn,",
+        "strangnas"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "willys"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "swish",
+        "till",
+        "litero",
+        "gårdsbutik"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Resor",
+      "transaction_key": [
+        "taxis",
+        "on",
+        "booking,",
+        "amsterdam"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "akademibokhande,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Fika",
+      "transaction_key": [
+        "presso",
+        "seppala",
+        "jyvasky,",
+        "jyvaeskylae"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "vetekatten",
+        "kungsgatan",
+        "55",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping - Hund",
+      "transaction_key": [
+        "arken",
+        "zoo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping - Hund",
+      "transaction_key": [
+        "spiritdog",
+        "training,",
+        "spiritdogtrai"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "city",
+        "gross"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - shopping",
+      "transaction_key": [
+        "bic",
+        "camera,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Upplevelse",
+      "transaction_key": [
+        "willer",
+        "travel,",
+        "osaka"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Skatt",
+      "transaction_key": [
+        "återbetalning",
+        "skatt",
+        "sk7305120375"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Bil",
+      "transaction_key": [
+        "besikta",
+        "lindesberg,",
+        "lindesberg"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "circuit,",
+        "skonsberg",
+        "sun"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Äta ute",
+      "transaction_key": [
+        "a214",
+        "hel",
+        "bastard",
+        "burger",
+        "a,",
+        "vantaa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Resor",
+      "transaction_key": [
+        "jr",
+        "east,",
+        "sibuyaku"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Kläder",
+      "transaction_key": [
+        "blue",
+        "fox,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping - Hus",
+      "transaction_key": [
+        "lagerhaus"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "örebro",
+        "kommun,",
+        "örebro"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Fika",
+      "transaction_key": [
+        "hennahotel",
+        "kourinbou2,",
+        "ishikawa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Kläder",
+      "transaction_key": [
+        "globale",
+        "re-vivo,",
+        "amsterdam"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Hälsa - Tillskott",
+      "transaction_key": [
+        "k*svensktkos"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Fika",
+      "transaction_key": [
+        "doutor",
+        "coffee,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Resor",
+      "transaction_key": [
+        "sj",
+        "ab"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Utdelningar",
+      "transaction_key": [
+        "utdelning",
+        "ad"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - shopping",
+      "transaction_key": [
+        "mujirushiryohin,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Vård",
+      "transaction_key": [
+        "bg",
+        "5984-4126",
+        "cereb",
+        "ab"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Sparande Avanza",
+      "transaction_key": [
+        "swish",
+        "till",
+        "avanza"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Telefon",
+      "transaction_key": [
+        "telia",
+        "sverige",
+        "ab"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping - Hus",
+      "transaction_key": [
+        "ikea"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Hälsa - Träning",
+      "transaction_key": [
+        "swish",
+        "till",
+        "bergslagens",
+        "fightclub"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "normal"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - läkemedel",
+      "transaction_key": [
+        "cocokarafine,",
+        "yokohama"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Sparande Avanza",
+      "transaction_key": [
+        "insättning",
+        "från",
+        "annan",
+        "bank",
+        "avanza"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Resor",
+      "transaction_key": [
+        "nihonkotsu,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Fika",
+      "transaction_key": [
+        "tavarapuoti",
+        "vk",
+        "oy",
+        "tuur,",
+        "tuuri"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Kläder",
+      "transaction_key": [
+        "sp",
+        "vaistoa.com",
+        "vesilahti"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "chicce,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Hund - Försäkring",
+      "transaction_key": [
+        "bg",
+        "4641056",
+        "agria",
+        "djurförsäkring"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Telefon",
+      "transaction_key": [
+        "telenor"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Äta ute",
+      "transaction_key": [
+        "vfi*talo",
+        "events",
+        "oy,",
+        "tampere"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "svea",
+        "bank"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Äta ute",
+      "transaction_key": [
+        "chubu",
+        "int'l",
+        "airport",
+        "cen,",
+        "tokoname"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "IT och tjänster",
+      "transaction_key": [
+        "anthropic*",
+        "claude",
+        "sub,",
+        "anthropic.com"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Äta ute",
+      "transaction_key": [
+        "boul'ange",
+        "shinjukusazan,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - boende",
+      "transaction_key": [
+        "bkg*hotel",
+        "at",
+        "booking.c,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "max",
+        "burgers"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "olhall,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "restaurang",
+        "kungsgatan",
+        "1,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "vasteras",
+        "stadsmission,",
+        "vasteras"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "sushi",
+        "yama"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Äta ute",
+      "transaction_key": [
+        "nashinoya",
+        "hacchoboriten,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "hemma",
+        "hos",
+        "adam,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Äta ute",
+      "transaction_key": [
+        "momoparadise",
+        "shibuyakoen,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "burger",
+        "king"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Äta ute",
+      "transaction_key": [
+        "viking",
+        "line,",
+        "glory,",
+        "mariehamn"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "kjell"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Kläder",
+      "transaction_key": [
+        "stadium"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Resor",
+      "transaction_key": [
+        "swish",
+        "till",
+        "ab",
+        "storstockholms",
+        "lokaltrafik"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Anja",
+      "transaction_key": [
+        "swish",
+        "till",
+        "lsmt",
+        "ab"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Resor",
+      "transaction_key": [
+        "länstrafiken"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "gsp",
+        "restaurang",
+        "ab,",
+        "örebro"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Resor",
+      "transaction_key": [
+        "east",
+        "japan",
+        "railway",
+        "co.,",
+        "sibuyaku"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "gift",
+        "shop,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Bil",
+      "transaction_key": [
+        "uhbilservice,",
+        "lindesberg"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Fika",
+      "transaction_key": [
+        "dydo",
+        "drinco,",
+        "osaka"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Resor",
+      "transaction_key": [
+        "yamatekotsuu/nfc,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "restaurang",
+        "haga,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Övrigt",
+      "transaction_key": [
+        "s-market",
+        "vaasanpuistikko,",
+        "vaasa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "swish",
+        "till",
+        "carrie",
+        "ann",
+        "ellis"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "meiwei,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "ekobutiken,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Freja",
+      "transaction_key": [
+        "swish",
+        "freja",
+        "nygren",
+        "peura"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "swish",
+        "från",
+        "elisabeth",
+        "nygren"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "swish",
+        "till",
+        "hanna",
+        "eriksen"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Försäkring - Hus",
+      "transaction_key": [
+        "folksam"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "artbar,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Kläder",
+      "transaction_key": [
+        "dressmann"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "restaurang",
+        "erbil,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "swish",
+        "till",
+        "adina",
+        "langseth"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Äta ute",
+      "transaction_key": [
+        "aurora",
+        "botnia,",
+        "vaasa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "akesslaktstyckningab,",
+        "soderbarke"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Media",
+      "transaction_key": [
+        "spotifyse,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "24",
+        "livs,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "sobi,",
+        "örebro"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "swish",
+        "till",
+        "food",
+        "today"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "pg",
+        "4866603-6",
+        "svea",
+        "inkasso",
+        "akti"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - shopping",
+      "transaction_key": [
+        "shibuya",
+        "loft,",
+        "sibuyaku"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Äta ute",
+      "transaction_key": [
+        "la",
+        "canasta,",
+        "malaga"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fritid",
+      "transaction_key": [
+        "bg",
+        "179-4296",
+        "hedins",
+        "skogar",
+        "karl"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping - Trädgård",
+      "transaction_key": [
+        "swish",
+        "till",
+        "aspa",
+        "växtodling"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Hantverkare",
+      "transaction_key": [
+        "värmepannan"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping - Hus",
+      "transaction_key": [
+        "jysk"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Äta ute",
+      "transaction_key": [
+        "koto-ku,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "swish",
+        "till",
+        "pernilla",
+        "hjälm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping - Hus",
+      "transaction_key": [
+        "rusta"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "11157",
+        "bibliotekscafeet",
+        "örebro"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "andra",
+        "varvet,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "swish",
+        "till",
+        "postnord",
+        "sverige",
+        "ab"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Äta ute",
+      "transaction_key": [
+        "boomers",
+        "bar,",
+        "tampere"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "IT och tjänster",
+      "transaction_key": [
+        "microsoft#g170527629,",
+        "dublin",
+        "2"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "IT och tjänster",
+      "transaction_key": [
+        "dnh*godaddyæ3966186108,",
+        "https://www.g"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - boende",
+      "transaction_key": [
+        "ms*",
+        "hotelkakola,",
+        "turku"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "söderbärke",
+        "pizzeria",
+        "ab,",
+        "söderbärke"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "svea",
+        "ba"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "boutique",
+        "hamngatan",
+        "sto,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Fika",
+      "transaction_key": [
+        "avolta",
+        "hel",
+        "t2",
+        "nsh",
+        "plaza",
+        "g,",
+        "vantaa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "skullshaver.eu",
+        "tallinn"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "okq8,",
+        "örebro"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "rice",
+        "noodles"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "bigme.vip,",
+        "hong",
+        "kong"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "röda",
+        "huset",
+        "bistro,",
+        "kopparberg"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - shopping",
+      "transaction_key": [
+        "annival",
+        "interio,",
+        "muurame"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "sp",
+        "wicked",
+        "cushions",
+        "wickedcushion"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - shopping",
+      "transaction_key": [
+        "g",
+        "u",
+        "co,",
+        "yamaguchi"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Internet",
+      "transaction_key": [
+        "bahnhof"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "centralens",
+        "toalett",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Fika",
+      "transaction_key": [
+        "vending",
+        "machine,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "nyx*matbolagetieskilstun,",
+        "eskilstuna"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "clas",
+        "ohlson"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "spanjoren,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "IT och tjänster",
+      "transaction_key": [
+        "dublin"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Äta ute",
+      "transaction_key": [
+        "eggslut",
+        "shinjukusazante,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Hälsa - Träning",
+      "transaction_key": [
+        "djupdalsbadet,",
+        "kumla"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "clas",
+        "ohlson,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Alkohol",
+      "transaction_key": [
+        "systembolaget,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "swish",
+        "till",
+        "else-marie",
+        "axelsson"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Hantverkare",
+      "transaction_key": [
+        "ludvikasotarn"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "swish",
+        "till",
+        "leffler",
+        "peura,anna"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "espresso",
+        "house"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "matoppet",
+        "lovstahallen,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Nöje",
+      "transaction_key": [
+        "swish",
+        "till",
+        "billetto"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - shopping",
+      "transaction_key": [
+        "narita",
+        "airport,",
+        "chiba"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "john",
+        "scotts",
+        "pub,",
+        "kopparberg"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "El",
+      "transaction_key": [
+        "e.on",
+        "kundsupport",
+        "sverige"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "tvapunktnoll"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Lån - Hus",
+      "transaction_key": [
+        "bg",
+        "5150-5105",
+        "skandiabanken"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "zettle_*elinas",
+        "marknad,",
+        "grodinge"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "IT och tjänster",
+      "transaction_key": [
+        "codeium.com",
+        "codeium.com"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - shopping",
+      "transaction_key": [
+        "divercity",
+        "tokyoplaza,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Kläder",
+      "transaction_key": [
+        "ellos",
+        "ab,",
+        "boras"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "tempo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "zettle_*jennys",
+        "bageri,",
+        "nora"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "IT och tjänster",
+      "transaction_key": [
+        "anthropic.com"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "korthuset"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "oob"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Resor",
+      "transaction_key": [
+        "ubr*",
+        "pending.uber.com,",
+        "amsterdam"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "norrmal"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "ica"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - shopping",
+      "transaction_key": [
+        "sekaido",
+        "honten,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Parkering",
+      "transaction_key": [
+        "bg",
+        "5051-6905",
+        "felparkeringsavgi"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "swish",
+        "till",
+        "jon",
+        "neergaard"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Kläder",
+      "transaction_key": [
+        "sp",
+        "shaperluv",
+        "shaperluv.com"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Hälsa - Träning",
+      "transaction_key": [
+        "laxbrogym"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "rebro",
+        "ost,",
+        "rebro"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - läkemedel",
+      "transaction_key": [
+        "sugi",
+        "pharmacy,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping - Hus",
+      "transaction_key": [
+        "k*jysk.se"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "swish",
+        "till",
+        "dhl",
+        "express",
+        "(sweden)",
+        "ab"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Vitvaror",
+      "transaction_key": [
+        "k*power",
+        "sver"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Bil",
+      "transaction_key": [
+        "tage",
+        "rejmes",
+        "orebro,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Resor",
+      "transaction_key": [
+        "mobile",
+        "suica",
+        "apple",
+        "v,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fritid",
+      "transaction_key": [
+        "jaktia"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Nöje",
+      "transaction_key": [
+        "steam",
+        "purchase",
+        "seattle"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "zettle_*therese",
+        "moland,",
+        "stora",
+        "mellosa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "humana",
+        "city",
+        "1,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "kajplats",
+        "9",
+        "vasteras"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Resor",
+      "transaction_key": [
+        "purotakushi,",
+        "076-253-5555"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Resor",
+      "transaction_key": [
+        "k*voiscooter"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - läkemedel",
+      "transaction_key": [
+        "sugi",
+        "pharmacy,",
+        "kanazawa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "akropolisrestaurang",
+        "kopparberg"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Resor",
+      "transaction_key": [
+        "ticket",
+        "se,",
+        "nacka"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping - Hus",
+      "transaction_key": [
+        "swish",
+        "till",
+        "kopparbergs",
+        "måleri",
+        "ab"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "mcdorebrosodermalmspla,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "IT och tjänster",
+      "transaction_key": [
+        "jetbrains,",
+        "prague"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "swish",
+        "till",
+        "nannberga",
+        "honung",
+        "ab"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Resor",
+      "transaction_key": [
+        "escort",
+        "koutsu,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Hälsa - Träning",
+      "transaction_key": [
+        "swish",
+        "till",
+        "marcus",
+        "grimvakt"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Undersök",
+      "transaction_key": [
+        "www.zoolox.com,",
+        "nicosia"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "kreatima",
+        "stockholm,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "El",
+      "transaction_key": [
+        "e.on"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "bonhamn",
+        "bryggan,",
+        "nordingra"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "IT och tjänster",
+      "transaction_key": [
+        "google"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Anja",
+      "transaction_key": [
+        "hoyoverse,",
+        "singapore"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "24",
+        "se",
+        "sverige",
+        "ab,",
+        "kalmar"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - shopping",
+      "transaction_key": [
+        "jms*fryingpan,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "butiken",
+        "i",
+        "rondellen,",
+        "eskilstuna"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Bilavsättning",
+      "transaction_key": [
+        "bilavsättning"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - läkemedel",
+      "transaction_key": [
+        "muuramen",
+        "apteekki,",
+        "muurame"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "ftc",
+        "sthlm",
+        "götgatan,",
+        "se207,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Lån - Elisabeth",
+      "transaction_key": [
+        "återbet.",
+        "elisabeth"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Resor",
+      "transaction_key": [
+        "lanstrafiken",
+        "se,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Vård",
+      "transaction_key": [
+        "pg",
+        "region",
+        "örebro",
+        "län"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Vård",
+      "transaction_key": [
+        "swish",
+        "till",
+        "stjärnkliniken",
+        "ab"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "lulu",
+        "poke",
+        "&",
+        "sushi",
+        "mos,",
+        "solna"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Övrigt",
+      "transaction_key": [
+        "finnpark",
+        "pysakointi",
+        "oy,",
+        "tampere"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Kläder",
+      "transaction_key": [
+        "sp",
+        "shaperluv,",
+        "shaperluv.com"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "$hlens"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Läkemedel",
+      "transaction_key": [
+        "kronans",
+        "apotek,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "ramsbergs",
+        "handel,",
+        "ramsberg"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Resor",
+      "transaction_key": [
+        "sj",
+        "app,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Fika",
+      "transaction_key": [
+        "sukiya,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Parkering",
+      "transaction_key": [
+        "aimo",
+        "park"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Fika",
+      "transaction_key": [
+        "lawson,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Fika",
+      "transaction_key": [
+        "shibuya",
+        "hikarie,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "restaurang",
+        "forum,",
+        "örebro"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Kläder",
+      "transaction_key": [
+        "rch-canles",
+        "calgary"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "ftc",
+        "västerås",
+        "erikslund,",
+        "s,",
+        "västerås"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Parkering",
+      "transaction_key": [
+        "apcoa",
+        "parking"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Resor",
+      "transaction_key": [
+        "sj",
+        "se",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "IT och tjänster",
+      "transaction_key": [
+        "albert",
+        "goteborg"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "swish",
+        "från",
+        "leffler",
+        "peura,anna"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "brunneby",
+        "musteri,",
+        "borensberg"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Bank - avgift",
+      "transaction_key": [
+        "övertrasseringsränta",
+        "korrigering",
+        "av",
+        "ränta"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Hälsa - Tillskott",
+      "transaction_key": [
+        "vitasunn",
+        "ltd,",
+        "newry"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Nöje",
+      "transaction_key": [
+        "filmstaden"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Parkering",
+      "transaction_key": [
+        "pg",
+        "4818300-8",
+        "hojab",
+        "parkeringss"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "hemkop"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Bil - laddning",
+      "transaction_key": [
+        "digital",
+        "charging",
+        "solution,",
+        "berlin"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Resor",
+      "transaction_key": [
+        "ishikawakintetsutaxi,",
+        "076-261-9227"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping - Trädgård",
+      "transaction_key": [
+        "plantagen"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "natu",
+        "sushi"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Anja",
+      "transaction_key": [
+        "polisen",
+        "1801",
+        "or,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - shopping",
+      "transaction_key": [
+        "maxvalu",
+        "kanazawashimeno,",
+        "ishikawa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livskvalitet",
+      "transaction_key": [
+        "swish",
+        "till",
+        "bokadirekt"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "raw",
+        "sushi",
+        "and",
+        "bowl",
+        "stockh,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "pramen",
+        "vesteras"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Äta ute",
+      "transaction_key": [
+        "sq*suminokohanare,",
+        "ishikawa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Kläder",
+      "transaction_key": [
+        "kappahl"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Övrigt",
+      "transaction_key": [
+        "prisma",
+        "seppala",
+        "jyvaskyla,",
+        "jyvaskyla"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "nyx*nayaxdirektutbetalni,",
+        "torslanda"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Resor",
+      "transaction_key": [
+        "rikuokotsu,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Nöje",
+      "transaction_key": [
+        "filmstaden.se"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "swish",
+        "till",
+        "interflora",
+        "aktiebolag"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "7-eleven"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "natusushi,",
+        "örebro",
+        "(ekers"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "IT och tjänster",
+      "transaction_key": [
+        "obsidian.md",
+        "oakville"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "k*",
+        "klarna"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - shopping",
+      "transaction_key": [
+        "heinemann",
+        "duty",
+        "free/fil.3,",
+        "frankfurt",
+        "am"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - läkemedel",
+      "transaction_key": [
+        "tomozu",
+        "kayabachoten,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Bil",
+      "transaction_key": [
+        "loomisp*kopparbergsmac,",
+        "kopparberg"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Undersök",
+      "transaction_key": [
+        "insättning",
+        "tommie",
+        "daniel",
+        "nygren"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Äta ute",
+      "transaction_key": [
+        "trattoria",
+        "puistikko,",
+        "osh,",
+        "vaasa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "tant",
+        "grön,",
+        "vintrosa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "värdshuset",
+        "älgen,",
+        "kopparberg"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Resor",
+      "transaction_key": [
+        "subarukotsu,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "panduro"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "överf.",
+        "t.",
+        "nygren"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping - Hus",
+      "transaction_key": [
+        "bauhaus,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Media",
+      "transaction_key": [
+        "k*dagens",
+        "nyh"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "pressbyr"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Fika",
+      "transaction_key": [
+        "familymart,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Hantverkare",
+      "transaction_key": [
+        "bg",
+        "5236-1615",
+        "dalarnas",
+        "vvs",
+        "&",
+        "vä"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "circle",
+        "k",
+        "enkoping",
+        "salatul,",
+        "enkoping"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Fika",
+      "transaction_key": [
+        "kompassen,",
+        "norrfällsvike"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "CSN-buffert",
+      "transaction_key": [
+        "överföring",
+        "9159",
+        "8823606"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Vård",
+      "transaction_key": [
+        "yazen,",
+        "lund"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping - Hus",
+      "transaction_key": [
+        "mio"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "swish",
+        "till",
+        "karin",
+        "kyndel"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "ge",
+        "f",
+        "r",
+        "livet,",
+        "rebro"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "walley"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Övrigt",
+      "transaction_key": [
+        "journey",
+        "japan",
+        "esim,",
+        "shibuyaku"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Nöje",
+      "transaction_key": [
+        "swish",
+        "till",
+        "kulturföreningen",
+        "hillstreet"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping - Hund",
+      "transaction_key": [
+        "svenska",
+        "brukshundklubben,",
+        "farsta"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "zettle_*with",
+        "style",
+        "of,",
+        "arboga"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Äta ute",
+      "transaction_key": [
+        "zettle_*thaifood",
+        "168,",
+        "muurame"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "netonnet"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "mcdorebrovasthaga,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "zettle_*wesomnia,",
+        "saltsjobaden"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "11155",
+        "rest",
+        "etage,",
+        "örebro"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "j?rntorget",
+        "delikatess,",
+        "eskilstuna"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Övrigt",
+      "transaction_key": [
+        "forex",
+        "sky",
+        "city,",
+        "arlanda"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - shopping",
+      "transaction_key": [
+        "kanazawa",
+        "forus,",
+        "ishikawa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "zettle_*sjolanders"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "keemchi",
+        "ab,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "mcdstrangnas,",
+        "strangnas"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - shopping",
+      "transaction_key": [
+        "tokyo",
+        "island",
+        "shop,",
+        "minatoku"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - shopping",
+      "transaction_key": [
+        "hbk-muta",
+        "muta,",
+        "kanazawa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping - Hus",
+      "transaction_key": [
+        "bauhaus"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "IT och tjänster",
+      "transaction_key": [
+        "obsidian,",
+        "oakville"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "nyx*saniboxab,",
+        "nacka"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping - Hus",
+      "transaction_key": [
+        "risåns",
+        "måleri&färgstation,",
+        "kopparberg"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Fika",
+      "transaction_key": [
+        "myb",
+        "kayabacho3chome,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "sibylla",
+        "bettorp,",
+        "örebro"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "swish",
+        "till",
+        "roddans",
+        "partihandel"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Parkering",
+      "transaction_key": [
+        "flowy",
+        "information",
+        "ab,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Läkemedel",
+      "transaction_key": [
+        "apotek"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Telefon",
+      "transaction_key": [
+        "telia",
+        "refill"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "swish",
+        "till",
+        "swedbank",
+        "pay"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "zettle_*raberga",
+        "ekopro,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fritid",
+      "transaction_key": [
+        "bg",
+        "5315-3680",
+        "ljusnarsbergs",
+        "jak"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "svea*brothershopen,",
+        "vastrafrolund"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "blommor",
+        "4",
+        "you,",
+        "hisings",
+        "ka.rr"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "room",
+        "55",
+        "city,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Läkemedel",
+      "transaction_key": [
+        "dozapotek198,",
+        "örebro"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Fika",
+      "transaction_key": [
+        "a103",
+        "se",
+        "arn",
+        "whsmith",
+        "as",
+        "t2,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Försäkring - Liv",
+      "transaction_key": [
+        "gjensidige"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "okq8"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "l$dan,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "swish",
+        "till",
+        "zara's",
+        "restaurang",
+        "och",
+        "pizzeria"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "swish",
+        "från",
+        "lukas",
+        "hammarström",
+        "frejd"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "red",
+        "cross",
+        "red",
+        "crescent,",
+        "den",
+        "haag"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Resor",
+      "transaction_key": [
+        "vasttrafikblipp,",
+        "skovde"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "11158",
+        "so",
+        "smart",
+        "örebro,",
+        "örebro"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "IT och tjänster",
+      "transaction_key": [
+        "microsoftæg163095804,",
+        "dublin",
+        "2"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "nobel,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Fika",
+      "transaction_key": [
+        "kanazawahiyakubangai,",
+        "ishikawa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "pressbyr}n"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "utlån"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Äta ute",
+      "transaction_key": [
+        "a212",
+        "fi",
+        "hel",
+        "food",
+        "court,",
+        "vantaa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "swish",
+        "till",
+        "janolsgården"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "feihao",
+        "zhangs",
+        "kitchen,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "cn",
+        "sweden",
+        "ab",
+        "-",
+        "checkout,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - shopping",
+      "transaction_key": [
+        "halpa-halli,",
+        "vaasa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Resor",
+      "transaction_key": [
+        "hokuriku",
+        "railroad",
+        "train,",
+        "ishikawa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "x:-tra",
+        "markbacken,",
+        "örebro"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Media",
+      "transaction_key": [
+        "paypal",
+        "*scribd.com",
+        "564704,",
+        "4029357733"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Parkering",
+      "transaction_key": [
+        "parkster"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - shopping",
+      "transaction_key": [
+        "rayard",
+        "miyashita",
+        "park,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Fika",
+      "transaction_key": [
+        "picasso",
+        "akasaka,",
+        "03-6229-9411"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - boende",
+      "transaction_key": [
+        "innside",
+        "palma",
+        "center,",
+        "palma",
+        "mallorc"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "swish",
+        "till",
+        "kevin",
+        "kovacevic"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "El",
+      "transaction_key": [
+        "insättning",
+        "från",
+        "annan",
+        "bank",
+        "elstöd"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "lidl157lindesberg,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "wh",
+        "nora",
+        "prastgatan,",
+        "nora"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livskvalitet",
+      "transaction_key": [
+        "nyx*massagestolar,",
+        "oerebro"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Hälsa - Utrustning",
+      "transaction_key": [
+        "shop.resmed.com,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Äta ute",
+      "transaction_key": [
+        "hausmann's",
+        "flughafen,",
+        "frankfurt"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "swish",
+        "till",
+        "elin",
+        "falk"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "mcdkarlskoga,",
+        "karlskoga"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Lån - Elisabeth",
+      "transaction_key": [
+        "lån",
+        "elisabeth"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Hund - Försäkring",
+      "transaction_key": [
+        "agria"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - läkemedel",
+      "transaction_key": [
+        "matsumotokiyoshichienpapa,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Media",
+      "transaction_key": [
+        "k*tv4",
+        "aktieb"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping - Hus",
+      "transaction_key": [
+        "hemtex",
+        "orebro,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "swish",
+        "till",
+        "daniel",
+        "gustafsson"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "musikcafeet",
+        "prego,",
+        "örebro"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fritid",
+      "transaction_key": [
+        "swish",
+        "till",
+        "ljusnarsbergs",
+        "jaktskytteklubb"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "swish",
+        "från",
+        "tehler,",
+        "jonas"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "circle",
+        "k,",
+        "stockholm"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Kläder",
+      "transaction_key": [
+        "brandy",
+        "melville"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "mjalloms",
+        "tunnbrod,",
+        "ullanger"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Fika",
+      "transaction_key": [
+        "innside",
+        "palma",
+        "center,",
+        "palma",
+        "mallorc"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "bangbro",
+        "herrgard,",
+        "kopparberg"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Äta ute",
+      "transaction_key": [
+        "shogun",
+        "burger",
+        "azabudai,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "vete-katten"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "restaurang",
+        "parken,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Lön",
+      "transaction_key": [
+        "lön"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "IT och tjänster",
+      "transaction_key": [
+        "msbill.info"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "swish",
+        "till",
+        "tehler,",
+        "jonas"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "överföring"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Kläder",
+      "transaction_key": [
+        "skoservice"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Kläder",
+      "transaction_key": [
+        "xxl",
+        "sport"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - shopping",
+      "transaction_key": [
+        "victoria,",
+        "tokyo"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Kläder",
+      "transaction_key": [
+        "sp",
+        "vaistoa.com,",
+        "vesilahti"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "jme",
+        "bodega",
+        "kopparberg"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Fika",
+      "transaction_key": [
+        "ravintolat",
+        "vk",
+        "oy",
+        "tuuri,",
+        "tuuri"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Äta ute",
+      "transaction_key": [
+        "a215",
+        "fi",
+        "hel",
+        "fafas",
+        "as,",
+        "vantaa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "lyko"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Övrigt",
+      "transaction_key": [
+        "swish",
+        "till",
+        "bealo",
+        "ab"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Äta ute",
+      "transaction_key": [
+        "casualfood,",
+        "frankfurt",
+        "am"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Nöje",
+      "transaction_key": [
+        "steamgames.com",
+        "4259522985,",
+        "hamburg"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "gro",
+        "stallbacken,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Fika",
+      "transaction_key": [
+        "halls",
+        "konditori,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Livsmedel",
+      "transaction_key": [
+        "robertsons",
+        "charkuteri",
+        "ham,"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Semester - Äta ute",
+      "transaction_key": [
+        "royal",
+        "host,",
+        "tiyuuouku"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Hantverkare",
+      "transaction_key": [
+        "bg",
+        "217-2393",
+        "el",
+        "och",
+        "automation"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping - Trädgård",
+      "transaction_key": [
+        "jord",
+        "och",
+        "flora,",
+        "ludvika"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "swish",
+        "till",
+        "carin",
+        "lindevall"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Äta ute",
+      "transaction_key": [
+        "viking",
+        "pizzeria,",
+        "orsa"
+      ],
+      "item_key": [],
+      "always_apply": true
+    },
+    {
+      "tag_name": "Shopping",
+      "transaction_key": [
+        "swish",
+        "till",
+        "eva",
+        "elisabet",
+        "persson"
+      ],
+      "item_key": [],
+      "always_apply": true
+    }
+  ]
+}

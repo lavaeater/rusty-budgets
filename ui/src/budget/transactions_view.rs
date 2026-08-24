@@ -1,11 +1,13 @@
 use crate::budget::budget_hero::BudgetState;
 use crate::budget::{ItemSelector, NewBudgetItem};
 use crate::{Button, ButtonVariant, Input, PopoverContent, PopoverRoot, PopoverTrigger};
-use api::models::{BudgetingType, Periodicity};
+use api::models::{BankAccountType, BudgetingType, Periodicity};
 use api::view_models::{
-    AllocationViewModel, BudgetItemViewModel, TransactionViewModel, TransferPair,
+    AllocationViewModel, BudgetItemViewModel, TransactionViewModel, TransferPair, TransferSuggestion,
 };
-use api::{connect_transaction, reject_transfer_pair, resolve_transfer_pair};
+use api::{
+    confirm_transfer_suggestions, connect_transaction, reject_transfer_pair, resolve_transfer_pair,
+};
 use dioxus::prelude::*;
 use uuid::Uuid;
 
@@ -290,6 +292,9 @@ pub fn TransferPairsView() -> Element {
     let budget = budget_signal();
     let pairs = budget.potential_transfers.clone();
     let total_count = budget.potential_transfer_count;
+    let suggested_count = budget.suggested_transfer_count;
+    let budget_id = budget.id;
+    let period_id = budget.period_id;
 
     if pairs.is_empty() {
         return rsx! {};
@@ -304,9 +309,28 @@ pub fn TransferPairsView() -> Element {
                     span { class: "transaction-count", " — visar {pairs.len()} av {total_count}" }
                 }
             }
+            if suggested_count > 0 {
+                div { class: "transfer-suggestions-bar",
+                    span { class: "transaction-count",
+                        "{suggested_count} matchar ett tidigare mönster"
+                    }
+                    Button {
+                        r#type: "button",
+                        onclick: move |_| async move {
+                            if let Ok(bv) = confirm_transfer_suggestions(budget_id, period_id).await {
+                                consume_context::<BudgetState>().0.set(bv);
+                            }
+                        },
+                        "Bekräfta alla föreslagna"
+                    }
+                }
+            }
             div { class: "transactions-list",
                 for pair in pairs {
-                    TransferPairCard { pair }
+                    TransferPairCard {
+                        key: "{pair.outgoing.tx_id}-{pair.incoming.tx_id}",
+                        pair,
+                    }
                 }
             }
         }
@@ -318,7 +342,17 @@ fn TransferPairCard(pair: TransferPair) -> Element {
     let budget_signal = use_context::<BudgetState>().0;
     let out_id = pair.outgoing.tx_id;
     let in_id = pair.incoming.tx_id;
-    let mut savings_mode = use_signal(|| false);
+
+    // A transfer landing in a savings account is always a contribution, never
+    // a neutral internal float — don't offer that resolution for it, and
+    // jump straight to the savings tag picker.
+    let incoming_is_savings = budget_signal()
+        .accounts
+        .iter()
+        .find(|a| a.account_number == pair.incoming.account_number)
+        .is_some_and(|a| a.account_type == BankAccountType::Savings);
+
+    let mut savings_mode = use_signal(move || incoming_is_savings);
     let mut selected_tag_id: Signal<Option<Uuid>> = use_signal(|| None);
     let mut new_tag_name: Signal<String> = use_signal(String::new);
 
@@ -331,7 +365,6 @@ fn TransferPairCard(pair: TransferPair) -> Element {
     rsx! {
         div {
             class: "transaction-card transfer-pair-card",
-            key: "{out_id}-{in_id}",
             div { class: "transfer-pair-row",
                 div { class: "transfer-leg",
                     span { class: "transfer-leg-label", "Ut" }
@@ -351,6 +384,47 @@ fn TransferPairCard(pair: TransferPair) -> Element {
                     }
                     span { class: "transaction-amount positive", {pair.incoming.amount.to_string()} }
                     span { class: "transfer-account", {pair.incoming.account_number.clone()} }
+                }
+            }
+
+            if let Some(suggestion) = pair.suggested_resolution.clone() {
+                div { class: "transfer-suggestion",
+                    span { class: "transfer-suggestion-label",
+                        {
+                            match &suggestion {
+                                TransferSuggestion::InternalTransfer { .. } => {
+                                    "Förslag: intern överföring (float)".to_string()
+                                }
+                                TransferSuggestion::Savings { tag_name, .. } => {
+                                    format!("Förslag: sparande → {tag_name}")
+                                }
+                            }
+                        }
+                    }
+                    Button {
+                        r#type: "button",
+                        onclick: move |_| {
+                            let suggestion = suggestion.clone();
+                            async move {
+                                let budget_id = budget_signal().id;
+                                let period_id = budget_signal().period_id;
+                                let (out_id, in_id, tag_id) = match suggestion {
+                                    TransferSuggestion::InternalTransfer { outgoing_tx_id, incoming_tx_id } => {
+                                        (outgoing_tx_id, incoming_tx_id, None)
+                                    }
+                                    TransferSuggestion::Savings { outgoing_tx_id, incoming_tx_id, tag_id, .. } => {
+                                        (outgoing_tx_id, incoming_tx_id, Some(tag_id))
+                                    }
+                                };
+                                if let Ok(bv) =
+                                    resolve_transfer_pair(budget_id, out_id, in_id, tag_id, period_id).await
+                                {
+                                    consume_context::<BudgetState>().0.set(bv);
+                                }
+                            }
+                        },
+                        "Bekräfta förslag"
+                    }
                 }
             }
 
@@ -435,14 +509,29 @@ fn TransferPairCard(pair: TransferPair) -> Element {
                             },
                             "Bekräfta sparande"
                         }
-                        Button {
-                            variant: ButtonVariant::Secondary,
-                            r#type: "button",
-                            onclick: move |_| {
-                                savings_mode.set(false);
-                                selected_tag_id.set(None);
-                            },
-                            "Avbryt"
+                        if incoming_is_savings {
+                            Button {
+                                variant: ButtonVariant::Secondary,
+                                r#type: "button",
+                                onclick: move |_| async move {
+                                    let budget_id = budget_signal().id;
+                                    let period_id = budget_signal().period_id;
+                                    if let Ok(bv) = reject_transfer_pair(budget_id, out_id, in_id, period_id).await {
+                                        consume_context::<BudgetState>().0.set(bv);
+                                    }
+                                },
+                                "Inte en överföring"
+                            }
+                        } else {
+                            Button {
+                                variant: ButtonVariant::Secondary,
+                                r#type: "button",
+                                onclick: move |_| {
+                                    savings_mode.set(false);
+                                    selected_tag_id.set(None);
+                                },
+                                "Avbryt"
+                            }
                         }
                     }
                 }

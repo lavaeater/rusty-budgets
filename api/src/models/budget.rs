@@ -1,6 +1,6 @@
 use crate::cqrs::framework::Aggregate;
 use crate::cqrs::framework::DomainEvent;
-use crate::events::{BudgetCreated, ItemAdded, ActualAdded, TransactionAdded, TransactionConnected, TransactionIgnored, BudgetedFundsReallocated, ActualBudgetedFundsAdjusted, ItemModified, ActualModified, RuleAdded, AllocationCreated, AllocationDeleted, BankAccountCreated, TagCreated, TagModified, TagClassified, TransactionTagged, TransactionUntagged, RuleModified, RuleDeleted, ItemBufferSet, TransferPairRejected};
+use crate::events::{BudgetCreated, ItemAdded, ActualAdded, TransactionAdded, TransactionConnected, TransactionIgnored, BudgetedFundsReallocated, ActualBudgetedFundsAdjusted, ItemModified, ActualModified, RuleAdded, AllocationCreated, AllocationDeleted, BankAccountCreated, BankAccountModified, TagCreated, TagModified, TagClassified, CarryoverConfigured, TransactionTagged, TransactionUntagged, RuleModified, RuleDeleted, ItemBufferSet, TransferPairRejected, TransferRuleAdded};
 use crate::models::budget_item::{BudgetItem, Periodicity};
 use crate::models::budget_period::RuleMatch;
 use crate::models::budget_period_id::PeriodId;
@@ -9,7 +9,7 @@ use crate::models::money::{Currency, Money};
 use crate::models::rule_packages::RulePackages;
 use crate::models::{
     ActualItem, BankAccount, BankTransaction, BudgetPeriod, MatchRule, Matching, MonthBeginsOn, Tag,
-    TransactionAllocation,
+    TransactionAllocation, TransferRule,
 };
 use crate::pub_events_enum;
 use crate::view_models::{BudgetingTypeOverview, TagSummary};
@@ -40,15 +40,18 @@ pub_events_enum! {
         AllocationCreated,
         AllocationDeleted,
         BankAccountCreated,
+        BankAccountModified,
         TagCreated,
         TagModified,
         TagClassified,
+        CarryoverConfigured,
         TransactionTagged,
         TransactionUntagged,
         RuleModified,
         RuleDeleted,
         ItemBufferSet,
         TransferPairRejected,
+        TransferRuleAdded,
     }
 }
 
@@ -78,6 +81,16 @@ pub struct Budget {
     pub tags: Vec<Tag>,
     #[serde(default)]
     pub rejected_transfer_pairs: HashSet<(Uuid, Uuid)>,
+    /// Learned patterns for recurring internal-transfer pairs, created
+    /// whenever the user resolves a [`Self::potential_internal_transfers`]
+    /// pair by hand. See [`Self::suggested_transfer_resolutions`].
+    #[serde(default)]
+    pub transfer_rules: HashSet<TransferRule>,
+    /// First period whose category balances carry forward. `None` disables
+    /// carryover — the pre-existing behaviour, and the default for budgets
+    /// whose snapshots predate this field.
+    #[serde(default)]
+    pub carryover_from: Option<PeriodId>,
 }
 
 
@@ -186,6 +199,20 @@ impl Budget {
         !self.transaction_hashes.contains(tx_hash)
     }
 
+    /// Places transactions fetched from the relational `transactions` table
+    /// (see `PgRuntime::load`) back into their periods, exactly as
+    /// [`Self::insert_transaction`] does for a freshly-imported one — minus
+    /// the dedup check, since these are already-persisted rows, not new
+    /// inserts. Must run before trailing event replay so an event like
+    /// `TransactionTagged` still finds the transaction it targets.
+    pub fn load_transactions(&mut self, txs: Vec<BankTransaction>) {
+        for tx in txs {
+            self.transaction_hashes.insert(tx.get_hash());
+            let period_id = PeriodId::from_date(tx.date, self.month_begins_on);
+            self.with_period_mut(period_id).insert_transaction(tx);
+        }
+    }
+
     pub fn contains_transaction(&self, tx_id: Uuid) -> bool {
         self.periods
             .iter()
@@ -274,6 +301,81 @@ impl Budget {
 
     pub fn get_active_tags(&self) -> Vec<&Tag> {
         self.tags.iter().filter(|t| !t.deleted).collect()
+    }
+
+    /// Budgeted and actual for one item in one period, using the *same*
+    /// definitions the projection uses — actual comes from tagged transactions
+    /// and is abs-normalised for Expense/Savings so it compares against a
+    /// positive budgeted amount.
+    ///
+    /// Factored out so carryover and `BudgetItemViewModel` cannot drift apart:
+    /// if they disagreed, a category's running balance would not match the
+    /// numbers shown next to it.
+    fn item_period_totals(&self, item: &BudgetItem, period: &BudgetPeriod) -> (Money, Money) {
+        let actual_item = period
+            .actual_items
+            .iter()
+            .find(|ai| ai.budget_item_id == item.id);
+        let budgeted = actual_item.map_or_else(|| Money::zero(self.currency), |ai| ai.budgeted_amount);
+        let effective_type = actual_item.map_or(item.budgeting_type, |ai| ai.budgeting_type);
+
+        let tagged: Money = period
+            .transactions
+            .iter()
+            .filter(|tx| !tx.ignored)
+            .filter(|tx| tx.tag_id.is_some_and(|tid| item.tag_ids.contains(&tid)))
+            .map(|tx| tx.amount)
+            .sum();
+        let actual = match effective_type {
+            BudgetingType::Expense | BudgetingType::Savings => tagged.abs(),
+            _ => tagged,
+        };
+        // Fall back to the stored actual when nothing is tagged, mirroring the
+        // projection's precedence.
+        let actual = if actual.is_zero() {
+            actual_item.map_or_else(|| Money::zero(self.currency), |ai| ai.actual_amount)
+        } else {
+            actual
+        };
+        (budgeted, actual)
+    }
+
+    /// Running category balances entering `period_id`, keyed by budget item.
+    ///
+    /// This is the envelope identity applied across periods:
+    /// `available(n) = available(n-1) + budgeted(n) - actual(n)`, accumulated
+    /// from `carryover_from` up to but excluding `period_id`. Overspending
+    /// carries forward as a **negative** balance, so a category stays visibly
+    /// in the hole until it is topped up.
+    ///
+    /// Empty when carryover is disabled (`carryover_from == None`), which keeps
+    /// the pre-existing per-period behaviour for budgets that have not opted in.
+    ///
+    /// Derived rather than stored: editing a past month must flow forward
+    /// automatically, and storing it would need an event per item per period.
+    pub fn carryover_into(&self, period_id: PeriodId) -> std::collections::HashMap<Uuid, Money> {
+        let mut balances = std::collections::HashMap::new();
+        let Some(from) = self.carryover_from else {
+            return balances;
+        };
+
+        let mut periods: Vec<&BudgetPeriod> = self
+            .periods
+            .iter()
+            .filter(|p| p.id >= from && p.id < period_id)
+            .collect();
+        periods.sort_by_key(|p| p.id);
+
+        for period in periods {
+            for item in &self.items {
+                let (budgeted, actual) = self.item_period_totals(item, period);
+                let entry = balances
+                    .entry(item.id)
+                    .or_insert_with(|| Money::zero(self.currency));
+                *entry += budgeted - actual;
+            }
+        }
+        balances
     }
 
     /// Compute average monthly and yearly spend per active tag, across all transaction history.
@@ -426,9 +528,16 @@ impl Budget {
                 if tx.tag_id.is_some() || tx.ignored {
                     continue;
                 }
+                // Tokenize once per transaction, not once per (transaction,
+                // rule) pair — with hundreds of rules this turned an
+                // O(transactions) scan into O(transactions × rules).
+                let tokens: HashSet<String> =
+                    crate::models::match_rule::tokenize_description(&tx.description)
+                        .into_iter()
+                        .collect();
                 for rule in &self.match_rules {
                     if let Some(tag_id) = rule.tag_id
-                        && rule.matches_transaction(tx)
+                        && rule.matches_tokens(&tokens)
                     {
                         // A rule pointing at a deleted or unknown tag is inert.
                         if let Some(tag) = self.tags.iter().find(|t| t.id == tag_id && !t.deleted)
@@ -655,6 +764,29 @@ impl Budget {
             }
         }
         pairs
+    }
+
+    /// Potential transfer pairs (see [`Self::potential_internal_transfers`])
+    /// that also match a previously learned [`TransferRule`], paired with
+    /// the resolution that rule implies — `(outgoing_id, incoming_id,
+    /// tag_id)`, in the same shape `resolve_transfer_pair` expects.
+    ///
+    /// Always a **suggestion**: the caller decides whether to show it for
+    /// confirmation or apply it via a bulk "confirm all" action — this never
+    /// resolves anything on its own, since it moves money between
+    /// accounts/tags.
+    pub fn suggested_transfer_resolutions(&self) -> Vec<(Uuid, Uuid, Option<Uuid>)> {
+        self.potential_internal_transfers()
+            .into_iter()
+            .filter_map(|(a_id, b_id)| {
+                let a = self.get_transaction(a_id)?;
+                let b = self.get_transaction(b_id)?;
+                self.transfer_rules.iter().find_map(|rule| {
+                    rule.matches_pair(a, b)
+                        .map(|(out_id, in_id)| (out_id, in_id, rule.tag_id))
+                })
+            })
+            .collect()
     }
 
     pub fn evaluate_rules(&self) -> Vec<RuleMatch> {

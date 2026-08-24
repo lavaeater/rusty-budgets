@@ -389,6 +389,44 @@
     gap: 12px;
 }
 
+.settings-hint {
+    margin: 0 0 12px 0;
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.settings-budget-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.settings-budget-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+}
+
+.settings-budget-name {
+    font-size: 0.95rem;
+    color: #2d3748;
+}
+
+.settings-budget-active {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 2px 9px;
+    border-radius: 10px;
+    background: #eef2ff;
+    color: #4338ca;
+}
+
 @media (max-width: 640px) {
     .workspace-tab-list .tabs-trigger {
         padding: 10px 12px;

@@ -11,6 +11,7 @@ pub mod month_begins_on;
 pub mod rule_packages;
 pub mod tag;
 pub mod transaction_allocation;
+pub mod transfer_rule;
 pub mod user;
 
 pub use actual_item::*;
@@ -26,4 +27,5 @@ pub use money::*;
 pub use month_begins_on::*;
 pub use tag::*;
 pub use transaction_allocation::*;
+pub use transfer_rule::*;
 pub use user::*;

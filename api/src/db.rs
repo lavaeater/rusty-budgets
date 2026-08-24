@@ -1,10 +1,10 @@
 pub const DEFAULT_USER_EMAIL: &str = "tommie.nygren@gmail.com";
 
 use crate::api_error::RustyError;
-use crate::cqrs::framework::AsyncRuntime;
+use crate::cqrs::framework::{AsyncRuntime, DomainEvent};
 use crate::cqrs::runtime::{AsyncBudgetCommandsTrait, PgRuntime, create_runtime};
 use crate::import::{import_from_path, import_from_skandia_excel_bytes};
-use crate::models::{User, Budget, MonthBeginsOn, Currency, BudgetingType, CostKind, Matching, Money, PeriodId, Periodicity, MatchRule, Tag, BankTransaction};
+use crate::models::{User, Budget, BudgetEvent, MonthBeginsOn, Currency, BudgetingType, CostKind, Matching, Money, PeriodId, Periodicity, MatchRule, Tag, BankTransaction, BankAccountType};
 use chrono::NaiveDate;
 use dioxus::logger::tracing;
 use dioxus::logger::tracing::error;
@@ -57,6 +57,10 @@ pub async fn get_default_budget(user_id: Uuid) -> Result<Budget, RustyError> {
     runtime().await.get_default_budget(user_id).await
 }
 
+pub async fn list_budgets(user_id: Uuid) -> Result<Vec<crate::view_models::BudgetSummary>, RustyError> {
+    runtime().await.list_budgets(user_id).await
+}
+
 pub async fn get_budget(budget_id: Uuid) -> Result<Budget, RustyError> {
     runtime().await.load(budget_id).await
 }
@@ -67,6 +71,14 @@ pub async fn add_budget_to_user(
     default: bool,
 ) -> Result<Uuid, RustyError> {
     runtime().await.add_budget_to_user(user_id, budget_id, default).await
+}
+
+/// Makes `budget_id` the user's default budget — the one every subsequent
+/// `get_budget(None, ...)` resolves to — then returns it, loaded.
+pub async fn switch_budget(user_id: Uuid, budget_id: Uuid) -> Result<Budget, RustyError> {
+    let rt = runtime().await;
+    rt.add_budget_to_user(user_id, budget_id, true).await?;
+    rt.load(budget_id).await
 }
 
 pub async fn create_budget(user_id: Uuid, name: &str, default_budget: bool) -> Result<Uuid, RustyError> {
@@ -422,6 +434,15 @@ pub async fn modify_tag(
     runtime().await.modify_tag(user_id, budget_id, tag_id, name, periodicity, deleted).await
 }
 
+pub async fn modify_bank_account(
+    user_id: Uuid,
+    budget_id: Uuid,
+    account_id: Uuid,
+    account_type: BankAccountType,
+) -> Result<Uuid, RustyError> {
+    runtime().await.modify_bank_account(user_id, budget_id, account_id, account_type).await
+}
+
 pub async fn classify_tag(
     user_id: Uuid,
     budget_id: Uuid,
@@ -433,6 +454,16 @@ pub async fn classify_tag(
         .await
         .classify_tag(user_id, budget_id, tag_id, cost_kind, matching)
         .await
+}
+
+/// Chooses the month from which category balances carry forward. `None`
+/// disables carryover and restores the per-period behaviour.
+pub async fn configure_carryover(
+    user_id: Uuid,
+    budget_id: Uuid,
+    from_period: Option<PeriodId>,
+) -> Result<Uuid, RustyError> {
+    runtime().await.configure_carryover(user_id, budget_id, from_period).await
 }
 
 pub async fn get_next_untagged_transaction(budget_id: Uuid) -> Result<Option<BankTransaction>, RustyError> {
@@ -501,6 +532,54 @@ pub async fn reject_transfer_pair(
         .await
 }
 
+/// Tags `tx_id` with `tag_id` on `current` **in memory**, adds the implied
+/// `MatchRule` if one doesn't already exist, and applies every automatic
+/// rule match that falls out of that — pushing every resulting event onto
+/// `events`. Returns how many rule matches were applied.
+///
+/// Shared by [`tag_transaction`] and [`resolve_transfer_pair`] so both can
+/// wrap it in their own single `load`/`append_many`/`snapshot` instead of
+/// this reloading the aggregate itself.
+fn tag_transaction_in_memory(
+    current: &mut Budget,
+    events: &mut Vec<BudgetEvent>,
+    tx_id: Uuid,
+    tag_id: Uuid,
+) -> Result<usize, RustyError> {
+    let tag_ev = current.do_transaction_tagged(tx_id, tag_id)?;
+    tag_ev.apply(current);
+    events.push(tag_ev.into());
+
+    let tx = current.get_transaction(tx_id).ok_or(RustyError::ItemNotFound(
+        tx_id.to_string(),
+        "Transaction not found".to_string(),
+    ))?;
+    let transaction_key = MatchRule::create_transaction_key(tx);
+    let rule_exists = current
+        .match_rules
+        .iter()
+        .any(|r| r.transaction_key == transaction_key && r.tag_id == Some(tag_id));
+    if !rule_exists {
+        let rule_ev = current.add_rule(transaction_key, Vec::new(), true, Some(tag_id))?;
+        rule_ev.apply(current);
+        events.push(rule_ev.into());
+    }
+
+    Ok(apply_automatic_rule_matches(current, events))
+}
+
+/// Resolves one potential-transfer pair: tags (savings) or ignores
+/// (internal transfer) the outgoing leg, ignores the incoming leg, and — new
+/// — learns a [`crate::models::TransferRule`] from the pair's accounts and
+/// descriptions, so a future matching pair can be suggested via
+/// [`Budget::suggested_transfer_resolutions`] instead of resolved by hand
+/// again. Skips learning if an identical rule already exists.
+///
+/// All of this happens against a single in-memory load, one
+/// `append_many`/`snapshot` — resolving 764 pairs by hand used to cost two
+/// full reloads each (one via `tag_transaction`/`ignore_transaction`, one
+/// via the other); now it's one, plus this no longer does its learning as a
+/// separate step either.
 pub async fn resolve_transfer_pair(
     user_id: Uuid,
     budget_id: Uuid,
@@ -508,13 +587,181 @@ pub async fn resolve_transfer_pair(
     incoming_tx_id: Uuid,
     tag_id: Option<Uuid>,
 ) -> Result<Uuid, RustyError> {
+    let rt = runtime().await;
+    let mut current = rt.load(budget_id).await?;
+    let mut events: Vec<BudgetEvent> = Vec::new();
+
     if let Some(tag_id) = tag_id {
-        tag_transaction(user_id, budget_id, outgoing_tx_id, tag_id).await?;
+        tag_transaction_in_memory(&mut current, &mut events, outgoing_tx_id, tag_id)?;
     } else {
-        ignore_transaction(budget_id, user_id, outgoing_tx_id).await?;
+        let ignore_ev = current.ignore_transaction(outgoing_tx_id)?;
+        ignore_ev.apply(&mut current);
+        events.push(ignore_ev.into());
     }
-    ignore_transaction(budget_id, user_id, incoming_tx_id).await?;
+
+    let ignore_in_ev = current.ignore_transaction(incoming_tx_id)?;
+    ignore_in_ev.apply(&mut current);
+    events.push(ignore_in_ev.into());
+
+    if let (Some(out_tx), Some(in_tx)) = (
+        current.get_transaction(outgoing_tx_id),
+        current.get_transaction(incoming_tx_id),
+    ) {
+        let outgoing_account = out_tx.account_number.clone();
+        let incoming_account = in_tx.account_number.clone();
+        let outgoing_key = MatchRule::create_transaction_key(out_tx);
+        let incoming_key = MatchRule::create_transaction_key(in_tx);
+        if let Ok(rule_ev) = current.add_transfer_rule(
+            outgoing_account,
+            incoming_account,
+            outgoing_key,
+            incoming_key,
+            tag_id,
+        ) {
+            rule_ev.apply(&mut current);
+            events.push(rule_ev.into());
+        }
+    }
+
+    rt.append_many(user_id, events).await?;
+    rt.snapshot(&current).await?;
     Ok(budget_id)
+}
+
+/// Resolves every potential-transfer pair that currently matches a learned
+/// [`crate::models::TransferRule`] (see
+/// [`Budget::suggested_transfer_resolutions`]) — the "confirm all
+/// suggestions" bulk action, mirroring [`confirm_tag_suggestions`] for tags.
+/// Doesn't learn any new rules; these matches already came from existing
+/// ones.
+pub async fn confirm_transfer_suggestions(user_id: Uuid, budget_id: Uuid) -> Result<usize, RustyError> {
+    let rt = runtime().await;
+    let mut current = rt.load(budget_id).await?;
+    let matches = current.suggested_transfer_resolutions();
+
+    let mut events: Vec<BudgetEvent> = Vec::new();
+    let mut applied = 0;
+    for (out_id, in_id, tag_id) in matches {
+        let result = if let Some(tag_id) = tag_id {
+            tag_transaction_in_memory(&mut current, &mut events, out_id, tag_id).map(|_| ())
+        } else {
+            current
+                .ignore_transaction(out_id)
+                .map(|ev| {
+                    ev.apply(&mut current);
+                    events.push(ev.into());
+                })
+                .map_err(RustyError::from)
+        };
+        if let Err(e) = result {
+            error!(error = %e, "Could not resolve suggested transfer pair {}/{}", out_id, in_id);
+            continue;
+        }
+        match current.ignore_transaction(in_id) {
+            Ok(ev) => {
+                ev.apply(&mut current);
+                events.push(ev.into());
+                applied += 1;
+            }
+            Err(e) => error!(error = %e, "Could not ignore incoming leg {} of suggested transfer pair", in_id),
+        }
+    }
+
+    if !events.is_empty() {
+        rt.append_many(user_id, events).await?;
+        rt.snapshot(&current).await?;
+    }
+    info!("confirm_transfer_suggestions: applied {applied} suggestions");
+    Ok(applied)
+}
+
+/// Applies every rule match currently found by [`Budget::evaluate_tag_rules`]
+/// (i.e. `Matching::Automatic` tags) to `current` **in memory**, pushing the
+/// resulting events onto `events`. Returns how many were applied.
+///
+/// Kept as a helper shared by [`tag_transaction`] and [`evaluate_tag_rules`]
+/// so both can do their one `load`/`append_many`/`snapshot` around it instead
+/// of each other, which used to mean a whole extra full reload per call. See
+/// [`confirm_tag_suggestions`] for why the same shape isn't reused there.
+fn apply_automatic_rule_matches(current: &mut Budget, events: &mut Vec<BudgetEvent>) -> usize {
+    let matches = current.evaluate_tag_rules();
+    let mut applied = 0;
+    for (tx_id, tag_id) in matches {
+        match current.do_transaction_tagged(tx_id, tag_id) {
+            Ok(ev) => {
+                ev.apply(current);
+                events.push(ev.into());
+                applied += 1;
+            }
+            Err(e) => error!(error = %e, "Could not tag transaction {} with tag {}", tx_id, tag_id),
+        }
+    }
+    applied
+}
+
+/// Migrates any rule whose `transaction_key` was stored before punctuation
+/// stripping was added to the tokenizer — e.g. `"ellos,"` from a
+/// "CITY, CITY"-style address suffix — so it once again matches the
+/// now-comma-free tokens real transactions produce. Idempotent: a no-op once
+/// every rule is normalized.
+///
+/// Two rules can end up wanting the same normalized key (a stale `"ellos,"`
+/// rule and a fresh `"ellos"` rule created after the tokenizer fix landed);
+/// the first one seen is kept (renormalized if needed), later duplicates are
+/// deleted outright rather than turned into a collision.
+/// `(transaction_key, item_key, always_apply, tag_id)` — the identity a
+/// [`MatchRule`] is deduplicated on, once its `transaction_key` is normalized.
+type RuleKey = (Vec<String>, Vec<String>, bool, Option<Uuid>);
+
+fn normalize_stale_rule_tokens(current: &mut Budget, events: &mut Vec<BudgetEvent>) -> usize {
+    let rules: Vec<MatchRule> = current.match_rules.iter().cloned().collect();
+
+    // Partition every rule by the key it *should* end up with, so a group of
+    // more than one member is exactly the set of rules that must collapse
+    // into one. Grouping up front (rather than resolving as we go) is what
+    // lets duplicates be deleted before the survivor is renamed into their
+    // spot — `Budget::modify_rule` removes-then-reinserts into the same
+    // `HashSet<MatchRule>`, and a `HashSet::insert` onto an already-occupied
+    // key is a silent no-op, so renaming into a live collision would drop
+    // the rule instead of merging it.
+    let mut groups: std::collections::HashMap<RuleKey, Vec<MatchRule>> = std::collections::HashMap::new();
+    for rule in rules {
+        let normalized_key = MatchRule::normalize_key(&rule.transaction_key);
+        let final_key = (normalized_key, rule.item_key.clone(), rule.always_apply, rule.tag_id);
+        groups.entry(final_key).or_default().push(rule);
+    }
+
+    let mut touched = 0;
+    for (final_key, mut members) in groups {
+        if members.len() == 1 && members[0].transaction_key == final_key.0 {
+            continue; // already correct
+        }
+
+        // Keep whichever member is already correctly keyed, if any, so it
+        // needs no rewrite; otherwise the choice is arbitrary.
+        let keeper_idx = members
+            .iter()
+            .position(|r| r.transaction_key == final_key.0)
+            .unwrap_or(0);
+        let keeper = members.remove(keeper_idx);
+
+        for dup in members {
+            if let Ok(ev) = current.delete_rule(dup.id) {
+                ev.apply(current);
+                events.push(ev.into());
+                touched += 1;
+            }
+        }
+
+        if keeper.transaction_key != final_key.0
+            && let Ok(ev) = current.modify_rule(keeper.id, final_key.0.clone())
+        {
+            ev.apply(current);
+            events.push(ev.into());
+            touched += 1;
+        }
+    }
+    touched
 }
 
 pub async fn tag_transaction(
@@ -525,52 +772,48 @@ pub async fn tag_transaction(
 ) -> Result<Uuid, RustyError> {
     let t = std::time::Instant::now();
     let rt = runtime().await;
-    rt.tag_transaction(user_id, budget_id, tx_id, tag_id).await?;
-    tracing::info!("[perf] tag_transaction/tag_event: {:?}", t.elapsed());
-    let budget = rt.load(budget_id).await?;
-    tracing::info!("[perf] tag_transaction/load_for_rule_check: {:?}", t.elapsed());
-    let tx = budget.get_transaction(tx_id).ok_or(RustyError::ItemNotFound(
-        tx_id.to_string(),
-        "Transaction not found".to_string(),
-    ))?;
-    let transaction_key = MatchRule::create_transaction_key(tx);
-    let rule_exists = budget
-        .match_rules
-        .iter()
-        .any(|r| r.transaction_key == transaction_key && r.tag_id == Some(tag_id));
-    if !rule_exists {
-        rt.add_rule(user_id, budget_id, transaction_key, Vec::new(), true, Some(tag_id)).await?;
-        tracing::info!("[perf] tag_transaction/add_rule: {:?}", t.elapsed());
-    }
-    evaluate_tag_rules(user_id, budget_id).await?;
-    tracing::info!("[perf] tag_transaction/total: {:?}", t.elapsed());
+    // One load, one snapshot for the whole operation: tag the transaction,
+    // maybe add the match rule it implies, then apply every rule match that
+    // falls out of that — all against the same in-memory `current`, instead
+    // of each step reloading and replaying the full event stream.
+    let mut current = rt.load(budget_id).await?;
+    let mut events: Vec<BudgetEvent> = Vec::new();
+
+    let applied = tag_transaction_in_memory(&mut current, &mut events, tx_id, tag_id)?;
+
+    rt.append_many(user_id, events).await?;
+    rt.snapshot(&current).await?;
+    tracing::info!(
+        "[perf] tag_transaction/total (applied {} rule matches): {:?}",
+        applied,
+        t.elapsed()
+    );
     Ok(budget_id)
 }
 
 pub async fn evaluate_tag_rules(user_id: Uuid, budget_id: Uuid) -> Result<Uuid, RustyError> {
     let t = std::time::Instant::now();
     let rt = runtime().await;
-    let budget = rt.load(budget_id).await?;
-    let matches = budget.evaluate_tag_rules();
-    let match_count = matches.len();
-    info!("[perf] evaluate_tag_rules: {} matches found in {:?}", match_count, t.elapsed());
-    for (tx_id, tag_id) in matches {
-        match rt.tag_transaction(user_id, budget_id, tx_id, tag_id).await {
-            Ok(_) => info!("Tagged a transaction, bro!"),
-            Err(e) => error!(error = %e, "Could not tag transaction {} with tag {}", tx_id, tag_id),
-        }
+    let mut current = rt.load(budget_id).await?;
+    let mut events: Vec<BudgetEvent> = Vec::new();
+    normalize_stale_rule_tokens(&mut current, &mut events);
+    let applied = apply_automatic_rule_matches(&mut current, &mut events);
+    info!("[perf] evaluate_tag_rules: {} matches found in {:?}", applied, t.elapsed());
+    if !events.is_empty() {
+        rt.append_many(user_id, events).await?;
+        rt.snapshot(&current).await?;
     }
-    info!("[perf] evaluate_tag_rules/total (applied {} tags): {:?}", match_count, t.elapsed());
+    info!("[perf] evaluate_tag_rules/total (applied {} tags): {:?}", applied, t.elapsed());
     Ok(budget_id)
 }
 
 /// Confirms pending `Matching::Suggest` matches, optionally limited to one tag.
 ///
-/// Goes straight to the runtime command rather than through [`tag_transaction`]:
-/// that wrapper reloads the aggregate, checks for a missing rule and re-runs a
-/// full rule evaluation on every call, which would be quadratic when confirming
-/// a batch. Neither step is needed here — a suggestion *is* a rule match, so the
-/// rule already exists, and the matches are computed once up front.
+/// Applies matches directly against a single in-memory load rather than going
+/// through [`tag_transaction`] per match: that wrapper also checks for a
+/// missing rule and re-runs rule evaluation, neither of which is needed here
+/// — a suggestion *is* a rule match, so the rule already exists, and the
+/// matches are computed once up front.
 ///
 /// Returns the number of transactions tagged.
 pub async fn confirm_tag_suggestions(
@@ -579,19 +822,28 @@ pub async fn confirm_tag_suggestions(
     tag_id: Option<Uuid>,
 ) -> Result<usize, RustyError> {
     let rt = runtime().await;
-    let budget = rt.load(budget_id).await?;
-    let matches: Vec<(Uuid, Uuid)> = budget
+    let mut current = rt.load(budget_id).await?;
+    let matches: Vec<(Uuid, Uuid)> = current
         .suggest_tag_rules()
         .into_iter()
         .filter(|(_, tid)| tag_id.is_none_or(|wanted| *tid == wanted))
         .collect();
 
+    let mut events: Vec<BudgetEvent> = Vec::new();
     let mut applied = 0;
     for (tx_id, tid) in matches {
-        match rt.tag_transaction(user_id, budget_id, tx_id, tid).await {
-            Ok(_) => applied += 1,
+        match current.do_transaction_tagged(tx_id, tid) {
+            Ok(ev) => {
+                ev.apply(&mut current);
+                events.push(ev.into());
+                applied += 1;
+            }
             Err(e) => error!(error = %e, "Could not confirm suggestion for tx {}", tx_id),
         }
+    }
+    if !events.is_empty() {
+        rt.append_many(user_id, events).await?;
+        rt.snapshot(&current).await?;
     }
     info!("confirm_tag_suggestions: applied {applied} suggestions");
     Ok(applied)
@@ -606,17 +858,28 @@ pub async fn confirm_tag_suggestions(
 /// to be applied too.
 pub async fn apply_all_tag_rules(user_id: Uuid, budget_id: Uuid) -> Result<Uuid, RustyError> {
     let rt = runtime().await;
-    let budget = rt.load(budget_id).await?;
-    let matches: Vec<_> = budget
+    let mut current = rt.load(budget_id).await?;
+    let mut events: Vec<BudgetEvent> = Vec::new();
+    normalize_stale_rule_tokens(&mut current, &mut events);
+
+    let matches: Vec<_> = current
         .evaluate_tag_rules()
         .into_iter()
-        .chain(budget.suggest_tag_rules())
+        .chain(current.suggest_tag_rules())
         .collect();
     info!("apply_all_tag_rules: applying {} matches", matches.len());
     for (tx_id, tag_id) in matches {
-        if let Err(e) = rt.tag_transaction(user_id, budget_id, tx_id, tag_id).await {
-            error!(error = %e, "Could not tag transaction {} with tag {}", tx_id, tag_id);
+        match current.do_transaction_tagged(tx_id, tag_id) {
+            Ok(ev) => {
+                ev.apply(&mut current);
+                events.push(ev.into());
+            }
+            Err(e) => error!(error = %e, "Could not tag transaction {} with tag {}", tx_id, tag_id),
         }
+    }
+    if !events.is_empty() {
+        rt.append_many(user_id, events).await?;
+        rt.snapshot(&current).await?;
     }
     Ok(budget_id)
 }
@@ -634,15 +897,23 @@ pub async fn modify_rule(
     runtime().await.modify_rule(user_id, budget_id, rule_id, transaction_key).await
 }
 
+/// Deletes a rule and, if it was the only rule tagging some transactions
+/// with its tag, untags them — all against a single in-memory load instead
+/// of reloading the aggregate once per affected transaction (that used to
+/// mean `2 + 2N` full reload-and-replay cycles for N affected transactions;
+/// see the same fix applied to tagging in [`tag_transaction`]).
 pub async fn delete_rule(user_id: Uuid, budget_id: Uuid, rule_id: Uuid) -> Result<Uuid, RustyError> {
     let rt = runtime().await;
-    let budget = rt.load(budget_id).await?;
-    let deleted_tag_id = budget.match_rules.iter().find(|r| r.id == rule_id).and_then(|r| r.tag_id);
-    rt.delete_rule(user_id, budget_id, rule_id).await?;
+    let mut current = rt.load(budget_id).await?;
+    let mut events: Vec<BudgetEvent> = Vec::new();
+
+    let deleted_tag_id = current.match_rules.iter().find(|r| r.id == rule_id).and_then(|r| r.tag_id);
+    let delete_ev = current.delete_rule(rule_id)?;
+    delete_ev.apply(&mut current);
+    events.push(delete_ev.into());
 
     if let Some(tag_id) = deleted_tag_id {
-        let budget = rt.load(budget_id).await?;
-        let transactions_to_check: Vec<Uuid> = budget
+        let transactions_to_check: Vec<Uuid> = current
             .periods
             .iter()
             .flat_map(|p| p.transactions.iter())
@@ -651,23 +922,98 @@ pub async fn delete_rule(user_id: Uuid, budget_id: Uuid, rule_id: Uuid) -> Resul
             .collect();
 
         for tx_id in transactions_to_check {
-            let budget = rt.load(budget_id).await?;
-            if let Some(tx) = budget.get_transaction(tx_id) {
-                let still_matches = budget
+            let still_matches = current.get_transaction(tx_id).is_some_and(|tx| {
+                let tokens: std::collections::HashSet<String> =
+                    MatchRule::create_transaction_key(tx).into_iter().collect();
+                current
                     .match_rules
                     .iter()
-                    .any(|r| r.tag_id == Some(tag_id) && r.matches_transaction(tx));
-                if !still_matches {
-                    match rt.untag_transaction(user_id, budget_id, tx_id).await {
-                        Ok(_) => info!("Untagged transaction {} after rule deletion", tx_id),
-                        Err(e) => error!(error = %e, "Failed to untag transaction {} after rule deletion", tx_id),
+                    .any(|r| r.tag_id == Some(tag_id) && r.matches_tokens(&tokens))
+            });
+            if !still_matches {
+                match current.do_transaction_untagged(tx_id) {
+                    Ok(ev) => {
+                        ev.apply(&mut current);
+                        events.push(ev.into());
+                        info!("Untagged transaction {} after rule deletion", tx_id);
                     }
+                    Err(e) => error!(error = %e, "Failed to untag transaction {} after rule deletion", tx_id),
                 }
             }
         }
     }
 
+    rt.append_many(user_id, events).await?;
+    rt.snapshot(&current).await?;
     Ok(budget_id)
+}
+
+/// Serialises the budget's non-deleted tags and match rules to a JSON string,
+/// for the user to save to a file and later replay onto another budget with
+/// [`import_tags_and_rules`].
+pub async fn export_tags_and_rules(budget_id: Uuid) -> Result<String, RustyError> {
+    let rt = runtime().await;
+    let budget = rt.load(budget_id).await?;
+    let export = crate::rules_export::export_tags_and_rules(&budget);
+    Ok(serde_json::to_string_pretty(&export)?)
+}
+
+/// Applies a JSON document produced by [`export_tags_and_rules`] onto
+/// `budget_id`: creates any tag missing by name (reusing an existing one of
+/// the same name otherwise) and any rule not already present, in a single
+/// load/append/snapshot regardless of how many tags or rules are in the file.
+pub async fn import_tags_and_rules(
+    user_id: Uuid,
+    budget_id: Uuid,
+    json: &str,
+) -> Result<crate::rules_export::ImportSummary, RustyError> {
+    let export: crate::rules_export::RulesExport = serde_json::from_str(json)?;
+    let rt = runtime().await;
+    let mut current = rt.load(budget_id).await?;
+    let mut events: Vec<BudgetEvent> = Vec::new();
+    let summary = crate::rules_export::apply_rules_export(&mut current, &mut events, &export);
+    if !events.is_empty() {
+        rt.append_many(user_id, events).await?;
+        rt.snapshot(&current).await?;
+    }
+    info!(
+        "import_tags_and_rules: {} tags created, {} reused, {} rules created, {} skipped, \
+         {} transfer rules created, {} skipped",
+        summary.tags_created,
+        summary.tags_reused,
+        summary.rules_created,
+        summary.rules_skipped,
+        summary.transfer_rules_created,
+        summary.transfer_rules_skipped
+    );
+    Ok(summary)
+}
+
+/// Dumps an entire budget — accounts, tags, match rules, transfer rules,
+/// items, periods, and every transaction — as a JSON string, for the user
+/// to save to a file and later restore with [`import_budget`] on this or
+/// any other instance of the app.
+pub async fn export_budget(budget_id: Uuid) -> Result<String, RustyError> {
+    let budget = get_budget(budget_id).await?;
+    Ok(serde_json::to_string_pretty(&budget)?)
+}
+
+/// Restores a JSON dump produced by [`export_budget`] as a brand new budget
+/// for `user_id` — never merged into an existing budget. Becomes the user's
+/// default budget only if they don't already have one (so importing into an
+/// instance that already has an active budget can't silently swap it out).
+pub async fn import_budget(user_id: Uuid, json: &str) -> Result<Uuid, RustyError> {
+    let parsed: Budget = serde_json::from_str(json)?;
+    let budget = crate::budget_export::prepare_imported_budget(parsed, user_id);
+    let rt = runtime().await;
+    let make_default = rt.get_default_budget(user_id).await.is_err();
+    rt.snapshot(&budget).await?;
+    rt.add_budget_to_user(user_id, budget.id, make_default).await?;
+    info!(
+        "import_budget: created budget {} for user {} (default: {})",
+        budget.id, user_id, make_default
+    );
+    Ok(budget.id)
 }
 
 pub async fn set_item_buffer(
@@ -677,4 +1023,50 @@ pub async fn set_item_buffer(
     buffer_target: Option<Money>,
 ) -> Result<Uuid, RustyError> {
     runtime().await.set_item_buffer(user_id, budget_id, item_id, buffer_target).await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::cqrs::framework::Runtime;
+    use crate::cqrs::runtime::{BudgetCommandsTrait, JoyDbBudgetRuntime};
+
+    #[test]
+    fn normalize_stale_rule_tokens_fixes_stray_comma_and_merges_duplicate() {
+        let rt = JoyDbBudgetRuntime::new_in_memory();
+        let user_id = Uuid::new_v4();
+        let budget_id = rt
+            .create_budget(user_id, "Test Budget", true, MonthBeginsOn::default(), Currency::SEK)
+            .unwrap();
+        let tag_id = rt
+            .create_tag(user_id, budget_id, "Ellos".to_string(), Periodicity::Monthly)
+            .unwrap();
+
+        // A stale pre-fix rule, plus a fresh post-fix rule created for the
+        // same payee — exactly what happens once the tokenizer stops
+        // producing "ellos," but the old rule is still stored with it.
+        rt.add_rule(user_id, budget_id, vec!["ellos,".to_string()], Vec::new(), true, Some(tag_id))
+            .unwrap();
+        rt.add_rule(user_id, budget_id, vec!["ellos".to_string()], Vec::new(), true, Some(tag_id))
+            .unwrap();
+
+        let mut current = rt.load(budget_id).unwrap();
+        assert_eq!(current.match_rules.len(), 2);
+
+        let mut events: Vec<BudgetEvent> = Vec::new();
+        let touched = normalize_stale_rule_tokens(&mut current, &mut events);
+        assert!(touched >= 1);
+        assert!(!events.is_empty());
+
+        assert_eq!(current.match_rules.len(), 1, "duplicate must be merged away");
+        let survivor = current.match_rules.iter().next().unwrap();
+        assert_eq!(survivor.transaction_key, vec!["ellos".to_string()]);
+        assert_eq!(survivor.tag_id, Some(tag_id));
+
+        // Idempotent: running it again against the now-clean state is a no-op.
+        let mut events2 = Vec::new();
+        let touched2 = normalize_stale_rule_tokens(&mut current, &mut events2);
+        assert_eq!(touched2, 0);
+        assert!(events2.is_empty());
+    }
 }

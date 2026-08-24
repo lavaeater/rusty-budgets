@@ -7,6 +7,20 @@ use serde::{Deserialize, Serialize};
 use std::hash::{DefaultHasher, Hash, Hasher};
 use uuid::Uuid;
 
+/// What an account is used for. Drives how transfers into/out of it are
+/// interpreted — most importantly, a transfer landing in a `Savings`
+/// account is always a savings contribution, never a neutral internal
+/// float, so the UI shouldn't offer that resolution for it.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+pub enum BankAccountType {
+    #[default]
+    Checking,
+    Billing,
+    Savings,
+    Personal,
+    CreditCard,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct BankAccount {
     pub id: Uuid,
@@ -14,6 +28,8 @@ pub struct BankAccount {
     pub description: String,
     pub currency: String,
     pub balance: Money,
+    #[serde(default)]
+    pub account_type: BankAccountType,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, Default)]

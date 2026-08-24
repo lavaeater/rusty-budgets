@@ -1,23 +1,25 @@
-#![allow(unused_imports)]
-
+#[cfg(not(feature = "server"))]
 use dioxus::fullstack;
 use dioxus::logger::tracing::Level;
 use dioxus::prelude::*;
+#[cfg(not(feature = "server"))]
 use std::env;
-
+use views::Budget;
 mod views;
-use views::*;
-const MAIN_CSS: Asset = asset!("/assets/main.css");
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
 enum Route {
     #[layout(DesktopNavbar)]
-    #[route("/")]
-    Home {},    
-    #[route("/:..segments")]
-    PageNotFound { segments: Vec<String> },
+    #[redirect("/", || {
+        let now = ui::budget::BudgetLocation::current();
+        Route::Budget { period: now.period_slug(), tab: now.tab_slug().to_string() }
+    })]
+    #[route("/budget/:period/:tab")]
+    Budget { period: String, tab: String },
 }
+
+const MAIN_CSS: Asset = asset!("/assets/main.css");
 
 fn main() {
     dioxus::logger::init(Level::INFO).expect("failed to init logger");
@@ -27,8 +29,6 @@ fn main() {
         let port = env::var("PORT").unwrap_or("8080".to_string());
         fullstack::set_server_url(Box::leak(format!("{}:{}", server_url, port).into_boxed_str()));
     }
-    #[cfg(feature = "server")]
-    let _ = api::db::CLIENT;
 
     launch(App);
 }
@@ -49,17 +49,6 @@ fn App() -> Element {
 #[component]
 fn DesktopNavbar() -> Element {
     rsx! {
-        // Navbar {
-        //     Link { to: Route::Home {}, "Översikt" }
-        //     Link { to: Route::Blog { id: 1 }, "Blog" }
-        // }
         Outlet::<Route> {}
-    }
-}
-
-#[component]
-fn PageNotFound(segments: Vec<String>) -> Element {
-    rsx! {
-        h1 { "404" }
     }
 }

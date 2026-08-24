@@ -23,6 +23,13 @@ pub struct BudgetItemViewModel {
     pub budgeted_amount: Money,
     pub actual_amount: Money,
     pub remaining_budget: Money,
+    /// Balance carried in from previous periods. Zero when carryover is off.
+    /// Negative means the category is still covering an earlier overspend.
+    pub carried_over: Money,
+    /// The envelope figure: `carried_over + budgeted - actual`. This is what is
+    /// really left to spend, as opposed to `remaining_budget`, which looks at
+    /// this period alone.
+    pub available: Money,
     pub status: BudgetItemStatus,
     pub transactions: Vec<TransactionViewModel>,
     /// The total amount this item needs to have available (e.g. 1200 kr for annual insurance).
@@ -32,7 +39,7 @@ pub struct BudgetItemViewModel {
 }
 
 impl BudgetItemViewModel {
-    #[allow(clippy::too_many_lines)]
+    #[allow(clippy::too_many_lines, clippy::too_many_arguments)]
     pub fn from_item(
         budget_item: &BudgetItem,
         actual_items: &[&ActualItem],
@@ -41,6 +48,7 @@ impl BudgetItemViewModel {
         allocations: &[TransactionAllocation],
         budget_tags: &[Tag],
         all_period_transactions: &[&BankTransaction],
+        carried_over: Money,
     ) -> Self {
         let actual_item = actual_items
             .iter()
@@ -151,6 +159,8 @@ impl BudgetItemViewModel {
                 budgeted_amount: actual_item.budgeted_amount,
                 actual_amount,
                 remaining_budget: actual_item.budgeted_amount - actual_amount,
+                carried_over,
+                available: carried_over + actual_item.budgeted_amount - actual_amount,
                 status,
                 transactions: txs,
                 buffer_target: budget_item.buffer_target,
@@ -172,6 +182,8 @@ impl BudgetItemViewModel {
                 budgeted_amount: Money::zero(currency),
                 actual_amount: tagged_actual,
                 remaining_budget: Money::zero(currency),
+                carried_over,
+                available: carried_over - tagged_actual,
                 status: NotBudgeted,
                 transactions: txs,
                 buffer_target: budget_item.buffer_target,
