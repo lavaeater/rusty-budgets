@@ -343,14 +343,27 @@ fn TransferPairCard(pair: TransferPair) -> Element {
     let out_id = pair.outgoing.tx_id;
     let in_id = pair.incoming.tx_id;
 
+    let accounts = budget_signal().accounts.clone();
+
     // A transfer landing in a savings account is always a contribution, never
     // a neutral internal float — don't offer that resolution for it, and
     // jump straight to the savings tag picker.
-    let incoming_is_savings = budget_signal()
-        .accounts
+    let incoming_is_savings = accounts
         .iter()
         .find(|a| a.account_number == pair.incoming.account_number)
         .is_some_and(|a| a.account_type == BankAccountType::Savings);
+
+    // Account descriptions are optional (empty until the user names the
+    // account in settings), so fall back to just the formatted number.
+    let account_label = move |accounts: &[api::models::BankAccount], account_number: &str| {
+        let formatted = format_account_number(account_number);
+        match accounts.iter().find(|a| a.account_number == account_number) {
+            Some(a) if !a.description.is_empty() => format!("{formatted} ({})", a.description),
+            _ => formatted,
+        }
+    };
+    let outgoing_account_label = account_label(&accounts, &pair.outgoing.account_number);
+    let incoming_account_label = account_label(&accounts, &pair.incoming.account_number);
 
     let mut savings_mode = use_signal(move || incoming_is_savings);
     let mut selected_tag_id: Signal<Option<Uuid>> = use_signal(|| None);
@@ -373,7 +386,7 @@ fn TransferPairCard(pair: TransferPair) -> Element {
                         {pair.outgoing.date.format("%Y-%m-%d").to_string()}
                     }
                     span { class: "transaction-amount negative", {pair.outgoing.amount.to_string()} }
-                    span { class: "transfer-account", {format_account_number(&pair.outgoing.account_number)} }
+                    span { class: "transfer-account", {outgoing_account_label} }
                 }
                 div { class: "transfer-arrow", "⇄" }
                 div { class: "transfer-leg",
@@ -383,7 +396,7 @@ fn TransferPairCard(pair: TransferPair) -> Element {
                         {pair.incoming.date.format("%Y-%m-%d").to_string()}
                     }
                     span { class: "transaction-amount positive", {pair.incoming.amount.to_string()} }
-                    span { class: "transfer-account", {format_account_number(&pair.incoming.account_number)} }
+                    span { class: "transfer-account", {incoming_account_label} }
                 }
             }
 

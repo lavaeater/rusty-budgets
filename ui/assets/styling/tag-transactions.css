@@ -55,6 +55,11 @@
     color: #94a3b8;
 }
 
+.tag-tx-account {
+    color: #94a3b8;
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+}
+
 .tag-tx-amount {
     font-weight: 600;
     font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;

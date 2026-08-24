@@ -1,6 +1,6 @@
 use crate::budget::budget_hero::BudgetState;
 use crate::{Button, ButtonVariant, Input};
-use api::models::{BankTransaction, Periodicity};
+use api::models::{BankTransaction, Periodicity, format_account_number};
 use api::{
     apply_all_rules, create_tag, get_untagged_transactions, ignore_transaction,
     preview_rule_matches, tag_transaction, update_rule,
@@ -113,6 +113,17 @@ pub fn TagTransactionsView() -> Element {
                     let tx_amount_pos = tx.amount.is_pos();
                     let amount_str = tx.amount.to_string();
                     let date_str = tx.date.format("%Y-%m-%d").to_string();
+                    let formatted_account = format_account_number(&tx.account_number);
+                    let account_str = match budget_signal()
+                        .accounts
+                        .iter()
+                        .find(|a| a.account_number == tx.account_number)
+                    {
+                        Some(a) if !a.description.is_empty() => {
+                            format!("{formatted_account} ({})", a.description)
+                        }
+                        _ => formatted_account,
+                    };
                     rsx! {
                         div { class: "tag-tx-progress",
                             span {
@@ -135,6 +146,7 @@ pub fn TagTransactionsView() -> Element {
                             }
                             div { class: "tag-tx-meta",
                                 span { class: "tag-tx-date", {date_str} }
+                                span { class: "tag-tx-account", {account_str} }
                                 span { class: if tx_amount_pos { "tag-tx-amount positive" } else { "tag-tx-amount negative" },
                                     {amount_str}
                                 }
