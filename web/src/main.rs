@@ -20,12 +20,24 @@ enum Route {
 const FAVICON: Asset = asset!("/assets/favicon.ico");
 const MAIN_CSS: Asset = asset!("/assets/main.css");
 
+/// Import/export payloads (zip files with attached documents) can comfortably exceed axum's
+/// default 2MB request body limit, so we raise it for the whole app.
+#[cfg(feature = "server")]
+const MAX_BODY_SIZE: usize = 100 * 1024 * 1024;
+
 fn main() {
     dioxus::logger::init(Level::INFO).expect("failed to init logger");
 
     #[cfg(not(feature = "server"))]
     fullstack::set_server_url("http://127.0.0.1");
 
+    #[cfg(feature = "server")]
+    dioxus::server::serve(|| async move {
+        Ok(dioxus::server::router(App)
+            .layer(dioxus::server::axum::extract::DefaultBodyLimit::max(MAX_BODY_SIZE)))
+    });
+
+    #[cfg(not(feature = "server"))]
     launch(App);
 }
 
