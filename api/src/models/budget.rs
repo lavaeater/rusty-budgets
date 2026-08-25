@@ -379,7 +379,8 @@ impl Budget {
         balances
     }
 
-    /// Compute average monthly and yearly spend per active tag, across all transaction history.
+    /// Compute average monthly and last-calendar-month spend per active tag, across all
+    /// transaction history.
     ///
     /// The denominator is the number of calendar months spanned by the full transaction dataset
     /// (from earliest to latest transaction, inclusive). Amounts are signed — expenses are
@@ -412,6 +413,7 @@ impl Budget {
         };
 
         let mut per_tag: HashMap<Uuid, (Money, u32)> = HashMap::new();
+        let mut per_tag_last_month: HashMap<Uuid, Money> = HashMap::new();
         for tx in &all_txs {
             if let Some(tag_id) = tx.tag_id {
                 let entry = per_tag
@@ -419,6 +421,12 @@ impl Budget {
                     .or_insert((Money::zero(self.currency), 0));
                 entry.0 += tx.amount;
                 entry.1 += 1;
+
+                if tx.date.year() == max_date.year() && tx.date.month() == max_date.month() {
+                    *per_tag_last_month
+                        .entry(tag_id)
+                        .or_insert(Money::zero(self.currency)) += tx.amount;
+                }
             }
         }
 
@@ -431,7 +439,10 @@ impl Budget {
                     .copied()
                     .unwrap_or((Money::zero(self.currency), 0));
                 let average_monthly = total.divide(months_covered);
-                let average_yearly = average_monthly.multiply(12);
+                let last_month = per_tag_last_month
+                    .get(&tag.id)
+                    .copied()
+                    .unwrap_or(Money::zero(self.currency));
                 let monthly_budget_contribution = Self::periodised_monthly(
                     tag,
                     &all_txs,
@@ -445,7 +456,7 @@ impl Budget {
                     matching: tag.matching,
                     needs_review: tag.needs_review,
                     average_monthly,
-                    average_yearly,
+                    last_month,
                     monthly_budget_contribution,
                     transaction_count: count,
                 }

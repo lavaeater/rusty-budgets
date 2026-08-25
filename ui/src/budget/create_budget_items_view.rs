@@ -95,10 +95,10 @@ pub fn CreateBudgetItemsView() -> Element {
                 .average_monthly
                 .amount_in_cents()
                 .cmp(&b.average_monthly.amount_in_cents()),
-            "yearly" => a
-                .average_yearly
+            "last_month" => a
+                .last_month
                 .amount_in_cents()
-                .cmp(&b.average_yearly.amount_in_cents()),
+                .cmp(&b.last_month.amount_in_cents()),
             _ => a.name.cmp(&b.name),
         };
         if asc { ord } else { ord.reverse() }
@@ -171,16 +171,16 @@ pub fn CreateBudgetItemsView() -> Element {
                         "Snitt / mån"
                     }
                     div {
-                        class: "{header_class(\"yearly\")}",
+                        class: "{header_class(\"last_month\")}",
                         onclick: move |_| {
-                            if sort_col() == "yearly" {
+                            if sort_col() == "last_month" {
                                 sort_asc.toggle();
                             } else {
-                                sort_col.set("yearly");
+                                sort_col.set("last_month");
                                 sort_asc.set(true);
                             }
                         },
-                        "Snitt / år"
+                        "Förra månaden"
                     }
                 }
                 for summary in summaries.iter() {
@@ -192,7 +192,7 @@ pub fn CreateBudgetItemsView() -> Element {
                         let tag_name_click = tag_name.clone();
                         let is_selected = selected.contains(&tag_id);
                         let monthly = summary.average_monthly.amount_in_cents();
-                        let yearly = summary.average_yearly.amount_in_cents();
+                        let last_month = summary.last_month.amount_in_cents();
                         let cost_kind = summary.cost_kind;
                         rsx! {
                             div {
@@ -317,7 +317,7 @@ pub fn CreateBudgetItemsView() -> Element {
                                     }
                                 }
                                 span { class: "{money_class(monthly)}", "{fmt_sek(monthly)}" }
-                                span { class: "{money_class(yearly)}", "{fmt_sek(yearly)}" }
+                                span { class: "{money_class(last_month)}", "{fmt_sek(last_month)}" }
                             }
                         }
                     }

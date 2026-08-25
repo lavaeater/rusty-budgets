@@ -14,8 +14,8 @@ pub struct TagSummary {
     /// Observed average per month across the whole history window (signed —
     /// negative for expenses, positive for income). Noisy for infrequent bills.
     pub average_monthly: Money,
-    /// Average yearly amount (`average_monthly` × 12).
-    pub average_yearly: Money,
+    /// Total for the most recent calendar month with transaction data.
+    pub last_month: Money,
     /// What to budget each month. For a cost billed less often than monthly
     /// this is the billed amount spread across its cycle — an annual 12 000 kr
     /// insurance contributes 1 000 kr/month — so a once-a-year bill does not
