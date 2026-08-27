@@ -12,6 +12,7 @@ mod report_view_model;
 pub mod rule;
 mod tag_suggestion;
 mod tag_summary;
+mod transaction_search_result;
 mod transaction_view_model;
 pub mod value_kind;
 
@@ -26,6 +27,7 @@ pub use report_view_model::{ReportItemViewModel, ReportTagViewModel, ReportViewM
 pub use rule::Rule;
 pub use tag_suggestion::TagSuggestion;
 pub use tag_summary::TagSummary;
+pub use transaction_search_result::TransactionSearchResult;
 pub use transaction_view_model::TransactionViewModel;
 pub use value_kind::ValueKind;
 

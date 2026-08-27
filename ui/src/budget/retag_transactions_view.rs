@@ -1,12 +1,13 @@
+use crate::budget::PeriodFilter;
 use crate::budget::budget_hero::BudgetState;
 use crate::{Button, ButtonVariant, Input};
 use api::models::{BankTransaction, Periodicity};
-use api::{create_tag, get_tagged_transactions, tag_transaction};
+use api::{create_tag, search_transactions, tag_transaction};
 use dioxus::prelude::*;
 use uuid::Uuid;
 
 const RETAG_CSS: Asset = asset!("assets/styling/retag-transactions.css");
-const PAGE_SIZE: usize = 50;
+const PAGE_SIZE: usize = 100;
 
 #[component]
 pub fn RetagTransactionsView() -> Element {
@@ -14,22 +15,41 @@ pub fn RetagTransactionsView() -> Element {
     let budget_id = budget_signal().id;
     let period_id = budget_signal().period_id;
 
-    let mut transactions: Signal<Vec<BankTransaction>> = use_signal(Vec::new);
-    let mut offset: Signal<usize> = use_signal(|| 0);
-    let mut has_more: Signal<bool> = use_signal(|| false);
+    let year = use_signal(|| period_id.year);
+    let month: Signal<Option<u32>> = use_signal(|| Some(period_id.month));
     let mut search: Signal<String> = use_signal(String::new);
     let mut tag_filter: Signal<Option<Uuid>> = use_signal(|| None);
+
+    let mut transactions: Signal<Vec<BankTransaction>> = use_signal(Vec::new);
+    let mut total_count: Signal<usize> = use_signal(|| 0);
     let mut is_loading: Signal<bool> = use_signal(|| true);
+    // Bumped on every filter change so a slow, superseded request can't
+    // overwrite the result of a newer one landing first.
+    let mut request_id: Signal<u64> = use_signal(|| 0);
     // Per-row "create new tag" state
     let mut creating_for_tx: Signal<Option<Uuid>> = use_signal(|| None);
     let mut new_tag_name: Signal<String> = use_signal(String::new);
 
     use_effect(move || {
+        let y = year();
+        let m = month();
+        let tag = tag_filter();
+        let s = search();
+        let this_request = {
+            let mut id = request_id.write();
+            *id += 1;
+            *id
+        };
+        is_loading.set(true);
         spawn(async move {
-            if let Ok(batch) = get_tagged_transactions(budget_id, PAGE_SIZE + 1, 0).await {
-                has_more.set(batch.len() > PAGE_SIZE);
-                transactions.set(batch.into_iter().take(PAGE_SIZE).collect());
-                offset.set(PAGE_SIZE);
+            let search_opt = (!s.trim().is_empty()).then(|| s.trim().to_string());
+            let result = search_transactions(budget_id, y, m, tag, search_opt, PAGE_SIZE, 0).await;
+            if request_id() != this_request {
+                return;
+            }
+            if let Ok(result) = result {
+                transactions.set(result.transactions);
+                total_count.set(result.total_count);
             }
             is_loading.set(false);
         });
@@ -39,18 +59,20 @@ pub fn RetagTransactionsView() -> Element {
     tags.retain(|t| !t.deleted);
     tags.sort_by(|a, b| a.name.cmp(&b.name));
 
-    let search_str = search().to_lowercase();
-    let active_tag_filter = tag_filter();
+    let available_years: Vec<i32> = {
+        let mut years: Vec<i32> = budget_signal()
+            .period_summaries
+            .iter()
+            .map(|s| s.period_id.year)
+            .collect();
+        years.sort_unstable();
+        years.dedup();
+        years
+    };
 
-    let visible: Vec<BankTransaction> = transactions()
-        .into_iter()
-        .filter(|tx| {
-            let matches_search =
-                search_str.is_empty() || tx.description.to_lowercase().contains(&search_str);
-            let matches_tag = active_tag_filter.is_none_or(|tid| tx.tag_id == Some(tid));
-            matches_search && matches_tag
-        })
-        .collect();
+    let active_tag_filter = tag_filter();
+    let visible = transactions();
+    let has_more = visible.len() < total_count();
 
     rsx! {
         document::Link { rel: "stylesheet", href: RETAG_CSS }
@@ -75,20 +97,16 @@ pub fn RetagTransactionsView() -> Element {
                         }
                     }
                 }
-                span { class: "retag-count",
-                    "{visible.len()} transaktioner"
-                    if has_more() && search_str.is_empty() && active_tag_filter.is_none() {
-                        " (fler finns)"
-                    }
-                }
+                PeriodFilter { year, month, available_years }
+                span { class: "retag-count", "{total_count()} transaktioner" }
             }
 
             if is_loading() {
                 p { class: "retag-loading", "Laddar..." }
             } else if visible.is_empty() {
                 p { class: "retag-empty",
-                    if search_str.is_empty() && active_tag_filter.is_none() {
-                        "Inga taggade transaktioner."
+                    if search().trim().is_empty() && active_tag_filter.is_none() {
+                        "Inga taggade transaktioner för perioden."
                     } else {
                         "Inga transaktioner matchar filtret."
                     }
@@ -229,26 +247,31 @@ pub fn RetagTransactionsView() -> Element {
                     }
                 }
 
-                if has_more() && search_str.is_empty() && active_tag_filter.is_none() {
+                if has_more {
                     Button {
                         variant: ButtonVariant::Secondary,
                         r#type: "button",
                         onclick: move |_| async move {
-                            let current_offset = offset();
-                            if let Ok(batch) = get_tagged_transactions(
+                            let current_offset = transactions().len();
+                            let search_opt = {
+                                let s = search();
+                                (!s.trim().is_empty()).then(|| s.trim().to_string())
+                            };
+                            if let Ok(result) = search_transactions(
                                     budget_id,
-                                    PAGE_SIZE + 1,
+                                    year(),
+                                    month(),
+                                    tag_filter(),
+                                    search_opt,
+                                    PAGE_SIZE,
                                     current_offset,
                                 )
                                 .await
                             {
-                                let more = batch.len() > PAGE_SIZE;
-                                let new_txs: Vec<_> = batch.into_iter().take(PAGE_SIZE).collect();
                                 let mut all = transactions();
-                                all.extend(new_txs);
+                                all.extend(result.transactions);
                                 transactions.set(all);
-                                offset.set(current_offset + PAGE_SIZE);
-                                has_more.set(more);
+                                total_count.set(result.total_count);
                             }
                         },
                         "Visa fler"

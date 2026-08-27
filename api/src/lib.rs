@@ -441,9 +441,23 @@ pub async fn get_transactions_for_tag(budget_id: Uuid, tag_id: Uuid) -> ServerFn
     Ok(db::get_transactions_for_tag(budget_id, tag_id).await?)
 }
 
-#[server(endpoint = "get_tagged_transactions")]
-pub async fn get_tagged_transactions(budget_id: Uuid, limit: usize, offset: usize) -> ServerFnResult<Vec<BankTransaction>> {
-    Ok(db::get_tagged_transactions(budget_id, limit, offset).await?)
+/// Backs the Transaktioner tab's search: tagged, non-ignored transactions
+/// within a year (or one month of it), filtered by tag and description, with
+/// pagination for result sets over `limit`.
+#[server(endpoint = "search_transactions")]
+#[allow(clippy::too_many_arguments)]
+pub async fn search_transactions(
+    budget_id: Uuid,
+    year: i32,
+    month: Option<u32>,
+    tag_id: Option<Uuid>,
+    search: Option<String>,
+    limit: usize,
+    offset: usize,
+) -> ServerFnResult<view_models::TransactionSearchResult> {
+    let (transactions, total_count) =
+        db::search_transactions(budget_id, year, month, tag_id, search, limit, offset).await?;
+    Ok(view_models::TransactionSearchResult { transactions, total_count })
 }
 
 #[server(endpoint = "get_untagged_transactions")]

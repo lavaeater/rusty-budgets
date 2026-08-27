@@ -367,13 +367,16 @@
     color: #c53030;
 }
 
-.report-filters {
+.period-filters {
     display: flex;
     gap: 16px;
+}
+
+.report-filters-row {
     margin-bottom: 20px;
 }
 
-.report-filter-field {
+.period-filter-field {
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -382,7 +385,7 @@
     font-weight: 600;
 }
 
-.report-filter-select {
+.period-filter-select {
     padding: 6px 10px;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
