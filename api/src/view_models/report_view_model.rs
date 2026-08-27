@@ -31,11 +31,15 @@ pub struct ReportViewModel {
 
 impl ReportViewModel {
     /// Builds the report for `year`, restricted to `month` when given, or the
-    /// entire year when `month` is `None`.
-    pub fn from_budget(budget: &Budget, year: i32, month: Option<u32>) -> Self {
-        let period_ids: Vec<PeriodId> = match month {
-            Some(m) => vec![PeriodId::new(year, m)],
-            None => (1..=12).map(|m| PeriodId::new(year, m)).collect(),
+    /// entire year when `month` is `None`. `year` of `None` means "all
+    /// time" — every period the budget has, ignoring `month`.
+    pub fn from_budget(budget: &Budget, year: Option<i32>, month: Option<u32>) -> Self {
+        let period_ids: Vec<PeriodId> = match year {
+            None => budget.periods.iter().map(|p| p.id).collect(),
+            Some(year) => match month {
+                Some(m) => vec![PeriodId::new(year, m)],
+                None => (1..=12).map(|m| PeriodId::new(year, m)).collect(),
+            },
         };
 
         let items = budget

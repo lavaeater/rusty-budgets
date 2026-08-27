@@ -11,7 +11,8 @@ pub fn ReportsTab() -> Element {
     let budget = use_context::<BudgetState>().0();
     let budget_id = budget.id;
 
-    let year = use_signal(|| budget.period_id.year);
+    // `None` means "Alla tider" (all time).
+    let year: Signal<Option<i32>> = use_signal(|| Some(budget.period_id.year));
     // `None` means "Hela året".
     let month: Signal<Option<u32>> = use_signal(|| Some(budget.period_id.month));
 
@@ -29,10 +30,15 @@ pub fn ReportsTab() -> Element {
                         .and_then(|r| r.as_ref().ok())
                         .map(|r| r.available_years.clone())
                         .filter(|years| !years.is_empty())
-                        .unwrap_or_else(|| vec![year()]);
+                        .unwrap_or_else(|| year().into_iter().collect());
                     rsx! {
                         div { class: "report-filters-row",
-                            PeriodFilter { year, month, available_years: years }
+                            PeriodFilter {
+                                year,
+                                month,
+                                available_years: years,
+                                allow_all_time: true,
+                            }
                         }
                     }
                 }

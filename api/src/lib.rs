@@ -317,11 +317,12 @@ pub async fn get_budget(
 }
 
 /// Builds the Rapporter view for `year`, restricted to `month` when given,
-/// or the entire year when `month` is `None`.
+/// or the entire year when `month` is `None`. `year` of `None` means "all
+/// time" — every period in the budget, regardless of year or month.
 #[server(endpoint = "get_report")]
 pub async fn get_report(
     budget_id: Uuid,
-    year: i32,
+    year: Option<i32>,
     month: Option<u32>,
 ) -> ServerFnResult<view_models::ReportViewModel> {
     let budget = db::get_budget(budget_id).await?;

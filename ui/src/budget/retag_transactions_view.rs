@@ -15,7 +15,7 @@ pub fn RetagTransactionsView() -> Element {
     let budget_id = budget_signal().id;
     let period_id = budget_signal().period_id;
 
-    let year = use_signal(|| period_id.year);
+    let year: Signal<Option<i32>> = use_signal(|| Some(period_id.year));
     let month: Signal<Option<u32>> = use_signal(|| Some(period_id.month));
     let mut search: Signal<String> = use_signal(String::new);
     let mut tag_filter: Signal<Option<Uuid>> = use_signal(|| None);
@@ -31,7 +31,7 @@ pub fn RetagTransactionsView() -> Element {
     let mut new_tag_name: Signal<String> = use_signal(String::new);
 
     use_effect(move || {
-        let y = year();
+        let y = year().unwrap_or(period_id.year);
         let m = month();
         let tag = tag_filter();
         let s = search();
@@ -259,7 +259,7 @@ pub fn RetagTransactionsView() -> Element {
                             };
                             if let Ok(result) = search_transactions(
                                     budget_id,
-                                    year(),
+                                    year().unwrap_or(period_id.year),
                                     month(),
                                     tag_filter(),
                                     search_opt,
