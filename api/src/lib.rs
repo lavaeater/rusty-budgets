@@ -316,6 +316,18 @@ pub async fn get_budget(
     }
 }
 
+/// Builds the Rapporter view for `year`, restricted to `month` when given,
+/// or the entire year when `month` is `None`.
+#[server(endpoint = "get_report")]
+pub async fn get_report(
+    budget_id: Uuid,
+    year: i32,
+    month: Option<u32>,
+) -> ServerFnResult<view_models::ReportViewModel> {
+    let budget = db::get_budget(budget_id).await?;
+    Ok(view_models::ReportViewModel::from_budget(&budget, year, month))
+}
+
 #[server(endpoint = "import_transactions")]
 pub async fn import_transactions(
     budget_id: Uuid,
