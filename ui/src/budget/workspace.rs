@@ -3,6 +3,7 @@ use crate::budget::tabs::{
     BudgetPlanTab, OverviewTab, ReportsTab, SettingsTab, TodoTab, TransactionsTab,
 };
 use crate::components::{TabContent, TabList, TabTrigger, Tabs};
+use crate::version::VersionBadge;
 use api::models::{BudgetingType, MonthBeginsOn, PeriodId};
 use api::view_models::BudgetViewModel;
 use chrono::Utc;
@@ -178,6 +179,7 @@ fn BudgetWorkspaceHeader(mut period_id: Signal<PeriodId>) -> Element {
         div { class: "budget-header-a",
             div { class: "header-title",
                 h1 { {budget.name.clone()} }
+                VersionBadge {}
                 div { class: "period-nav",
                     button {
                         class: "period-nav-btn",

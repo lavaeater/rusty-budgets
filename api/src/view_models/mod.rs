@@ -8,9 +8,11 @@ mod budget_summary;
 mod budget_view_model;
 mod budgeting_type_overview;
 mod period_summary;
+mod report_view_model;
 pub mod rule;
 mod tag_suggestion;
 mod tag_summary;
+mod transaction_search_result;
 mod transaction_view_model;
 pub mod value_kind;
 
@@ -21,9 +23,11 @@ pub use budget_summary::BudgetSummary;
 pub use budget_view_model::{BudgetViewModel, TransferPair, TransferSuggestion};
 pub use budgeting_type_overview::BudgetingTypeOverview;
 pub use period_summary::PeriodSummary;
+pub use report_view_model::{ReportItemViewModel, ReportTagViewModel, ReportViewModel};
 pub use rule::Rule;
 pub use tag_suggestion::TagSuggestion;
 pub use tag_summary::TagSummary;
+pub use transaction_search_result::TransactionSearchResult;
 pub use transaction_view_model::TransactionViewModel;
 pub use value_kind::ValueKind;
 

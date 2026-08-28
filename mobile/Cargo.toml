@@ -11,6 +11,11 @@ dioxus = { workspace = true, features = ["router", "fullstack"] }
 ui = { workspace = true }
 api = { workspace = true, features = ["server"], optional = true }
 
+[target.'cfg(target_os = "android")'.dependencies]
+android_logger = "0.14"
+log = "0.4"
+
 [features]
+default = []
 mobile = ["dioxus/mobile"]
 server = ["dioxus/server", "api"]

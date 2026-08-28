@@ -494,21 +494,41 @@ pub async fn get_transactions_for_tag(
     Ok(txs)
 }
 
-pub async fn get_tagged_transactions(
+/// Tagged, non-ignored transactions within `year` (and `month`, when given —
+/// `None` searches the whole year), narrowed by `tag_id` and a case-insensitive
+/// `search` substring on the description. Both filtering and pagination happen
+/// here so the UI never has to reconcile a partial page against a filter.
+#[allow(clippy::too_many_arguments)]
+pub async fn search_transactions(
     budget_id: Uuid,
+    year: i32,
+    month: Option<u32>,
+    tag_id: Option<Uuid>,
+    search: Option<String>,
     limit: usize,
     offset: usize,
-) -> Result<Vec<BankTransaction>, RustyError> {
+) -> Result<(Vec<BankTransaction>, usize), RustyError> {
     let budget = get_budget(budget_id).await?;
+    let search_lower = search
+        .map(|s| s.trim().to_lowercase())
+        .filter(|s| !s.is_empty());
     let mut txs: Vec<BankTransaction> = budget
         .periods
         .iter()
+        .filter(|p| p.id.year == year && month.is_none_or(|m| p.id.month == m))
         .flat_map(|p| p.transactions.iter())
         .filter(|tx| tx.tag_id.is_some() && !tx.ignored)
+        .filter(|tx| tag_id.is_none_or(|tid| tx.tag_id == Some(tid)))
+        .filter(|tx| {
+            search_lower
+                .as_ref()
+                .is_none_or(|s| tx.description.to_lowercase().contains(s.as_str()))
+        })
         .cloned()
         .collect();
     txs.sort_by_key(|b| std::cmp::Reverse(b.date));
-    Ok(txs.into_iter().skip(offset).take(limit).collect())
+    let total_count = txs.len();
+    Ok((txs.into_iter().skip(offset).take(limit).collect(), total_count))
 }
 
 pub async fn get_untagged_transactions(budget_id: Uuid, limit: usize) -> Result<Vec<BankTransaction>, RustyError> {

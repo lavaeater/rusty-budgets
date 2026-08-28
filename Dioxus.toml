@@ -1,8 +1,20 @@
 [application]
 name = "Rusty Budgets"
 version = "0.0.1"
+android_manifest = "mobile/assets/android/AndroidManifest.xml"
+
 [bundle]
 publisher = "Kid VHS Enterprises"
 # The list of files to include in the bundle. These can contain globs.
 resources = ["**/*.css", "**/*.svg"]
-identifier ="com.kidvhs.rusty_budgets"
+identifier = "com.kidvhs.rusty_budgets"
+icon = ["mobile/assets/icons/icon.png"]
+
+[android]
+min_sdk = 24
+target_sdk = 35
+compile_sdk = 35
+
+[android.permissions]
+"android.permission.INTERNET" = { description = "Talk to the budget server" }
+"android.permission.ACCESS_NETWORK_STATE" = { description = "Check network connectivity" }

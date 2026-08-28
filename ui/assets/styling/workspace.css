@@ -367,6 +367,75 @@
     color: #c53030;
 }
 
+.period-filters {
+    display: flex;
+    gap: 16px;
+}
+
+.report-filters-row {
+    margin-bottom: 20px;
+}
+
+.period-filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.85rem;
+    color: #718096;
+    font-weight: 600;
+}
+
+.period-filter-select {
+    padding: 6px 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: #2d3748;
+    background: white;
+}
+
+.report-items {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.report-item-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 16px;
+}
+
+.report-item-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.report-item-name {
+    font-weight: 700;
+    color: #2d3748;
+    flex: 1;
+}
+
+.report-item-type {
+    color: #718096;
+    font-size: 0.8rem;
+}
+
+.report-item-amounts {
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.report-item-amounts.over {
+    color: #c53030;
+}
+
+.report-tag-table {
+    margin-top: 10px;
+}
+
 /* Settings */
 
 .settings-section {
