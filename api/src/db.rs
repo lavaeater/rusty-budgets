@@ -366,7 +366,15 @@ pub async fn auto_budget_period(
             .map(|tx| tx.amount)
             .sum();
         let actual_amount = match item.budgeting_type {
-            BudgetingType::Expense | BudgetingType::Savings => raw_sum.abs(),
+            // A net refund in the period (e.g. a return posted the month after
+            // the purchase, so this period has no offsetting expense) makes
+            // `raw_sum` positive. Unlike the "actual spend" call sites, this
+            // seeds a *budgeted target*, so a negative suggestion makes no
+            // sense here — clamp it to zero (nothing to auto-budget) instead.
+            BudgetingType::Expense | BudgetingType::Savings => {
+                let spend = -raw_sum;
+                if spend.is_pos() { spend } else { Money::zero(budget.currency) }
+            }
             _ => raw_sum,
         };
 

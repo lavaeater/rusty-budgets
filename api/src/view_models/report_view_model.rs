@@ -61,9 +61,14 @@ impl ReportViewModel {
                     .filter(|tx| !tx.ignored)
                     .collect();
 
+                // Sign-flip Expense/Savings so a net spend reports positive. A net
+                // *refund* (e.g. a return posted in a later period than the
+                // purchase, so this window has no offsetting expense) becomes a
+                // negative amount — a credit — rather than being abs()-ed into
+                // looking like more spending.
                 let normalize = |raw: Money| -> Money {
                     match budget_item.budgeting_type {
-                        BudgetingType::Expense | BudgetingType::Savings => raw.abs(),
+                        BudgetingType::Expense | BudgetingType::Savings => -raw,
                         _ => raw,
                     }
                 };
@@ -108,5 +113,58 @@ impl ReportViewModel {
             items,
             available_years,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::models::{BankTransaction, Budget, BudgetItem, BudgetPeriod};
+    use chrono::Utc;
+
+    fn tagged_tx(amount_cents: i64, tag_id: Uuid) -> BankTransaction {
+        BankTransaction {
+            id: Uuid::new_v4(),
+            account_number: "12345678901".to_string(),
+            amount: Money::new_cents(amount_cents, Currency::SEK),
+            description: "test".to_string(),
+            date: Utc::now(),
+            actual_id: None,
+            balance: Money::zero(Currency::SEK),
+            ignored: false,
+            tag_id: Some(tag_id),
+        }
+    }
+
+    /// A refund-only month (return posted the month after the purchase)
+    /// should report as a negative (credit) actual for that month's report,
+    /// not get abs()-ed into looking like spending.
+    #[test]
+    fn refund_only_month_reports_negative_actual() {
+        let tag_id = Uuid::new_v4();
+        let item_id = Uuid::new_v4();
+        let mut item = BudgetItem::new(item_id, "Clothes", BudgetingType::Expense);
+        item.tag_ids.push(tag_id);
+
+        let september = PeriodId::new(2026, 9);
+        let mut period = BudgetPeriod::new(september);
+        period.transactions.push(tagged_tx(30_000, tag_id)); // 300 kr refund, no purchase this month
+
+        let mut budget = Budget::new(Uuid::new_v4());
+        budget.periods = vec![period];
+        budget.items = vec![item];
+        budget.tags = vec![crate::models::Tag::new(
+            tag_id,
+            "Clothes".to_string(),
+            crate::models::CostKind::Variable,
+            crate::models::Matching::Automatic,
+        )];
+
+        let report = ReportViewModel::from_budget(&budget, Some(2026), Some(9));
+        let report_item = report.items.iter().find(|i| i.item_id == item_id).unwrap();
+
+        assert_eq!(report_item.actual_amount, Money::new_cents(-30_000, Currency::SEK));
+        let tag_row = report_item.tags.iter().find(|t| t.tag_id == tag_id).unwrap();
+        assert_eq!(tag_row.actual_amount, Money::new_cents(-30_000, Currency::SEK));
     }
 }
