@@ -14,6 +14,8 @@ uuid = { workspace = true  }
 strum = { workspace = true }
 chrono = {workspace = true}
 lucide-dioxus = { workspace = true }
+
+[target.'cfg(not(target_os = "android"))'.dependencies]
 rfd = { version = "0.17.2", features = ["xdg-portal"] }
 
 [build-dependencies]

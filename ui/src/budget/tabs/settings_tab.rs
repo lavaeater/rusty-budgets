@@ -1,6 +1,6 @@
 use crate::budget::budget_hero::BudgetState;
 use crate::budget::{CarryoverSettings, RulesView, TagReviewView, TagsView};
-use crate::file_chooser::{FileData, FileDialog};
+use crate::file_chooser::{FileData, FileDialog, save_bytes_to_file};
 use crate::{Button, ButtonVariant, Input};
 use api::models::{BankAccount, BankAccountType, MonthBeginsOn, PeriodId, format_account_number};
 use api::{
@@ -59,13 +59,8 @@ pub fn SettingsTab() -> Element {
                 info!("Failed to export selected data");
                 return;
             };
-            let handle = rfd::AsyncFileDialog::new()
-                .set_title("Spara valda delar")
-                .set_file_name("budget-regler.json")
-                .save_file()
-                .await;
-            if let Some(handle) = handle
-                && let Err(e) = handle.write(json.as_bytes()).await
+            if let Err(e) =
+                save_bytes_to_file("Spara valda delar", "budget-regler.json", json.as_bytes()).await
             {
                 info!("Failed to save export: {}", e);
             }
@@ -93,13 +88,8 @@ pub fn SettingsTab() -> Element {
                 info!("Failed to export budget");
                 return;
             };
-            let handle = rfd::AsyncFileDialog::new()
-                .set_title("Spara hela budgeten")
-                .set_file_name("budget-export.json")
-                .save_file()
-                .await;
-            if let Some(handle) = handle
-                && let Err(e) = handle.write(json.as_bytes()).await
+            if let Err(e) =
+                save_bytes_to_file("Spara hela budgeten", "budget-export.json", json.as_bytes()).await
             {
                 info!("Failed to save budget export: {}", e);
             }
