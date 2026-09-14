@@ -92,10 +92,14 @@ impl BudgetItemViewModel {
         tagged_txs.sort_by_key(|tx| tx.date);
         // Raw sum of transaction amounts (negative for expenses/savings — money leaving)
         let tagged_actual_raw: Money = tagged_txs.iter().map(|tx| tx.amount).sum();
-        // Normalize: budgeted amounts are always positive, so abs-normalise actual for
-        // Expense and Savings so that comparisons and remaining_budget are correct.
+        // Normalize: budgeted amounts are always positive, so sign-flip actual for
+        // Expense and Savings so a net spend compares as positive. A net *refund*
+        // (e.g. a return posted the month after the purchase, so this period has no
+        // offsetting expense to net against) becomes a negative actual — a credit
+        // that increases `remaining_budget`/`available` — rather than being
+        // abs()-ed into looking like additional spending.
         let tagged_actual = match effective_budgeting_type {
-            BudgetingType::Expense | BudgetingType::Savings => tagged_actual_raw.abs(),
+            BudgetingType::Expense | BudgetingType::Savings => -tagged_actual_raw,
             _ => tagged_actual_raw,
         };
 
@@ -190,5 +194,70 @@ impl BudgetItemViewModel {
                 required_monthly_contribution,
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::models::PeriodId;
+    use chrono::Utc;
+
+    fn tagged_tx(amount_cents: i64, tag_id: Uuid) -> BankTransaction {
+        BankTransaction {
+            id: Uuid::new_v4(),
+            account_number: "12345678901".to_string(),
+            amount: Money::new_cents(amount_cents, Currency::SEK),
+            description: "test".to_string(),
+            date: Utc::now(),
+            actual_id: None,
+            balance: Money::zero(Currency::SEK),
+            ignored: false,
+            tag_id: Some(tag_id),
+        }
+    }
+
+    /// A return posted the month *after* the purchase lands in a period with
+    /// no offsetting expense for that tag, so the period's net is a positive
+    /// refund. That must show up as a credit (negative actual, boosting
+    /// `remaining_budget`/`available`), not as additional spending.
+    #[test]
+    fn refund_only_period_reports_negative_actual_as_a_credit() {
+        let tag_id = Uuid::new_v4();
+        let item_id = Uuid::new_v4();
+        let mut budget_item = BudgetItem::new(item_id, "Clothes", BudgetingType::Expense);
+        budget_item.tag_ids.push(tag_id);
+
+        let actual_item = ActualItem::new(
+            Uuid::new_v4(),
+            "Clothes",
+            item_id,
+            BudgetingType::Expense,
+            PeriodId::new(2026, 9),
+            Money::new_cents(50_000, Currency::SEK), // 500 kr budgeted
+            Money::zero(Currency::SEK),
+            None,
+            Vec::new(),
+        );
+
+        // Only transaction this period: a 300 kr refund for a purchase that
+        // was expensed last month.
+        let refund = tagged_tx(30_000, tag_id);
+        let all_period_transactions: Vec<&BankTransaction> = vec![&refund];
+
+        let vm = BudgetItemViewModel::from_item(
+            &budget_item,
+            &[&actual_item],
+            Currency::SEK,
+            &Vec::new(),
+            &[],
+            &[],
+            &all_period_transactions,
+            Money::zero(Currency::SEK),
+        );
+
+        assert_eq!(vm.actual_amount, Money::new_cents(-30_000, Currency::SEK));
+        assert_eq!(vm.remaining_budget, Money::new_cents(80_000, Currency::SEK));
+        assert_eq!(vm.status, UnderBudget);
     }
 }

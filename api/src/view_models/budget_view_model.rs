@@ -261,7 +261,7 @@ impl BudgetViewModel {
                     }))
                     .map(|tx| tx.amount)
                     .sum();
-                let expense: crate::models::Money = period
+                let expense_raw: crate::models::Money = period
                     .transactions
                     .iter()
                     .filter(|tx| !tx.ignored && tx.tag_id.is_some_and(|tid| {
@@ -270,8 +270,15 @@ impl BudgetViewModel {
                                 && item.tag_ids.contains(&tid)
                         })
                     }))
-                    .map(|tx| tx.amount.abs())
+                    .map(|tx| tx.amount)
                     .sum();
+                // Refunds are positive transactions on expense tags and must net
+                // against expenses first. Sign-flipping (rather than abs()-ing)
+                // the net also handles a return posted in a *later* period than
+                // the purchase: that period's net is a positive refund with no
+                // offsetting expense, and abs() would report it as spending
+                // instead of the credit it actually is.
+                let expense = -expense_raw;
                 let net = income - expense;
                 running_net += net;
                 PeriodSummary {
@@ -311,5 +318,110 @@ impl BudgetViewModel {
                 .filter(|t| !t.deleted && t.needs_review)
                 .count(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::models::{BankTransaction, BudgetItem, BudgetPeriod, Money};
+    use chrono::Utc;
+
+    fn tagged_tx(amount_cents: i64, tag_id: Uuid) -> BankTransaction {
+        BankTransaction {
+            id: Uuid::new_v4(),
+            account_number: "12345678901".to_string(),
+            amount: Money::new_cents(amount_cents, Currency::SEK),
+            description: "test".to_string(),
+            date: Utc::now(),
+            actual_id: None,
+            balance: Money::zero(Currency::SEK),
+            ignored: false,
+            tag_id: Some(tag_id),
+        }
+    }
+
+    /// A store refund on an expense tag arrives as a positive transaction and
+    /// must net against the tag's expenses, not add to them.
+    #[test]
+    fn refund_on_expense_tag_reduces_expense_actual_not_increases_it() {
+        let tag_id = Uuid::new_v4();
+        let mut item = BudgetItem::new(Uuid::new_v4(), "Clothes", BudgetingType::Expense);
+        item.tag_ids.push(tag_id);
+
+        let period_id = PeriodId::new(2026, 1);
+        let mut period = BudgetPeriod::new(period_id);
+        // 500 kr spent on clothes, then a 50 kr refund from a return.
+        period.transactions.push(tagged_tx(-50_000, tag_id));
+        period.transactions.push(tagged_tx(5_000, tag_id));
+
+        let mut budget = Budget::new(Uuid::new_v4());
+        budget.periods = vec![period];
+        budget.items = vec![item];
+
+        let vm = BudgetViewModel::from_budget(&budget, period_id);
+        let summary = vm
+            .period_summaries
+            .iter()
+            .find(|s| s.period_id == period_id)
+            .expect("period summary should exist");
+
+        // Net spend should be 450 kr, not 550 kr (which is what per-transaction
+        // abs()-then-sum would incorrectly produce).
+        assert_eq!(summary.expense_actual, Money::new_cents(45_000, Currency::SEK));
+    }
+
+    /// Without any refund, plain expenses still report correctly.
+    #[test]
+    fn expense_only_reports_absolute_total() {
+        let tag_id = Uuid::new_v4();
+        let mut item = BudgetItem::new(Uuid::new_v4(), "Clothes", BudgetingType::Expense);
+        item.tag_ids.push(tag_id);
+
+        let period_id = PeriodId::new(2026, 1);
+        let mut period = BudgetPeriod::new(period_id);
+        period.transactions.push(tagged_tx(-50_000, tag_id));
+
+        let mut budget = Budget::new(Uuid::new_v4());
+        budget.periods = vec![period];
+        budget.items = vec![item];
+
+        let vm = BudgetViewModel::from_budget(&budget, period_id);
+        let summary = vm
+            .period_summaries
+            .iter()
+            .find(|s| s.period_id == period_id)
+            .expect("period summary should exist");
+
+        assert_eq!(summary.expense_actual, Money::new_cents(50_000, Currency::SEK));
+    }
+
+    /// A return posted the month *after* the purchase lands in a period with
+    /// no offsetting expense for that tag — the period's net is a positive
+    /// refund. That period's `expense_actual` must be negative (a credit),
+    /// not zero and not a positive "spend" figure.
+    #[test]
+    fn refund_only_period_reports_negative_expense_actual() {
+        let tag_id = Uuid::new_v4();
+        let mut item = BudgetItem::new(Uuid::new_v4(), "Clothes", BudgetingType::Expense);
+        item.tag_ids.push(tag_id);
+
+        let period_id = PeriodId::new(2026, 9);
+        let mut period = BudgetPeriod::new(period_id);
+        period.transactions.push(tagged_tx(30_000, tag_id)); // 300 kr refund, no purchase this month
+
+        let mut budget = Budget::new(Uuid::new_v4());
+        budget.periods = vec![period];
+        budget.items = vec![item];
+
+        let vm = BudgetViewModel::from_budget(&budget, period_id);
+        let summary = vm
+            .period_summaries
+            .iter()
+            .find(|s| s.period_id == period_id)
+            .expect("period summary should exist");
+
+        assert_eq!(summary.expense_actual, Money::new_cents(-30_000, Currency::SEK));
+        assert_eq!(summary.net, Money::new_cents(30_000, Currency::SEK));
     }
 }

@@ -306,8 +306,12 @@ impl Budget {
 
     /// Budgeted and actual for one item in one period, using the *same*
     /// definitions the projection uses — actual comes from tagged transactions
-    /// and is abs-normalised for Expense/Savings so it compares against a
-    /// positive budgeted amount.
+    /// and is sign-normalised for Expense/Savings so it compares against a
+    /// positive budgeted amount: a `tagged` net spend (negative) becomes a
+    /// positive actual, while a net *refund* (e.g. a return posted the month
+    /// after the purchase, so the period has no offsetting expense) becomes a
+    /// **negative** actual — a credit that increases what's available, rather
+    /// than `abs()`-ing it into looking like more spending.
     ///
     /// Factored out so carryover and `BudgetItemViewModel` cannot drift apart:
     /// if they disagreed, a category's running balance would not match the
@@ -328,7 +332,7 @@ impl Budget {
             .map(|tx| tx.amount)
             .sum();
         let actual = match effective_type {
-            BudgetingType::Expense | BudgetingType::Savings => tagged.abs(),
+            BudgetingType::Expense | BudgetingType::Savings => -tagged,
             _ => tagged,
         };
         // Fall back to the stored actual when nothing is tagged, mirroring the
@@ -893,5 +897,53 @@ impl Aggregate for Budget {
 
     fn version(&self) -> i64 {
         self.version
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn tagged_tx(amount_cents: i64, tag_id: Uuid) -> BankTransaction {
+        BankTransaction {
+            id: Uuid::new_v4(),
+            account_number: "12345678901".to_string(),
+            amount: Money::new_cents(amount_cents, Currency::SEK),
+            description: "test".to_string(),
+            date: Utc::now(),
+            actual_id: None,
+            balance: Money::zero(Currency::SEK),
+            ignored: false,
+            tag_id: Some(tag_id),
+        }
+    }
+
+    /// A purchase expensed in one period and returned (refunded) the next
+    /// should wash out to a zero carryover balance, not double-count as
+    /// -1600 kr of spending across the two periods.
+    #[test]
+    fn carryover_nets_a_refund_posted_in_a_later_period_than_the_purchase() {
+        let tag_id = Uuid::new_v4();
+        let item_id = Uuid::new_v4();
+        let mut item = BudgetItem::new(item_id, "Clothes", BudgetingType::Expense);
+        item.tag_ids.push(tag_id);
+
+        let august = PeriodId::new(2026, 8);
+        let september = PeriodId::new(2026, 9);
+        let october = PeriodId::new(2026, 10);
+
+        let mut august_period = BudgetPeriod::new(august);
+        august_period.transactions.push(tagged_tx(-80_000, tag_id)); // 800 kr spent
+
+        let mut september_period = BudgetPeriod::new(september);
+        september_period.transactions.push(tagged_tx(80_000, tag_id)); // 800 kr refunded, no purchase this period
+
+        let mut budget = Budget::new(Uuid::new_v4());
+        budget.carryover_from = Some(august);
+        budget.periods = vec![august_period, september_period];
+        budget.items = vec![item];
+
+        let balances = budget.carryover_into(october);
+        assert_eq!(balances.get(&item_id).copied(), Some(Money::zero(Currency::SEK)));
     }
 }
