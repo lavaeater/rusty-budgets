@@ -23,10 +23,15 @@ adb reverse tcp:8080 tcp:8080
 
 This works for both the emulator and a USB-connected physical device, and
 only needs to be re-run when the device reconnects. `mobile/src/main.rs`
-points the client at `http://localhost:8080` accordingly, and
+points the client at `http://localhost:8080` in debug builds accordingly, and
 `AndroidManifest.xml` allows cleartext (plain HTTP) traffic for this — fine
-for local dev, but revisit before shipping a build that talks to a real
-deployed server over HTTPS.
+for local dev.
+
+Release builds (`dx bundle --release`, e.g. via `deploy-mobile.sh`) skip all
+of this and point the client straight at the production API,
+`https://rustybudgets.kidvhs.com`, over HTTPS — no dev server or port
+forwarding involved. The debug/release split is `#[cfg(debug_assertions)]`
+in `mobile/src/main.rs`.
 
 ## Serve (hot-reload dev loop)
 

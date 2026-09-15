@@ -38,12 +38,19 @@ fn main() {
 
     dioxus::logger::init(Level::INFO).expect("failed to init logger");
 
-    // The Android WebView's "localhost" is the *device's* loopback, not the dev
-    // machine's — it only resolves to the fullstack server via `adb reverse
-    // tcp:8080 tcp:8080`, which forwards the device's localhost:8080 back to
-    // the host. See mobile/README.md for the one-time setup.
-    #[cfg(not(feature = "server"))]
+    // Debug builds (`dx serve`) talk to the local dev server. The Android
+    // WebView's "localhost" is the *device's* loopback, not the dev machine's
+    // — it only resolves to the fullstack server via `adb reverse tcp:8080
+    // tcp:8080`, which forwards the device's localhost:8080 back to the host.
+    // See mobile/README.md for the one-time setup.
+    #[cfg(all(not(feature = "server"), debug_assertions))]
     fullstack::set_server_url("http://localhost:8080");
+
+    // Release builds (`dx bundle --release`, e.g. via `deploy-mobile.sh`) talk
+    // to the production API directly over HTTPS — there is no dev server to
+    // forward to on a real install.
+    #[cfg(all(not(feature = "server"), not(debug_assertions)))]
+    fullstack::set_server_url("https://rustybudgets.kidvhs.com");
 
     #[cfg(feature = "server")]
     dioxus::server::serve(|| async move {
