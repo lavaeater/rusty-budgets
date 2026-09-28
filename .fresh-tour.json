@@ -1,0 +1,120 @@
+{
+  "$schema": "https://fresh.dev/schemas/tour.json",
+  "title": "Rusty Budgets: core concepts",
+  "description": "A tour of the domain model and architecture: the Budget aggregate, CQRS events, tags/items/transactions, and the tagging + transfer-resolution UI that drives day-to-day use.",
+  "schema_version": "1.0",
+  "commit_hash": "60a0e1f",
+  "steps": [
+    {
+      "step_id": 1,
+      "title": "Workspace layout",
+      "file_path": "CLAUDE.md",
+      "lines": [1, 22],
+      "explanation": "## Start here\n\nRusty Budgets is a full-stack Rust app built with **Dioxus** (web/desktop/mobile from one codebase), a custom JSON file database called **JoyDB**, and a hand-rolled **CQRS + event sourcing** layer.\n\nThe workspace splits into:\n- `api/` — domain model, events, server functions\n- `ui/` — shared Dioxus components\n- `web/`, `desktop/`, `mobile/` — platform entry points\n- `cqrs_macros/` — proc macros for event handling\n\nThe intended user workflow is: **Setup → Import → Tag & Create Rules → Create Budget Items → Day-to-day budget work**. This tour follows that same order."
+    },
+    {
+      "step_id": 2,
+      "title": "Budget: the aggregate root",
+      "file_path": "api/src/models/budget.rs",
+      "lines": [26, 82],
+      "overlay_config": { "type": "block", "focus_mode": true },
+      "explanation": "## Everything hangs off `Budget`\n\n`Budget` is the single **aggregate root** (event-sourcing terminology: the consistency boundary that all events target). It owns:\n\n- `items` — budget categories (`BudgetItem`)\n- `periods` — one `BudgetPeriod` per calendar month\n- `accounts` — bank accounts\n- `match_rules` — auto-categorisation rules\n- `currency`, `month_begins_on` — budget-wide settings\n\nAbove it, `pub_events_enum!` generates `BudgetEvent`, an enum wrapping every event type that can happen to a budget — `TransactionTagged`, `ItemAdded`, `TagClassified`, and so on. **State is never mutated directly; it's always the result of applying one of these events.**"
+    },
+    {
+      "step_id": 3,
+      "title": "The event-sourcing framework",
+      "file_path": "api/src/cqrs/framework.rs",
+      "lines": [23, 98],
+      "overlay_config": { "type": "block" },
+      "explanation": "## Aggregate + DomainEvent\n\nTwo traits define the whole framework:\n\n- **`Aggregate`** — anything with an id and a version that evolves over time (`Budget` implements this).\n- **`DomainEvent<A>`** — anything that can `apply()` itself to an aggregate and return the id of whatever it affected.\n\nEvery mutation in the app is: validate → construct an event → `apply()` it → persist it. There's no direct field mutation from command handlers — replaying the event log is how state gets rebuilt."
+    },
+    {
+      "step_id": 4,
+      "title": "A concrete event: TransactionTagged",
+      "file_path": "api/src/events/transaction_tagged.rs",
+      "lines": [1, 45],
+      "overlay_config": { "type": "block" },
+      "explanation": "## One event, start to finish\n\nThis is the smallest complete example of the pattern:\n\n- `TransactionTagged { budget_id, tx_id, tag_id }` — the event's data (just enough to replay it)\n- `#[domain_event(aggregate = \"Budget\")]` — the `cqrs_macros::DomainEvent` derive generates the boilerplate `Handler` trait and wiring\n- `do_transaction_tagged_impl` — the **command**: validates the transaction and tag exist, then builds the event (fails closed, never mutates)\n- `apply_do_transaction_tagged` — the **event application**: the only place that actually sets `tx.tag_id`\n\nEvery other event file in `api/src/events/` (26 of them, listed in the `BudgetEvent` enum) follows this exact shape."
+    },
+    {
+      "step_id": 5,
+      "title": "Tag: periodicity lives here, not on the item",
+      "file_path": "api/src/models/tag.rs",
+      "lines": [1, 17],
+      "overlay_config": { "type": "block" },
+      "explanation": "## Cost behavior is a property of the tag\n\n`CostKind` decides how a tag's spending is budgeted:\n\n- **`Recurring(Periodicity)`** — a billed commitment (rent, annual insurance). It periodises: a 12,000 kr/year bill contributes 1,000 kr/month and builds a **buffer** between bills.\n- **`Variable`** — everyday spending (groceries) with no cadence, budgeted per month as it happens.\n\nThe key design decision: \"Electricity\" is *inherently* monthly, \"Dog Insurance\" is *inherently* annual — that's a fact about the category, not about any one transaction or budget item, so it's attached to the `Tag`."
+    },
+    {
+      "step_id": 6,
+      "title": "Tag struct + backward-compatible loading",
+      "file_path": "api/src/models/tag.rs",
+      "lines": [72, 87],
+      "overlay_config": { "type": "block" },
+      "explanation": "## Tags are never hard-deleted\n\n`deleted: bool` is a soft-delete flag — tags must stay historically intact so old transactions and reports still resolve correctly. `needs_review` and `explicitly_classified` track whether a tag's `CostKind` was chosen by the user or just inferred from a legacy field, which matters because of how old snapshots load (next step)."
+    },
+    {
+      "step_id": 7,
+      "title": "Migrating old data without a migration",
+      "file_path": "api/src/models/tag.rs",
+      "lines": [89, 106],
+      "overlay_config": { "type": "block" },
+      "explanation": "## No SQL means no ALTER TABLE\n\nBecause aggregates are persisted as JSON snapshots plus a tail of replayed events, adding a required field would break every existing budget on load. `TagRepr` is a permissive deserialization shim: new fields (`cost_kind`, `matching`) win when present, otherwise they're derived from the legacy `periodicity` field. This pattern — an intermediate `*Repr` struct — is how the domain model evolves without a schema migration step."
+    },
+    {
+      "step_id": 8,
+      "title": "BudgetItem: grouping tags into a budget line",
+      "file_path": "api/src/models/budget_item.rs",
+      "lines": [1, 39],
+      "overlay_config": { "type": "block" },
+      "explanation": "## One item, many tags\n\nA `BudgetItem` is a named budget line (e.g. \"Transport\") that references one or more tags by `tag_ids: Vec<Uuid>` — so \"Transport\" can bundle the \"Car\", \"Bus Pass\", and \"Train\" tags into a single budgeted amount. `budgeting_type` (Income/Expense/Savings/InternalTransfer) and `buffer_target` (the rolling-buffer amount for recurring costs) live here too."
+    },
+    {
+      "step_id": 9,
+      "title": "MatchRule: auto-categorisation",
+      "file_path": "api/src/models/match_rule.rs",
+      "lines": [12, 21],
+      "overlay_config": { "type": "block", "focus_mode": true },
+      "explanation": "## How tagging one transaction tags many\n\nWhen a user tags a transaction, the app auto-creates a `MatchRule` from tokenised fragments of its description (`transaction_key`). Every future untagged transaction is checked against the set of `match_rules` on `Budget` — a match applies `tag_id` automatically. Tokenisation is Swedish-localised (filters Swedish stopwords and dates), since transaction descriptions come from Swedish bank exports."
+    },
+    {
+      "step_id": 10,
+      "title": "Money: never mix currencies",
+      "file_path": "api/src/models/money.rs",
+      "lines": [9, 32],
+      "overlay_config": { "type": "block" },
+      "explanation": "## Cents, not floats\n\n`Money` stores an `i64` in minor units (cents/öre) plus a `Currency`. This avoids float rounding errors entirely. Arithmetic between two `Money` values of different currencies panics rather than silently producing a wrong number — correctness over convenience, since this is a budgeting app."
+    },
+    {
+      "step_id": 11,
+      "title": "Server functions: the API surface",
+      "file_path": "api/src/lib.rs",
+      "lines": [465, 517],
+      "overlay_config": { "type": "block" },
+      "explanation": "## #[server] functions are the whole backend\n\nDioxus's `#[server]` macro turns each function into a client-callable RPC endpoint, backed by real server code. `get_untagged_transactions` fetches a batch for the tagging workflow; `tag_transaction` applies a tag and fires rule evaluation; `resolve_transfer_pair` is the internal-transfer resolution endpoint we'll see wired to the UI next. All of them return a `BudgetViewModel` — a read-optimized projection, never the raw aggregate."
+    },
+    {
+      "step_id": 12,
+      "title": "The tagging workflow UI",
+      "file_path": "ui/src/budget/tag_transactions_view.rs",
+      "lines": [1, 19],
+      "overlay_config": { "type": "block" },
+      "explanation": "## Where the domain model meets the screen\n\n`TagTransactionsView` is the core day-one UX loop: untagged transactions are shown in batches of `BATCH_SIZE` (10), the user picks or creates a tag, and behind the scenes `create_tag` → `tag_transaction` → `apply_all_rules` chains through the server functions and events we've just walked through. It's mounted in the budget overview whenever there are untagged transactions."
+    },
+    {
+      "step_id": 13,
+      "title": "Detecting potential internal transfers",
+      "file_path": "api/src/models/budget.rs",
+      "lines": [737, 754],
+      "overlay_config": { "type": "block" },
+      "explanation": "## Same amount, different account, few days apart\n\n`potential_internal_transfers()` finds pairs of unallocated, untagged transactions with matching absolute amounts across different accounts within a short window — likely one \"move money\" action seen as two bank-side transactions (e.g. moving money to a savings account). These are excluded from the regular tagging flow and resolved separately."
+    },
+    {
+      "step_id": 14,
+      "title": "Resolving a transfer pair",
+      "file_path": "ui/src/budget/transactions_view.rs",
+      "lines": [341, 355],
+      "overlay_config": { "type": "block" },
+      "explanation": "## Savings deposits aren't a second expense\n\n`TransferPairCard` offers two resolutions: mark the pair as a neutral internal float (ignore both sides), or — when the incoming leg lands in a `Savings`-type account — tag the *outgoing* leg as a savings contribution and ignore the incoming receipt. This correctly models savings: the deduction from checking is the budget event; the deposit is just where it landed, not a second thing to budget for."
+    }
+  ]
+}
