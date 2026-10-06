@@ -14,6 +14,7 @@ pub mod import;
 #[cfg(feature = "server")]
 pub mod migrations;
 pub mod budget_export;
+pub mod portfolio;
 pub mod rules_export;
 #[cfg(feature = "server")]
 pub mod pg_models;
@@ -351,6 +352,18 @@ pub async fn import_transactions_bytes(
     db::import_transactions_bytes(user.id, budget_id, file_contents).await?;
     db::evaluate_rules(user.id, budget_id).await?;
     Ok(BudgetViewModel::from_budget(&db::get_budget(budget_id).await?, period_id))
+}
+
+/// Analyses broker/exchange exports (a zip with one CSV per account, or a
+/// single CSV) into a profit/loss overview. Stateless: nothing is stored
+/// and the budget is never touched.
+#[allow(clippy::unused_async)]
+#[server(endpoint = "analyze_portfolio")]
+pub async fn analyze_portfolio(
+    file_name: String,
+    file_contents: Vec<u8>,
+) -> ServerFnResult<portfolio::PortfolioReport> {
+    Ok(portfolio::analyze_upload(&file_name, &file_contents))
 }
 
 #[server(endpoint = "connect_transaction")]

@@ -1,0 +1,157 @@
+/* Investeringar — analysis of broker/exchange exports */
+
+.portfolio-status {
+    margin: 12px 0 0 0;
+    color: #4a5568;
+}
+
+.portfolio-skipped {
+    border-color: #f6e05e;
+    background: #fffff0;
+}
+
+.portfolio-skipped h4 {
+    margin: 0 0 8px 0;
+    color: #744210;
+}
+
+.portfolio-skipped ul {
+    margin: 0;
+    padding-left: 20px;
+    color: #744210;
+    font-size: 0.9rem;
+}
+
+.portfolio-account-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px 16px;
+}
+
+.portfolio-account-meta {
+    color: #718096;
+    font-size: 0.8rem;
+}
+
+.portfolio-result {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 16px;
+    color: #4a5568;
+}
+
+.portfolio-result strong {
+    font-size: 1.6rem;
+    color: #2d3748;
+}
+
+.portfolio-result strong.pos,
+.portfolio-combined strong.pos {
+    color: #2f855a;
+}
+
+.portfolio-result strong.neg,
+.portfolio-combined strong.neg {
+    color: #c53030;
+}
+
+.portfolio-kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+    margin: 0 0 16px 0;
+}
+
+.portfolio-kpi {
+    padding: 10px 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+}
+
+.portfolio-kpi dt {
+    font-size: 0.75rem;
+    color: #718096;
+    margin-bottom: 4px;
+}
+
+.portfolio-kpi dd {
+    margin: 0;
+    font-weight: 600;
+    color: #2d3748;
+    font-variant-numeric: tabular-nums;
+}
+
+.portfolio-kpi dd.pos {
+    color: #2f855a;
+}
+
+.portfolio-kpi dd.neg {
+    color: #c53030;
+}
+
+.portfolio-subtitle {
+    margin: 20px 0 8px 0;
+    color: #2d3748;
+}
+
+.portfolio-asset-id {
+    color: #a0aec0;
+    font-size: 0.75rem;
+}
+
+.portfolio-account .report-table td.num,
+.portfolio-account .report-table th.num {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.portfolio-price-input {
+    width: 120px;
+    text-align: right;
+}
+
+.portfolio-table-scroll {
+    overflow-x: auto;
+}
+
+.portfolio-strong {
+    font-weight: 700;
+}
+
+.portfolio-note {
+    margin-top: 12px;
+}
+
+.portfolio-rates {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 12px;
+}
+
+.portfolio-rate {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    color: #2d3748;
+}
+
+.portfolio-combined {
+    margin: 12px 0 0 0;
+    color: #2d3748;
+}
+
+.portfolio-warnings {
+    margin-top: 16px;
+    font-size: 0.85rem;
+    color: #744210;
+}
+
+.portfolio-warnings summary {
+    cursor: pointer;
+}

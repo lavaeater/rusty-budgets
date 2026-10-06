@@ -3,6 +3,7 @@ use crate::budget::tabs::{
     BudgetPlanTab, OverviewTab, ReportsTab, SettingsTab, TodoTab, TransactionsTab,
 };
 use crate::components::{TabContent, TabList, TabTrigger, Tabs};
+use crate::portfolio::PortfolioView;
 use crate::version::VersionBadge;
 use api::models::{BudgetingType, MonthBeginsOn, PeriodId};
 use api::view_models::BudgetViewModel;
@@ -27,6 +28,7 @@ pub enum BudgetTab {
     Transactions,
     Todo,
     Reports,
+    Investments,
     Settings,
 }
 
@@ -39,6 +41,7 @@ impl BudgetTab {
             BudgetTab::Transactions => "transaktioner",
             BudgetTab::Todo => "att-gora",
             BudgetTab::Reports => "rapporter",
+            BudgetTab::Investments => "investeringar",
             BudgetTab::Settings => "installningar",
         }
     }
@@ -50,6 +53,7 @@ impl BudgetTab {
             BudgetTab::Transactions => "Transaktioner",
             BudgetTab::Todo => "Att göra",
             BudgetTab::Reports => "Rapporter",
+            BudgetTab::Investments => "Investeringar",
             BudgetTab::Settings => "Inställningar",
         }
     }
@@ -148,6 +152,11 @@ pub fn BudgetWorkspace(
                             },
                             BudgetTab::Reports => rsx! {
                                 ReportsTab {}
+                            },
+                            // Independent of the budget; it only lives here so
+                            // it is reachable from the same tab bar.
+                            BudgetTab::Investments => rsx! {
+                                PortfolioView {}
                             },
                             BudgetTab::Settings => rsx! {
                                 SettingsTab {}

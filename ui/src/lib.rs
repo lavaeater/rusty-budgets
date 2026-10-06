@@ -6,6 +6,7 @@ pub mod budget;
 
 mod components;
 mod file_chooser;
+pub mod portfolio;
 mod version;
 
 pub use components::*;

@@ -102,6 +102,10 @@ After all transactions are tagged:
 
 For items with irregular or infrequent bills (electricity, annual insurance): instead of budgeting the exact monthly cost, the budget builds a rolling buffer. The monthly contribution fills the buffer; in cheap months the buffer grows faster. This allows the monthly budget to absorb billing spikes without going over. Not yet implemented — tracked as `buffer_target: Option<Money>` on BudgetItem (future field).
 
+## Investment Analysis (`api/src/portfolio/`, `ui/src/portfolio.rs`)
+
+Stand-alone and stateless — no events, no DB, never touches `Budget`. The "Investeringar" tab uploads a zip (one CSV per account) or a single CSV to `analyze_portfolio`, which returns a `PortfolioReport`. Supported: Kraken *Ledgers* export (the trades export is skipped — it lacks deposits) and Avanza transaction exports (grouped by `Konto`). Average-cost method; amounts are `f64` in each account's own currency. Real exports live in the git-ignored `kraken/` folder; `cargo test -p api real_exports -- --nocapture` runs against them.
+
 ## Conventions
 
 - All IDs are `Uuid` (v4)
