@@ -7,6 +7,9 @@ mod avanza;
 mod book;
 mod csv;
 mod kraken;
+mod xirr;
+
+pub use xirr::xirr;
 
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
@@ -94,6 +97,35 @@ pub struct Holding {
     /// Most recent price per unit seen in the file, in the account currency.
     pub last_price: Option<f64>,
     pub last_price_date: Option<NaiveDate>,
+    pub crypto: bool,
+}
+
+/// Everything that happened to one asset in one account.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct InstrumentSummary {
+    pub asset: String,
+    pub name: String,
+    pub crypto: bool,
+    /// Spent on purchases, fees included.
+    pub bought: f64,
+    /// Received from sales, fees deducted.
+    pub sold: f64,
+    pub realised: f64,
+    pub fees: f64,
+    pub dividends: f64,
+    pub buys: u32,
+    pub sells: u32,
+    /// Quantity still held at the end of the file.
+    pub quantity: f64,
+}
+
+/// Value the owner put into (positive) or took out of (negative) the
+/// account on one day: deposits, withdrawals, transfers between own
+/// accounts and assets sent out at cost. The input for [`xirr`].
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+pub struct DatedAmount {
+    pub date: NaiveDate,
+    pub amount: f64,
 }
 
 /// An asset that entered or left the account without being bought or sold.
@@ -121,6 +153,10 @@ pub struct AccountReport {
     pub assets_moved_in: Vec<AssetMovement>,
     pub assets_moved_out: Vec<AssetMovement>,
     pub years: Vec<YearSummary>,
+    /// Per asset, largest realised result first.
+    pub instruments: Vec<InstrumentSummary>,
+    /// One entry per day with external flows, oldest first.
+    pub contributions: Vec<DatedAmount>,
     /// Present when the export states its own result per sale.
     pub broker_check: Option<BrokerCheck>,
     pub warnings: Vec<String>,
@@ -292,9 +328,56 @@ mod tests {
         assert_eq!(report.totals[0].summary.deposited, 100.0);
     }
 
+    const AVANZA_HEADER: &str = "Datum;Konto;Typ av transaktion;Värdepapper/beskrivning;Antal;Kurs;Belopp;Transaktionsvaluta;Courtage";
+    const KRAKEN_LEDGER: &str = "\"txid\",\"refid\",\"time\",\"type\",\"subtype\",\"aclass\",\"subclass\",\"asset\",\"wallet\",\"amount\",\"fee\",\"balance\"\n\
+        \"L1\",\"D1\",\"2021-01-01 10:00:00\",\"deposit\",\"\",\"currency\",\"fiat\",\"EUR\",\"spot\",100.0,0,100.0";
+    const KRAKEN_TRADES: &str = "\"txid\",\"ordertxid\",\"pair\",\"time\",\"type\"";
+
+    fn file(name: &str, text: &str) -> (String, Vec<u8>) {
+        (name.to_string(), text.as_bytes().to_vec())
+    }
+
+    #[test]
+    fn a_plain_csv_upload_is_analysed() {
+        let text = format!("{AVANZA_HEADER}\n2024-01-01;1;Insättning;;;;100;SEK;");
+        let report = analyze_upload("transaktioner.csv", text.as_bytes());
+        assert_eq!(report.accounts.len(), 1);
+        assert_eq!(report.accounts[0].source_file, "transaktioner.csv");
+    }
+
+    #[test]
+    fn kraken_trades_export_is_skipped_with_advice() {
+        let alone = analyze_files(&[file("trades.csv", KRAKEN_TRADES)]);
+        assert!(alone.skipped_files[0].reason.contains("Ledgers"));
+
+        let with_ledger = analyze_files(&[file("trades.csv", KRAKEN_TRADES), file("ledger.csv", KRAKEN_LEDGER)]);
+        assert_eq!(with_ledger.accounts.len(), 1);
+        assert!(with_ledger.skipped_files[0].reason.contains("behövs inte"));
+    }
+
+    #[test]
+    fn totals_are_kept_per_currency_and_internal_transfers_cancel() {
+        let avanza = format!(
+            "{AVANZA_HEADER}\n\
+             2024-01-02;ISK;Intern överföring;Från AF;;;300;SEK;\n\
+             2024-01-02;AF;Intern överföring;Till ISK;;;-300;SEK;\n\
+             2024-01-01;AF;Insättning;;;;1000;SEK;"
+        );
+        let report = analyze_files(&[file("avanza.csv", &avanza), file("kraken.csv", KRAKEN_LEDGER)]);
+        assert_eq!(report.accounts.len(), 3);
+        let currencies: Vec<_> = report.totals.iter().map(|t| t.currency.as_str()).collect();
+        assert_eq!(currencies, ["EUR", "SEK"]);
+        let sek = &report.totals[1];
+        assert!((sek.summary.net_transferred()).abs() < 1e-9);
+        assert!((sek.summary.net_deposited() - 1000.0).abs() < 1e-9);
+        assert!((sek.cash_balance - 1000.0).abs() < 1e-9);
+        assert!((report.totals[0].summary.deposited - 100.0).abs() < 1e-9);
+    }
+
     /// Runs against the real exports in `kraken/` (git-ignored, so this is
     /// a no-op elsewhere). `cargo test -p api real_exports -- --nocapture`
-    /// prints the full report.
+    /// prints the full report. Only invariants are asserted, so no personal
+    /// figures end up in the repository.
     #[test]
     fn real_exports() {
         let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../kraken");
@@ -305,14 +388,41 @@ mod tests {
             .map(|e| (e.file_name().to_string_lossy().into_owned(), std::fs::read(e.path()).unwrap()))
             .collect();
         let report = analyze_files(&files);
-        println!("{report:#?}");
         for account in &report.accounts {
+            println!("== {} ({})", account.name, account.currency);
+            for i in &account.instruments {
+                println!("  {:<45} crypto={} realised={:>12.2} fees={:>9.2} buys={} sells={}", i.name, i.crypto, i.realised, i.fees, i.buys, i.sells);
+            }
+            let mut flows: Vec<(NaiveDate, f64)> = account.contributions.iter().map(|c| (c.date, -c.amount)).collect();
+            if let Some(last) = account.last_date {
+                flows.push((last, account.cash_balance + account.holdings_cost_basis()));
+            }
+            println!("  xirr (holdings at cost) = {:?}", xirr(&flows));
+        }
+        for account in &report.accounts {
+            // Kraken: our balances match the ledger's running balances.
             assert!(
-                !account.warnings.iter().any(|w| w.contains("stämmer inte")),
+                !account.warnings.iter().any(|w| w.contains("stämmer inte") || w.starts_with("Mer ")),
                 "{}: {:?}",
                 account.name,
                 account.warnings
             );
+            // Avanza: our realised result is within 1 % of Avanza's own,
+            // on the rows where Avanza states one.
+            if let Some(check) = account.broker_check {
+                let tolerance = check.broker_realised.abs().max(1.0) * 0.01;
+                assert!(
+                    (check.our_realised - check.broker_realised).abs() <= tolerance,
+                    "{}: {check:?}",
+                    account.name
+                );
+            }
+            // An emptied account has no cash left over beyond rounding.
+            assert!(account.cash_balance > -1.0, "{}: {}", account.name, account.cash_balance);
+        }
+        // Money moved between own accounts arrives where it was sent.
+        for totals in &report.totals {
+            assert!(totals.summary.net_transferred().abs() < 1.0, "{totals:?}");
         }
     }
 }

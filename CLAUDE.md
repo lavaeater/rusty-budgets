@@ -104,7 +104,7 @@ For items with irregular or infrequent bills (electricity, annual insurance): in
 
 ## Investment Analysis (`api/src/portfolio/`, `ui/src/portfolio.rs`)
 
-Stand-alone and stateless — no events, no DB, never touches `Budget`. The "Investeringar" tab uploads a zip (one CSV per account) or a single CSV to `analyze_portfolio`, which returns a `PortfolioReport`. Supported: Kraken *Ledgers* export (the trades export is skipped — it lacks deposits) and Avanza transaction exports (grouped by `Konto`). Average-cost method; amounts are `f64` in each account's own currency. Real exports live in the git-ignored `kraken/` folder; `cargo test -p api real_exports -- --nocapture` runs against them.
+Stand-alone and stateless — no events, no DB, never touches `Budget`. The "Investeringar" tab uploads a zip (one CSV per account) or a single CSV to `analyze_portfolio`, which returns a `PortfolioReport`. Supported: Kraken *Ledgers* export (the trades export is skipped — it lacks deposits) and Avanza transaction exports (grouped by `Konto`). Average-cost method; amounts are `f64` in each account's own currency. Each account also carries per-instrument results (crypto flagged by asset/name, see `CRYPTO_WORDS` in `avanza.rs`) and dated owner contributions, from which the UI computes an annualised return with `portfolio::xirr`. Real exports live in the git-ignored `kraken/` folder; `cargo test -p api real_exports -- --nocapture` runs against them.
 
 ## Conventions
 

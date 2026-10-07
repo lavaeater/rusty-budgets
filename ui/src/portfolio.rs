@@ -8,7 +8,8 @@
 use crate::Input;
 use crate::file_chooser::{FileData, FileDialog};
 use api::analyze_portfolio;
-use api::portfolio::{AccountReport, FlowSummary, Holding, PortfolioReport};
+use api::portfolio::{AccountReport, FlowSummary, Holding, PortfolioReport, xirr};
+use chrono::{NaiveDate, Utc};
 use dioxus::prelude::*;
 use std::collections::HashMap;
 
@@ -110,6 +111,74 @@ impl Valuation {
 /// wallets, at cost) minus everything that was put into it.
 fn total_result(summary: &FlowSummary, cash: f64, market_value: f64, moved_out_at_cost: f64) -> f64 {
     cash + market_value + moved_out_at_cost - summary.net_deposited() - summary.net_transferred()
+}
+
+fn format_percent(rate: Option<f64>) -> String {
+    rate.map_or_else(|| "—".to_string(), |r| format!("{} %/år", format_number(r * 100.0, 1)))
+}
+
+/// Annualised money-weighted return: the owner's dated contributions
+/// (positive = put in), with everything still in the accounts treated as
+/// taken out at `end`.
+fn annual_return(contributions: &[(NaiveDate, f64)], end: NaiveDate, end_value: f64) -> Option<f64> {
+    let mut flows: Vec<(NaiveDate, f64)> = contributions.iter().map(|(d, a)| (*d, -a)).collect();
+    flows.push((end, end_value));
+    xirr(&flows)
+}
+
+/// Accounts that still hold something are valued today; emptied ones on
+/// their last transaction, so idle time after closing does not dilute the
+/// rate.
+fn valuation_date<'a>(accounts: impl IntoIterator<Item = &'a AccountReport>) -> NaiveDate {
+    let today = Utc::now().date_naive();
+    let mut last: Option<NaiveDate> = None;
+    for account in accounts {
+        if !account.holdings.is_empty() {
+            return today;
+        }
+        last = last.max(account.last_date);
+    }
+    last.unwrap_or(today)
+}
+
+fn contributions_of<'a>(accounts: impl IntoIterator<Item = &'a AccountReport>, rate: f64) -> Vec<(NaiveDate, f64)> {
+    accounts
+        .into_iter()
+        .flat_map(|a| a.contributions.iter().map(move |c| (c.date, c.amount * rate)))
+        .collect()
+}
+
+/// Result attributable to crypto (or to everything else) in `accounts`.
+#[derive(Debug, Clone, Copy, Default, PartialEq)]
+struct Split {
+    realised: f64,
+    unrealised: f64,
+    fees: f64,
+    dividends: f64,
+}
+
+impl Split {
+    fn of(accounts: &[&AccountReport], crypto: bool, prices: &HashMap<String, String>) -> Self {
+        let mut split = Split::default();
+        for account in accounts {
+            for instrument in account.instruments.iter().filter(|i| i.crypto == crypto) {
+                split.realised += instrument.realised;
+                split.fees += instrument.fees;
+                split.dividends += instrument.dividends;
+            }
+            let holdings: Vec<Holding> = account.holdings.iter().filter(|h| h.crypto == crypto).cloned().collect();
+            split.unrealised += Valuation::of(&holdings, &account.currency, prices).unrealised();
+        }
+        split
+    }
+
+    fn result(&self) -> f64 {
+        self.realised + self.unrealised + self.dividends
+    }
+
+    fn is_empty(&self) -> bool {
+        self.realised == 0.0 && self.unrealised == 0.0 && self.fees == 0.0 && self.dividends == 0.0
+    }
 }
 
 /// Seeds the price inputs with the most recent price seen in the files.
@@ -226,8 +295,26 @@ fn PortfolioTotals(report: PortfolioReport, prices: Prices, mut rates: Prices) -
                 valuation.market_value,
                 totals.moved_out_at_cost,
             );
-            (totals.clone(), valuation, value, result)
+            let accounts: Vec<&AccountReport> =
+                report.accounts.iter().filter(|a| a.currency == totals.currency).collect();
+            let annual = annual_return(
+                &contributions_of(accounts.iter().copied(), 1.0),
+                valuation_date(accounts.iter().copied()),
+                value,
+            );
+            (totals.clone(), valuation, value, result, annual)
         })
+        .collect();
+    let splits: Vec<(String, &str, Split)> = report
+        .totals
+        .iter()
+        .flat_map(|totals| {
+            let accounts: Vec<&AccountReport> =
+                report.accounts.iter().filter(|a| a.currency == totals.currency).collect();
+            [(true, "Krypto"), (false, "Övrigt")]
+                .map(|(crypto, label)| (totals.currency.clone(), label, Split::of(&accounts, crypto, &price_map)))
+        })
+        .filter(|(.., split)| !split.is_empty())
         .collect();
 
     let foreign: Vec<String> = rows
@@ -242,13 +329,18 @@ fn PortfolioTotals(report: PortfolioReport, prices: Prices, mut rates: Prices) -
             rate_map.get(currency).and_then(|r| parse_decimal(r))
         }
     };
-    let combined = rows.iter().try_fold((0.0, 0.0, 0.0), |acc, (t, _, value, result)| {
+    let combined = rows.iter().try_fold((0.0, 0.0, 0.0, Vec::new()), |mut acc, (t, _, value, result, _)| {
         let r = rate(&t.currency)?;
-        Some((
-            acc.0 + (t.summary.net_deposited() + t.summary.net_transferred()) * r,
-            acc.1 + value * r,
-            acc.2 + result * r,
-        ))
+        acc.0 += (t.summary.net_deposited() + t.summary.net_transferred()) * r;
+        acc.1 += value * r;
+        acc.2 += result * r;
+        let accounts = report.accounts.iter().filter(|a| a.currency == t.currency);
+        acc.3.extend(contributions_of(accounts, r));
+        Some(acc)
+    });
+    let combined = combined.map(|(invested, value, result, contributions)| {
+        let annual = annual_return(&contributions, valuation_date(&report.accounts), value);
+        (invested, value, result, annual)
     });
 
     rsx! {
@@ -264,10 +356,11 @@ fn PortfolioTotals(report: PortfolioReport, prices: Prices, mut rates: Prices) -
                         th { class: "num", "Orealiserat" }
                         th { class: "num", "Avgifter" }
                         th { class: "num", "Totalt resultat" }
+                        th { class: "num", "Årlig avkastning" }
                     }
                 }
                 tbody {
-                    for (totals , valuation , value , result) in rows.iter() {
+                    for (totals , valuation , value , result , annual) in rows.iter() {
                         tr {
                             td { {totals.currency.clone()} }
                             td { class: "num",
@@ -284,13 +377,47 @@ fn PortfolioTotals(report: PortfolioReport, prices: Prices, mut rates: Prices) -
                             td { class: "num portfolio-strong {sign_class(*result)}",
                                 {format_money(*result, &totals.currency)}
                             }
+                            td { class: "num {sign_class(annual.unwrap_or_default())}", {format_percent(*annual)} }
+                        }
+                    }
+                }
+            }
+
+            h4 { class: "portfolio-subtitle", "Krypto och övrigt" }
+            table { class: "report-table",
+                thead {
+                    tr {
+                        th { "Valuta" }
+                        th { "Slag" }
+                        th { class: "num", "Realiserat" }
+                        th { class: "num", "Orealiserat" }
+                        th { class: "num", "Utdelningar" }
+                        th { class: "num", "Resultat" }
+                        th { class: "num", "Varav avgifter" }
+                    }
+                }
+                tbody {
+                    for (currency , label , split) in splits.iter() {
+                        tr {
+                            td { {currency.clone()} }
+                            td { {*label} }
+                            td { class: "num {sign_class(split.realised)}", {format_money(split.realised, currency)} }
+                            td { class: "num {sign_class(split.unrealised)}", {format_money(split.unrealised, currency)} }
+                            td { class: "num", {format_money(split.dividends, currency)} }
+                            td { class: "num portfolio-strong {sign_class(split.result())}",
+                                {format_money(split.result(), currency)}
+                            }
+                            td { class: "num", {format_money(split.fees, currency)} }
                         }
                     }
                 }
             }
             p { class: "settings-hint portfolio-note",
                 "Netto insatt = insättningar − uttag (överföringar mellan egna konton tar ut varandra). "
-                "Totalt resultat = kassa + marknadsvärde + krypto flyttat till egen plånbok (till anskaffningsvärde) − netto insatt."
+                "Totalt resultat = kassa + marknadsvärde + krypto flyttat till egen plånbok (till anskaffningsvärde) − netto insatt. "
+                "Årlig avkastning är pengaviktad (XIRR): tar hänsyn till när pengarna sattes in och togs ut. "
+                "Krypto flyttat till egen plånbok räknas som uttag till anskaffningsvärdet. "
+                "Krypto och övrigt delar upp resultatet per värdepapper; ränta och skatt hör till kontot och ingår inte."
             }
 
             if !foreign.is_empty() {
@@ -313,7 +440,7 @@ fn PortfolioTotals(report: PortfolioReport, prices: Prices, mut rates: Prices) -
                         }
                     }
                 }
-                if let Some((invested, value, result)) = combined {
+                if let Some((invested, value, result, annual)) = combined {
                     p { class: "portfolio-combined",
                         "Allt omräknat till SEK med dagens kurs: netto insatt "
                         strong { {format_money(invested, "SEK")} }
@@ -321,6 +448,8 @@ fn PortfolioTotals(report: PortfolioReport, prices: Prices, mut rates: Prices) -
                         strong { {format_money(value, "SEK")} }
                         ", resultat "
                         strong { class: sign_class(result), {format_money(result, "SEK")} }
+                        ", årlig avkastning "
+                        strong { class: sign_class(annual.unwrap_or_default()), {format_percent(annual)} }
                     }
                 }
             }
@@ -336,6 +465,11 @@ fn AccountCard(account: AccountReport, mut prices: Prices) -> Element {
     let valuation = Valuation::of(&account.holdings, &currency, &price_map);
     let moved_out_at_cost = account.moved_out_at_cost();
     let result = total_result(&summary, account.cash_balance, valuation.market_value, moved_out_at_cost);
+    let annual = annual_return(
+        &contributions_of([&account], 1.0),
+        valuation_date([&account]),
+        account.cash_balance + valuation.market_value,
+    );
     let money = |v: f64| format_money(v, &currency);
     let period = match (account.first_date, account.last_date) {
         (Some(first), Some(last)) => format!("{first} – {last}"),
@@ -382,6 +516,8 @@ fn AccountCard(account: AccountReport, mut prices: Prices) -> Element {
             div { class: "portfolio-result",
                 span { "Totalt resultat" }
                 strong { class: sign_class(result), {money(result)} }
+                span { "Årlig avkastning" }
+                strong { class: sign_class(annual.unwrap_or_default()), {format_percent(annual)} }
             }
 
             dl { class: "portfolio-kpis",
@@ -401,6 +537,10 @@ fn AccountCard(account: AccountReport, mut prices: Prices) -> Element {
                     strong { {money(check.our_realised)} }
                     "."
                 }
+            }
+
+            if !account.instruments.is_empty() {
+                InstrumentTable { account: account.clone() }
             }
 
             if !account.holdings.is_empty() {
@@ -453,7 +593,7 @@ fn AccountCard(account: AccountReport, mut prices: Prices) -> Element {
                                                 },
                                             }
                                         }
-                                        td { class: "num", {value.map_or_else(|| "—".to_string(), &money)} }
+                                        td { class: "num", {value.map_or_else(|| "—".to_string(), money)} }
                                         td { class: "num {value.map_or(\"\", |v| sign_class(v - holding.cost_basis))}",
                                             {value.map_or_else(|| "—".to_string(), |v| money(v - holding.cost_basis))}
                                         }
@@ -489,7 +629,7 @@ fn AccountCard(account: AccountReport, mut prices: Prices) -> Element {
                                 td { {moved.name.clone()} }
                                 td { class: "num", {format_quantity(moved.quantity)} }
                                 td { class: "num", {money(moved.cost_basis)} }
-                                td { class: "num", {moved.value.map_or_else(|| "—".to_string(), &money)} }
+                                td { class: "num", {moved.value.map_or_else(|| "—".to_string(), money)} }
                             }
                         }
                     }
@@ -540,6 +680,75 @@ fn AccountCard(account: AccountReport, mut prices: Prices) -> Element {
     }
 }
 
+/// Per-instrument results, with crypto and everything else subtotalled.
+#[component]
+fn InstrumentTable(account: AccountReport) -> Element {
+    let currency = account.currency.clone();
+    let money = |v: f64| format_money(v, &currency);
+    let subtotal = |crypto: bool| {
+        let instruments = account.instruments.iter().filter(move |i| i.crypto == crypto);
+        let count = instruments.clone().count();
+        let realised: f64 = instruments.clone().map(|i| i.realised).sum();
+        let fees: f64 = instruments.map(|i| i.fees).sum();
+        (count, realised, fees)
+    };
+    let subtotals: Vec<(&str, usize, f64, f64)> = [(true, "Summa krypto"), (false, "Summa övrigt")]
+        .into_iter()
+        .map(|(crypto, label)| {
+            let (count, realised, fees) = subtotal(crypto);
+            (label, count, realised, fees)
+        })
+        .filter(|(_, count, ..)| *count > 0)
+        .collect();
+
+    rsx! {
+        h4 { class: "portfolio-subtitle", "Per värdepapper" }
+        div { class: "portfolio-table-scroll",
+            table { class: "report-table",
+                thead {
+                    tr {
+                        th { "Värdepapper" }
+                        th { class: "num", "Köp" }
+                        th { class: "num", "Sälj" }
+                        th { class: "num", "Köpt för" }
+                        th { class: "num", "Sålt för" }
+                        th { class: "num", "Avgifter" }
+                        th { class: "num", "Realiserat" }
+                    }
+                }
+                tbody {
+                    for instrument in account.instruments.iter() {
+                        tr { key: "{instrument.asset}",
+                            td {
+                                {instrument.name.clone()}
+                                if instrument.crypto {
+                                    span { class: "portfolio-crypto-badge", "krypto" }
+                                }
+                                if instrument.quantity.abs() > 1e-9 {
+                                    span { class: "portfolio-asset-id", " innehav {format_quantity(instrument.quantity)}" }
+                                }
+                            }
+                            td { class: "num", "{instrument.buys}" }
+                            td { class: "num", "{instrument.sells}" }
+                            td { class: "num", {money(instrument.bought)} }
+                            td { class: "num", {money(instrument.sold)} }
+                            td { class: "num", {money(instrument.fees)} }
+                            td { class: "num {sign_class(instrument.realised)}", {money(instrument.realised)} }
+                        }
+                    }
+                    for (label , _ , realised , fees) in subtotals {
+                        tr { class: "portfolio-subtotal",
+                            td { colspan: 5, {label} }
+                            td { class: "num", {money(fees)} }
+                            td { class: "num {sign_class(realised)}", {money(realised)} }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -558,5 +767,128 @@ mod tests {
         assert_eq!(parse_decimal("75 703,19"), Some(75_703.19));
         assert_eq!(parse_decimal(""), None);
         assert_eq!(parse_decimal("abc"), None);
+    }
+    fn holding(asset: &str, quantity: f64, cost_basis: f64) -> Holding {
+        Holding {
+            asset: asset.to_string(),
+            name: asset.to_string(),
+            quantity,
+            cost_basis,
+            last_price: None,
+            last_price_date: None,
+            crypto: asset == "BTC",
+        }
+    }
+
+    #[test]
+    fn valuation_uses_typed_prices_and_falls_back_to_cost() {
+        let holdings = [holding("BTC", 0.5, 10_000.0), holding("ETH", 2.0, 3_000.0)];
+        let prices = HashMap::from([(price_key("EUR", "BTC"), "30 000".to_string())]);
+        let valuation = Valuation::of(&holdings, "EUR", &prices);
+        assert_eq!(valuation.market_value, 15_000.0 + 3_000.0);
+        assert_eq!(valuation.unrealised(), 5_000.0);
+        assert_eq!(valuation.missing_prices, 1);
+        // A price for another currency does not apply.
+        assert_eq!(Valuation::of(&holdings, "SEK", &prices).missing_prices, 2);
+    }
+
+    #[test]
+    fn total_result_is_value_minus_what_was_put_in() {
+        let summary = FlowSummary {
+            deposited: 1_000.0,
+            withdrawn: 200.0,
+            transferred_in: 50.0,
+            transferred_out: 150.0,
+            ..FlowSummary::default()
+        };
+        // Net 700 put in; 100 cash + 900 holdings + 50 sent to a wallet.
+        assert_eq!(total_result(&summary, 100.0, 900.0, 50.0), 350.0);
+    }
+
+    #[test]
+    fn default_prices_take_the_most_recent_price_across_accounts() {
+        let date = |d| chrono::NaiveDate::from_ymd_opt(2024, 1, d);
+        let account = |price: f64, day: u32| AccountReport {
+            name: String::new(),
+            provider: api::portfolio::Provider::Avanza,
+            source_file: String::new(),
+            currency: "SEK".to_string(),
+            first_date: None,
+            last_date: None,
+            summary: FlowSummary::default(),
+            cash_balance: 0.0,
+            holdings: vec![Holding { last_price: Some(price), last_price_date: date(day), ..holding("X", 1.0, 1.0) }],
+            assets_moved_in: vec![],
+            assets_moved_out: vec![],
+            years: vec![],
+            instruments: vec![],
+            contributions: vec![],
+            broker_check: None,
+            warnings: vec![],
+        };
+        let report = PortfolioReport { accounts: vec![account(12.0, 5), account(10.0, 1)], ..PortfolioReport::default() };
+        assert_eq!(default_prices(&report)[&price_key("SEK", "X")], "12.00");
+    }
+
+    fn empty_account(currency: &str) -> AccountReport {
+        AccountReport {
+            name: String::new(),
+            provider: api::portfolio::Provider::Avanza,
+            source_file: String::new(),
+            currency: currency.to_string(),
+            first_date: None,
+            last_date: None,
+            summary: FlowSummary::default(),
+            cash_balance: 0.0,
+            holdings: vec![],
+            assets_moved_in: vec![],
+            assets_moved_out: vec![],
+            years: vec![],
+            instruments: vec![],
+            contributions: vec![],
+            broker_check: None,
+            warnings: vec![],
+        }
+    }
+
+    #[test]
+    fn split_separates_crypto_from_the_rest() {
+        let instrument = |asset: &str, crypto: bool, realised: f64| api::portfolio::InstrumentSummary {
+            asset: asset.to_string(),
+            crypto,
+            realised,
+            fees: 1.0,
+            ..Default::default()
+        };
+        let mut account = empty_account("SEK");
+        account.instruments = vec![instrument("BTC", true, 100.0), instrument("X", false, -40.0)];
+        account.holdings = vec![holding("BTC", 1.0, 50.0), holding("X", 1.0, 10.0)];
+        let prices = HashMap::from([
+            (price_key("SEK", "BTC"), "80".to_string()),
+            (price_key("SEK", "X"), "5".to_string()),
+        ]);
+        let crypto = Split::of(&[&account], true, &prices);
+        assert_eq!((crypto.realised, crypto.unrealised, crypto.fees), (100.0, 30.0, 1.0));
+        assert_eq!(crypto.result(), 130.0);
+        let other = Split::of(&[&account], false, &prices);
+        assert_eq!(other.result(), -45.0);
+    }
+
+    #[test]
+    fn annual_return_values_whats_left_at_the_end() {
+        let date = |y| NaiveDate::from_ymd_opt(y, 1, 1).unwrap();
+        // 100 in grows to 110, 50 out, the remaining 60 grows to 66: 10 %/year.
+        let rate = annual_return(&[(date(2021), 100.0), (date(2022), -50.0)], date(2023), 66.0).unwrap();
+        assert!((rate - 0.1).abs() < 1e-6, "{rate}");
+    }
+
+    #[test]
+    fn emptied_accounts_are_valued_on_their_last_day() {
+        let mut closed = empty_account("SEK");
+        closed.last_date = NaiveDate::from_ymd_opt(2024, 5, 1);
+        assert_eq!(valuation_date([&closed]), NaiveDate::from_ymd_opt(2024, 5, 1).unwrap());
+        let mut open = empty_account("SEK");
+        open.holdings = vec![holding("BTC", 1.0, 1.0)];
+        assert_eq!(valuation_date([&closed, &open]), Utc::now().date_naive());
     }
 }

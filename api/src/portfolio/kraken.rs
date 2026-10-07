@@ -112,7 +112,7 @@ pub fn parse(text: &str, file_name: &str) -> Result<AccountReport, String> {
         .or_else(|| rows.iter().find(|r| r.fiat))
         .map_or_else(|| "EUR".to_string(), |r| r.asset.clone());
 
-    let mut book = Book::new(&currency);
+    let mut book = Book::new(&currency).crypto_when(|asset, _| !FIAT.contains(&asset));
     add_opening_balances(&mut book, &rows, &currency);
 
     let mut trade_legs: HashMap<&str, Vec<usize>> = HashMap::new();
@@ -285,5 +285,68 @@ mod tests {
         let report = parse(&text, "ledger.csv").unwrap();
         assert!(close(report.summary.deposited, 102.5));
         assert_eq!(report.warnings.len(), 1);
+    }
+    #[test]
+    fn crypto_to_crypto_trade_carries_basis() {
+        let text = ledger(&[
+            r#""L1","D1","2017-11-01 10:00:00","deposit","","currency","fiat","EUR","spot",100.0,0,100.0"#,
+            r#""L2","T1","2017-11-02 10:00:00","trade","tradespot","currency","fiat","EUR","spot",-100.0,0,0.0"#,
+            r#""L3","T1","2017-11-02 10:00:00","trade","tradespot","currency","crypto","BCH","spot",1.0,0,1.0"#,
+            r#""L4","T2","2017-12-01 10:00:00","trade","tradespot","currency","crypto","BCH","spot",-1.0,0,0.0"#,
+            r#""L5","T2","2017-12-01 10:00:00","trade","tradespot","currency","crypto","XXBT","spot",0.1,0.001,0.099"#,
+        ]);
+        let report = parse(&text, "l.csv").unwrap();
+        assert!(close(report.summary.realised, 0.0));
+        let btc = &report.holdings[0];
+        assert_eq!(btc.asset, "BTC");
+        assert!(btc.crypto);
+        assert!(close(btc.quantity, 0.099) && close(btc.cost_basis, 100.0));
+        assert_eq!(report.warnings.len(), 1, "{:?}", report.warnings);
+    }
+
+    #[test]
+    fn rows_are_sorted_and_fees_on_the_crypto_leg_reduce_quantity() {
+        // Newest first; the buy's fee is taken in BTC.
+        let text = ledger(&[
+            r#""L3","T1","2021-01-02 10:00:00","trade","tradespot","currency","crypto","BTC","spot",0.02,0.0002,0.0198"#,
+            r#""L2","T1","2021-01-02 10:00:00","trade","tradespot","currency","fiat","EUR","spot",-1000.0,0,0.0"#,
+            r#""L1","D1","2021-01-01 10:00:00","deposit","","currency","fiat","EUR","spot",1000.0,0,1000.0"#,
+        ]);
+        let report = parse(&text, "l.csv").unwrap();
+        assert!(report.warnings.is_empty(), "{:?}", report.warnings);
+        let btc = &report.holdings[0];
+        assert!(close(btc.quantity, 0.0198) && close(btc.cost_basis, 1000.0));
+        // 0.0002 BTC at 50 000 EUR/BTC.
+        assert!(close(report.summary.fees, 10.0));
+    }
+
+    #[test]
+    fn free_coins_have_zero_basis() {
+        let text = ledger(&[
+            r#""L1","A1","2018-11-18 10:00:00","transfer","","currency","crypto","BSV","spot",0.16,0,0.16"#,
+            r#""L2","S1","2019-12-08 10:00:00","spend","","currency","crypto","BSV","spot",-0.16,0,0.0"#,
+            r#""L3","S1","2019-12-08 10:00:00","receive","","currency","fiat","EUR","spot",20.0,0,20.0"#,
+        ]);
+        let report = parse(&text, "l.csv").unwrap();
+        assert!(close(report.summary.realised, 20.0));
+        assert!(report.warnings.iter().any(|w| w.contains("BSV")), "{:?}", report.warnings);
+    }
+
+    #[test]
+    fn missing_rows_show_up_as_balance_mismatch() {
+        let text = ledger(&[
+            r#""L1","D1","2021-01-01 10:00:00","deposit","","currency","fiat","EUR","spot",100.0,0,100.0"#,
+            r#""L2","D2","2021-01-03 10:00:00","deposit","","currency","fiat","EUR","spot",50.0,0,250.0"#,
+        ]);
+        let report = parse(&text, "l.csv").unwrap();
+        assert!(report.warnings.iter().any(|w| w.contains("stämmer inte")), "{:?}", report.warnings);
+    }
+
+    #[test]
+    fn base_currency_follows_the_first_fiat_deposit() {
+        let text = ledger(&[
+            r#""L1","D1","2021-01-01 10:00:00","deposit","","currency","fiat","ZUSD","spot",100.0,0,100.0"#,
+        ]);
+        assert_eq!(parse(&text, "l.csv").unwrap().currency, "USD");
     }
 }

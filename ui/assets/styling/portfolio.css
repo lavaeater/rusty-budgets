@@ -37,8 +37,9 @@
 
 .portfolio-result {
     display: flex;
+    flex-wrap: wrap;
     align-items: baseline;
-    gap: 12px;
+    gap: 4px 12px;
     margin-bottom: 16px;
     color: #4a5568;
 }
@@ -46,6 +47,7 @@
 .portfolio-result strong {
     font-size: 1.6rem;
     color: #2d3748;
+    margin-right: 16px;
 }
 
 .portfolio-result strong.pos,
@@ -154,4 +156,19 @@
 
 .portfolio-warnings summary {
     cursor: pointer;
+}
+
+.portfolio-crypto-badge {
+    margin-left: 6px;
+    padding: 1px 7px;
+    border-radius: 10px;
+    background: #fefcbf;
+    color: #744210;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.report-table tr.portfolio-subtotal td {
+    font-weight: 700;
+    border-top: 2px solid #e2e8f0;
 }

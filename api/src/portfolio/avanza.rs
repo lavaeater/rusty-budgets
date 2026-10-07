@@ -10,6 +10,20 @@ pub fn is_transactions(header: &str) -> bool {
     header.starts_with("Datum;Konto;Typ av transaktion")
 }
 
+/// Whole words in an instrument name that mark it as a crypto product
+/// (ETPs and trackers such as "XBT Provider Bitcoin Tracker One").
+const CRYPTO_WORDS: &[&str] = &[
+    "bitcoin", "btc", "xbt", "ethereum", "ether", "eth", "crypto", "krypto", "solana", "cardano",
+    "xrp", "ripple", "litecoin", "polkadot", "avalanche", "chainlink", "dogecoin", "valour",
+    "coinshares", "21shares",
+];
+
+fn is_crypto_instrument(_isin: &str, name: &str) -> bool {
+    name.to_lowercase()
+        .split(|c: char| !c.is_alphanumeric())
+        .any(|word| CRYPTO_WORDS.contains(&word))
+}
+
 struct Columns {
     date: usize,
     account: usize,
@@ -62,7 +76,7 @@ pub fn parse(text: &str, file_name: &str) -> Result<Vec<AccountReport>, String> 
                 "" => "SEK",
                 c => c,
             };
-            books.push((account.clone(), Book::new(currency)));
+            books.push((account.clone(), Book::new(currency).crypto_when(is_crypto_instrument)));
             books.len() - 1
         };
         let book = &mut books[index].1;
@@ -118,7 +132,10 @@ fn apply_row(book: &mut Book, date: NaiveDate, record: &[String], columns: &Colu
         ("Utbokning", Some(q), None) => {
             book.send_out(date, asset, description, q.abs(), 0.0, Some(0.0));
         }
-        (k, _, Some(a)) if k.starts_with("Utdelning") => book.dividend(date, a),
+        (k, _, Some(a)) if k.starts_with("Utdelning") => {
+            let has_asset = columns.isin.is_some_and(|i| !cell(i).is_empty());
+            book.dividend(date, has_asset.then_some(asset), a);
+        }
         (k, _, Some(a)) if k.to_lowercase().contains("skatt") => book.tax(date, a),
         (k, _, Some(a)) if k.to_lowercase().contains("ränta") => book.interest(date, a),
         (k, _, Some(a)) => {
@@ -176,5 +193,109 @@ mod tests {
         assert!(close(isk.holdings[0].quantity, 5.0));
         assert!(close(isk.holdings[0].cost_basis, 100.0));
         assert_eq!(isk.holdings[0].last_price, Some(30.0));
+    }
+    fn parse_rows(rows: &[&str]) -> Vec<AccountReport> {
+        let text = std::iter::once(HEADER).chain(rows.iter().copied()).collect::<Vec<_>>().join("\n");
+        parse(&csv::decode(text.as_bytes()), "t.csv").unwrap()
+    }
+
+    #[test]
+    fn average_cost_with_courtage_over_several_buys() {
+        // Newest first, like the real export.
+        let reports = parse_rows(&[
+            "2024-01-04;1;Sälj;Fond;-15;40;590;SEK;10;;SEK;SE01;155",
+            "2024-01-03;1;Köp;Fond;10;30;-305;SEK;5;;SEK;SE01;",
+            "2024-01-02;1;Köp;Fond;10;10;-105;SEK;5;;SEK;SE01;",
+        ]);
+        let account = &reports[0];
+        // 20 units cost 410 (20,50 each); 15 of them carry 307,50.
+        assert!(close(account.summary.realised, 590.0 - 307.5));
+        assert!(close(account.holdings[0].quantity, 5.0));
+        assert!(close(account.holdings[0].cost_basis, 102.5));
+        assert!(close(account.summary.fees, 20.0));
+        assert!(close(account.cash_balance, -105.0 - 305.0 + 590.0));
+    }
+
+    #[test]
+    fn foreign_instruments_use_the_sek_amount() {
+        let reports = parse_rows(&[
+            "2021-11-05;1;Sälj;GME;-10;25;2400;SEK;20;10;USD;US01;",
+            "2021-11-01;1;Köp;GME;10;20;-2010;SEK;10;9,95;USD;US01;",
+        ]);
+        let account = &reports[0];
+        assert!(close(account.summary.realised, 390.0));
+        assert!(account.broker_check.is_none());
+        // Moving it out values it at quote × exchange rate.
+        let moved = parse_rows(&[
+            "2021-11-02;1;Värdepappersuttag;Flytt;-10;20;;;;9,95;USD;US01;",
+            "2021-11-01;1;Köp;GME;10;20;-2010;SEK;10;9,95;USD;US01;",
+        ]);
+        assert!(close(moved[0].summary.transferred_out, 1990.0));
+        assert!(close(moved[0].summary.realised, 1990.0 - 2010.0));
+    }
+
+    #[test]
+    fn booked_in_and_out_securities() {
+        let reports = parse_rows(&[
+            "2021-10-13;1;Utbokning;Rätter;-100;;;;;;;SE02;",
+            "2021-10-12;1;Utbokning;Teckningsoption;-10;;;;;;;SE01;",
+            "2021-09-01;1;Köp;Rätter;100;1;-100;SEK;0;;SEK;SE02;",
+            "2019-10-24;1;Inbokning;Teckningsoption;10;;;;;;;SE01;",
+        ]);
+        let account = &reports[0];
+        assert!(account.holdings.is_empty(), "{:?}", account.holdings);
+        // The free warrants expire at no loss; the bought rights lose their cost.
+        assert!(close(account.summary.realised, -100.0));
+        assert!(account.warnings.is_empty(), "{:?}", account.warnings);
+    }
+
+    #[test]
+    fn cash_only_rows() {
+        let reports = parse_rows(&[
+            "2024-05-01;1;Okänd sak;;;;5;SEK;;;;;",
+            "2024-04-30;1;Utlåningsränta;;;;-8,33;SEK;;;;;",
+            "2024-04-01;1;Utländsk källskatt;;;;-1,5;SEK;;;;;",
+            "2024-04-01;1;Utdelning;Bolag;10;1;10;SEK;;;SEK;SE03;",
+            "2024-03-01;1;Uttag;Uttag till 123;;;-50;SEK;;;;;",
+            "2024-02-01;1;Intern överföring;Till 2;;;-25;SEK;;;;;",
+            "2024-01-01;1;Insättning;Swish;;;100;SEK;;;;;",
+        ]);
+        let account = &reports[0];
+        let s = account.summary;
+        assert!(close(s.deposited, 100.0) && close(s.withdrawn, 50.0));
+        assert!(close(s.transferred_out, 25.0));
+        assert!(close(s.dividends, 10.0) && close(s.tax, 1.5) && close(s.interest, -8.33));
+        assert!(close(s.other, 5.0));
+        assert!(close(account.cash_balance, 100.0 - 25.0 - 50.0 + 10.0 - 1.5 - 8.33 + 5.0));
+        assert_eq!(account.warnings.len(), 1, "{:?}", account.warnings);
+        assert!(account.warnings[0].contains("Okänd sak"));
+    }
+
+    #[test]
+    fn latin1_export_is_read() {
+        let mut bytes = b"Datum;Konto;Typ av transaktion;V\xE4rdepapper/beskrivning;Antal;Kurs;Belopp;Transaktionsvaluta;Courtage\n".to_vec();
+        bytes.extend_from_slice(b"2024-01-01;1;Ins\xE4ttning;;;;100;SEK;\n");
+        let reports = parse(&csv::decode(&bytes), "t.csv").unwrap();
+        assert!(close(reports[0].summary.deposited, 100.0));
+    }
+
+    #[test]
+    fn missing_column_is_an_error() {
+        assert!(parse("Datum;Konto;Typ av transaktion\n", "t.csv").is_err());
+    }
+
+    #[test]
+    fn crypto_products_are_recognised_by_name() {
+        for name in [
+            "XBT Provider Bitcoin Tracker One - SEK",
+            "Valour Bitcoin (BTC) Zero SEK",
+            "Bitwise Core Bitcoin ETP",
+            "CoinShares Physical Ethereum",
+        ] {
+            assert!(is_crypto_instrument("", name), "{name}");
+        }
+        for name in ["GameStop", "Avanza Zero", "Länsförsäkringar Japan Index", "Ethos Holding", "Bethesda"] {
+            assert!(!is_crypto_instrument("", name), "{name}");
+        }
     }
 }
