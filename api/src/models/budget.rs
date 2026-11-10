@@ -139,14 +139,12 @@ impl Budget {
 
     pub fn all_actuals(&self, period_id: PeriodId) -> Vec<&ActualItem> {
         self.get_period(period_id)
-            .map(|p| p.all_actuals())
-            .unwrap_or_default()
+            .map_or_default(|p| p.all_actuals())
     }
 
     pub fn ignored_transactions(&self, period_id: PeriodId) -> Vec<&BankTransaction> {
         self.get_period(period_id)
-            .map(|p| p.ignored_transactions())
-            .unwrap_or_default()
+            .map_or_default(|p| p.ignored_transactions())
     }
 
     pub fn month_begins_on(&self) -> MonthBeginsOn {
@@ -158,8 +156,7 @@ impl Budget {
         budget_period_id: PeriodId,
     ) -> Vec<(usize, BudgetingType, BudgetingTypeOverview, Vec<ActualItem>)> {
         self.get_period(budget_period_id)
-            .map(|p| p.items_by_type(&self.rules))
-            .unwrap_or_default()
+            .map_or_default(|p| p.items_by_type(&self.rules))
     }
 
     pub fn all_items(&self) -> &Vec<BudgetItem> {
@@ -168,14 +165,12 @@ impl Budget {
 
     pub fn budgeted_for_type(&self, budgeting_type: BudgetingType, period_id: PeriodId) -> Money {
         self.get_period(period_id)
-            .map(|p| p.budgeted_for_type(budgeting_type))
-            .unwrap_or_default()
+            .map_or_default(|p| p.budgeted_for_type(budgeting_type))
     }
 
     pub fn spent_for_type(&self, budgeting_type: BudgetingType, period_id: PeriodId) -> Money {
         self.get_period(period_id)
-            .map(|p| p.spent_for_type(budgeting_type))
-            .unwrap_or_default()
+            .map_or_default(|p| p.spent_for_type(budgeting_type))
     }
 
     pub fn insert_item(&mut self, item: BudgetItem) {
@@ -608,20 +603,16 @@ impl Budget {
         match budgeting_type {
             BudgetingType::Expense => self
                 .get_period(period_id)
-                .map(|p| p.get_expense_overview(&self.rules))
-                .unwrap_or_default(),
+                .map_or_default(|p| p.get_expense_overview(&self.rules)),
             BudgetingType::Income => self
                 .get_period(period_id)
-                .map(|p| p.get_income_overview(&self.rules))
-                .unwrap_or_default(),
+                .map_or_default(|p| p.get_income_overview(&self.rules)),
             BudgetingType::Savings => self
                 .get_period(period_id)
-                .map(|p| p.get_savings_overview(&self.rules))
-                .unwrap_or_default(),
+                .map_or_default(|p| p.get_savings_overview(&self.rules)),
             BudgetingType::InternalTransfer => self
                 .get_period(period_id)
-                .map(|p| p.get_transfer_overview(&self.rules))
-                .unwrap_or_default(),
+                .map_or_default(|p| p.get_transfer_overview(&self.rules)),
         }
     }
 
@@ -646,13 +637,12 @@ impl Budget {
         sorted: bool,
     ) -> Vec<&BankTransaction> {
         self.get_period(period_id)
-            .map(|p| p.transactions_for_actual(actual_id, sorted))
-            .unwrap_or_default()
+            .map_or_default(|p| p.transactions_for_actual(actual_id, sorted))
     }
 
     pub fn unconnected_transactions(&self, period_id: PeriodId) -> Vec<&BankTransaction> {
         self.get_period(period_id)
-            .map(|p| {
+            .map_or_default(|p| {
                 p.transactions
                     .iter()
                     .filter(|t| {
@@ -663,12 +653,11 @@ impl Budget {
                     })
                     .collect()
             })
-            .unwrap_or_default()
     }
 
     pub fn connected_transactions(&self, period_id: PeriodId) -> Vec<&BankTransaction> {
         self.get_period(period_id)
-            .map(|p| {
+            .map_or_default(|p| {
                 p.transactions
                     .iter()
                     .filter(|t| {
@@ -677,7 +666,6 @@ impl Budget {
                     })
                     .collect()
             })
-            .unwrap_or_default()
     }
 
     pub fn all_transactions(&self) -> Vec<&BankTransaction> {
@@ -851,14 +839,12 @@ impl Budget {
         actual_id: Uuid,
     ) -> Vec<&TransactionAllocation> {
         self.get_period(period_id)
-            .map(|p| p.allocations_for_actual(actual_id))
-            .unwrap_or_default()
+            .map_or_default(|p| p.allocations_for_actual(actual_id))
     }
 
     pub fn allocations_for_transaction(&self, transaction_id: Uuid) -> Vec<&TransactionAllocation> {
         self.get_period_for_transaction(transaction_id)
-            .map(|p| p.allocations_for_transaction(transaction_id))
-            .unwrap_or_default()
+            .map_or_default(|p| p.allocations_for_transaction(transaction_id))
     }
 
     pub fn allocated_amount_for_actual(&self, period_id: PeriodId, actual_id: Uuid) -> Money {

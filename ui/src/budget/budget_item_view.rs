@@ -30,8 +30,7 @@ pub fn BudgetItemView(item: BudgetItemViewModel) -> Element {
     let mut new_tag_name = use_signal(String::new);
     let mut buffer_target_str = use_signal(|| {
         item.buffer_target
-            .map(|m| m.amount_in_dollars().to_string())
-            .unwrap_or_default()
+            .map_or_default(|m| m.amount_in_dollars().to_string())
     });
 
     // State for selected transactions and retagging

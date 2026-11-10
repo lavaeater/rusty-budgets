@@ -37,7 +37,7 @@ pub fn PeriodFilter(
                 span { "År" }
                 select {
                     class: "period-filter-select",
-                    value: year().map(|y| y.to_string()).unwrap_or_else(|| "all".to_string()),
+                    value: year().map_or_else(|| "all".to_string(), |y| y.to_string()),
                     onchange: move |e| {
                         if e.value() == "all" {
                             year.set(None);
@@ -59,7 +59,7 @@ pub fn PeriodFilter(
                     span { "Period" }
                     select {
                         class: "period-filter-select",
-                        value: month().map(|m| m.to_string()).unwrap_or_else(|| "all".to_string()),
+                        value: month().map_or_else(|| "all".to_string(), |m| m.to_string()),
                         onchange: move |e| {
                             if e.value() == "all" {
                                 month.set(None);

@@ -94,11 +94,7 @@ fn is_date_pattern(s: &str) -> bool {
     }
 
     // Pattern: YYYYMMDD
-    if s.len() == 8 && s.chars().all(char::is_numeric) {
-        return true;
-    }
-
-    false
+    s.len() == 8 && s.chars().all(char::is_numeric)
 }
 
 /// Strips leading/trailing punctuation that bank exports glue onto tokens

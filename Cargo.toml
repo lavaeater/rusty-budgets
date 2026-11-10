@@ -13,9 +13,22 @@ members = [
 pedantic = { level = "warn", priority = -1 }
 must_use_candidate = "allow"
 missing_errors_doc = "allow"
+# Dioxus components take their props by value.
+needless_pass_by_value = "allow"
+# Money panics on currency mismatch by design.
+missing_panics_doc = "allow"
+similar_names = "allow"
+too_many_lines = "allow"
+items_after_statements = "allow"
+doc_markdown = "allow"
+cast_possible_truncation = "allow"
+cast_precision_loss = "allow"
+# Cheap guards against leftovers.
+todo = "warn"
+dbg_macro = "warn"
 
 [workspace.dependencies]
-dioxus = { version = "0.8.0-alpha.1", features = ["fullstack"] }
+dioxus = { version = "0.8.0-alpha.3", features = ["fullstack"] }
 lucide-dioxus = { git="https://github.com/lavaeater/lucide.git", branch="main", features = ["all-icons"] }
 uuid = { version = "1.23.0", features = ["v4", "js", "serde"] }
 chrono = { version = "0.4.44", features = ["serde"] }
@@ -24,7 +37,6 @@ serde_json = { version = "1.0.149" }
 thiserror = "2.0.18"
 joydb = { version = "0.1.0", features = ["json"] }
 strum = { version = "0.28.0", features = ["derive"] }
-env = "1.0.1"
 dotenvy = { version = "0.15.7" }
 
 # workspace
@@ -32,10 +44,22 @@ ui = { path = "ui" }
 api = { path = "api" }
 cqrs_macros = { path = "cqrs_macros" }
 
-[profile]
+# Dev builds are tuned for compile speed, not runtime speed. Every tool (dx, bacon,
+# cargo, rust-analyzer, agents) reads these, so builds stay interchangeable: never
+# override profile settings, codegen backend or RUSTFLAGS through env vars.
+[profile.dev]
+# Enough for backtraces with line numbers; far less to write and link than full debuginfo.
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+debug = false
 
 [profile.wasm-dev]
 inherits = "dev"
+
+# Unoptimised dependency wasm is huge and sluggish in the browser; optimise only the
+# dependencies so our own crates keep fast incremental rebuilds.
+[profile.wasm-dev.package."*"]
 opt-level = 1
 
 [profile.server-dev]

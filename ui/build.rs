@@ -22,9 +22,7 @@ fn main() {
 
     let is_dirty = Command::new("git")
         .args(["status", "--porcelain"])
-        .output()
-        .ok()
-        .is_some_and(|o| !o.stdout.is_empty());
+        .output().is_ok_and(|o| !o.stdout.is_empty());
 
     let version_suffix = if is_dirty { "-dirty" } else { "" };
 

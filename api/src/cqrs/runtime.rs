@@ -509,8 +509,7 @@ impl BudgetCommandsTrait for JoyDbBudgetRuntime {
         // would miss that and leave a stale duplicate entry behind), then
         // clear every other default before adding this one back.
         let mut budgets: Vec<(Uuid, bool)> = user_budgets
-            .map(|b| b.budgets)
-            .unwrap_or_default()
+            .map_or_default(|b| b.budgets)
             .into_iter()
             .filter(|(id, _)| *id != budget_id)
             .collect();

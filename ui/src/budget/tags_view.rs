@@ -112,7 +112,7 @@ pub fn TagsView() -> Element {
                                                 onclick: move |e| e.stop_propagation(),
                                                 oninput: move |e: FormEvent| editing_name.set(e.value()),
                                                 onkeydown: move |e: KeyboardEvent| {
-                                                    if e.key() == Key::Escape {
+                                                    if e.key() == Key::Named(NamedKey::Escape) {
                                                         editing_name.set(tag_name_escape.clone());
                                                         editing_tag_id.set(None);
                                                     }

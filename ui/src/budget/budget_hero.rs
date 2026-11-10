@@ -78,7 +78,7 @@ pub fn BudgetHero(
             |l| l.period_id,
         )
     });
-    let mut tab = use_signal(|| location.map(|l| l.tab).unwrap_or_default());
+    let mut tab = use_signal(|| location.map_or_default(|l| l.tab));
 
     // The last location we handed to the router. Guards both directions so a
     // URL echo doesn't bounce back as a fresh navigation.

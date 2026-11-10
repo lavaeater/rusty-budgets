@@ -27,8 +27,7 @@ fn derive_command_fn_name(struct_name: &str) -> String {
     let mut current = String::new();
     for c in struct_name.chars() {
         if c.is_uppercase() && !current.is_empty() {
-            words.push(current);
-            current = String::new();
+            words.push(std::mem::take(&mut current));
         }
         current.push(c.to_ascii_lowercase());
     }

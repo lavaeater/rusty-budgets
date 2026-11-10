@@ -9,7 +9,7 @@ A full-stack personal budgeting application written entirely in Rust, using Diox
 ## Tech Stack
 
 - **Rust 2024 Edition**, multi-crate workspace
-- **Dioxus 0.7.3** — fullstack framework (React-like, used for web/desktop/mobile)
+- **Dioxus 0.8.0-alpha.3** — fullstack framework (React-like, used for web/desktop/mobile)
 - **JoyDB** — custom JSON/RON file-based database (no SQL)
 - **CQRS + Event Sourcing** — custom framework in `api/src/cqrs/`
 - **Tokio** — async runtime (server-side only)
@@ -104,7 +104,30 @@ For items with irregular or infrequent bills (electricity, annual insurance): in
 
 ## Investment Analysis (`api/src/portfolio/`, `ui/src/portfolio.rs`)
 
-Stand-alone and stateless — no events, no DB, never touches `Budget`. The "Investeringar" tab uploads a zip (one CSV per account) or a single CSV to `analyze_portfolio`, which returns a `PortfolioReport`. Supported: Kraken *Ledgers* export (the trades export is skipped — it lacks deposits) and Avanza transaction exports (grouped by `Konto`). Average-cost method; amounts are `f64` in each account's own currency. Each account also carries per-instrument results (crypto flagged by asset/name, see `CRYPTO_WORDS` in `avanza.rs`) and dated owner contributions, from which the UI computes an annualised return with `portfolio::xirr`. Real exports live in the git-ignored `kraken/` folder; `cargo test -p api real_exports -- --nocapture` runs against them.
+Stand-alone and stateless — no events, no DB, never touches `Budget`. The "Investeringar" tab uploads a zip (one CSV per account) or a single CSV to `analyze_portfolio`, which returns a `PortfolioReport`. Supported: Kraken *Ledgers* export (the trades export is skipped — it lacks deposits) and Avanza transaction exports (grouped by `Konto`). Average-cost method; amounts are `f64` in each account's own currency. Each account also carries per-instrument results (crypto flagged by asset/name, see `CRYPTO_WORDS` in `avanza.rs`) and dated owner contributions, from which the UI computes an annualised return with `portfolio::xirr`. Real exports live in the git-ignored `kraken/` folder; `cargo llvm-cov nextest -E 'test(real_exports)' --no-capture` runs against them.
+
+## Building, linting, testing
+
+Run exactly these commands — they are the user's bacon jobs, so builds share artifacts
+instead of rebuilding each other. Feature sets matter: a different `-p`/`--features`
+combination (e.g. `cargo check --workspace`) compiles a different dependency graph.
+
+| Purpose | Command |
+|---|---|
+| Lint server side (default check) | `cargo clippy -p web --features server` |
+| Lint web client | `cargo clippy -p web --features web` |
+| Lint mobile | `cargo clippy -p mobile --features mobile` |
+| Tests | `cargo llvm-cov nextest --hide-progress-bar --failure-output final` (narrow with `-E 'test(name)'`) |
+| Autofix lints | `cargo clippy --fix --allow-dirty -p web -p api -p ui -p cqrs_macros --features web/server` |
+| Run the app | `dx serve` (user runs this; don't start it unless asked) |
+
+- Never add `RUSTFLAGS`, `RUSTC_WRAPPER`, `CARGO_PROFILE_*`, `+toolchain` or `-Z` flags to a
+  command. kache (rustc wrapper) and the nightly toolchain come from global config; build
+  settings live in the `Cargo.toml` profiles. One-off overrides invalidate the cache.
+- No cranelift. Dev profiles favour compile speed; runtime performance is not a goal.
+- Fix clippy warnings in code you touch. The lint set is pedantic with a curated allow-list
+  in the workspace `Cargo.toml`; prefer fixing over adding `#[allow]`.
+- If cargo blocks on the build-directory lock, the user's bacon is building — just wait.
 
 ## Conventions
 

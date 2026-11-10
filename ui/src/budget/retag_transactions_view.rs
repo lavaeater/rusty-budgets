@@ -146,11 +146,11 @@ pub fn RetagTransactionsView() -> Element {
                                                 oninput: move |e: FormEvent| new_tag_name.set(e.value()),
                                                 onkeydown: move |e: KeyboardEvent| {
                                                     match e.key() {
-                                                        Key::Escape => {
+                                                        Key::Named(NamedKey::Escape) => {
                                                             new_tag_name.set(String::new());
                                                             creating_for_tx.set(None);
                                                         }
-                                                        Key::Enter => {
+                                                        Key::Named(NamedKey::Enter) => {
                                                             let name = new_tag_name().trim().to_string();
                                                             if name.is_empty() {
                                                                 return;

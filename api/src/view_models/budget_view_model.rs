@@ -81,13 +81,11 @@ impl BudgetViewModel {
 
         let period_allocations = budget
             .get_period(period_id)
-            .map(|p| p.allocations.clone())
-            .unwrap_or_default();
+            .map_or_default(|p| p.allocations.clone());
 
         let all_period_transactions: Vec<&crate::models::BankTransaction> = budget
             .get_period(period_id)
-            .map(|p| p.transactions.iter().filter(|t| !t.ignored).collect())
-            .unwrap_or_default();
+            .map_or_default(|p| p.transactions.iter().filter(|t| !t.ignored).collect());
 
         // Running category balances entering this period. Empty (all zero) when
         // carryover has not been switched on, which preserves the original

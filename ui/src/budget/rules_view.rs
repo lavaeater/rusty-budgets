@@ -107,8 +107,7 @@ pub fn RulesView() -> Element {
                                                                         .match_rules
                                                                         .iter()
                                                                         .find(|r| r.id == rule_id)
-                                                                        .map(|r| r.transaction_key.clone())
-                                                                        .unwrap_or_default();
+                                                                        .map_or_default(|r| r.transaction_key.clone());
                                                                     if i < toks.len() {
                                                                         toks.remove(i);
                                                                     }
@@ -135,7 +134,7 @@ pub fn RulesView() -> Element {
                                                             onkeydown: move |e: KeyboardEvent| {
                                                                 let tokens_snap = rule.transaction_key.clone();
                                                                 match e.key() {
-                                                                    Key::Enter => {
+                                                                    Key::Named(NamedKey::Enter) => {
                                                                         let token = new_token_value().trim().to_lowercase();
                                                                         if token.is_empty() {
                                                                             adding_to_rule.set(None);
@@ -155,7 +154,7 @@ pub fn RulesView() -> Element {
                                                                             }
                                                                         });
                                                                     }
-                                                                    Key::Escape => {
+                                                                    Key::Named(NamedKey::Escape) => {
                                                                         new_token_value.set(String::new());
                                                                         adding_to_rule.set(None);
                                                                     }
