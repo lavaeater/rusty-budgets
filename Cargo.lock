@@ -3600,8 +3600,8 @@ dependencies = [
 
 [[package]]
 name = "lucide-dioxus"
-version = "3.26.0"
-source = "git+https://github.com/lavaeater/lucide.git?branch=main#0a0f0b2a9c661884342aaf331999eb41d88b563b"
+version = "3.58.0"
+source = "git+https://github.com/lavaeater/lucide.git?branch=main#29e3b541a9195b30d95fda57c77ca72a9d19ff10"
 dependencies = [
  "dioxus",
 ]
@@ -7154,7 +7154,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
